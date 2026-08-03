@@ -2,54 +2,1056 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/a.md
+FILE_PATH: src/transl/EN/components/span.md
 
-# a
+# span
 
 
-Anchor component, which defaults to an inline element, is used to jump to the specified page.
+`span` is also a text component. Unlike [`p` 组件](p), `span` components are inline elements by default and can span lines. [`label` ](label) components and [`a`](a) components also have similar effects. Text spanning means that elements can be laid out across multiple lines instead of occupying an entire "box".
+
+
+The `span` component can be used to implement [富文本排版](/framework/render/rich-text.md#富文本显示).
+
+
+<glyphix id="span" :height="36">
+
+
+
+``` html
+<div>
+  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
+</div>
+```
+
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/canvas.md
+
+# canvas
+
+
+Canvas component, by using scripts in JavaScript, you can draw graphics, etc. on `canvas`.
+
+
+### `context`
+
+
+**Value type**: context content obtained by canvas API
+
+
+**Action**: Setup
+
+
+Sets the canvas context in which graphics are to be drawn.
+
+============================================================
+FILE_PATH: src/transl/EN/components/marquee.md
+
+# marquee
+
+
+The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any subcomponents including `span`.
+
+
+`marquee` supports common CSS properties, but due to implementation reasons, the `text-align` property may not be supported at this time. Since `marquee` only displays a single line of text and will scroll when the text content is too long, attributes such as `max-lines` also have no effect.
 
 
 ## property
 
 
-### `href` <decl type="string" get set />
+### `text` <decl type="string" get set/>
 
 
-Specify the [页面名称](/framework/application/manifest.md#pages) or URI string to be jumped.
+Set the text content in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of `marquee`, the text will automatically scroll.
+
+============================================================
+FILE_PATH: src/transl/EN/components/scroll-bar.md
+
+# scroll-bar
+
+
+Scroll bar component. This component can display a scroll bar when there is a lot of scrolling content, and the user can control the scrolling of the content through the scroll bar.
+
+
+## property
+
+
+### `value` <decl type="number" set get listen />
+
+
+The current value of the scroll bar, which is a value between `min` and `max`. The default value is $0$.
+
+
+### `min` <decl type="number" set />
+
+
+The minimum value of the scroll bar, which should be no greater than `max`. The default value is $0$.
+
+
+### `max` <decl type="number" set />
+
+
+The maximum value of the scroll bar. This value should be no less than `min`. The default value is $100$.
+
+
+### `pagestep` <decl type="number" set />
+
+
+The scroll step size of the scroll bar, that is, the distance of each scroll. The default value is $10$.
+
+============================================================
+FILE_PATH: src/transl/EN/components/p.md
+
+# p
+
+
+Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text crossing lines when set as an inline element. If you need to implement rich text typesetting, you should consider using components such as `span`.
+
+
+## property
+
+
+### `text` <decl type="string" get set/>
+
+
+Set text content and support the following two writing methods.
 
 
 ``` html
-<a href="page1">跳转到 page1 页面</a>
+<p text="Hello Glyphix"></p>
+<p>Hello Glyphix</p>
 ```
 
 
-Unlike the `<a>` tag in the Web, the `a` component only supports page jumps but not hyperlink jumps.
+<glyphix id="p" :height="70" inline>
 
-
-The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings of the form `PageName?key=value`, which are URIs consisting of the page name (as the path field) and the query field. The query field of the URI will be parsed as the page's jump parameter. For example, when clicking this `<a>` element:
 
 
 ``` html
-<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+<div>
+  <p text="Hello Glyphix"></p>
+  <p>Hello Glyphix</p>
+</div>
 ```
 
 
-Equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
+</glyphix>
+
+
+
+### `color` <decl type="string" get set/>
+
+
+Set text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shortcut for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
+
+
+### `lines` <decl type="number" get set/>
+
+
+Set the maximum number of lines of text. Text exceeding this number will be truncated or omitted. This property is a shortcut for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
+
+
+### `text-align` <decl type="string" set/>
+
+
+Set the text alignment, supporting `left`, `center`, `right` and other values. This property is a shortcut for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
+
+
+### `font-size` <decl type="string" set/>
+
+
+Set the text font size, supporting `12px`, `1.5em` and other CSS font size values. This property is a shortcut for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
+
+
+### `font-weight` <decl type="number" set/>
+
+
+Set the text font weight. Currently, only integer values ​​are supported, such as `400`, `600`, etc. This property is a shortcut for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
+
+
+## Tips
+
+
+### size control
+
+
+In general, do not manually set the height of the `p` component, e.g.
+``` css
+p.my-paragraph {
+  height: 48px;
+  font-size: 32px;
+}
+```
+On the face of it, this sets a height for the `p` component that is larger than the font size, but what happens is:
+- For single-line text, the actual height of some fonts may exceed the font size, and even heights of `48px` may appear vertically clipped.
+- For multi-line text, setting a fixed height will cause the multi-line text to be cropped and cannot be displayed completely.
+
+
+If you wish to control the number of lines of text displayed, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to implement text truncation and omission instead of setting a fixed height.
+
+
+### Text clipping animation <version-badge since="0.9"/>
+
+
+You can use the [`width`](/framework/generic/styles.md#width) attribute with the [`transition`](/framework/component/prop-modifier.md#transition-修饰符) modification to implement text clipping animation. For example:
+
+
+``` html
+<p :width="state ? 240 : 0"
+   width.transition="{duration: 2.0}">
+  Hello Glyphix!
+</p>
+```
+
+
+With the `max-lines: 1` style, you can achieve text cropping animation from left to right. But there is a problem with this animation: when the width is insufficient, the last character will be discarded instead of being cropped. The current workaround is to put the text content in a child component and animate the width of the parent component:
+
+
+``` html
+<div :width="state ? 240 : 1"
+     width.transition="{duration: 2.0}">
+  <p style="max-lines: 1">Hello Glyphix!</p>
+</div>
+```
+
+
+<glyphix id="p-width-transition" title="文字裁剪动画" height="120">
+
+
+``` html
+<div class="container">
+  <p class="animated-text"
+     :width="state ? 240 : 0"
+     width.transition="{duration: 2.0}">
+    Hello Glyphix!
+  </p>
+  <div class="animated-text"
+       :width="state ? 240 : 1"
+       width.transition="{duration: 2.0}">
+    <p>Hello Glyphix!</p>
+  </div>
+</div>
+```
 
 
 ``` js
-router.push({
-  uri: 'page1',
-  params: {text: 'test-text', message: 'hello'}
-})
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2500)
+  }
+}
 ```
+
+
+```css
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.animated-text {
+  margin: 4px;
+  border: 1px solid #f00;
+}
+
+p {
+  max-lines: 1;
+  text-overflow: clip;
+}
+````
+
+
+</glyphix>
+
+
+
+However, when using a `div` element as a parent component, there is a problem with the animation: when the width is `0`, the layout size is calculated as `(width: 0, height: 0)`, which causes the element to be unable to occupy the vertical space and vertical jumps at the beginning of the animation. The solution is to set the width to a very small value (e.g. `1px` ) instead of `0` so that the element can occupy the vertical space and thus avoid the bounce problem.
+
+============================================================
+FILE_PATH: src/transl/EN/components/div.md
+
+# div
+
+
+`div` is the most basic container component. `div` supports subcomponents and layout, but does not support scrolling (content will be cropped directly if it exceeds the boundary). If you want content to scroll, use the [scroll](scroll) component.
+
+
+## Things to note
+
+
+### text display
+
+
+The `div` component cannot be used directly to display text. Instead, text components such as `p` must be used to display text, for example:
+
+
+```html
+<!-- 错误的写法，不会显示文本 -->
+<div>text content.</div>
+<!-- 正确的写法 -->
+<p>text content.</p>
+```
+
+
+However, if `div` has multiple child elements, you can use text as its child element:
+
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+
+<Glyphix id="components-div-text-element" height="48" width="360" inline >
+
+
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+
+</Glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/image-animator.md
+
+# image-animator
+
+
+The `image-animator` component is used to play a set of picture sequence frame animations. The component is an inline element by default.
+
+
+<glyphix id="image-animator-1" height="190" width="360" >
+
+
+
+```html
+<div class="flex-column">
+  <div class="frame-box">
+    <image-animator :images="frames" :play="play" :duration="100" />
+  </div>
+  <div>
+    <button on:click="play = 'start'">start</button>
+    <button on:click="play = 'pause'">pause</button>
+    <button on:click="play = 'stop'">stop</button>
+  </div>
+</div>
+```
+
+
+```js
+export default {
+  data: {
+    play: "stop",
+  },
+  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
+};
+```
+
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frame-box {
+  border: 2px solid lightgray;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+```
+
+
+</glyphix>
+
+
+
+## property
+
+
+### `images` <decl type="string[]" set />
+
+
+Set the sequence frame picture collection. Each element of `images` is the path or URI of the frame image. Usually, the size of each frame is the same.
+
+
+Supports images in PNG or JPEG format.
+
+
+If the sequence frame does not change, it is recommended to make it a non-reactive property to save memory:
+
+
+```js
+export default {
+  // frames is a non-responsive property of the component
+  frames: [
+    "/assets/sprite-1.png",
+    "/assets/sprite-2.png",
+    "/assets/sprite-3.png",
+  ],
+};
+```
+
+
+The advantage of this is that multiple component objects will share the same `frames` array object (responsive properties will be copied to each component instance). Sequence frames should be written in a `data` object only if they really require responsiveness.
+
+
+If the sequence frames are encoded sequentially, you can use this trick to simplify the creation of the sequence frame array:
+
+
+```js
+export default {
+  // 4-frame sequence numbered starting from 0
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
+  // Alternatively, a sequence of 4 frames numbered starting from 1
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
+};
+```
+
+
+Play the animation by passing the `frames` array to the `images` attribute in the component template to specify the sequence frames:
+
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+
+::: note
+
+The `images` attribute currently does not support the `ImageFrame` structure of Quick Apps, so you cannot use frame collection definitions such as `[{ src: '...' },...]`.
+:::
+
+
+
+### `duration` <decl type="number" get set />
+
+
+Specify the playback duration of each frame in milliseconds.
+
+
+### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
+
+
+Set the playback status, supporting start, pause, and end status. `image-animator` is in the `stop` state initially, so it will automatically stop at the first frame position of [`images`](#images).
+
+
+| value | description |
+| :-------: | ---------------------- |
+
+| `'start'` | Start playing from the current frame. |
+| `'pause'` | Pause playback and display the current frame. |
+| `'stop'` | Stop playback and display the first frame. |
+
+
+As shown above, `play` only supports three enumeration values: `'start`, `'pause'` or `'stop'`. But the following trick can be used to automatically play animations:
+
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+
+That is, directly write a `play` attribute with no value, which is equivalent to the [隐式属性](/framework/component/template.md#隐式属性值) writing method of `:play="true"`. `true` This boolean type is always converted to the default `'start'` enumeration value. This writing method is very suitable for scenes that require automatic playback of sequence frame animation.
+
+
+### `iteration` <decl type="number" set />
+
+
+Set the number of repeat playback times for all sequence frames in `images`. When the upper limit is reached, it will automatically switch to `'pause'` mode. `0` means unlimited play times.
+
+
+## Inherited properties
+
+
+`image-animator` has the same [继承属性](/components/image.md#继承的属性) behavior as `image`.
+
+
+## CSS description
+
+
+`image-animator` has the same [CSS 行为](/components/image.md#css-说明) as `image`.
+
+============================================================
+FILE_PATH: src/transl/EN/components/drawer-navigation.md
+
+# drawer-navigation
+
+
+A subcomponent of [`drawer`](drawer), used to display specific drawer contents.
+
+
+## property
+
+
+### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
+
+
+The `direction` attribute is used to set the direction of `drawer-navigation`. The optional values ​​are `'left'`, `'right'`, `'up'`, and `'down'`.
+
+
+| value | description |
+| :-------: | ------------------------------------------------ |
+
+| `'left'` | The drawer-navigation on the left side of the screen is used to respond to the gesture of sliding from left to right. |
+| `'right'` | The drawer-navigation on the right side of the screen is used to correspond to the gesture of sliding from right to left. |
+| `'up'` | The drawer-navigation at the bottom of the screen is used to respond to the gesture of sliding from bottom to top. |
+| `'down'` | The drawer-navigation on the top of the screen is used to respond to the gesture of sliding from top to bottom. |
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/text.md
+
+# text
+
+
+Text components, `text` components and [`p` 组件](p) are identical except for the component name.
+
+============================================================
+FILE_PATH: src/transl/EN/components/picker.md
+
+# picker
+
+
+Text selector component. This component displays a group of text. Clicking on the middle text item will trigger the selection event, and the sliding operation can make all text items scroll and display.
+
+
+::: warning
+
+`picker` The functionality of the component has not been verified and it is not maintained.
+:::
+
+
+
+## property
+
+
+### `range` <decl type="string[]" set />
+
+
+All strings in the `range` attribute value will be displayed in the `picker` component. The user can manipulate the `picker` component to scroll or select these strings.
+
+
+`range` refers to [`index` 属性](#index) for the indexing method of strings in attribute values.
+
+
+### `loop` <decl type="boolean" set />
+
+
+Configure whether the `picker` component is displayed in a loop (i.e. infinitely long). When the value of this attribute is `true`, the loop display is enabled, and the default is `false`.
+
+
+### `value` <decl type="string" listen />
+
+
+Monitor the text of the current selected item. This monitoring will be triggered when the selected item changes during scrolling operation. The function of this attribute can also be implemented through the `on:index="handle(rangeData[$event])"` method.
+
+
+### `index` <decl type="Integer" get set listen />
+
+
+`picker` The selected item index value of the component. The indexing rules are: [`range` 属性](#range) The index value of the first string item in the attribute value array is $0$, and the indexes of other strings are increased by one in sequence. Setting the `index` attribute can specify the selected item of the `picker` component, and you can also listen to changes in this attribute to detect changes in the selected item caused by scrolling operations.
+
+
+### `scroll` <decl type="{ x: number y: number }" get set listen />
+
+
+The scrolling operation can be monitored through the `scroll` attribute, and the `picker` component can also be manipulated in code to display the scrolling effect. Similar to aligned list components, the `picker` operation of `scroll` also aligns to the nearest item.
+
+
+Since the `picker` component only supports vertical mode, the `x` field of the `scroll` attribute value is always `0`.
+
+
+### `scrolled` <decl type="boolean" read listen />
+
+
+Monitor whether `picker` is in the scrolling state through the `scrolled` attribute. The attribute value triggered by the event is `true` which means that `picker` is scrolling, otherwise it means that `picker` has stopped scrolling.
+
+
+The scrolling operation caused by user touch and scrolling through the `scroll` attribute will trigger the `scrolled` event. When `picker` stops from the scrolling state, the parameter value of the `scrolled` event is `false`.
+
+
+### `damping` <decl type="number" set />
+
+
+Set the damping coefficient of `picker` scroll animation. The valid value range is $[ 0.1, 50]$ (unsupported values ​​will be automatically modified to the upper and lower limits). The default value is $ 1.5 $. A larger damping coefficient will cause the animation to stop faster, and the default damping coefficient value can produce an inertial effect with a longer distance and longer duration.
+
+
+The damping coefficient should be set to a constant and not modified. Modifying the damping coefficient will not affect the rebound animation.
+
+============================================================
+FILE_PATH: src/transl/EN/components/drawer.md
+
+# drawer
+
+
+The drawer component is hidden by default and can display content by sliding.
+drawer is the basic drawer component. Drawer supports sub-components and layouts. You can set up 4 drawer-navigation components in the drawer to display drawers in four positions: top, bottom, left and right.
+
+
+[`drawer`](drawer) The sliding speed of the component follows the sliding speed of the gesture. The faster the sliding speed of the gesture, the faster the sliding speed of the component.
+
+
+### Example
+
+
+The following example demonstrates the functionality of the drawer
+
+
+<glyphix id="components-drawer" height="360" width="360" >
+
+
+
+``` html
+ <drawer class="drop-down">
+      <drawer-navigation direction="down" class="drop-down1">
+        <p>dawn panel</p>
+      </drawer-navigation>
+      <drawer-navigation direction="up" class="drop-down1">
+        <p>up panel</p>
+      </drawer-navigation>
+       <drawer-navigation direction="left" class="drop-down1">
+        <p>left panel</p>
+      </drawer-navigation>
+       <drawer-navigation direction="right" class="drop-down1">
+        <p>right panel</p>
+      </drawer-navigation>
+</drawer>
+```
+``` css
+.drop-down {
+    background-color: pink;
+  }
+.drop-down1 {
+    background-color: blue;
+  }
+p {
+  background-color: lightgreen;
+  text-align: center;
+  margin: 10px;
+}
+```
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/switch.md
+
+# switch
+
+
+Switch selects components, defaulting to inline elements. Used to represent on/off status and allow the user to switch between the two statuses. The function of `switch` is similar to that of `checkbox`, but the interaction effects and intentions are different, that is, they express switches and checks respectively.
+
+
+<glyphix id="components-switch" height="30">
+
+
+
+``` html
+<div>
+  <switch ::value="enabled" />
+  <span>switch state: {{ enabled ? 'on' : 'off' }}</span>
+</div>
+```
+
+
+``` js
+export default {
+  data: {
+    enabled: false
+  }
+}
+```
+</glyphix>
+
+
+
+::: note
+
+The `switch` component is typically styled as shown in the example, but may vary depending on the device. In particular, it should be noted that the width of `switch` may be different on different devices, and developers should reserve appropriate layout margin.
+:::
+
+
+
+## property
+
+
+### `value` <decl type="boolean" set get listen/>
+
+
+Indicates the status of `switch`. When the value is `true`, `switch` is in the on state, otherwise it is in the off state. When the `value` attribute is not specified, the `switch` component is turned off by default.
+
+
+### `checked` <decl type="boolean" set get/>
+
+
+This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
+
+
+### `change` <decl type="{ checked: boolean }" get listen/>
+
+
+This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
+
+
+## CSS behavior
+
+
+The overall style of the `switch` component is determined by the system and is not controlled by the developer, just like the style differences between [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) and [Material 3](https://m3.material.io/components/switch/overview). Glyphix allows the color of `switch` to be customized in CSS, and the size of `switch` to be resizable.
+
+
+### CSS properties
+
+
+#### `color`
+
+
+Set the slider color of the `switch` component. Unlike the general CSS [`color`](/framework/generic/styles.md#color), the `color` attribute of `switch` does not support inheritance, so you must define it on the current `switch` component.
+
+
+<glyphix id="components-switch-color" height="36" title="siwtch 滑块颜色">
+
+
+``` html
+<div>
+  red color: <switch class="red"/>,
+  not inherited: <switch/>
+</div>
+```
+
+
+``` css
+div {
+  color: red; /* 注意 switch 不会继承 color 属性 */
+}
+
+.red {
+  color: red; /* 必须在 switch 组件的样式上定义 color */
+}
+```
+</glyphix>
+
+
+
+#### `background-color`
+
+
+Controls the background color of the `switch` component, see the documentation of the [`active`](#active) pseudo-class for details.
+
+
+#### `font-size`
+
+
+You can adjust the size of `switch` through the [`font-size`](/framework/generic/styles.md#font-size) CSS property to match the inline text size. The following example demonstrates the relationship between `font-size` and `switch` sizes:
+
+
+<glyphix id="components-switch-size" height="100" title="font-size 与 siwtch 大小">
+
+
+``` html
+<div>
+  <p class="title">
+    title text: <switch/> (1.25rem)
+  </p>
+  <p>
+    content text: <switch/> (1rem)
+  </p>
+</div>
+```
+
+
+``` css
+div {
+  line-height: 1.8rem;
+}
+
+.title {
+  color: #415a77; /* 注意 switch 不会继承 color 属性 */
+  font-size: 1.25rem;
+}
+```
+</glyphix>
+
+
+
+::: warning
+
+The display size of `switch` is not controlled by attributes such as `width` and `height`, but is always determined by `font-size`. Therefore, please do not manually specify size attributes such as `width` to avoid abnormal display.
+:::
+
+
+
+### CSS pseudo-class
+
+
+#### `active`
+
+
+The `active` pseudo-class is used to define the style in which `switch` is turned on. As shown in the following example, it is usually configured along with regular style rules:
+
+
+<glyphix id="components-switch-colors" height="36" title="siwtch 滑块颜色设置">
+
+
+``` html
+<div>
+  color switch: <switch/>
+</div>
+```
+
+
+``` css
+/* switch 关闭状态下的样式 */
+switch {
+  color: #415a77;
+  background-color: #bde0fe;
+}
+
+/* switch 打开状态下的样式 */
+switch:active {
+  color: #fefae0;
+  background-color: #ffafcc;
+}
+```
+</glyphix>
+
+
+
+This example uses the `color` and `background-color` CSS properties to control the color style when switching `switch`. The `switch` component will only respond to the configuration of these two CSS properties when the `active` pseudo-class is activated.
 
 
 ::: tip
 
-Please note that the value of the query field in the URI will only be parsed as a string type, so `100` in `page1?size=100` will be parsed as a string `'100'` instead of a number `100`. If you need to pass parameters of a specific type, use the [`router`](/api/system-router.md) API.
+Please define the `color` and `background-color` attributes in the normal state and `active` state at the same time, otherwise there will be no corresponding color change when `switch` is switched.
 :::
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/image.md
+
+# image
+
+
+The picture component is used to display picture elements and is centered by default. `image` components are inline elements by default.
+
+
+## property
+
+
+### `src` <decl type="string" get set />
+
+
+Set the [URI](/framework/application/resource.md) of the image. For asset images in the application package, relative paths and absolute paths are supported. The `image` component supports the common image formats PNG and JPEG.
+
+
+::: tip
+
+The `image` component only supports local image resources, unlike the Web's `img` element which can directly display network image resources. See How to [显示网络图片](#显示网络图片) in Glyphix for details.
+:::
+
+
+
+### `noCache` <decl type="boolean" get set />
+
+
+Set whether the image should be cached. By default, caching will be used to optimize image loading speed. The `image` component will not use the cache when the `noCache` attribute is turned on, and the image will always be reloaded from the file after changing the [`src`](#src) attribute.
+
+
+Image caching is a technology that optimizes loading speed and reduces memory usage. When an image with the same URI is already loaded in the system, the `image` component with caching enabled will directly use the resource. However, image files downloaded from the Internet with fixed names and possibly changing contents (such as `internal://cache/avatar.png` for user avatars) usually need to enable the `noCache` attribute to ensure correct behavior.
+
+
+Even if the `noCache` attribute is turned on, the `image` component still will not detect updates to the image file content. In this case, you need to manually change the [`src`](#src) attribute. Considering that reactive frameworks filter identical assignments, you have to use a trick like this:
+``` html
+<!-- 假设这是需要更新显示的图片，no-cache 属性是必须的。 -->
+<image :src="avatarImage" no-cache />
+```
+
+
+``` js
+const avatarImage = 'internal:// cache/ avatar.png ' // Assume this is a picture downloaded from the Internet
+
+export default {
+  data: {
+    avatarImage: avatarImage
+  },
+  // Call this method after the avatar download is completed to update the interface
+  onAvatarDownloaded() {
+    this.avatarImage = null // A new value must be assigned first
+    this.avatarImage = avatarImage // Reassign to the correct URI
+  }
+}
+```
+In the above example, the responsive attribute `this.avatarImage` is first changed to `null` and then reassigned, so that the value changes, thereby bypassing the optimization mechanism of the responsive framework and enabling image updates.
+
+
+
+
+::: warning
+
+Resources with fixed URIs must be updated using this technique, otherwise the displayed content may not change. To be on the safe side, if the resource paths obtained from the network may be duplicated, you also need to use this technique to ensure that the interface is updated.
+
+
+In addition, you must wait for the image download or file writing to be completed before updating the `src` attribute of the `image` component, otherwise the interface cannot be updated normally.
+:::
+
+
+
+### `async` <decl type="boolean" get set />
+
+
+Load image resources asynchronously. This mode can ensure that image loading will not block the UI thread and improve the smoothness of the interface. However, compared to the default synchronous loading mode, images loaded asynchronously do not display the actual content, so they are not suitable for all interfaces.
+
+
+Asynchronous loading mode is suitable for images downloaded from the network. Unlike image assets that are automatically optimized when the application is packaged, web images are usually common formats such as PNG or JPEG that are slow to decode. Synchronously decoding network images will be very laggy, and in such scenarios there is usually no need to display images immediately.
+
+
+`async` can be used together with the [`noCache`](#nocache) attribute, since the latter is also mainly used for web images:
+``` html
+<image :src="avatarImage" no-cache async />
+```
+
+
+## Inherited properties
+
+
+These properties are inherited from the native component's [generic properties](/framework/generic/properties.md), but the`image` component handles these properties specially.
+
+
+### `opacity` <decl type="number" set />
+
+
+Set the transparency of the image, the value range is $[0, 1]$, where $0$ means completely transparent, $1$ means completely opaque, and the default value is $1$.
+
+
+### `transform` <decl type="string" set />
+
+
+Set the transformation effect of the image, which is equivalent to the [`transform`](/framework/generic/styles.md#transform) attribute of CSS.
+
+
+## CSS description
+
+
+### Unsupported common properties
+
+
+Compared with other native components, `image` is special. It does not support common attributes such as `background-color` and `border`. This is also very different from web standards. Specifically, the following CSS properties are not supported:
+
+
+- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
+- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
+
+
+This means that you cannot add a background color or image to the `image` component by setting CSS properties, nor can you set a border style for it. However, the `image` component supports the [`border-radius`](/framework/generic/styles.md#border-radius) attribute.
+
+
+### Special properties
+
+
+The `image` component supports other CSS properties that can be used with non-container components, but several properties can be used to achieve special effects.
+
+
+#### `transform`
+
+
+Set the transformation of the image. When this CSS attribute is used for `image`, it has a similar effect to [`transform`](/framework/generic/styles.md#transform) for other elements, but it can be displayed normally without setting the [`transparent`](/framework/generic/styles.md#transparent) attribute.
+
+
+#### `opacity`
+
+
+Set the transparency of the image, which has the same effect as the [`opacity`](#opacity) attribute.
+
+
+#### `border-radius`
+
+
+Set the corner radius of the picture. You can use this property to add rounded corners to the picture. The usage method is the same as the general [`border-radius`](/framework/generic/styles.md#border-radius). The `image` component will always apply rounded corners to the four corners of the image, regardless of whether the aspect ratio of the image is consistent with the aspect ratio of the `image` component itself.
+
+
+#### `object-fit`
+
+
+The `image` component's `object-fit` attribute defaults to `none`, which differs from the web standard (which defaults to `fill` ). By default, the image will not be automatically scaled, but will be displayed centered at the original size. If the size exceeds the container, it will be cropped. This design is based on the consideration of MCU device characteristics:
+- **Performance first**: Image scaling usually requires additional calculations, and some devices even implement interpolation scaling through software, which will significantly reduce the frame rate.
+- **Image quality consistency**: On some devices, even scaling down can cause noticeable blurring or aliasing. The default of no scaling ensures pixel-level rendering without distortion.
+- **Memory Restricted**: Default scaling can mask resource usage issues, resulting in inadvertently loading images that are too large, wasting valuable storage and memory space.
+
+
+It is recommended to provide image resources that match the display area during the design stage, so that the image can be displayed correctly in the default state; only when necessary, the display effect should be adjusted by explicitly setting `object-fit` (such as `contain`).
+
+
+## Tips
+
+
+### Show network pictures
+
+
+#### Avatar scenes
+
+
+This section demonstrates a method that requires loading images from the network. This method is mainly used in situations such as user avatars. That is, the images have a fixed storage location locally, but the content may change. Due to the caching policy of the Glyphix runtime, you need to use the techniques in this example to ensure that the display content is updated.
+
+
+``` html
+<template>
+  <image :src="avatar" no-cache />
+</template>
+```
+
+
+``` js
+import request from '@system.request'
+
+export default {
+  data: {
+    avatar: null
+  },
+  onInit() {
+    this.downloadAvatar()
+  },
+  async downloadAvatar() {
+    const saveFile = 'internal://files/avatar.png'
+    await request.download({
+      url: 'https://example.com/url/to/avatar.png',
+      filename: saveFile,
+    }).complete
+    // For details on the techniques here, see the description of the noCache attribute.
+    this.avatar = null
+    this.avatar = saveFile
+  }
+}
+```
 
 
 ============================================================
@@ -145,6 +1147,478 @@ The codepoint color ( `color` ) and background ( `background-color` ) styles of 
 At the same time, please set a large enough padding (`padding`) to ensure easy scanning and recognition.
 :::
 
+
+============================================================
+FILE_PATH: src/transl/EN/components/slider.md
+
+# slider
+
+
+Sliding selector, defaults to block-level elements.
+
+
+## property
+
+
+### `value` <decl type="number" get set listen />
+
+
+Current value, default: $10$.
+
+
+When setting the `value` attribute, the current value of the component will be changed. You can monitor changes in the current value through the `on` instruction, which will be triggered every time the current value changes.
+
+
+### `min` <decl type="number" set />
+
+
+Minimum value, default value: $0$.
+
+
+### `max` <decl type="number" set />
+
+
+Maximum value, default value: $100$.
+
+
+### `vertical` <decl type="boolean" set />
+
+
+If the value of the `vertical` attribute is `true`, the `slider` component will be displayed vertically, otherwise it will be displayed horizontally. The default value is `false`.
+
+
+## CSS specifications
+
+
+Developers can adjust the appearance of the `slider` component through CSS.
+
+
+### Size calculation
+
+
+The default width and height of `slider` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (can also be inherited). The size of `progress` can be customized through the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
+
+
+### CSS properties
+
+
+The following CSS properties may be useful:
+- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `slider`;
+- [`color`](/framework/generic/styles.md#color) can control the color of the progress bar of `slider`;
+- [`border-radius`](/framework/generic/styles.md#border-radius) can set `slider` to a rounded border, for example `50%` will produce a semicircular border;
+
+
+Other CSS properties may be useful, such as the [`border`](/framework/generic/styles.md#border) property to style the border.
+
+
+### CSS pseudo-elements
+
+
+#### `value`
+
+
+This pseudo-element can define the `slider` progress bar alone without containing the style of the background part. For example, you can set the corner radius of the scroll bar background and the progress bar part separately to achieve the effect that the outer border has a circular line cap and the progress bar has a straight cap.
+
+
+``` css
+slider {
+  border-radius: 50%; /* 滚动条背景圆角 */
+}
+
+slider::value {
+  border-radius: 0; /* 滚动条的进度条没有圆角 */
+}
+```
+
+
+#### `thumb` <experimental/>
+
+
+The `thumb` pseudo-element is used to define the style of the `slider` slider. By default `slider` does not contain handles. To display handles you must specify the width and height of the `thumb` element:
+``` css
+slider::thumb {
+  width: 150%;
+  height: 150%;
+  border-radius: 50%;
+}
+```
+The percentage units of `width` and `height` are calculated relative to the size of the element itself. The horizontal `slider` slider width and height are calculated as a percentage based on the `height` of the element's CSS, while the vertical `slider` handle width and height are calculated as a percentage based on the `width` attribute of the element's CSS. For example, the element CSS is
+``` css
+slider {
+  width: 200px;
+  height: 24px;
+}
+```
+At this time, the width and height of the slider corresponding to `slider::thumb` above are both $24\rm{px} \times 150\% = 36\rm{px}$. The handle's fillet radius percentage size is calculated based on the handle's own size. In this example, the calculated value of the `50%` pseudo-element fillet radius of `thumb` is $36\rm{px} \times 50\%=18\rm{px}$.
+
+
+The `thumb` pseudo-element supports the `border` CSS property, but the border will not exceed the dimensions of the `thumb` pseudo-element.
+
+
+### CSS example
+
+
+The following example demonstrates some ways to customize the appearance of the progress bar through CSS.
+<glyphix id="components-slider-styles" height="180" width="480" title="Slider 样式">
+
+
+``` html
+<div>
+  <!-- 默认样式 -->
+  <slider ::value="value" />
+  <!-- 直头进度条样式 -->
+  <slider class="flat" ::value="value" />
+  <slider class="more-style" ::value="value" />
+  <p>value: {{value}}</p>
+</div>
+```
+
+
+``` css
+div > * {
+  margin: 8px;
+  padding: 6px;
+}
+
+.flat::value {
+  /* value 伪元素的圆角半径设置为 0 即可实现进度条直头效果 */
+  border-radius: 0;
+}
+
+.more-style {
+  /* 自定义圆角半径 */
+  border-radius: 30%;
+  /* slider 背景色 */
+  background-color: #b3c5d7;
+  /* slider 前景颜色 */
+  color: #b5179e;
+  /* padding 可以调整 slider 前景的边距 */
+  padding: 6px;
+  height: 1rem;
+}
+
+/* 定义滚动条滑块样式 */
+.more-style::thumb {
+  width: 300%; /* 宽高比 2:1 的胶囊形滑块 */
+  height: 150%;
+  background-color: white;
+  border: 4px solid #f3722c; /* 滑块边框 */
+  border-radius: 50%;
+}
+```
+
+
+``` js
+export default {
+  data: { value: 50 }
+}
+```
+
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/textarea.md
+
+# textarea
+
+
+`textarea` <experimental/> <version-badge since="0.9" /> is a multi-line text input component that is displayed as a block-level element by default. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up the input method interface, so you must manually edit its content. `textarea` supports operating the cursor through touch gestures (such as clicking and scrolling), and provides methods to move the cursor up, down, left, and right.
+
+
+`textarea` is suitable as a low-level component for multi-line text input, and can implement soft keyboard and cursor control according to your needs. For details, please refer to [示例](#基本示例).
+
+
+::: important compatibility
+`textarea` is an experimental extension component that is currently only available in Glyphix 0.9 and above, and is only supported by some devices.
+:::
+
+
+
+## property
+
+
+### `text` <decl type="string" get set listen />
+
+
+The `text` attribute is a string that is the currently edited text content of `textarea`. Reading or listening to this value can obtain the input text, and you can also set this property.
+
+
+Usually `text` is bidirectionally bound to a specific responsive attribute, or the text can be set through the content inside the element, such as:
+
+
+```html
+<textarea ::text="inputText" />
+```
+
+
+or
+
+
+```html
+<textarea @text="onTextChanged">{{ inputText }}</textarea>
+```
+
+
+:::tip
+
+The `text` attribute of `textarea` functions similarly to the [`value`](text-field.md#value) attribute of [`text-field`](text-field.md).
+:::
+
+
+
+### `placeholder` <decl type="string" set get />
+
+
+When the content of `textarea` is empty, `placeholder` can be used to provide a brief prompt to the user, such as a phrase such as "Please enter text."
+
+
+`placeholder` is automatically displayed when the input text is empty, so usually only a fixed content is needed, such as:
+
+
+```html
+<textarea ::text="inputText" placeholder="type here" />
+```
+
+
+### `insert` <decl type="(text: string): void" method />
+
+
+Insert a piece of text with the content `text` at the cursor, and the cursor will automatically move after the inserted text. Calling this function will trigger the `text` listening event.
+
+
+### `backspace` <decl type="(): void" method />
+
+
+Delete the character at the cursor and the cursor will automatically move forward. Calling this function will trigger the `text` listening event.
+
+
+### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
+
+
+Moves the cursor one position in the specified direction. The optional values ​​​​of the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, which correspond to the four directions of up, down, left, and right respectively.
+
+
+## Instructions for use
+
+
+### basic example
+
+
+The following example shows basic usage of `textarea`. Users can directly enter multiple lines of text in the text box, or use the virtual keyboard below to edit content: click the letter/symbol key to insert characters; the "`×`" key to delete the content at the cursor; the "`Aa`" key to switch to uppercase and lowercase; the "`1#`" key to switch to the symbol keyboard; the "`Enter`" key to insert a newline character; the arrow keys to move the cursor.
+
+
+<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea 基本示例">
+
+
+```html
+  <div class="window">
+    <textarea
+      id="textarea"
+      :placeholder="placeholder"
+      @text="onTextChanged"
+    >
+      {{ text }}
+    </textarea>
+    <div class="keyboard">
+      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
+        <button
+          class="kb-key"
+          for="key in row.keys"
+          :width="key.width ? key.width : null"
+          on:touchstart="onKeyEvent(key, 'down')"
+          on:touchend="onKeyEvent(key, 'up')"
+          on:touchcancel="onKeyEvent(key, 'up')"
+        >
+          {{ key.code ? key.code : key }}
+        </button>
+      </div>
+    </div>
+  </div>
+```
+
+
+```js
+const keyboardQwert = [
+  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
+  {
+    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboardQwertUpper = [
+  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
+  {
+    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboard123 = [
+  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
+  {
+    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+export default {
+  data: {
+    placeholder: "Enter your text here...",
+    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
+    keyboard: keyboardQwert,
+  },
+  keyboardType: "qwerty",
+
+  ta: null,
+  onReady() {
+    this.ta = this.$element("textarea");
+  },
+
+  onTextChanged() {
+    console.log("You have edited the text");
+  },
+  toggleCase() {
+    if (this.keyboardType == "qwerty") {
+      this.keyboard = keyboardQwertUpper;
+      this.keyboardType = "qwertyUpper";
+    } else if (this.keyboardType == "qwertyUpper") {
+      this.keyboard = keyboardQwert;
+      this.keyboardType = "qwerty";
+    }
+  },
+  keyboardRowStyle(row) {
+    if (row.margin)
+      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
+    return "";
+  },
+  backspaceTimer: null,
+  onKeyEvent(key, event) {
+    if (event !== "down") {
+      clearInterval(this.backspaceTimer);
+      this.backspaceTimer = null;
+      return; // skip if the key is released
+    }
+
+    if (key.code) key = key.code;
+    switch (key) {
+      case "Aa": this.toggleCase(); break;
+      case "1#":
+        this.keyboard = keyboard123;
+        this.keyboardType = "123";
+        break;
+      case "abc":
+        this.keyboard = keyboardQwert;
+        this.keyboardType = "qwerty";
+        break;
+      case "×":
+        this.ta.backspace();
+        if (event == "down") {
+          this.backspaceTimer = setTimeout(() => {
+            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
+            this.ta.backspace();
+          }, 500);
+        }
+        break;
+      case "Enter": this.ta.insert("\n"); break;
+      case "Space": this.ta.insert(" "); break;
+      case "↑": this.ta.moveCaret("up"); break;
+      case "↓": this.ta.moveCaret("down"); break;
+      case "←": this.ta.moveCaret("left"); break;
+      case "→": this.ta.moveCaret("right"); break;
+      default: this.ta.insert(key); break;
+    }
+  },
+};
+```
+
+
+```css
+.window {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+textarea {
+  flex-grow: 1;
+  padding: 6px;
+  border: 2px solid #aaa6;
+  border-radius: 12px;
+  max-height: 160px;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.kb-key {
+  flex-grow: 1;
+  background-color: #f0f0f080;
+  border: 2px solid #999;
+  border-radius: 16px;
+  text-align: center;
+  padding: 6px auto;
+  margin: 2px;
+  font-size: 0.85rem;
+  min-width: 40px;
+}
+
+.kb-key:active {
+  background-color: #0003;
+  border-color: #6663;
+}
+```
+
+
+</glyphix>
+
+
+
+We first obtain the `textarea` component object through the `$element` method in the component's `onReady()` life cycle function, because then we need to use the [`insert()`](#insert), [`backspace`](#backspace) and [`moveCaret`](#movecaret) methods to edit content and move the cursor.
+
+
+On this basis, we can call the `textarea` method in the touch event listener of the `button` component, for example:
+
+
+```html
+<button on:touchstart="ta.insert('A')">A</button>
+```
+
+
+Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout, supporting uppercase and lowercase switching and a symbol keyboard. Call the corresponding method in the touch event listening function of each key to edit the text. The arrow keys move the cursor (up, down, left, and right) through the [`moveCaret()`](#movecaret) method, and the line feed key inserts a newline character `\n` through [`insert()`](#insert).
+
+
+### The difference between text-field and text-field
+
+
+`textarea` and `text-field` are both text input components. The main differences are as follows:
+
+
+| Features | `textarea` | `text-field` |
+|------|-----------|-------------|
+
+| Number of lines of text | Single or multiple lines | Single line |
+| Line feed support | Support `\n` line feed | Line feed not supported |
+| Cursor movement | Up and down movement | Left and right movement |
+| Content attributes | `text` | `value` |
+| Password mode | Not supported | Supported `password` attribute |
+| Default display | Block-level elements | Inline elements |
 
 ============================================================
 FILE_PATH: src/transl/EN/components/button.md
@@ -421,24 +1895,264 @@ export default {
 Open the browser console and click the `inner` text again. You will find that the log of `onInnerClick` will be printed only when you let go, and it can also prevent the outer layer `button` from responding to the gesture.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/canvas.md
+FILE_PATH: src/transl/EN/components/progress-arc.md
 
-# canvas
-
-
-Canvas component, by using scripts in JavaScript, you can draw graphics, etc. on `canvas`.
+# progress-arc
 
 
-### `context`
+The `progress-arc` component is used to display a circular progress bar and defaults to a block-level element.
 
 
-**Value type**: context content obtained by canvas API
+## property
 
 
-**Action**: Setup
+### `max` <decl type="number" set />
 
 
-Sets the canvas context in which graphics are to be drawn.
+The maximum progress value that the [`value`](#value) attribute will not be greater than.
+
+
+### `min` <decl type="number" get setet />
+
+
+The minimum progress value that the [`value`](#value) attribute will not be less than.
+
+
+### `value` <decl type="number" get set listen />
+
+
+Set the progress value. The display ratio of the progress depends on the ratio of the `value` attribute in the interval from `min` to `max`, and the display ratio will be limited to $0\% \sim 100\%$. The `value` value is an integer. If a floating point value is set, only the integer part will be truncated.
+
+
+### `busy` <decl type="boolean" get set />
+
+
+Set whether the `progress-arc` component is in a busy state. In the busy state, a loading animation will be displayed instead of displaying the value of the `value` attribute. The following example demonstrates how to use a circular progress bar to simulate a loading animation:
+
+
+<glyphix id="components-progress-arc-busy" height="100" width="300" title="模拟加载动画">
+
+
+``` html
+<progress-arc busy :startAngle="0" :stopAngle="360" />
+```
+
+
+</glyphix>
+
+
+
+In this example, the difference between the start angle and the end angle of the progress bar is $360^\circ$. At this time, the typical loading animation effect can be displayed through the `busy` attribute.
+
+
+::: tip
+
+As long as the progress bar is circular, it will display a fixed busy animation effect, and the starting and ending angles have no effect.
+:::
+
+
+
+### `startAngle` <decl type="number" get set />
+
+
+The starting angle of the arc-shaped progress bar. The default value is $135$. For more information, please refer to the [角度配置](#角度配置) chapter.
+
+
+### `stopAngle` <decl type="number" get set />
+
+
+The end angle of the arc-shaped progress bar. The default value is $405$. For more information, please refer to the [角度配置](#角度配置) chapter.
+
+
+## Instructions for use
+
+
+### angle configuration
+
+
+Unlike linear [`progress`](progress.md), arc-shaped or circular progress bars need to be properly configured with `startAngle` attributes and `stopAngle` attributes to display properly. Both properties use angle units. In the screen coordinate system, $0^\circ$ points to the horizontal right direction, that is, the $3$ o'clock direction of the clock, and increases in the clockwise direction, and vice versa decreases.
+
+
+The display of `progress-arc` is a linear interpolation of the angular range based on the scale of `value` in $[\texttt{min}, \texttt{max}]$. Specifically, the user will see the highlighted angle of progress starting at `startAngle` and ending at `valueAngle`:
+
+
+$$
+
+\begin{aligned}
+
+  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
+
+  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
+
+\end{aligned}
+
+$$
+
+
+
+Therefore, if you want to display a full circle of circular progress bar, you need to make the starting and ending angles differ by $360^\circ$, even though the two angles are visually the same. Alternatively, the starting angle can be larger than the ending angle, which will reverse the direction of the progress.
+
+
+The examples below show various angle configurations in action, please note that the second example shows the reverse progress display technique.
+
+
+<glyphix id="components-progress-arc-angles" height="120" width="720" title="角度配置示例">
+
+
+``` html
+<div>
+  <p class="progress-label">{{value}}%</p>
+  <stack>
+    <p>default</p>
+    <progress-arc :value="value" />
+  </stack>
+  <stack>
+    <p>405~135</p>
+    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
+  </stack>
+  <stack>
+    <p>-45~225</p>
+    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
+  </stack>
+  <stack>
+    <p>0~360</p>
+    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
+  </stack>
+  <stack>
+    <p>-90~270</p>
+    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
+  </stack>
+</div>
+```
+
+
+``` js
+export default {
+  data: { value: 0 },
+  onInit() {
+    setInterval(() => {
+      this.value = this.value + 5
+      if (this.value > 100)
+        this.value = 0
+    }, 500)
+  }
+}
+```
+
+
+``` css
+div {
+  display: flex;
+}
+
+progress-arc {
+  width: 200px;
+  padding: 0 8px 0 8px;
+  stroke-width: 0.5rem;
+}
+
+p {
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+.progress-label {
+  width: 3.5rem;
+}
+```
+
+
+</glyphix>
+
+
+
+## CSS specifications
+
+
+### Size calculation
+
+
+The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will occupy the shorter axis, and the center of the arc-shaped progress bar will be the center of the element. By default, the size of `progress-arc` may be close to one character, which will lead to very weird display effects, so it is usually necessary to explicitly specify the width and height in CSS, or use other reasonable layout strategies.
+
+
+::: tip
+
+It's best to specify a reasonable width and height for the `progress-arc` component, otherwise it may not be recognized. At a minimum, the `width` CSS property should also be set, and the component's layout strategy will automatically use the $1:1$ aspect ratio.
+:::
+
+
+
+### CSS properties
+
+
+The appearance of the `progress-arc` component can be adjusted via CSS.
+
+
+#### `stroke-width`
+
+
+This property specifies the arc outline width of the `progress-arc` component. The value type is [长度](/framework/render/style-and-layout.md#长度) and does not support percentage units.
+
+
+::: tip
+
+If you want the drawing width of the `progress-arc` component to be proportional to the font size, it is recommended to use the [`rem`](/framework/application/font-config.md#rem-字号单位) length unit, such as `0.15rem`.
+:::
+
+
+
+#### `color`
+
+
+Set `progress-arc` to highlight the color of the progress bar. By default, the system theme color will be used.
+
+
+#### `background-color`
+
+
+Set the color of the `progress-arc` background progress bar, which will be configured according to the system theme by default.
+
+
+### CSS pseudo-elements
+
+
+#### `value`
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/input.md
+
+# input
+
+
+The default is an inline element, which provides an interactive interface and receives user input.
+
+
+## property
+
+
+### `type` <decl type="'checkbox' | 'radio'" set />
+
+
+Controls that can be set to the above value types, the actual form of the final `input` component is determined according to the set type.
+
+
+### `name` <decl type="string" set />
+
+
+Set the `input` component name.
+
+
+### `checked` <decl type="boolean" set />
+
+
+The checked status of the current component can trigger the checked pseudo-class, which takes effect when the type is checkbox. When set to `on`, the checkbox is checked by default.
+
+
+### `value` <decl type="string" set />
+
+
+Set the value of the `input` component.
 
 ============================================================
 FILE_PATH: src/transl/EN/components/checkbox.md
@@ -654,310 +2368,80 @@ When the `checked` attribute is set (note that it is not cleared), the `indeterm
 The checkbox is an inline element by default, its display size is determined by the `font-size` CSS property, and it will be aligned with the display baseline of the text. Please do not manually specify attributes such as `width` and `height`, otherwise the display may be confused.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/collapsible-header.md
+FILE_PATH: src/transl/EN/components/qrcode.md
 
-# collapsible-header
-
-
-The `collapsible-header` component is used to add a collapsible title bar to the scrolling list. This effect is used to provide an interactive effect that saves the view area for watch-type devices and improves the user experience.
+# qrcode
 
 
-::: warning
+The `qrcode` component is used to display the [QR Code](https://en.wikipedia.org/wiki/QR_code) QR code. This component can display any text data and is suitable for displaying information such as website addresses, payment codes, login scan code links, etc.
 
-<experimental /> This is an experimental component, do not use it in ways not demonstrated in this document.
-:::
 
+In a fluid layout, the `qrcode` component defaults to a block-level element (`block`) and will be displayed on a separate line.
 
 
 ## property
 
 
-This component supports [通用属性](/framework/generic/properties.md) and has no dedicated attributes.
+### `value` <decl type="string" get set />
 
 
-## How to use
+Set the text data to be displayed as a QR code. The `qrcode` component will automatically select the appropriate version based on the length and length of the data. Currently, the highest supported version is $12$.
 
 
-There must be two subcomponents in the `collapsible-header` component, otherwise unexpected effects may occur. Specific examples are as follows:
+## CSS description
 
 
-```html
-<collapsible-header>
-  <p>这是可折叠的标题</p>
-  <scroll> ... </scroll>
-</collapsible-header>
-```
+To make the QR code easy to scan, the CSS properties of the `qrcode` component should be set correctly, including:
+- `color`: The code point color of the QR code, generally set to black (`black` or `#000`);
+- `background-color`: The background color of the QR code is usually white (`white` or `#fff`);
+- `padding` / `margin`: Sufficient internal and external margins can avoid confusion between the QR code and other elements and increase the scanning recognition rate;
+- `width` / `height`: The size of the QR code must be large enough to facilitate shooting.
 
 
-The first child element is a collapsible title, and the second element must be a scrollable container such as [`scroll`](/components/scroll.md). Here is a specific example:
+By default, each code point (module) of the QR code component will occupy the range of $4\rm{px}\times 4\rm{px}$, which may only be a barely recognizable size on a watch. However, layout strategies such as flex may reduce the size of the QR code, so developers are recommended to manually set the `width` / `height` properties of the QR code component as needed and test on the device.
 
 
-<glyphix id="components-collapsible-header-1" height="360" width="360" title="可折叠标题栏">
+The following example shows how to use the QR code component. Please note that various margins are set for the `qrcode` component in CSS. This is to ensure that there is enough space between the QR code and other interface elements to avoid interfering with scanning.
 
 
-```html
-<collapsible-header>
-  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
-  <scroll scroll-snap="center" deformation="fisheye">
-    <p for="x in 20" class="item">item {{ x + 1 }}</p>
-  </scroll>
-</collapsible-header>
-```
-
-
-```js
-import prompt from "@system.prompt";
-
-export default {
-  clickTitle() {
-    prompt.showToast({ message: "title clicked" });
-  }
-}
-```
-
-
-```css
-.title-bar {
-  margin: 56px auto auto;
-  transparent: true;
-  font-size: 1.5rem;
-}
-
-.item {
-  height: 33.3%;
-  background-color: #ddd;
-  border-radius: 20%;
-  margin: 8px;
-  transparent: true;
-  padding: 12px;
-  text-align: center;
-}
-```
-
-
-</glyphix>
-
-
-
-### Principle description
-
-
-`collapsible-header` accepts two child components, the first of which is a collapsible title bar, and the second must be a scrollable component similar to `scroll`. `collapsible-header` combines these two components and manipulates the display of the collapsible title bar as the list scrolls.
-
-
-You can use something like Fluid Layout to control the position of the title bar, for example:
-
-
-```css
-/* 元素的顶部间距为 48px，左右居中，适用于圆形屏幕。 */
-margin: 48px auto auto;
-/* 元素左侧和顶部间距为 12px，适用于方型屏幕。 */
-margin: 12px auto auto 12px;
-```
-
-
-Set the above style to the title bar element according to actual needs to achieve a specific alignment effect. You can also use a complex component containing child elements as a title bar, for example using a component containing a back button and page title text. But be aware that when the title bar is clicked, the click event can be sent to both the scroll list and the title bar. If there is a conflict, it can be resolved by preventing the event from bubbling.
-
-
-### Things to note
-
-
-You must provide both subcomponents for `collapsible-header` as specified above, and in the correct order. In addition, since the collapsible title bar and the underlying scrolling list are displayed stacked, this may cause the first element of the list to overlap with the title bar. When necessary, developers should consider some kind of placeholder method to avoid overlap, and centered `scroll` [吸附模式](/components/scroll.md#scrollsnap) ( `scroll-snap="center"` ) can also avoid overlap.
-
-============================================================
-FILE_PATH: src/transl/EN/components/div.md
-
-# div
-
-
-`div` is the most basic container component. `div` supports subcomponents and layout, but does not support scrolling (content will be cropped directly if it exceeds the boundary). If you want content to scroll, use the [scroll](scroll) component.
-
-
-## Things to note
-
-
-### text display
-
-
-The `div` component cannot be used directly to display text. Instead, text components such as `p` must be used to display text, for example:
-
-
-```html
-<!-- 错误的写法，不会显示文本 -->
-<div>text content.</div>
-<!-- 正确的写法 -->
-<p>text content.</p>
-```
-
-
-However, if `div` has multiple child elements, you can use text as its child element:
-
-
-```html
-<div>
-  first element,
-  <span style="color: #f0f">second element.</span>
-</div>
-```
-
-
-<Glyphix id="components-div-text-element" height="48" width="360" inline >
-
-
-
-```html
-<div>
-  first element,
-  <span style="color: #f0f">second element.</span>
-</div>
-```
-
-
-</Glyphix>
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/drawer-navigation.md
-
-# drawer-navigation
-
-
-A subcomponent of [`drawer`](drawer), used to display specific drawer contents.
-
-
-## property
-
-
-### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
-
-
-The `direction` attribute is used to set the direction of `drawer-navigation`. The optional values ​​are `'left'`, `'right'`, `'up'`, and `'down'`.
-
-
-| value | description |
-| :-------: | ------------------------------------------------ |
-
-| `'left'` | The drawer-navigation on the left side of the screen is used to respond to the gesture of sliding from left to right. |
-| `'right'` | The drawer-navigation on the right side of the screen is used to correspond to the gesture of sliding from right to left. |
-| `'up'` | The drawer-navigation at the bottom of the screen is used to respond to the gesture of sliding from bottom to top. |
-| `'down'` | The drawer-navigation on the top of the screen is used to respond to the gesture of sliding from top to bottom. |
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/drawer.md
-
-# drawer
-
-
-The drawer component is hidden by default and can display content by sliding.
-drawer is the basic drawer component. Drawer supports sub-components and layouts. You can set up 4 drawer-navigation components in the drawer to display drawers in four positions: top, bottom, left and right.
-
-
-[`drawer`](drawer) The sliding speed of the component follows the sliding speed of the gesture. The faster the sliding speed of the gesture, the faster the sliding speed of the component.
-
-
-### Example
-
-
-The following example demonstrates the functionality of the drawer
-
-
-<glyphix id="components-drawer" height="360" width="360" >
+<glyphix id="qrcode-1" :height="450" :width="350">
 
 
 
 ``` html
- <drawer class="drop-down">
-      <drawer-navigation direction="down" class="drop-down1">
-        <p>dawn panel</p>
-      </drawer-navigation>
-      <drawer-navigation direction="up" class="drop-down1">
-        <p>up panel</p>
-      </drawer-navigation>
-       <drawer-navigation direction="left" class="drop-down1">
-        <p>left panel</p>
-      </drawer-navigation>
-       <drawer-navigation direction="right" class="drop-down1">
-        <p>right panel</p>
-      </drawer-navigation>
-</drawer>
-```
-``` css
-.drop-down {
-    background-color: pink;
-  }
-.drop-down1 {
-    background-color: blue;
-  }
-p {
-  background-color: lightgreen;
-  text-align: center;
-  margin: 10px;
-}
-```
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/image-animator.md
-
-# image-animator
-
-
-The `image-animator` component is used to play a set of picture sequence frame animations. The component is an inline element by default.
-
-
-<glyphix id="image-animator-1" height="190" width="360" >
-
-
-
-```html
-<div class="flex-column">
-  <div class="frame-box">
-    <image-animator :images="frames" :play="play" :duration="100" />
-  </div>
-  <div>
-    <button on:click="play = 'start'">start</button>
-    <button on:click="play = 'pause'">pause</button>
-    <button on:click="play = 'stop'">stop</button>
-  </div>
+<div>
+  <qrcode :value="text"/>
+  <p>{{ text }}</p>
 </div>
 ```
 
 
-```js
+``` js
 export default {
   data: {
-    play: "stop",
-  },
-  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
-};
+    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
+  }
+}
 ```
 
 
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.frame-box {
-  border: 2px solid lightgray;
-  border-radius: 8px;
+``` css
+div {
+  background-color: black;
   padding: 8px;
 }
 
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
+qrcode {
+  margin: 16px;
+  padding: 16px;
+  color: black; /* 将二维码前景色设置为黑色 */
+  background-color: white; /* 将二维码背景色设置为白色 */
+  border-radius: 16px;
 }
 
-button:active {
-  opacity: 0.5;
+p {
+  color: white;
+  font-size: 0.75rem;
 }
 ```
 
@@ -966,405 +2450,12 @@ button:active {
 
 
 
-## property
-
-
-### `images` <decl type="string[]" set />
-
-
-Set the sequence frame picture collection. Each element of `images` is the path or URI of the frame image. Usually, the size of each frame is the same.
-
-
-Supports images in PNG or JPEG format.
-
-
-If the sequence frame does not change, it is recommended to make it a non-reactive property to save memory:
-
-
-```js
-export default {
-  // frames is a non-responsive property of the component
-  frames: [
-    "/assets/sprite-1.png",
-    "/assets/sprite-2.png",
-    "/assets/sprite-3.png",
-  ],
-};
-```
-
-
-The advantage of this is that multiple component objects will share the same `frames` array object (responsive properties will be copied to each component instance). Sequence frames should be written in a `data` object only if they really require responsiveness.
-
-
-If the sequence frames are encoded sequentially, you can use this trick to simplify the creation of the sequence frame array:
-
-
-```js
-export default {
-  // 4-frame sequence numbered starting from 0
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
-  // Alternatively, a sequence of 4 frames numbered starting from 1
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
-};
-```
-
-
-Play the animation by passing the `frames` array to the `images` attribute in the component template to specify the sequence frames:
-
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-
-::: note
-
-The `images` attribute currently does not support the `ImageFrame` structure of Quick Apps, so you cannot use frame collection definitions such as `[{ src: '...' },...]`.
-:::
-
-
-
-### `duration` <decl type="number" get set />
-
-
-Specify the playback duration of each frame in milliseconds.
-
-
-### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
-
-
-Set the playback status, supporting start, pause, and end status. `image-animator` is in the `stop` state initially, so it will automatically stop at the first frame position of [`images`](#images).
-
-
-| value | description |
-| :-------: | ---------------------- |
-
-| `'start'` | Start playing from the current frame. |
-| `'pause'` | Pause playback and display the current frame. |
-| `'stop'` | Stop playback and display the first frame. |
-
-
-As shown above, `play` only supports three enumeration values: `'start`, `'pause'` or `'stop'`. But the following trick can be used to automatically play animations:
-
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-
-That is, directly write a `play` attribute with no value, which is equivalent to the [隐式属性](/framework/component/template.md#隐式属性值) writing method of `:play="true"`. `true` This boolean type is always converted to the default `'start'` enumeration value. This writing method is very suitable for scenes that require automatic playback of sequence frame animation.
-
-
-### `iteration` <decl type="number" set />
-
-
-Set the number of repeat playback times for all sequence frames in `images`. When the upper limit is reached, it will automatically switch to `'pause'` mode. `0` means unlimited play times.
-
-
-## Inherited properties
-
-
-`image-animator` has the same [继承属性](/components/image.md#继承的属性) behavior as `image`.
-
-
-## CSS description
-
-
-`image-animator` has the same [CSS 行为](/components/image.md#css-说明) as `image`.
-
-============================================================
-FILE_PATH: src/transl/EN/components/image.md
-
-# image
-
-
-The picture component is used to display picture elements and is centered by default. `image` components are inline elements by default.
-
-
-## property
-
-
-### `src` <decl type="string" get set />
-
-
-Set the [URI](/framework/application/resource.md) of the image. For asset images in the application package, relative paths and absolute paths are supported. The `image` component supports the common image formats PNG and JPEG.
-
-
 ::: tip
 
-The `image` component only supports local image resources, unlike the Web's `img` element which can directly display network image resources. See How to [显示网络图片](#显示网络图片) in Glyphix for details.
-:::
+The codepoint color ( `color` ) and background ( `background-color` ) styles of **high contrast** QR code components should always be set explicitly. To avoid deviations between the device's default style theme and inherited style attributes, resulting in reduced recognition.
 
 
-
-### `noCache` <decl type="boolean" get set />
-
-
-Set whether the image should be cached. By default, caching will be used to optimize image loading speed. The `image` component will not use the cache when the `noCache` attribute is turned on, and the image will always be reloaded from the file after changing the [`src`](#src) attribute.
-
-
-Image caching is a technology that optimizes loading speed and reduces memory usage. When an image with the same URI is already loaded in the system, the `image` component with caching enabled will directly use the resource. However, image files downloaded from the Internet with fixed names and possibly changing contents (such as `internal://cache/avatar.png` for user avatars) usually need to enable the `noCache` attribute to ensure correct behavior.
-
-
-Even if the `noCache` attribute is turned on, the `image` component still will not detect updates to the image file content. In this case, you need to manually change the [`src`](#src) attribute. Considering that reactive frameworks filter identical assignments, you have to use a trick like this:
-``` html
-<!-- 假设这是需要更新显示的图片，no-cache 属性是必须的。 -->
-<image :src="avatarImage" no-cache />
-```
-
-
-``` js
-const avatarImage = 'internal:// cache/ avatar.png ' // Assume this is a picture downloaded from the Internet
-
-export default {
-  data: {
-    avatarImage: avatarImage
-  },
-  // Call this method after the avatar download is completed to update the interface
-  onAvatarDownloaded() {
-    this.avatarImage = null // A new value must be assigned first
-    this.avatarImage = avatarImage // Reassign to the correct URI
-  }
-}
-```
-In the above example, the responsive attribute `this.avatarImage` is first changed to `null` and then reassigned, so that the value changes, thereby bypassing the optimization mechanism of the responsive framework and enabling image updates.
-
-
-
-
-::: warning
-
-Resources with fixed URIs must be updated using this technique, otherwise the displayed content may not change. To be on the safe side, if the resource paths obtained from the network may be duplicated, you also need to use this technique to ensure that the interface is updated.
-
-
-In addition, you must wait for the image download or file writing to be completed before updating the `src` attribute of the `image` component, otherwise the interface cannot be updated normally.
-:::
-
-
-
-### `async` <decl type="boolean" get set />
-
-
-Load image resources asynchronously. This mode can ensure that image loading will not block the UI thread and improve the smoothness of the interface. However, compared to the default synchronous loading mode, images loaded asynchronously do not display the actual content, so they are not suitable for all interfaces.
-
-
-Asynchronous loading mode is suitable for images downloaded from the network. Unlike image assets that are automatically optimized when the application is packaged, web images are usually common formats such as PNG or JPEG that are slow to decode. Synchronously decoding network images will be very laggy, and in such scenarios there is usually no need to display images immediately.
-
-
-`async` can be used together with the [`noCache`](#nocache) attribute, since the latter is also mainly used for web images:
-``` html
-<image :src="avatarImage" no-cache async />
-```
-
-
-## Inherited properties
-
-
-These properties are inherited from the native component's [generic properties](/framework/generic/properties.md), but the`image` component handles these properties specially.
-
-
-### `opacity` <decl type="number" set />
-
-
-Set the transparency of the image, the value range is $[0, 1]$, where $0$ means completely transparent, $1$ means completely opaque, and the default value is $1$.
-
-
-### `transform` <decl type="string" set />
-
-
-Set the transformation effect of the image, which is equivalent to the [`transform`](/framework/generic/styles.md#transform) attribute of CSS.
-
-
-## CSS description
-
-
-### Unsupported common properties
-
-
-Compared with other native components, `image` is special. It does not support common attributes such as `background-color` and `border`. This is also very different from web standards. Specifically, the following CSS properties are not supported:
-
-
-- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
-- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
-
-
-This means that you cannot add a background color or image to the `image` component by setting CSS properties, nor can you set a border style for it. However, the `image` component supports the [`border-radius`](/framework/generic/styles.md#border-radius) attribute.
-
-
-### Special properties
-
-
-The `image` component supports other CSS properties that can be used with non-container components, but several properties can be used to achieve special effects.
-
-
-#### `transform`
-
-
-Set the transformation of the image. When this CSS attribute is used for `image`, it has a similar effect to [`transform`](/framework/generic/styles.md#transform) for other elements, but it can be displayed normally without setting the [`transparent`](/framework/generic/styles.md#transparent) attribute.
-
-
-#### `opacity`
-
-
-Set the transparency of the image, which has the same effect as the [`opacity`](#opacity) attribute.
-
-
-#### `border-radius`
-
-
-Set the corner radius of the picture. You can use this property to add rounded corners to the picture. The usage method is the same as the general [`border-radius`](/framework/generic/styles.md#border-radius). The `image` component will always apply rounded corners to the four corners of the image, regardless of whether the aspect ratio of the image is consistent with the aspect ratio of the `image` component itself.
-
-
-#### `object-fit`
-
-
-The `image` component's `object-fit` attribute defaults to `none`, which differs from the web standard (which defaults to `fill` ). By default, the image will not be automatically scaled, but will be displayed centered at the original size. If the size exceeds the container, it will be cropped. This design is based on the consideration of MCU device characteristics:
-- **Performance first**: Image scaling usually requires additional calculations, and some devices even implement interpolation scaling through software, which will significantly reduce the frame rate.
-- **Image quality consistency**: On some devices, even scaling down can cause noticeable blurring or aliasing. The default of no scaling ensures pixel-level rendering without distortion.
-- **Memory Restricted**: Default scaling can mask resource usage issues, resulting in inadvertently loading images that are too large, wasting valuable storage and memory space.
-
-
-It is recommended to provide image resources that match the display area during the design stage, so that the image can be displayed correctly in the default state; only when necessary, the display effect should be adjusted by explicitly setting `object-fit` (such as `contain`).
-
-
-## Tips
-
-
-### Show network pictures
-
-
-#### Avatar scenes
-
-
-This section demonstrates a method that requires loading images from the network. This method is mainly used in situations such as user avatars. That is, the images have a fixed storage location locally, but the content may change. Due to the caching policy of the Glyphix runtime, you need to use the techniques in this example to ensure that the display content is updated.
-
-
-``` html
-<template>
-  <image :src="avatar" no-cache />
-</template>
-```
-
-
-``` js
-import request from '@system.request'
-
-export default {
-  data: {
-    avatar: null
-  },
-  onInit() {
-    this.downloadAvatar()
-  },
-  async downloadAvatar() {
-    const saveFile = 'internal://files/avatar.png'
-    await request.download({
-      url: 'https://example.com/url/to/avatar.png',
-      filename: saveFile,
-    }).complete
-    // For details on the techniques here, see the description of the noCache attribute.
-    this.avatar = null
-    this.avatar = saveFile
-  }
-}
-```
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/input.md
-
-# input
-
-
-The default is an inline element, which provides an interactive interface and receives user input.
-
-
-## property
-
-
-### `type` <decl type="'checkbox' | 'radio'" set />
-
-
-Controls that can be set to the above value types, the actual form of the final `input` component is determined according to the set type.
-
-
-### `name` <decl type="string" set />
-
-
-Set the `input` component name.
-
-
-### `checked` <decl type="boolean" set />
-
-
-The checked status of the current component can trigger the checked pseudo-class, which takes effect when the type is checkbox. When set to `on`, the checkbox is checked by default.
-
-
-### `value` <decl type="string" set />
-
-
-Set the value of the `input` component.
-
-============================================================
-FILE_PATH: src/transl/EN/components/label.md
-
-# label
-
-
-The `label` component is used to display text or markup information, and is an inline element by default. `label` can display mark information with the following form components:
-- [input](input)
-- [radio](radio)
-- [switch](switch)
-- [checkbox](checkbox)
-
-
-When `label` is associated with a supported form component, clicking the `label` component will also trigger the value update of the form component.
-
-
-## property
-
-
-### `text` <decl type="string" set get />
-
-
-The text content of the label supports attribute syntax or text subelement syntax:
-``` html
-<label text="label text"></label>
-<label>label text</label>
-```
-
-
-### `target` <decl type="string" set get />
-
-
-The ID of the target component. For example:
-```html
-<radio id="red" /><label target="red">red</label>
-```
-Clicking on the `label` component in the example will also trigger the update of the `radio` component with ID `red`, but clicking on the `label` component will not trigger touch events such as `click` on the target component.
-
-
-Considering performance issues, only target components that are at the same level as the `label` component (i.e. have the same parent component) are supported.
-
-
-::: warning
-
-Changing the target component is not currently supported.
-:::
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/list-item.md
-
-# list-item
-
-
-The subcomponent of `list` is used to display specific items in the list. It supports subcomponents and layout, but does not support scrolling.
-
-
-::: tip
-
-Glyphix does not provide the same list container component as Quick Apps, but uses [`scroll`](scroll.md) to implement rolling containers. Similarly, there is no need to use the `list-item` component. Please use [`div`](div.md) or any other component directly as the list item element.
+At the same time, please set a large enough padding (`padding`) to ensure easy scanning and recognition.
 :::
 
 
@@ -1802,616 +2893,83 @@ export default {
 ```
 
 ============================================================
-FILE_PATH: src/transl/EN/components/marquee.md
+FILE_PATH: src/transl/EN/components/collapsible-header.md
 
-# marquee
-
-
-The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any subcomponents including `span`.
+# collapsible-header
 
 
-`marquee` supports common CSS properties, but due to implementation reasons, the `text-align` property may not be supported at this time. Since `marquee` only displays a single line of text and will scroll when the text content is too long, attributes such as `max-lines` also have no effect.
+The `collapsible-header` component is used to add a collapsible title bar to the scrolling list. This effect is used to provide an interactive effect that saves the view area for watch-type devices and improves the user experience.
+
+
+::: warning
+
+<experimental /> This is an experimental component, do not use it in ways not demonstrated in this document.
+:::
+
 
 
 ## property
 
 
-### `text` <decl type="string" get set/>
+This component supports [通用属性](/framework/generic/properties.md) and has no dedicated attributes.
 
 
-Set the text content in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of `marquee`, the text will automatically scroll.
-
-============================================================
-FILE_PATH: src/transl/EN/components/p.md
-
-# p
+## How to use
 
 
-Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text crossing lines when set as an inline element. If you need to implement rich text typesetting, you should consider using components such as `span`.
+There must be two subcomponents in the `collapsible-header` component, otherwise unexpected effects may occur. Specific examples are as follows:
 
 
-## property
-
-
-### `text` <decl type="string" get set/>
-
-
-Set text content and support the following two writing methods.
-
-
-``` html
-<p text="Hello Glyphix"></p>
-<p>Hello Glyphix</p>
+```html
+<collapsible-header>
+  <p>这是可折叠的标题</p>
+  <scroll> ... </scroll>
+</collapsible-header>
 ```
 
 
-<glyphix id="p" :height="70" inline>
+The first child element is a collapsible title, and the second element must be a scrollable container such as [`scroll`](/components/scroll.md). Here is a specific example:
 
 
+<glyphix id="components-collapsible-header-1" height="360" width="360" title="可折叠标题栏">
 
-``` html
-<div>
-  <p text="Hello Glyphix"></p>
-  <p>Hello Glyphix</p>
-</div>
+
+```html
+<collapsible-header>
+  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
+  <scroll scroll-snap="center" deformation="fisheye">
+    <p for="x in 20" class="item">item {{ x + 1 }}</p>
+  </scroll>
+</collapsible-header>
 ```
 
 
-</glyphix>
+```js
+import prompt from "@system.prompt";
 
-
-
-### `color` <decl type="string" get set/>
-
-
-Set text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shortcut for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
-
-
-### `lines` <decl type="number" get set/>
-
-
-Set the maximum number of lines of text. Text exceeding this number will be truncated or omitted. This property is a shortcut for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
-
-
-### `text-align` <decl type="string" set/>
-
-
-Set the text alignment, supporting `left`, `center`, `right` and other values. This property is a shortcut for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
-
-
-### `font-size` <decl type="string" set/>
-
-
-Set the text font size, supporting `12px`, `1.5em` and other CSS font size values. This property is a shortcut for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
-
-
-### `font-weight` <decl type="number" set/>
-
-
-Set the text font weight. Currently, only integer values ​​are supported, such as `400`, `600`, etc. This property is a shortcut for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
-
-
-## Tips
-
-
-### size control
-
-
-In general, do not manually set the height of the `p` component, e.g.
-``` css
-p.my-paragraph {
-  height: 48px;
-  font-size: 32px;
-}
-```
-On the face of it, this sets a height for the `p` component that is larger than the font size, but what happens is:
-- For single-line text, the actual height of some fonts may exceed the font size, and even heights of `48px` may appear vertically clipped.
-- For multi-line text, setting a fixed height will cause the multi-line text to be cropped and cannot be displayed completely.
-
-
-If you wish to control the number of lines of text displayed, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to implement text truncation and omission instead of setting a fixed height.
-
-
-### Text clipping animation <version-badge since="0.9"/>
-
-
-You can use the [`width`](/framework/generic/styles.md#width) attribute with the [`transition`](/framework/component/prop-modifier.md#transition-修饰符) modification to implement text clipping animation. For example:
-
-
-``` html
-<p :width="state ? 240 : 0"
-   width.transition="{duration: 2.0}">
-  Hello Glyphix!
-</p>
-```
-
-
-With the `max-lines: 1` style, you can achieve text cropping animation from left to right. But there is a problem with this animation: when the width is insufficient, the last character will be discarded instead of being cropped. The current workaround is to put the text content in a child component and animate the width of the parent component:
-
-
-``` html
-<div :width="state ? 240 : 1"
-     width.transition="{duration: 2.0}">
-  <p style="max-lines: 1">Hello Glyphix!</p>
-</div>
-```
-
-
-<glyphix id="p-width-transition" title="文字裁剪动画" height="120">
-
-
-``` html
-<div class="container">
-  <p class="animated-text"
-     :width="state ? 240 : 0"
-     width.transition="{duration: 2.0}">
-    Hello Glyphix!
-  </p>
-  <div class="animated-text"
-       :width="state ? 240 : 1"
-       width.transition="{duration: 2.0}">
-    <p>Hello Glyphix!</p>
-  </div>
-</div>
-```
-
-
-``` js
 export default {
-  data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2500)
+  clickTitle() {
+    prompt.showToast({ message: "title clicked" });
   }
 }
 ```
 
 
 ```css
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+.title-bar {
+  margin: 56px auto auto;
+  transparent: true;
+  font-size: 1.5rem;
 }
 
-.animated-text {
-  margin: 4px;
-  border: 1px solid #f00;
-}
-
-p {
-  max-lines: 1;
-  text-overflow: clip;
-}
-````
-
-
-</glyphix>
-
-
-
-However, when using a `div` element as a parent component, there is a problem with the animation: when the width is `0`, the layout size is calculated as `(width: 0, height: 0)`, which causes the element to be unable to occupy the vertical space and vertical jumps at the beginning of the animation. The solution is to set the width to a very small value (e.g. `1px` ) instead of `0` so that the element can occupy the vertical space and thus avoid the bounce problem.
-
-============================================================
-FILE_PATH: src/transl/EN/components/picker.md
-
-# picker
-
-
-Text selector component. This component displays a group of text. Clicking on the middle text item will trigger the selection event, and the sliding operation can make all text items scroll and display.
-
-
-::: warning
-
-`picker` The functionality of the component has not been verified and it is not maintained.
-:::
-
-
-
-## property
-
-
-### `range` <decl type="string[]" set />
-
-
-All strings in the `range` attribute value will be displayed in the `picker` component. The user can manipulate the `picker` component to scroll or select these strings.
-
-
-`range` refers to [`index` 属性](#index) for the indexing method of strings in attribute values.
-
-
-### `loop` <decl type="boolean" set />
-
-
-Configure whether the `picker` component is displayed in a loop (i.e. infinitely long). When the value of this attribute is `true`, the loop display is enabled, and the default is `false`.
-
-
-### `value` <decl type="string" listen />
-
-
-Monitor the text of the current selected item. This monitoring will be triggered when the selected item changes during scrolling operation. The function of this attribute can also be implemented through the `on:index="handle(rangeData[$event])"` method.
-
-
-### `index` <decl type="Integer" get set listen />
-
-
-`picker` The selected item index value of the component. The indexing rules are: [`range` 属性](#range) The index value of the first string item in the attribute value array is $0$, and the indexes of other strings are increased by one in sequence. Setting the `index` attribute can specify the selected item of the `picker` component, and you can also listen to changes in this attribute to detect changes in the selected item caused by scrolling operations.
-
-
-### `scroll` <decl type="{ x: number y: number }" get set listen />
-
-
-The scrolling operation can be monitored through the `scroll` attribute, and the `picker` component can also be manipulated in code to display the scrolling effect. Similar to aligned list components, the `picker` operation of `scroll` also aligns to the nearest item.
-
-
-Since the `picker` component only supports vertical mode, the `x` field of the `scroll` attribute value is always `0`.
-
-
-### `scrolled` <decl type="boolean" read listen />
-
-
-Monitor whether `picker` is in the scrolling state through the `scrolled` attribute. The attribute value triggered by the event is `true` which means that `picker` is scrolling, otherwise it means that `picker` has stopped scrolling.
-
-
-The scrolling operation caused by user touch and scrolling through the `scroll` attribute will trigger the `scrolled` event. When `picker` stops from the scrolling state, the parameter value of the `scrolled` event is `false`.
-
-
-### `damping` <decl type="number" set />
-
-
-Set the damping coefficient of `picker` scroll animation. The valid value range is $[ 0.1, 50]$ (unsupported values ​​will be automatically modified to the upper and lower limits). The default value is $ 1.5 $. A larger damping coefficient will cause the animation to stop faster, and the default damping coefficient value can produce an inertial effect with a longer distance and longer duration.
-
-
-The damping coefficient should be set to a constant and not modified. Modifying the damping coefficient will not affect the rebound animation.
-
-============================================================
-FILE_PATH: src/transl/EN/components/progress-arc.md
-
-# progress-arc
-
-
-The `progress-arc` component is used to display a circular progress bar and defaults to a block-level element.
-
-
-## property
-
-
-### `max` <decl type="number" set />
-
-
-The maximum progress value that the [`value`](#value) attribute will not be greater than.
-
-
-### `min` <decl type="number" get setet />
-
-
-The minimum progress value that the [`value`](#value) attribute will not be less than.
-
-
-### `value` <decl type="number" get set listen />
-
-
-Set the progress value. The display ratio of the progress depends on the ratio of the `value` attribute in the interval from `min` to `max`, and the display ratio will be limited to $0\% \sim 100\%$. The `value` value is an integer. If a floating point value is set, only the integer part will be truncated.
-
-
-### `busy` <decl type="boolean" get set />
-
-
-Set whether the `progress-arc` component is in a busy state. In the busy state, a loading animation will be displayed instead of displaying the value of the `value` attribute. The following example demonstrates how to use a circular progress bar to simulate a loading animation:
-
-
-<glyphix id="components-progress-arc-busy" height="100" width="300" title="模拟加载动画">
-
-
-``` html
-<progress-arc busy :startAngle="0" :stopAngle="360" />
-```
-
-
-</glyphix>
-
-
-
-In this example, the difference between the start angle and the end angle of the progress bar is $360^\circ$. At this time, the typical loading animation effect can be displayed through the `busy` attribute.
-
-
-::: tip
-
-As long as the progress bar is circular, it will display a fixed busy animation effect, and the starting and ending angles have no effect.
-:::
-
-
-
-### `startAngle` <decl type="number" get set />
-
-
-The starting angle of the arc-shaped progress bar. The default value is $135$. For more information, please refer to the [角度配置](#角度配置) chapter.
-
-
-### `stopAngle` <decl type="number" get set />
-
-
-The end angle of the arc-shaped progress bar. The default value is $405$. For more information, please refer to the [角度配置](#角度配置) chapter.
-
-
-## Instructions for use
-
-
-### angle configuration
-
-
-Unlike linear [`progress`](progress.md), arc-shaped or circular progress bars need to be properly configured with `startAngle` attributes and `stopAngle` attributes to display properly. Both properties use angle units. In the screen coordinate system, $0^\circ$ points to the horizontal right direction, that is, the $3$ o'clock direction of the clock, and increases in the clockwise direction, and vice versa decreases.
-
-
-The display of `progress-arc` is a linear interpolation of the angular range based on the scale of `value` in $[\texttt{min}, \texttt{max}]$. Specifically, the user will see the highlighted angle of progress starting at `startAngle` and ending at `valueAngle`:
-
-
-$$
-
-\begin{aligned}
-
-  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
-
-  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
-
-\end{aligned}
-
-$$
-
-
-
-Therefore, if you want to display a full circle of circular progress bar, you need to make the starting and ending angles differ by $360^\circ$, even though the two angles are visually the same. Alternatively, the starting angle can be larger than the ending angle, which will reverse the direction of the progress.
-
-
-The examples below show various angle configurations in action, please note that the second example shows the reverse progress display technique.
-
-
-<glyphix id="components-progress-arc-angles" height="120" width="720" title="角度配置示例">
-
-
-``` html
-<div>
-  <p class="progress-label">{{value}}%</p>
-  <stack>
-    <p>default</p>
-    <progress-arc :value="value" />
-  </stack>
-  <stack>
-    <p>405~135</p>
-    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
-  </stack>
-  <stack>
-    <p>-45~225</p>
-    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
-  </stack>
-  <stack>
-    <p>0~360</p>
-    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
-  </stack>
-  <stack>
-    <p>-90~270</p>
-    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
-  </stack>
-</div>
-```
-
-
-``` js
-export default {
-  data: { value: 0 },
-  onInit() {
-    setInterval(() => {
-      this.value = this.value + 5
-      if (this.value > 100)
-        this.value = 0
-    }, 500)
-  }
-}
-```
-
-
-``` css
-div {
-  display: flex;
-}
-
-progress-arc {
-  width: 200px;
-  padding: 0 8px 0 8px;
-  stroke-width: 0.5rem;
-}
-
-p {
-  text-align: center;
-  font-size: 0.7rem;
-}
-
-.progress-label {
-  width: 3.5rem;
-}
-```
-
-
-</glyphix>
-
-
-
-## CSS specifications
-
-
-### Size calculation
-
-
-The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will occupy the shorter axis, and the center of the arc-shaped progress bar will be the center of the element. By default, the size of `progress-arc` may be close to one character, which will lead to very weird display effects, so it is usually necessary to explicitly specify the width and height in CSS, or use other reasonable layout strategies.
-
-
-::: tip
-
-It's best to specify a reasonable width and height for the `progress-arc` component, otherwise it may not be recognized. At a minimum, the `width` CSS property should also be set, and the component's layout strategy will automatically use the $1:1$ aspect ratio.
-:::
-
-
-
-### CSS properties
-
-
-The appearance of the `progress-arc` component can be adjusted via CSS.
-
-
-#### `stroke-width`
-
-
-This property specifies the arc outline width of the `progress-arc` component. The value type is [长度](/framework/render/style-and-layout.md#长度) and does not support percentage units.
-
-
-::: tip
-
-If you want the drawing width of the `progress-arc` component to be proportional to the font size, it is recommended to use the [`rem`](/framework/application/font-config.md#rem-字号单位) length unit, such as `0.15rem`.
-:::
-
-
-
-#### `color`
-
-
-Set `progress-arc` to highlight the color of the progress bar. By default, the system theme color will be used.
-
-
-#### `background-color`
-
-
-Set the color of the `progress-arc` background progress bar, which will be configured according to the system theme by default.
-
-
-### CSS pseudo-elements
-
-
-#### `value`
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/progress.md
-
-# progress
-
-
-The `progress` component is used to display the progress bar and defaults to a block-level element.
-
-
-## property
-
-
-### `max` <decl type="number" set />
-
-
-The maximum progress value that the [`value`](#value) attribute will not be greater than.
-
-
-### `min` <decl type="number" set />
-
-
-The minimum progress value that the [`value`](#value) attribute will not be less than.
-
-
-### `value` <decl type="number" set get listen />
-
-
-Set the progress value. The display ratio of the progress depends on the ratio of the `value` attribute in the interval from `min` to `max`, and the display ratio will be limited to $0\% \sim 100\%$. The `value` value is an integer. If a floating point value is set, only the integer part will be truncated.
-
-
-### `vertical` <decl type="boolean" set />
-
-
-If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise it will be displayed horizontally. The default value is `false`.
-
-
-## CSS specifications
-
-
-Developers can adjust the appearance of the `progress` component through CSS.
-
-
-### Size calculation
-
-
-The default width and height of `progress` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (can also be inherited). The size of `progress` can be customized through the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
-
-
-### CSS properties
-
-
-The following CSS properties may be useful:
-- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `progress`;
-- [`color`](/framework/generic/styles.md#color) can control the color of the progress bar of `progress`;
-- [`border-radius`](/framework/generic/styles.md#border-radius) can set `progress` to a rounded border, for example `50%` will produce a semicircular border;
-
-
-Other CSS properties may be useful, such as the [`border`](/framework/generic/styles.md#border) property to style the border.
-
-
-### CSS pseudo-elements
-
-
-#### `value`
-
-
-This pseudo-element can define the `progress` progress bar alone without containing the style of the background part. For example, you can set the corner radius of the scroll bar background and the progress bar part separately to achieve the effect that the outer border has a circular line cap and the progress bar has a straight cap.
-
-
-``` css
-progress {
-  border-radius: 50%; /* 滚动条背景圆角 */
-}
-
-progress::value {
-  border-radius: 0; /* 滚动条的进度条没有圆角 */
-}
-```
-
-
-### CSS example
-
-
-The following example demonstrates some ways to customize the appearance of the progress bar through CSS.
-
-
-<glyphix id="components-progress-styles" height="140" width="480" title="进度条样式">
-
-
-``` html
-<div>
-  <!-- 默认样式 -->
-  <progress :value="40" />
-  <!-- 直头进度条样式 -->
-  <progress class="flat" :value="50" />
-  <progress class="more-style" :value="60" />
-</div>
-```
-
-
-``` css
-div > * {
+.item {
+  height: 33.3%;
+  background-color: #ddd;
+  border-radius: 20%;
   margin: 8px;
-}
-
-.flat::value {
-  /* value 伪元素的圆角半径设置为 0 即可实现进度条直头效果 */
-  border-radius: 0;
-}
-
-.more-style {
-  /* 自定义圆角半径 */
-  border-radius: 30%;
-  /* 进度条背景色 */
-  background-color: #b3c5d7;
-  /* 进度条前景颜色 */
-  color: #b5179e;
-  /* padding 可以调整进度条前景的边距 */
-  padding: 6px;
-  height: 1.25rem;
+  transparent: true;
+  padding: 12px;
+  text-align: center;
 }
 ```
 
@@ -2419,371 +2977,77 @@ div > * {
 </glyphix>
 
 
+
+### Principle description
+
+
+`collapsible-header` accepts two child components, the first of which is a collapsible title bar, and the second must be a scrollable component similar to `scroll`. `collapsible-header` combines these two components and manipulates the display of the collapsible title bar as the list scrolls.
+
+
+You can use something like Fluid Layout to control the position of the title bar, for example:
+
+
+```css
+/* 元素的顶部间距为 48px，左右居中，适用于圆形屏幕。 */
+margin: 48px auto auto;
+/* 元素左侧和顶部间距为 12px，适用于方型屏幕。 */
+margin: 12px auto auto 12px;
+```
+
+
+Set the above style to the title bar element according to actual needs to achieve a specific alignment effect. You can also use a complex component containing child elements as a title bar, for example using a component containing a back button and page title text. But be aware that when the title bar is clicked, the click event can be sent to both the scroll list and the title bar. If there is a conflict, it can be resolved by preventing the event from bubbling.
+
+
+### Things to note
+
+
+You must provide both subcomponents for `collapsible-header` as specified above, and in the correct order. In addition, since the collapsible title bar and the underlying scrolling list are displayed stacked, this may cause the first element of the list to overlap with the title bar. When necessary, developers should consider some kind of placeholder method to avoid overlap, and centered `scroll` [吸附模式](/components/scroll.md#scrollsnap) ( `scroll-snap="center"` ) can also avoid overlap.
+
 ============================================================
-FILE_PATH: src/transl/EN/components/pullable.md
+FILE_PATH: src/transl/EN/components/label.md
 
-# pullable
+# label
 
 
-The `pullable` component is used to add the function of triggering incremental loading or refreshing interactions during top pull-down and bottom pull-up in the scrolling list. `pullable` components are block-level elements by default.
+The `label` component is used to display text or markup information, and is an inline element by default. `label` can display mark information with the following form components:
+- [input](input)
+- [radio](radio)
+- [switch](switch)
+- [checkbox](checkbox)
+
+
+When `label` is associated with a supported form component, clicking the `label` component will also trigger the value update of the form component.
+
+
+## property
+
+
+### `text` <decl type="string" set get />
+
+
+The text content of the label supports attribute syntax or text subelement syntax:
+``` html
+<label text="label text"></label>
+<label>label text</label>
+```
+
+
+### `target` <decl type="string" set get />
+
+
+The ID of the target component. For example:
+```html
+<radio id="red" /><label target="red">red</label>
+```
+Clicking on the `label` component in the example will also trigger the update of the `radio` component with ID `red`, but clicking on the `label` component will not trigger touch events such as `click` on the target component.
+
+
+Considering performance issues, only target components that are at the same level as the `label` component (i.e. have the same parent component) are supported.
 
 
 ::: warning
 
-<experimental /> This is an experimental component, the function of `pullable` is not stable, and the animation may not be natural enough.
-:::
-
-
-
-`pullable` should be the first or last child component of [`scroll`](scroll.md). When it is the first child component, continuing to pull down at the head of the `scroll` content will trigger the `pulling` event; conversely, when `pullable` is the last child component of `scroll`, pulling up at the bottom will trigger the `pulling` event.
-
-
-The `pullable` component is hidden by default and will only be displayed when it is pulled up/down. The following example demonstrates the use of the `pullable` component.
-
-
-<glyphix id="components-pullable-1" height="360" width="360" title="上/下拉加载更多">
-
-
-```html
-<scroll scrollbar>
-  <pullable :hold="pulldown" on:pulling="onPulldown">
-    <progress-arc busy start-angle="0" stop-angle="360" />
-    <p>{{pulldown || 'keep pull down...'}}</p>
-  </pullable>
-  <p for="item in items">item ({{item}})</p>
-  <pullable :hold="pullup" on:pulling="onPullup">
-    <progress-arc busy start-angle="0" stop-angle="360" />
-    <p>{{pullup || 'keep pull up...'}}</p>
-  </pullable>
-</scroll>
-```
-
-
-```js
-export default {
-  data: {
-    pulldown: null,
-    pullup: null,
-    items: []
-  },
-  first: 0,
-  last: 0,
-  onInit() {
-    this.update(0, 10)
-  },
-  update(first, last) {
-    for (let i = this.first; i > first; --i)
-      this.items.unshift(i)
-    for (let i = this.last; i < last; ++i)
-      this.items.push(i)
-    this.first = first
-    this.last = last
-  },
-  onPulldown(event) {
-    this.pulldown = event ? 'please release' : 'updating...'
-    if (!event) {
-      setTimeout(() => {
-        this.update(this.first - 5, this.last)
-        this.pulldown = null
-      }, 1000)
-    }
-  },
-  onPullup(event) {
-    this.pullup = event ? 'please release' : 'updating...'
-    if (!event) {
-      setTimeout(() => {
-        this.update(this.first, this.last + 5)
-        this.pullup = null
-      }, 1000)
-    }
-  }
-}
-```
-
-
-```css
-scroll {
-  display: flex;
-  flex-direction: column;
-}
-
-scroll > p {
-  background-color: #ddd;
-  border-radius: 32px;
-  margin: 12px;
-  padding: 32px;
-  text-align: center;
-}
-
-pullable {
-  display: flex;
-  justify-content: center;
-  margin: 32px;
-}
-
-pullable > progress-arc {
-  stroke-width: 0.25rem;
-  margin-right: 16px;
-}
-```
-
-
-</glyphix>
-
-
-
-Please refer to [使用说明](#使用说明) for detailed usage.
-
-
-## property
-
-
-### `hold` <decl type="bool" get set />
-
-
-By default, `pullable` is only visible when pulling down at the top or pulling up at the bottom, but when the `hold` attribute is `true`, the `pullable` component will remain visible. This property is typically set when a [`pulling`](#pulling) event results in a content update, and is canceled when the content update is complete.
-
-
-### `pulling` <decl type="bool" get listen />
-
-
-When `pullable` is completely pulled out, the `pulling` event will be triggered, and the meaning of its event value is:
-- `true`: This event is triggered when the pull-down/pull-up reaches the full pull-out trigger distance of `pullable`;
-- `false`: This event is triggered when the user lets go after reaching the above-mentioned complete pull-out condition.
-
-
-The following example shows when the `pulling` event value is triggered. You can try slowly scrolling down from the top of the list and pay attention to the toast popup message when the `pulling` event is triggered.
-
-
-<glyphix id="components-pullable-pulling" height="360" width="360" title="pulling 事件">
-
-
-```html
-<scroll scrollbar>
-  <pullable :hold="refresh" on:pulling="onPulling">
-    <p>pulling...</p>
-  </pullable>
-  <p for="item in 10">item {{item}}</p>
-</scroll>
-```
-
-
-```js
-import prompt from '@system.prompt'
-
-export default {
-  data: {
-    refresh: false
-  },
-  onPulling(event) {
-    prompt.showToast({
-      message: `pulling: ${event ? 'trigged' : 'release'}`
-    })
-    if (!event) {
-      this.refresh = true
-      setTimeout(() => this.refresh = false, 1000)
-    }
-  }
-}
-```
-
-
-```css
-scroll {
-  display: flex;
-  flex-direction: column;
-}
-
-scroll > p {
-  background-color: #ddd;
-  border-radius: 32px;
-  margin: 12px;
-  padding: 32px;
-  text-align: center;
-}
-
-pullable {
-  text-align: center;
-  margin: 32px;
-}
-```
-
-
-</glyphix>
-
-
-
-## Instructions for use
-
-
-### Component location
-
-
-The `pullable` component must be the first or last child of vertical `scroll`. It automatically determines the action mode based on position: detecting the user pulling down from the top of the list when it is the first child element, and vice versa.
-
-
-For lists that only need to be refreshed by pulling down, the following usage will work:
-```html
-<scroll>
-  <pullable :hold="refresh" on:pulling="onPulling">
-    <p>pulling...</p>
-  </pullable>
-  <div for="item in items">
-    ...
-  </div>
-</scroll>
-```
-
-
-JavaScript code can listen to the `pulling` event and control the `refresh` attribute:
-``` js
-export default {
-  data: {
-    refresh: false
-  },
-  onPulling(hold) {
-    if (!hold) { // hold is false when the user lets go
-      this.refresh = true // Indicates refreshing
-      // In this example, a timer is used to simulate the loading operation and stop loading after 1s.
-      setTimeout(() => this.refresh = false, 1000)
-    }
-  }
-}
-```
-
-
-For specific effects, please refer to the example of the [`pulling`](#pulling) event document.
-
-
-### Prompt content control
-
-
-The `pullable` component can accommodate various components to display prompt content. As in the current example in this article, you can combine a loading animation with tooltip text. In addition, the value of the `pulling` event can be used to control the prompt content. It is generally recommended to use this state handling method:
-1. Set a reactive attribute (such as `refresh` ) for each `pullable` component. The default value is `null`. The `refresh` attribute is also used to control the [`hold`](#hold) attribute of `pullable`.
-2. In the initial state (i.e. `refresh` is false), the prompt content of `pullable` should remind the user to "continue pulling to update".
-3. When the user pulls down, the `pulling` event is fired, taking 4 or 5 steps depending on its event value.
-4. When `pulling` is `true`, the user should be prompted to "let go to start refreshing".
-5. When `pulling` is `false`, it means that the user has let go. At this time, `refresh` should be set to `true` and start refreshing the content. And should remind the user "refreshing".
-6. After the content refresh is completed, set `refresh` to `false` again and return to the initial state.
-
-
-You can also refer to the first example in this document, which implements the continue loading function of pulling down at the head of the list and pulling up at the tail at the same time. This example uses a trick to control all the state of `pullable` using just one reactive property.
-
-
-This trick sets the initial value of the `refresh` reactive attribute to `null` (similar to `false` ) and uses template code like this:
-``` html
-<pullable :hold="refresh" on:pulling="onPulling">
-  <p>{{refresh || 'Continue to drop down'}}</p>
-</pullable>
-```
-When `refresh` is not set, the default "continue pulling down" prompt content will be displayed once `pullable` is pulled out. Then, the `onPulling` event callback function should be written like this:
-``` js
-export default {
-  async onPulling(event) {
-    this.refresh = event ? 'please let go' : '更新中'
-    if (!event) { // Trigger refresh operation when letting go
-        await runRefreshJobs()
-        this.refresh = null // Reset status after refresh completes
-    }
-  }
-}
-```
-
-
-### limit
-
-
-There are currently some limitations with the `pullable` component. In addition to having to be used in a vertical `scroll` component, you also need to ensure that the number of list elements exceeds the size of the `scroll` visible area, otherwise problems may occur. In addition, the interaction effect of `pullable` may be stiff.
-
-============================================================
-FILE_PATH: src/transl/EN/components/qrcode.md
-
-# qrcode
-
-
-The `qrcode` component is used to display the [QR Code](https://en.wikipedia.org/wiki/QR_code) QR code. This component can display any text data and is suitable for displaying information such as website addresses, payment codes, login scan code links, etc.
-
-
-In a fluid layout, the `qrcode` component defaults to a block-level element (`block`) and will be displayed on a separate line.
-
-
-## property
-
-
-### `value` <decl type="string" get set />
-
-
-Set the text data to be displayed as a QR code. The `qrcode` component will automatically select the appropriate version based on the length and length of the data. Currently, the highest supported version is $12$.
-
-
-## CSS description
-
-
-To make the QR code easy to scan, the CSS properties of the `qrcode` component should be set correctly, including:
-- `color`: The code point color of the QR code, generally set to black (`black` or `#000`);
-- `background-color`: The background color of the QR code is usually white (`white` or `#fff`);
-- `padding` / `margin`: Sufficient internal and external margins can avoid confusion between the QR code and other elements and increase the scanning recognition rate;
-- `width` / `height`: The size of the QR code must be large enough to facilitate shooting.
-
-
-By default, each code point (module) of the QR code component will occupy the range of $4\rm{px}\times 4\rm{px}$, which may only be a barely recognizable size on a watch. However, layout strategies such as flex may reduce the size of the QR code, so developers are recommended to manually set the `width` / `height` properties of the QR code component as needed and test on the device.
-
-
-The following example shows how to use the QR code component. Please note that various margins are set for the `qrcode` component in CSS. This is to ensure that there is enough space between the QR code and other interface elements to avoid interfering with scanning.
-
-
-<glyphix id="qrcode-1" :height="450" :width="350">
-
-
-
-``` html
-<div>
-  <qrcode :value="text"/>
-  <p>{{ text }}</p>
-</div>
-```
-
-
-``` js
-export default {
-  data: {
-    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
-  }
-}
-```
-
-
-``` css
-div {
-  background-color: black;
-  padding: 8px;
-}
-
-qrcode {
-  margin: 16px;
-  padding: 16px;
-  color: black; /* 将二维码前景色设置为黑色 */
-  background-color: white; /* 将二维码背景色设置为白色 */
-  border-radius: 16px;
-}
-
-p {
-  color: white;
-  font-size: 0.75rem;
-}
-```
-
-
-</glyphix>
-
-
-
-::: tip
-
-The codepoint color ( `color` ) and background ( `background-color` ) styles of **high contrast** QR code components should always be set explicitly. To avoid deviations between the device's default style theme and inherited style attributes, resulting in reduced recognition.
-
-
-At the same time, please set a large enough padding (`padding`) to ensure easy scanning and recognition.
+Changing the target component is not currently supported.
 :::
 
 
@@ -2926,44 +3190,82 @@ label {
 The radio button is an inline element by default, its display size is determined by the `font-size` CSS property, and it will be aligned with the display baseline of the text. Please do not manually specify attributes such as `width` and `height`, otherwise the display may be confused.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/README.md
+FILE_PATH: src/transl/EN/components/stack.md
 
-# Native components
+# stack
+
+
+`stack` stacked layout components. In the stacked layout, the size and position of each subcomponent are the same as the `stack` component, and they are stacked and displayed in order. The following example shows two overlapping text elements within a `stack` component.
+
+
+<glyphix id="components-stack-layout" height="100" width="200" title="堆叠布局">
+
+
+``` html
+<stack>
+  <p class="text1">Text 1</p>
+  <p class="text2">Text 2</p>
+</stack>
+```
+
+
+``` css
+* {
+  text-align: center;
+}
+
+.text1 {
+  font-size: 64px;
+  color: #fff;
+}
+
+.text2 {
+  font-size: 48px;
+  color: #f008;
+}
+
+stack {
+  background-color: gray;
+}
+```
+
+
+</glyphix>
+
+
+
+::: tip
+
+The `stack` component always uses the stacked display layout strategy and cannot be changed to other layouts (such as flex layout or fluid layout) through CSS properties such as `display`.
+:::
+
+
+
+## layout behavior
+
+
+`stack` components have a fixed stacking layout strategy. Its size is determined by two constraints:
+1. The dimensions of `stack` are first specified by size CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
+2. The layout of the parent element may directly determine the layout of `stack`, such as `align-items: stretch`, `flex: 1` and other attributes in flex layout;
+3. Otherwise the size of the `stack` component is determined by the maximum width and maximum height of the child elements.
+
+
+Once the size of `stack` is determined, all its child elements will have the same outer box size (that is, the size of the child element plus `border` and `margin`). This sometimes causes trouble, for example, if an image is used as the background through `stack`, and the size of the upper element is too large, the image may not fit.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/scroll-bar.md
+FILE_PATH: src/transl/EN/components/list-item.md
 
-# scroll-bar
-
-
-Scroll bar component. This component can display a scroll bar when there is a lot of scrolling content, and the user can control the scrolling of the content through the scroll bar.
+# list-item
 
 
-## property
+The subcomponent of `list` is used to display specific items in the list. It supports subcomponents and layout, but does not support scrolling.
 
 
-### `value` <decl type="number" set get listen />
+::: tip
 
+Glyphix does not provide the same list container component as Quick Apps, but uses [`scroll`](scroll.md) to implement rolling containers. Similarly, there is no need to use the `list-item` component. Please use [`div`](div.md) or any other component directly as the list item element.
+:::
 
-The current value of the scroll bar, which is a value between `min` and `max`. The default value is $0$.
-
-
-### `min` <decl type="number" set />
-
-
-The minimum value of the scroll bar, which should be no greater than `max`. The default value is $0$.
-
-
-### `max` <decl type="number" set />
-
-
-The maximum value of the scroll bar. This value should be no less than `min`. The default value is $100$.
-
-
-### `pagestep` <decl type="number" set />
-
-
-The scroll step size of the scroll bar, that is, the distance of each scroll. The default value is $10$.
 
 ============================================================
 FILE_PATH: src/transl/EN/components/scroll.md
@@ -3824,107 +4126,362 @@ The following effect will be obtained, that is, the padding area will not crop t
 HTML's `div` does not directly correspond to the behavior of `scroll` in `overflow: clip`.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/slider-arc.md
+FILE_PATH: src/transl/EN/components/text-field.md
 
-# slider-arc
+# text-field
 
 
-The arc sliding selector defaults to a block-level element and does not support style modification.
+A component used to enter a single line of text content, which defaults to an inline element. Unlike similar GUI elements on mobile phones or PCs, `text-field` currently does not respond to input devices such as keyboards, nor does it pop up the input method interface, so you must manually edit its content. `text-field` supports cursor manipulation via touch gestures (such as clicking and scrolling).
+
+
+`text-field` is suitable as a low-level component for single-line text input, and you can implement your own soft keyboard (such as password grid, or even voice input) according to your needs. For details, please refer to [示例](#基本示例).
 
 
 ## property
 
 
-Inherit the properties of the [slider](slider) component
+### `value` <decl type="string" set get listen />
 
 
-### `arc-center` <decl type="{ x: number, y: number }" set />
+The `value` attribute is a string that is the currently edited content of `text-field`. Reading or listening to this value can obtain the input text, and you can also set this property.
 
 
-Set the position of the arc center.
+It is common to bind `value` bidirectionally to a specific reactive property, such as:
 
 
-### `start-angle` <decl type="number" set />
+```html
+<text-field ::value="inputText" />
+```
 
 
-Set the arc starting angle, default value: $-90$.
+### `placeholder` <decl type="string" set get />
 
 
-### `progress-angle` <decl type="number" set />
+When the content of `text-field` is empty, `placeholder` can be used to provide a brief prompt to the user, such as a phrase such as "Please enter text."
 
 
-Set the maximum rotation angle of the arc, default value: $360$, one circle of arc.
+`placeholder` is automatically displayed when the input text is empty, so usually only a fixed content is needed, such as:
 
 
-### `arc-width` <decl type="number" set />
+```html
+<text-field ::value="inputText" placeholder="type here" />
+```
 
 
-Set arc width.
+### `password` <decl type="boolean" set get />
 
 
-### `arc-radius` <decl type="number" set />
+When this attribute is set, `text-area` will use "cipher mode", that is, each character will be replaced with a "•" ( [Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm) ). You can turn off or turn on the `password` attribute at any time to switch between showing and hiding the password state.
 
 
-Set the arc radius.
+In the new version <version-badge since="0.9" />, the password mode will delay masking the entered characters, and the user can see the characters just entered for a short time before being replaced with "•". Older versions will immediately mask the entered characters.
+
+
+### `insert` <decl type="(text: string): void" method />
+
+
+Insert a piece of text with the content `text` at the cursor, and the cursor will automatically move after the inserted text. Calling this function will trigger the `value` listening event.
+
+
+### `backspace` <decl type="(): void" method />
+
+
+Delete the character at the cursor and the cursor will automatically move forward. Calling this function will trigger the `value` listening event.
+
+
+## Instructions for use
+
+
+### basic example
+
+
+The following example shows basic usage of `text-field`. You can click on the keyboard buttons to enter numbers. Click the "×" button to delete the content at the cursor, and click "A/*" to switch between password mode and normal text input mode. In password mode, the entered content will be hidden with `•`.
+
+
+<glyphix id="components-text-field-1" width="410" height="160">
+
+
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <!-- 一个简单的矩阵数字键盘 -->
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
+</div>
+```
+
+
+```js
+export default {
+  data: {
+    inputText: "",
+    password: false,
+  },
+  keyboard: [
+    ['1', '2', '3', '4', '5'],
+    ['6', '7', '8', '9', '0'],
+  ],
+  textField: null,
+  onReady() {
+    // Get the TextField component object to facilitate calling insert() and backspace() methods.
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  text-align: center;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+
+
+In this example, the text of `text-field` is centered, which is achieved through `text-align`:
+```css
+text-field {
+  text-align: center;
+}
+```
+
+
+We first obtain the `text-field` component object through the `$element` method in the component's `onReady()` life cycle function, because then we need to edit the content through the [`insert()`](#insert) and [`backspace`](#backspace) methods.
+
+
+On this basis, we can directly call the `text-field` method in the `click` event listener of the `button` component, for example:
+```html
+<button on:click="textField.backspace()">×</button>
+```
+
+
+Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. For teaching purposes, this example only implements a numeric keyboard with 2 rows and 5 columns. And insert the key value into `text-field` in the `click` event listening function of each key:
+```html
+<div class="flex-row" for="rows in keyboard">
+  <button class="flex-1" for="key in rows"
+          on:click="textField.insert(key)">
+    {{key}}
+  </button>
+</div>
+```
+
+
+This example also demonstrates the standard method of switching password modes.
+
+
+### Content validation and formatting
+
+
+You can validate and format input by bidirectionally binding the [`value`](#value) property of `text-field` to a computed property. The following example demonstrates this approach, which only allows you to enter up to 9 digits (no letters, etc.) and adds a " `,` " separator between each three digits.
+
+
+<glyphix id="components-text-field-validator" title="内容验证器" width="410" height="200">
+
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
+</div>
+```
+
+
+```js
+export default {
+  data: {
+    password: false,
+    rawText: "",
+  },
+  computed: {
+    inputText: {
+      get() { return this.rawText },
+      set(text) {
+        if (text.length < 12 && /^[\d,]*$/.test(text)) {
+          this.rawText = text.replace(/[^\d]/g, '')
+                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+      },
+    },
+  },
+  keyboard: [
+    ["1", "2", "3", "4", "5"],
+    ["6", "7", "8", "9", "0"],
+    ["A", "B", "C", "D", "E"],
+  ],
+  textField: null,
+  onReady() {
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+
+
+Content validation and formatting are implemented through two-way binding and computed properties. For the `text-field` component node
+```html
+<text-field id="text-field"
+            ::value="inputText"
+            :password="password"
+            placeholder="type here" />
+```
+For example, the `value` property is bidirectionally bound to `inputText`, which is actually a computed property. Its `set()` method checks that the input conforms to the specification (up to 11 characters, and only numbers and commas are allowed), then filters the numbers through a regular expression and formats them with commas between every three digits:
+```js
+function set(text) {
+  if (text.length < 12 && /^[\d,]*$/.test(text)) {
+    this.rawText = text.replace(/[^\d]/g, '')
+                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+}
+```
+If the input content does not meet the requirements, the `set()` method will ignore the input value, and the two-way binding mechanism will make the content of `text-field` and the attribute value of `inputText` (obtained through the `get()` method) consistent. Therefore you will find that you cannot enter alphabetic keys.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/slider.md
+FILE_PATH: src/transl/EN/components/progress.md
 
-# slider
+# progress
 
 
-Sliding selector, defaults to block-level elements.
+The `progress` component is used to display the progress bar and defaults to a block-level element.
 
 
 ## property
-
-
-### `value` <decl type="number" get set listen />
-
-
-Current value, default: $10$.
-
-
-When setting the `value` attribute, the current value of the component will be changed. You can monitor changes in the current value through the `on` instruction, which will be triggered every time the current value changes.
-
-
-### `min` <decl type="number" set />
-
-
-Minimum value, default value: $0$.
 
 
 ### `max` <decl type="number" set />
 
 
-Maximum value, default value: $100$.
+The maximum progress value that the [`value`](#value) attribute will not be greater than.
+
+
+### `min` <decl type="number" set />
+
+
+The minimum progress value that the [`value`](#value) attribute will not be less than.
+
+
+### `value` <decl type="number" set get listen />
+
+
+Set the progress value. The display ratio of the progress depends on the ratio of the `value` attribute in the interval from `min` to `max`, and the display ratio will be limited to $0\% \sim 100\%$. The `value` value is an integer. If a floating point value is set, only the integer part will be truncated.
 
 
 ### `vertical` <decl type="boolean" set />
 
 
-If the value of the `vertical` attribute is `true`, the `slider` component will be displayed vertically, otherwise it will be displayed horizontally. The default value is `false`.
+If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise it will be displayed horizontally. The default value is `false`.
 
 
 ## CSS specifications
 
 
-Developers can adjust the appearance of the `slider` component through CSS.
+Developers can adjust the appearance of the `progress` component through CSS.
 
 
 ### Size calculation
 
 
-The default width and height of `slider` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (can also be inherited). The size of `progress` can be customized through the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
+The default width and height of `progress` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (can also be inherited). The size of `progress` can be customized through the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
 
 
 ### CSS properties
 
 
 The following CSS properties may be useful:
-- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `slider`;
-- [`color`](/framework/generic/styles.md#color) can control the color of the progress bar of `slider`;
-- [`border-radius`](/framework/generic/styles.md#border-radius) can set `slider` to a rounded border, for example `50%` will produce a semicircular border;
+- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `progress`;
+- [`color`](/framework/generic/styles.md#color) can control the color of the progress bar of `progress`;
+- [`border-radius`](/framework/generic/styles.md#border-radius) can set `progress` to a rounded border, for example `50%` will produce a semicircular border;
 
 
 Other CSS properties may be useful, such as the [`border`](/framework/generic/styles.md#border) property to style the border.
@@ -3936,59 +4493,36 @@ Other CSS properties may be useful, such as the [`border`](/framework/generic/st
 #### `value`
 
 
-This pseudo-element can define the `slider` progress bar alone without containing the style of the background part. For example, you can set the corner radius of the scroll bar background and the progress bar part separately to achieve the effect that the outer border has a circular line cap and the progress bar has a straight cap.
+This pseudo-element can define the `progress` progress bar alone without containing the style of the background part. For example, you can set the corner radius of the scroll bar background and the progress bar part separately to achieve the effect that the outer border has a circular line cap and the progress bar has a straight cap.
 
 
 ``` css
-slider {
+progress {
   border-radius: 50%; /* 滚动条背景圆角 */
 }
 
-slider::value {
+progress::value {
   border-radius: 0; /* 滚动条的进度条没有圆角 */
 }
 ```
-
-
-#### `thumb` <experimental/>
-
-
-The `thumb` pseudo-element is used to define the style of the `slider` slider. By default `slider` does not contain handles. To display handles you must specify the width and height of the `thumb` element:
-``` css
-slider::thumb {
-  width: 150%;
-  height: 150%;
-  border-radius: 50%;
-}
-```
-The percentage units of `width` and `height` are calculated relative to the size of the element itself. The horizontal `slider` slider width and height are calculated as a percentage based on the `height` of the element's CSS, while the vertical `slider` handle width and height are calculated as a percentage based on the `width` attribute of the element's CSS. For example, the element CSS is
-``` css
-slider {
-  width: 200px;
-  height: 24px;
-}
-```
-At this time, the width and height of the slider corresponding to `slider::thumb` above are both $24\rm{px} \times 150\% = 36\rm{px}$. The handle's fillet radius percentage size is calculated based on the handle's own size. In this example, the calculated value of the `50%` pseudo-element fillet radius of `thumb` is $36\rm{px} \times 50\%=18\rm{px}$.
-
-
-The `thumb` pseudo-element supports the `border` CSS property, but the border will not exceed the dimensions of the `thumb` pseudo-element.
 
 
 ### CSS example
 
 
 The following example demonstrates some ways to customize the appearance of the progress bar through CSS.
-<glyphix id="components-slider-styles" height="180" width="480" title="Slider 样式">
+
+
+<glyphix id="components-progress-styles" height="140" width="480" title="进度条样式">
 
 
 ``` html
 <div>
   <!-- 默认样式 -->
-  <slider ::value="value" />
+  <progress :value="40" />
   <!-- 直头进度条样式 -->
-  <slider class="flat" ::value="value" />
-  <slider class="more-style" ::value="value" />
-  <p>value: {{value}}</p>
+  <progress class="flat" :value="50" />
+  <progress class="more-style" :value="60" />
 </div>
 ```
 
@@ -3996,7 +4530,6 @@ The following example demonstrates some ways to customize the appearance of the 
 ``` css
 div > * {
   margin: 8px;
-  padding: 6px;
 }
 
 .flat::value {
@@ -4007,124 +4540,75 @@ div > * {
 .more-style {
   /* 自定义圆角半径 */
   border-radius: 30%;
-  /* slider 背景色 */
+  /* 进度条背景色 */
   background-color: #b3c5d7;
-  /* slider 前景颜色 */
+  /* 进度条前景颜色 */
   color: #b5179e;
-  /* padding 可以调整 slider 前景的边距 */
+  /* padding 可以调整进度条前景的边距 */
   padding: 6px;
-  height: 1rem;
-}
-
-/* 定义滚动条滑块样式 */
-.more-style::thumb {
-  width: 300%; /* 宽高比 2:1 的胶囊形滑块 */
-  height: 150%;
-  background-color: white;
-  border: 4px solid #f3722c; /* 滑块边框 */
-  border-radius: 50%;
+  height: 1.25rem;
 }
 ```
+
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/a.md
+
+# a
+
+
+Anchor component, which defaults to an inline element, is used to jump to the specified page.
+
+
+## property
+
+
+### `href` <decl type="string" get set />
+
+
+Specify the [页面名称](/framework/application/manifest.md#pages) or URI string to be jumped.
+
+
+``` html
+<a href="page1">跳转到 page1 页面</a>
+```
+
+
+Unlike the `<a>` tag in the Web, the `a` component only supports page jumps but not hyperlink jumps.
+
+
+The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings of the form `PageName?key=value`, which are URIs consisting of the page name (as the path field) and the query field. The query field of the URI will be parsed as the page's jump parameter. For example, when clicking this `<a>` element:
+
+
+``` html
+<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+```
+
+
+Equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
 
 
 ``` js
-export default {
-  data: { value: 50 }
-}
+router.push({
+  uri: 'page1',
+  params: {text: 'test-text', message: 'hello'}
+})
 ```
-
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/span.md
-
-# span
-
-
-`span` is also a text component. Unlike [`p` 组件](p), `span` components are inline elements by default and can span lines. [`label` ](label) components and [`a`](a) components also have similar effects. Text spanning means that elements can be laid out across multiple lines instead of occupying an entire "box".
-
-
-The `span` component can be used to implement [富文本排版](/framework/render/rich-text.md#富文本显示).
-
-
-<glyphix id="span" :height="36">
-
-
-
-``` html
-<div>
-  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
-</div>
-```
-
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/stack.md
-
-# stack
-
-
-`stack` stacked layout components. In the stacked layout, the size and position of each subcomponent are the same as the `stack` component, and they are stacked and displayed in order. The following example shows two overlapping text elements within a `stack` component.
-
-
-<glyphix id="components-stack-layout" height="100" width="200" title="堆叠布局">
-
-
-``` html
-<stack>
-  <p class="text1">Text 1</p>
-  <p class="text2">Text 2</p>
-</stack>
-```
-
-
-``` css
-* {
-  text-align: center;
-}
-
-.text1 {
-  font-size: 64px;
-  color: #fff;
-}
-
-.text2 {
-  font-size: 48px;
-  color: #f008;
-}
-
-stack {
-  background-color: gray;
-}
-```
-
-
-</glyphix>
-
 
 
 ::: tip
 
-The `stack` component always uses the stacked display layout strategy and cannot be changed to other layouts (such as flex layout or fluid layout) through CSS properties such as `display`.
+Please note that the value of the query field in the URI will only be parsed as a string type, so `100` in `page1?size=100` will be parsed as a string `'100'` instead of a number `100`. If you need to pass parameters of a specific type, use the [`router`](/api/system-router.md) API.
 :::
 
 
+============================================================
+FILE_PATH: src/transl/EN/components/README.md
 
-## layout behavior
-
-
-`stack` components have a fixed stacking layout strategy. Its size is determined by two constraints:
-1. The dimensions of `stack` are first specified by size CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
-2. The layout of the parent element may directly determine the layout of `stack`, such as `align-items: stretch`, `flex: 1` and other attributes in flex layout;
-3. Otherwise the size of the `stack` component is determined by the maximum width and maximum height of the child elements.
-
-
-Once the size of `stack` is determined, all its child elements will have the same outer box size (that is, the size of the child element plus `border` and `margin`). This sometimes causes trouble, for example, if an image is used as the background through `stack`, and the size of the upper element is too large, the image may not fit.
+# Native components
 
 ============================================================
 FILE_PATH: src/transl/EN/components/swiper.md
@@ -4609,771 +5093,110 @@ When `swiper` has [水平布局](#vertical), use the `indicator-bottom` attribut
 See the description of [scroll 组件](scroll.md#padding-和-overflow). The `padding` and `overflow` attributes of the `swiper` component have the same behavior specifications as the attributes of the same name of the `scroll` component. For more instructions, please refer to the relevant documentation.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/switch.md
+FILE_PATH: src/transl/EN/components/pullable.md
 
-# switch
-
-
-Switch selects components, defaulting to inline elements. Used to represent on/off status and allow the user to switch between the two statuses. The function of `switch` is similar to that of `checkbox`, but the interaction effects and intentions are different, that is, they express switches and checks respectively.
+# pullable
 
 
-<glyphix id="components-switch" height="30">
-
-
-
-``` html
-<div>
-  <switch ::value="enabled" />
-  <span>switch state: {{ enabled ? 'on' : 'off' }}</span>
-</div>
-```
-
-
-``` js
-export default {
-  data: {
-    enabled: false
-  }
-}
-```
-</glyphix>
-
-
-
-::: note
-
-The `switch` component is typically styled as shown in the example, but may vary depending on the device. In particular, it should be noted that the width of `switch` may be different on different devices, and developers should reserve appropriate layout margin.
-:::
-
-
-
-## property
-
-
-### `value` <decl type="boolean" set get listen/>
-
-
-Indicates the status of `switch`. When the value is `true`, `switch` is in the on state, otherwise it is in the off state. When the `value` attribute is not specified, the `switch` component is turned off by default.
-
-
-### `checked` <decl type="boolean" set get/>
-
-
-This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
-
-
-### `change` <decl type="{ checked: boolean }" get listen/>
-
-
-This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
-
-
-## CSS behavior
-
-
-The overall style of the `switch` component is determined by the system and is not controlled by the developer, just like the style differences between [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) and [Material 3](https://m3.material.io/components/switch/overview). Glyphix allows the color of `switch` to be customized in CSS, and the size of `switch` to be resizable.
-
-
-### CSS properties
-
-
-#### `color`
-
-
-Set the slider color of the `switch` component. Unlike the general CSS [`color`](/framework/generic/styles.md#color), the `color` attribute of `switch` does not support inheritance, so you must define it on the current `switch` component.
-
-
-<glyphix id="components-switch-color" height="36" title="siwtch 滑块颜色">
-
-
-``` html
-<div>
-  red color: <switch class="red"/>,
-  not inherited: <switch/>
-</div>
-```
-
-
-``` css
-div {
-  color: red; /* 注意 switch 不会继承 color 属性 */
-}
-
-.red {
-  color: red; /* 必须在 switch 组件的样式上定义 color */
-}
-```
-</glyphix>
-
-
-
-#### `background-color`
-
-
-Controls the background color of the `switch` component, see the documentation of the [`active`](#active) pseudo-class for details.
-
-
-#### `font-size`
-
-
-You can adjust the size of `switch` through the [`font-size`](/framework/generic/styles.md#font-size) CSS property to match the inline text size. The following example demonstrates the relationship between `font-size` and `switch` sizes:
-
-
-<glyphix id="components-switch-size" height="100" title="font-size 与 siwtch 大小">
-
-
-``` html
-<div>
-  <p class="title">
-    title text: <switch/> (1.25rem)
-  </p>
-  <p>
-    content text: <switch/> (1rem)
-  </p>
-</div>
-```
-
-
-``` css
-div {
-  line-height: 1.8rem;
-}
-
-.title {
-  color: #415a77; /* 注意 switch 不会继承 color 属性 */
-  font-size: 1.25rem;
-}
-```
-</glyphix>
-
+The `pullable` component is used to add the function of triggering incremental loading or refreshing interactions during top pull-down and bottom pull-up in the scrolling list. `pullable` components are block-level elements by default.
 
 
 ::: warning
 
-The display size of `switch` is not controlled by attributes such as `width` and `height`, but is always determined by `font-size`. Therefore, please do not manually specify size attributes such as `width` to avoid abnormal display.
+<experimental /> This is an experimental component, the function of `pullable` is not stable, and the animation may not be natural enough.
 :::
 
 
 
-### CSS pseudo-class
+`pullable` should be the first or last child component of [`scroll`](scroll.md). When it is the first child component, continuing to pull down at the head of the `scroll` content will trigger the `pulling` event; conversely, when `pullable` is the last child component of `scroll`, pulling up at the bottom will trigger the `pulling` event.
 
 
-#### `active`
+The `pullable` component is hidden by default and will only be displayed when it is pulled up/down. The following example demonstrates the use of the `pullable` component.
 
 
-The `active` pseudo-class is used to define the style in which `switch` is turned on. As shown in the following example, it is usually configured along with regular style rules:
-
-
-<glyphix id="components-switch-colors" height="36" title="siwtch 滑块颜色设置">
-
-
-``` html
-<div>
-  color switch: <switch/>
-</div>
-```
-
-
-``` css
-/* switch 关闭状态下的样式 */
-switch {
-  color: #415a77;
-  background-color: #bde0fe;
-}
-
-/* switch 打开状态下的样式 */
-switch:active {
-  color: #fefae0;
-  background-color: #ffafcc;
-}
-```
-</glyphix>
-
-
-
-This example uses the `color` and `background-color` CSS properties to control the color style when switching `switch`. The `switch` component will only respond to the configuration of these two CSS properties when the `active` pseudo-class is activated.
-
-
-::: tip
-
-Please define the `color` and `background-color` attributes in the normal state and `active` state at the same time, otherwise there will be no corresponding color change when `switch` is switched.
-:::
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/text-field.md
-
-# text-field
-
-
-A component used to enter a single line of text content, which defaults to an inline element. Unlike similar GUI elements on mobile phones or PCs, `text-field` currently does not respond to input devices such as keyboards, nor does it pop up the input method interface, so you must manually edit its content. `text-field` supports cursor manipulation via touch gestures (such as clicking and scrolling).
-
-
-`text-field` is suitable as a low-level component for single-line text input, and you can implement your own soft keyboard (such as password grid, or even voice input) according to your needs. For details, please refer to [示例](#基本示例).
-
-
-## property
-
-
-### `value` <decl type="string" set get listen />
-
-
-The `value` attribute is a string that is the currently edited content of `text-field`. Reading or listening to this value can obtain the input text, and you can also set this property.
-
-
-It is common to bind `value` bidirectionally to a specific reactive property, such as:
+<glyphix id="components-pullable-1" height="360" width="360" title="上/下拉加载更多">
 
 
 ```html
-<text-field ::value="inputText" />
-```
-
-
-### `placeholder` <decl type="string" set get />
-
-
-When the content of `text-field` is empty, `placeholder` can be used to provide a brief prompt to the user, such as a phrase such as "Please enter text."
-
-
-`placeholder` is automatically displayed when the input text is empty, so usually only a fixed content is needed, such as:
-
-
-```html
-<text-field ::value="inputText" placeholder="type here" />
-```
-
-
-### `password` <decl type="boolean" set get />
-
-
-When this attribute is set, `text-area` will use "cipher mode", that is, each character will be replaced with a "•" ( [Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm) ). You can turn off or turn on the `password` attribute at any time to switch between showing and hiding the password state.
-
-
-In the new version <version-badge since="0.9" />, the password mode will delay masking the entered characters, and the user can see the characters just entered for a short time before being replaced with "•". Older versions will immediately mask the entered characters.
-
-
-### `insert` <decl type="(text: string): void" method />
-
-
-Insert a piece of text with the content `text` at the cursor, and the cursor will automatically move after the inserted text. Calling this function will trigger the `value` listening event.
-
-
-### `backspace` <decl type="(): void" method />
-
-
-Delete the character at the cursor and the cursor will automatically move forward. Calling this function will trigger the `value` listening event.
-
-
-## Instructions for use
-
-
-### basic example
-
-
-The following example shows basic usage of `text-field`. You can click on the keyboard buttons to enter numbers. Click the "×" button to delete the content at the cursor, and click "A/*" to switch between password mode and normal text input mode. In password mode, the entered content will be hidden with `•`.
-
-
-<glyphix id="components-text-field-1" width="410" height="160">
-
-
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <!-- 一个简单的矩阵数字键盘 -->
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
+<scroll scrollbar>
+  <pullable :hold="pulldown" on:pulling="onPulldown">
+    <progress-arc busy start-angle="0" stop-angle="360" />
+    <p>{{pulldown || 'keep pull down...'}}</p>
+  </pullable>
+  <p for="item in items">item ({{item}})</p>
+  <pullable :hold="pullup" on:pulling="onPullup">
+    <progress-arc busy start-angle="0" stop-angle="360" />
+    <p>{{pullup || 'keep pull up...'}}</p>
+  </pullable>
+</scroll>
 ```
 
 
 ```js
 export default {
   data: {
-    inputText: "",
-    password: false,
+    pulldown: null,
+    pullup: null,
+    items: []
   },
-  keyboard: [
-    ['1', '2', '3', '4', '5'],
-    ['6', '7', '8', '9', '0'],
-  ],
-  textField: null,
-  onReady() {
-    // Get the TextField component object to facilitate calling insert() and backspace() methods.
-    this.textField = this.$element("text-field")
+  first: 0,
+  last: 0,
+  onInit() {
+    this.update(0, 10)
   },
-}
-```
-
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  text-align: center;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-
-
-In this example, the text of `text-field` is centered, which is achieved through `text-align`:
-```css
-text-field {
-  text-align: center;
-}
-```
-
-
-We first obtain the `text-field` component object through the `$element` method in the component's `onReady()` life cycle function, because then we need to edit the content through the [`insert()`](#insert) and [`backspace`](#backspace) methods.
-
-
-On this basis, we can directly call the `text-field` method in the `click` event listener of the `button` component, for example:
-```html
-<button on:click="textField.backspace()">×</button>
-```
-
-
-Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. For teaching purposes, this example only implements a numeric keyboard with 2 rows and 5 columns. And insert the key value into `text-field` in the `click` event listening function of each key:
-```html
-<div class="flex-row" for="rows in keyboard">
-  <button class="flex-1" for="key in rows"
-          on:click="textField.insert(key)">
-    {{key}}
-  </button>
-</div>
-```
-
-
-This example also demonstrates the standard method of switching password modes.
-
-
-### Content validation and formatting
-
-
-You can validate and format input by bidirectionally binding the [`value`](#value) property of `text-field` to a computed property. The following example demonstrates this approach, which only allows you to enter up to 9 digits (no letters, etc.) and adds a " `,` " separator between each three digits.
-
-
-<glyphix id="components-text-field-validator" title="内容验证器" width="410" height="200">
-
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
-```
-
-
-```js
-export default {
-  data: {
-    password: false,
-    rawText: "",
+  update(first, last) {
+    for (let i = this.first; i > first; --i)
+      this.items.unshift(i)
+    for (let i = this.last; i < last; ++i)
+      this.items.push(i)
+    this.first = first
+    this.last = last
   },
-  computed: {
-    inputText: {
-      get() { return this.rawText },
-      set(text) {
-        if (text.length < 12 && /^[\d,]*$/.test(text)) {
-          this.rawText = text.replace(/[^\d]/g, '')
-                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        }
-      },
-    },
+  onPulldown(event) {
+    this.pulldown = event ? 'please release' : 'updating...'
+    if (!event) {
+      setTimeout(() => {
+        this.update(this.first - 5, this.last)
+        this.pulldown = null
+      }, 1000)
+    }
   },
-  keyboard: [
-    ["1", "2", "3", "4", "5"],
-    ["6", "7", "8", "9", "0"],
-    ["A", "B", "C", "D", "E"],
-  ],
-  textField: null,
-  onReady() {
-    this.textField = this.$element("text-field")
-  },
-}
-```
-
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-
-
-Content validation and formatting are implemented through two-way binding and computed properties. For the `text-field` component node
-```html
-<text-field id="text-field"
-            ::value="inputText"
-            :password="password"
-            placeholder="type here" />
-```
-For example, the `value` property is bidirectionally bound to `inputText`, which is actually a computed property. Its `set()` method checks that the input conforms to the specification (up to 11 characters, and only numbers and commas are allowed), then filters the numbers through a regular expression and formats them with commas between every three digits:
-```js
-function set(text) {
-  if (text.length < 12 && /^[\d,]*$/.test(text)) {
-    this.rawText = text.replace(/[^\d]/g, '')
-                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  onPullup(event) {
+    this.pullup = event ? 'please release' : 'updating...'
+    if (!event) {
+      setTimeout(() => {
+        this.update(this.first, this.last + 5)
+        this.pullup = null
+      }, 1000)
+    }
   }
 }
 ```
-If the input content does not meet the requirements, the `set()` method will ignore the input value, and the two-way binding mechanism will make the content of `text-field` and the attribute value of `inputText` (obtained through the `get()` method) consistent. Therefore you will find that you cannot enter alphabetic keys.
-
-============================================================
-FILE_PATH: src/transl/EN/components/text.md
-
-# text
-
-
-Text components, `text` components and [`p` 组件](p) are identical except for the component name.
-
-============================================================
-FILE_PATH: src/transl/EN/components/textarea.md
-
-# textarea
-
-
-`textarea` <experimental/> <version-badge since="0.9" /> is a multi-line text input component that is displayed as a block-level element by default. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up the input method interface, so you must manually edit its content. `textarea` supports operating the cursor through touch gestures (such as clicking and scrolling), and provides methods to move the cursor up, down, left, and right.
-
-
-`textarea` is suitable as a low-level component for multi-line text input, and can implement soft keyboard and cursor control according to your needs. For details, please refer to [示例](#基本示例).
-
-
-::: important compatibility
-`textarea` is an experimental extension component that is currently only available in Glyphix 0.9 and above, and is only supported by some devices.
-:::
-
-
-
-## property
-
-
-### `text` <decl type="string" get set listen />
-
-
-The `text` attribute is a string that is the currently edited text content of `textarea`. Reading or listening to this value can obtain the input text, and you can also set this property.
-
-
-Usually `text` is bidirectionally bound to a specific responsive attribute, or the text can be set through the content inside the element, such as:
-
-
-```html
-<textarea ::text="inputText" />
-```
-
-
-or
-
-
-```html
-<textarea @text="onTextChanged">{{ inputText }}</textarea>
-```
-
-
-:::tip
-
-The `text` attribute of `textarea` functions similarly to the [`value`](text-field.md#value) attribute of [`text-field`](text-field.md).
-:::
-
-
-
-### `placeholder` <decl type="string" set get />
-
-
-When the content of `textarea` is empty, `placeholder` can be used to provide a brief prompt to the user, such as a phrase such as "Please enter text."
-
-
-`placeholder` is automatically displayed when the input text is empty, so usually only a fixed content is needed, such as:
-
-
-```html
-<textarea ::text="inputText" placeholder="type here" />
-```
-
-
-### `insert` <decl type="(text: string): void" method />
-
-
-Insert a piece of text with the content `text` at the cursor, and the cursor will automatically move after the inserted text. Calling this function will trigger the `text` listening event.
-
-
-### `backspace` <decl type="(): void" method />
-
-
-Delete the character at the cursor and the cursor will automatically move forward. Calling this function will trigger the `text` listening event.
-
-
-### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
-
-
-Moves the cursor one position in the specified direction. The optional values ​​​​of the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, which correspond to the four directions of up, down, left, and right respectively.
-
-
-## Instructions for use
-
-
-### basic example
-
-
-The following example shows basic usage of `textarea`. Users can directly enter multiple lines of text in the text box, or use the virtual keyboard below to edit content: click the letter/symbol key to insert characters; the "`×`" key to delete the content at the cursor; the "`Aa`" key to switch to uppercase and lowercase; the "`1#`" key to switch to the symbol keyboard; the "`Enter`" key to insert a newline character; the arrow keys to move the cursor.
-
-
-<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea 基本示例">
-
-
-```html
-  <div class="window">
-    <textarea
-      id="textarea"
-      :placeholder="placeholder"
-      @text="onTextChanged"
-    >
-      {{ text }}
-    </textarea>
-    <div class="keyboard">
-      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
-        <button
-          class="kb-key"
-          for="key in row.keys"
-          :width="key.width ? key.width : null"
-          on:touchstart="onKeyEvent(key, 'down')"
-          on:touchend="onKeyEvent(key, 'up')"
-          on:touchcancel="onKeyEvent(key, 'up')"
-        >
-          {{ key.code ? key.code : key }}
-        </button>
-      </div>
-    </div>
-  </div>
-```
-
-
-```js
-const keyboardQwert = [
-  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
-  {
-    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboardQwertUpper = [
-  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
-  {
-    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboard123 = [
-  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
-  {
-    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-export default {
-  data: {
-    placeholder: "Enter your text here...",
-    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
-    keyboard: keyboardQwert,
-  },
-  keyboardType: "qwerty",
-
-  ta: null,
-  onReady() {
-    this.ta = this.$element("textarea");
-  },
-
-  onTextChanged() {
-    console.log("You have edited the text");
-  },
-  toggleCase() {
-    if (this.keyboardType == "qwerty") {
-      this.keyboard = keyboardQwertUpper;
-      this.keyboardType = "qwertyUpper";
-    } else if (this.keyboardType == "qwertyUpper") {
-      this.keyboard = keyboardQwert;
-      this.keyboardType = "qwerty";
-    }
-  },
-  keyboardRowStyle(row) {
-    if (row.margin)
-      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
-    return "";
-  },
-  backspaceTimer: null,
-  onKeyEvent(key, event) {
-    if (event !== "down") {
-      clearInterval(this.backspaceTimer);
-      this.backspaceTimer = null;
-      return; // skip if the key is released
-    }
-
-    if (key.code) key = key.code;
-    switch (key) {
-      case "Aa": this.toggleCase(); break;
-      case "1#":
-        this.keyboard = keyboard123;
-        this.keyboardType = "123";
-        break;
-      case "abc":
-        this.keyboard = keyboardQwert;
-        this.keyboardType = "qwerty";
-        break;
-      case "×":
-        this.ta.backspace();
-        if (event == "down") {
-          this.backspaceTimer = setTimeout(() => {
-            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
-            this.ta.backspace();
-          }, 500);
-        }
-        break;
-      case "Enter": this.ta.insert("\n"); break;
-      case "Space": this.ta.insert(" "); break;
-      case "↑": this.ta.moveCaret("up"); break;
-      case "↓": this.ta.moveCaret("down"); break;
-      case "←": this.ta.moveCaret("left"); break;
-      case "→": this.ta.moveCaret("right"); break;
-      default: this.ta.insert(key); break;
-    }
-  },
-};
-```
 
 
 ```css
-.window {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-textarea {
-  flex-grow: 1;
-  padding: 6px;
-  border: 2px solid #aaa6;
-  border-radius: 12px;
-  max-height: 160px;
-}
-
-.keyboard {
+scroll {
   display: flex;
   flex-direction: column;
 }
 
-.kb-row {
-  display: flex;
-  flex-direction: row;
-}
-
-.kb-key {
-  flex-grow: 1;
-  background-color: #f0f0f080;
-  border: 2px solid #999;
-  border-radius: 16px;
+scroll > p {
+  background-color: #ddd;
+  border-radius: 32px;
+  margin: 12px;
+  padding: 32px;
   text-align: center;
-  padding: 6px auto;
-  margin: 2px;
-  font-size: 0.85rem;
-  min-width: 40px;
 }
 
-.kb-key:active {
-  background-color: #0003;
-  border-color: #6663;
+pullable {
+  display: flex;
+  justify-content: center;
+  margin: 32px;
+}
+
+pullable > progress-arc {
+  stroke-width: 0.25rem;
+  margin-right: 16px;
 }
 ```
 
@@ -5382,33 +5205,210 @@ textarea {
 
 
 
-We first obtain the `textarea` component object through the `$element` method in the component's `onReady()` life cycle function, because then we need to use the [`insert()`](#insert), [`backspace`](#backspace) and [`moveCaret`](#movecaret) methods to edit content and move the cursor.
+Please refer to [使用说明](#使用说明) for detailed usage.
 
 
-On this basis, we can call the `textarea` method in the touch event listener of the `button` component, for example:
+## property
+
+
+### `hold` <decl type="bool" get set />
+
+
+By default, `pullable` is only visible when pulling down at the top or pulling up at the bottom, but when the `hold` attribute is `true`, the `pullable` component will remain visible. This property is typically set when a [`pulling`](#pulling) event results in a content update, and is canceled when the content update is complete.
+
+
+### `pulling` <decl type="bool" get listen />
+
+
+When `pullable` is completely pulled out, the `pulling` event will be triggered, and the meaning of its event value is:
+- `true`: This event is triggered when the pull-down/pull-up reaches the full pull-out trigger distance of `pullable`;
+- `false`: This event is triggered when the user lets go after reaching the above-mentioned complete pull-out condition.
+
+
+The following example shows when the `pulling` event value is triggered. You can try slowly scrolling down from the top of the list and pay attention to the toast popup message when the `pulling` event is triggered.
+
+
+<glyphix id="components-pullable-pulling" height="360" width="360" title="pulling 事件">
 
 
 ```html
-<button on:touchstart="ta.insert('A')">A</button>
+<scroll scrollbar>
+  <pullable :hold="refresh" on:pulling="onPulling">
+    <p>pulling...</p>
+  </pullable>
+  <p for="item in 10">item {{item}}</p>
+</scroll>
 ```
 
 
-Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout, supporting uppercase and lowercase switching and a symbol keyboard. Call the corresponding method in the touch event listening function of each key to edit the text. The arrow keys move the cursor (up, down, left, and right) through the [`moveCaret()`](#movecaret) method, and the line feed key inserts a newline character `\n` through [`insert()`](#insert).
+```js
+import prompt from '@system.prompt'
+
+export default {
+  data: {
+    refresh: false
+  },
+  onPulling(event) {
+    prompt.showToast({
+      message: `pulling: ${event ? 'trigged' : 'release'}`
+    })
+    if (!event) {
+      this.refresh = true
+      setTimeout(() => this.refresh = false, 1000)
+    }
+  }
+}
+```
 
 
-### The difference between text-field and text-field
+```css
+scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+scroll > p {
+  background-color: #ddd;
+  border-radius: 32px;
+  margin: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+pullable {
+  text-align: center;
+  margin: 32px;
+}
+```
 
 
-`textarea` and `text-field` are both text input components. The main differences are as follows:
+</glyphix>
 
 
-| Features | `textarea` | `text-field` |
-|------|-----------|-------------|
 
-| Number of lines of text | Single or multiple lines | Single line |
-| Line feed support | Support `\n` line feed | Line feed not supported |
-| Cursor movement | Up and down movement | Left and right movement |
-| Content attributes | `text` | `value` |
-| Password mode | Not supported | Supported `password` attribute |
-| Default display | Block-level elements | Inline elements |
+## Instructions for use
+
+
+### Component location
+
+
+The `pullable` component must be the first or last child of vertical `scroll`. It automatically determines the action mode based on position: detecting the user pulling down from the top of the list when it is the first child element, and vice versa.
+
+
+For lists that only need to be refreshed by pulling down, the following usage will work:
+```html
+<scroll>
+  <pullable :hold="refresh" on:pulling="onPulling">
+    <p>pulling...</p>
+  </pullable>
+  <div for="item in items">
+    ...
+  </div>
+</scroll>
+```
+
+
+JavaScript code can listen to the `pulling` event and control the `refresh` attribute:
+``` js
+export default {
+  data: {
+    refresh: false
+  },
+  onPulling(hold) {
+    if (!hold) { // hold is false when the user lets go
+      this.refresh = true // Indicates refreshing
+      // In this example, a timer is used to simulate the loading operation and stop loading after 1s.
+      setTimeout(() => this.refresh = false, 1000)
+    }
+  }
+}
+```
+
+
+For specific effects, please refer to the example of the [`pulling`](#pulling) event document.
+
+
+### Prompt content control
+
+
+The `pullable` component can accommodate various components to display prompt content. As in the current example in this article, you can combine a loading animation with tooltip text. In addition, the value of the `pulling` event can be used to control the prompt content. It is generally recommended to use this state handling method:
+1. Set a reactive attribute (such as `refresh` ) for each `pullable` component. The default value is `null`. The `refresh` attribute is also used to control the [`hold`](#hold) attribute of `pullable`.
+2. In the initial state (i.e. `refresh` is false), the prompt content of `pullable` should remind the user to "continue pulling to update".
+3. When the user pulls down, the `pulling` event is fired, taking 4 or 5 steps depending on its event value.
+4. When `pulling` is `true`, the user should be prompted to "let go to start refreshing".
+5. When `pulling` is `false`, it means that the user has let go. At this time, `refresh` should be set to `true` and start refreshing the content. And should remind the user "refreshing".
+6. After the content refresh is completed, set `refresh` to `false` again and return to the initial state.
+
+
+You can also refer to the first example in this document, which implements the continue loading function of pulling down at the head of the list and pulling up at the tail at the same time. This example uses a trick to control all the state of `pullable` using just one reactive property.
+
+
+This trick sets the initial value of the `refresh` reactive attribute to `null` (similar to `false` ) and uses template code like this:
+``` html
+<pullable :hold="refresh" on:pulling="onPulling">
+  <p>{{refresh || 'Continue to drop down'}}</p>
+</pullable>
+```
+When `refresh` is not set, the default "continue pulling down" prompt content will be displayed once `pullable` is pulled out. Then, the `onPulling` event callback function should be written like this:
+``` js
+export default {
+  async onPulling(event) {
+    this.refresh = event ? 'please let go' : '更新中'
+    if (!event) { // Trigger refresh operation when letting go
+        await runRefreshJobs()
+        this.refresh = null // Reset status after refresh completes
+    }
+  }
+}
+```
+
+
+### limit
+
+
+There are currently some limitations with the `pullable` component. In addition to having to be used in a vertical `scroll` component, you also need to ensure that the number of list elements exceeds the size of the `scroll` visible area, otherwise problems may occur. In addition, the interaction effect of `pullable` may be stiff.
+
+============================================================
+FILE_PATH: src/transl/EN/components/slider-arc.md
+
+# slider-arc
+
+
+The arc sliding selector defaults to a block-level element and does not support style modification.
+
+
+## property
+
+
+Inherit the properties of the [slider](slider) component
+
+
+### `arc-center` <decl type="{ x: number, y: number }" set />
+
+
+Set the position of the arc center.
+
+
+### `start-angle` <decl type="number" set />
+
+
+Set the arc starting angle, default value: $-90$.
+
+
+### `progress-angle` <decl type="number" set />
+
+
+Set the maximum rotation angle of the arc, default value: $360$, one circle of arc.
+
+
+### `arc-width` <decl type="number" set />
+
+
+Set arc width.
+
+
+### `arc-radius` <decl type="number" set />
+
+
+Set the arc radius.
 
