@@ -49,14 +49,18 @@ def translate_text(text, target_lang, max_retries=3):
             
         except Exception as e:
             error_msg = str(e)
+            
+            # Принудительный дамп сырого ответа API для отладки
+            print(f"\n[RAW API ERROR DUMP - {target_lang}]:\n{error_msg}")
+            
             # Обработка ошибки лимита запросов (Rate Limit / Quota)
             if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
                 wait_time = 30 * (attempt + 1)
-                print(f"\n[!] Лимит API (429). Ожидание {wait_time} сек. (Попытка {attempt + 1}/{max_retries})")
+                print(f"[*] Перехват 429. Ожидание {wait_time} сек. (Попытка {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
                 continue
                 
-            print(f"\n[!] Непредвиденная ошибка API ({target_lang}): {error_msg}")
+            print(f"[!] Непредвиденная ошибка API ({target_lang}). Отмена для файла.")
             return None
             
     print(f"\n[!] Исчерпаны попытки перевода для языка {target_lang}.")
