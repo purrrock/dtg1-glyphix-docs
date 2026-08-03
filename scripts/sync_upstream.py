@@ -47,12 +47,18 @@ def sync_chinese_docs():
         print("[*] Копирование документации...")
         shutil.copytree(extracted_src, TARGET_DIR)
         
-        # 5. Принудительное удаление .vuepress из новых данных
+        # 5. Принудительное удаление мусорных и устаревших данных
         vuepress_path = os.path.join(TARGET_DIR, ".vuepress")
         if os.path.exists(vuepress_path):
             shutil.rmtree(vuepress_path)
             print("[*] Директория .vuepress удалена (оптимизация контекста LLM).")
 
+        # ИСПРАВЛЕНИЕ: Убран несуществующий промежуточный узел "src"
+        outdated_en_path = os.path.join(TARGET_DIR, "en")
+        if os.path.exists(outdated_en_path):
+            shutil.rmtree(outdated_en_path)
+            print("[*] Устаревшая директория оригинального перевода 'en' удалена.")
+            
         print("[+] Синхронизация успешно завершена.")
 
 if __name__ == "__main__":
