@@ -7,7 +7,7 @@ from google.genai import types
 
 # Конфигурация путей
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SRC_DIR = os.path.join(BASE_DIR, "src", "original_docs", "src")
+SRC_DIR = os.path.join(BASE_DIR, "src", "original_docs")
 TRANSL_DIR = os.path.join(BASE_DIR, "src", "transl")
 
 # Настройка API Gemini
@@ -71,7 +71,7 @@ def process_translation():
         if "\\en\\" in filepath or "/en/" in filepath:
             continue
 
-        rel_path = os.path.relpath(filepath, SRC_DIR)
+        rel_path = os.path.relpath(filepath, SRC_DIR).replace("\\", "/")
         current_hash = get_file_hash(filepath)
         
         # Проверка, изменился ли файл с прошлого перевода

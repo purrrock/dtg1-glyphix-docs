@@ -11,7 +11,7 @@ RE_DELTAS_DIR = os.path.join(SRC_DIR, "re_deltas")
 
 # Маршрутизация исходных текстов по языкам
 LANGUAGES = {
-    "ZH": os.path.join(SRC_DIR, "original_docs", "src"),
+    "ZH": os.path.join(SRC_DIR, "original_docs"),
     "EN": os.path.join(SRC_DIR, "transl", "EN"),
     "RU": os.path.join(SRC_DIR, "transl", "RU")
 }
