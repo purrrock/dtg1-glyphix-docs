@@ -1,27 +1,19 @@
 # p
 
+Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text wrapping across lines even when set as an inline element. If rich text layout is required, you should consider using components like `span`.
 
-Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text crossing lines when set as an inline element. If you need to implement rich text typesetting, you should consider using components such as `span`.
-
-
-## property
-
+## Properties
 
 ### `text` <decl type="string" get set/>
 
-
-Set text content and support the following two writing methods.
-
+Sets the text content. Supports the following two writing formats:
 
 ``` html
 <p text="Hello Glyphix"></p>
 <p>Hello Glyphix</p>
 ```
 
-
 <glyphix id="p" :height="70" inline>
-
-
 
 ``` html
 <div>
@@ -30,67 +22,48 @@ Set text content and support the following two writing methods.
 </div>
 ```
 
-
 </glyphix>
-
-
 
 ### `color` <decl type="string" get set/>
 
-
-Set text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shortcut for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
-
+Sets the text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shorthand for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
 
 ### `lines` <decl type="number" get set/>
 
-
-Set the maximum number of lines of text. Text exceeding this number will be truncated or omitted. This property is a shortcut for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
-
+Sets the maximum number of lines for the text. Text exceeding this number of lines will be truncated or omitted. This property is a shorthand for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
 
 ### `text-align` <decl type="string" set/>
 
-
-Set the text alignment, supporting `left`, `center`, `right` and other values. This property is a shortcut for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
-
+Sets the text alignment. Supports values such as `left`, `center`, `right`, etc. This property is a shorthand for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
 
 ### `font-size` <decl type="string" set/>
 
-
-Set the text font size, supporting `12px`, `1.5em` and other CSS font size values. This property is a shortcut for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
-
+Sets the font size of the text. Supports CSS font size values like `12px`, `1.5em`, etc. This property is a shorthand for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
 
 ### `font-weight` <decl type="number" set/>
 
+Sets the font weight of the text. Currently, only integer values are supported, such as `400`, `600`, etc. This property is a shorthand for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
 
-Set the text font weight. Currently, only integer values ​​are supported, such as `400`, `600`, etc. This property is a shortcut for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
+## Tips & Tricks
 
+### Size Control
 
-## Tips
-
-
-### size control
-
-
-In general, do not manually set the height of the `p` component, e.g.
+In general, you should avoid manually setting the height of the `p` component. For example:
 ``` css
 p.my-paragraph {
   height: 48px;
   font-size: 32px;
 }
 ```
-On the face of it, this sets a height for the `p` component that is larger than the font size, but what happens is:
-- For single-line text, the actual height of some fonts may exceed the font size, and even heights of `48px` may appear vertically clipped.
-- For multi-line text, setting a fixed height will cause the multi-line text to be cropped and cannot be displayed completely.
+On the surface, this sets a height greater than the font size for the `p` component, but in reality:
+- For single-line text, the actual height of certain fonts may exceed the font size, and vertical clipping may occur even with a height of `48px`.
+- For multi-line text, setting a fixed height will cause the multi-line text to be clipped, preventing it from displaying completely.
 
+If you want to control the number of displayed lines of text, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to achieve text truncation and omission, rather than setting a fixed height.
 
-If you wish to control the number of lines of text displayed, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to implement text truncation and omission instead of setting a fixed height.
+### Text Clipping Animation <version-badge since="0.9"/>
 
-
-### Text clipping animation <version-badge since="0.9"/>
-
-
-You can use the [`width`](/framework/generic/styles.md#width) attribute with the [`transition`](/framework/component/prop-modifier.md#transition-修饰符) modification to implement text clipping animation. For example:
-
+You can use the [`width`](/framework/generic/styles.md#width) property combined with the [`transition`](/framework/component/prop-modifier.md#transition-modifier) modifier to achieve a text clipping animation. For example:
 
 ``` html
 <p :width="state ? 240 : 0"
@@ -99,9 +72,7 @@ You can use the [`width`](/framework/generic/styles.md#width) attribute with the
 </p>
 ```
 
-
-With the `max-lines: 1` style, you can achieve text cropping animation from left to right. But there is a problem with this animation: when the width is insufficient, the last character will be discarded instead of being cropped. The current workaround is to put the text content in a child component and animate the width of the parent component:
-
+Combined with the `max-lines: 1` style, this can achieve a left-to-right text clipping animation. However, there is a problem with this animation: when the width is insufficient, the last character is dropped directly instead of being clipped. The current workaround is to place the text content inside a child component and apply the width animation to the parent component:
 
 ``` html
 <div :width="state ? 240 : 1"
@@ -110,9 +81,7 @@ With the `max-lines: 1` style, you can achieve text cropping animation from left
 </div>
 ```
 
-
-<glyphix id="p-width-transition" title="文字裁剪动画" height="120">
-
+<glyphix id="p-width-transition" title="Text Clipping Animation" height="120">
 
 ``` html
 <div class="container">
@@ -129,7 +98,6 @@ With the `max-lines: 1` style, you can achieve text cropping animation from left
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
@@ -140,7 +108,6 @@ export default {
   }
 }
 ```
-
 
 ```css
 .container {
@@ -162,9 +129,6 @@ p {
 }
 ````
 
-
 </glyphix>
 
-
-
-However, when using a `div` element as a parent component, there is a problem with the animation: when the width is `0`, the layout size is calculated as `(width: 0, height: 0)`, which causes the element to be unable to occupy the vertical space and vertical jumps at the beginning of the animation. The solution is to set the width to a very small value (e.g. `1px` ) instead of `0` so that the element can occupy the vertical space and thus avoid the bounce problem.
+However, when using a `div` element as the parent component, the animation has an issue: when the width is `0`, the layout dimensions calculate to `(width: 0, height: 0)`, which causes the element to fail to occupy vertical space, resulting in a vertical jump at the start of the animation. The solution is to set the width to a very small value (e.g., `1px`) instead of `0` so that the element can still occupy vertical space, thereby avoiding the jumping issue.

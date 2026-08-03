@@ -1,22 +1,15 @@
 # drawer
 
+The drawer component is hidden by default and can display content through sliding gestures.
+The drawer is a basic drawer component. It supports sub-components and layouts, and you can place up to four `drawer-navigation` components inside a drawer to display drawers from the top, bottom, left, and right positions.
 
-The drawer component is hidden by default and can display content by sliding.
-drawer is the basic drawer component. Drawer supports sub-components and layouts. You can set up 4 drawer-navigation components in the drawer to display drawers in four positions: top, bottom, left and right.
-
-
-[`drawer`](drawer) The sliding speed of the component follows the sliding speed of the gesture. The faster the sliding speed of the gesture, the faster the sliding speed of the component.
-
+The sliding speed of the [`drawer`](drawer) component follows the gesture sliding speed: the faster the gesture, the faster the component slides.
 
 ### Example
 
-
-The following example demonstrates the functionality of the drawer
-
+The following example demonstrates the functionality of the drawer.
 
 <glyphix id="components-drawer" height="360" width="360" >
-
-
 
 ``` html
  <drawer class="drop-down">

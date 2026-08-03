@@ -1,74 +1,74 @@
-# 异步功能开发
+# Asynchronous Function Development
 
-在嵌入式系统中，许多操作都是耗时的——读取闪存、访问网络、等待硬件响应。如果这些操作在 UI 线程（同时也是渲染线程）执行，就会冻结 UI，导致应用无响应。
+In embedded systems, many operations are time-consuming—reading flash memory, accessing the network, and waiting for hardware responses. If these operations are executed on the UI thread (which is also the rendering thread), they will freeze the UI and cause the application to become unresponsive.
 
-Glyphix 通过将异步操作与 JavaScript 的 `Promise` 机制无缝对接来解决这个问题。C++ 侧负责真正的异步逻辑（通常在另一个线程或通过事件驱动），JavaScript 侧通过 `async/await` 或 `.then()` 等待结果，而 UI 在等待期间保持流畅。
+Glyphix solves this problem by seamlessly integrating asynchronous operations with JavaScript's `Promise` mechanism. The C++ side handles the actual asynchronous logic (usually in another thread or via event-driven mechanisms), the JavaScript side waits for the result using `async/await` or `.then()`, and the UI remains smooth during the wait.
 
-## 核心机制
+## Core Mechanism
 
-异步功能的核心是“会话（Session）”模型。当一个 JavaScript 异步调用发起时，C++ 侧创建一个**会话对象**（`AsyncSession`），立即返回一个 `Promise` 给 JavaScript；当操作完成时，会话驱动 `Promise` 的决议（resolve 或 reject），JavaScript 侧的 `then/catch` 或 `await` 随之得到执行。
+The core of the asynchronous functionality is the "Session" model. When a JavaScript asynchronous call is initiated, the C++ side creates a **session object** (`AsyncSession`) and immediately returns a `Promise` to JavaScript; when the operation completes, the session drives the resolution (resolve or reject) of the `Promise`, executing the `then/catch` or `await` on the JavaScript side.
 
-会话对象绑定到发起调用的 `Applet`，当应用退出时会话会自动清理，开发者无需手动管理内存。
+The session object is bound to the `Applet` that initiated the call. When the application exits, the session is automatically cleaned up, eliminating the need for developers to manage memory manually.
 
-下图展示了异步会话在框架中的位置和核心组件：
+The diagram below illustrates the position and core components of asynchronous sessions within the framework:
 
 <ArchDiagram max-width="520px">
   <div>
-    JavaScript 应用层
+    JavaScript Application Layer
     <div class="group row">
-      <div>async/await<div class="remark">调用模块函数</div></div>
-      <div>Promise<div class="remark">等待异步结果</div></div>
+      <div>async/await<div class="remark">Call module functions</div></div>
+      <div>Promise<div class="remark">Wait for async results</div></div>
     </div>
   </div>
   <div class="subject">
-    异步会话（C++）
+    Async Session (C++)
     <div class="group row">
-      <div>ResultSession<div class="remark">单次查询 · Promise 桥接</div></div>
-      <div>Signal&lt;T&gt;<div class="remark">全局事件广播</div></div>
+      <div>ResultSession<div class="remark">One-shot query · Promise bridge</div></div>
+      <div>Signal&lt;T&gt;<div class="remark">Global event broadcast</div></div>
     </div>
     <div class="group row">
-      <div>Client 类<div class="remark">纯 C++ · 无 JS 依赖</div></div>
-      <div>SingleTimer<div class="remark">超时控制</div></div>
+      <div>Client Class<div class="remark">Pure C++ · No JS dependency</div></div>
+      <div>SingleTimer<div class="remark">Timeout control</div></div>
     </div>
   </div>
   <div>
-    异步执行器
+    Async Executor
     <div class="group row">
-      <div>线程池<div class="remark">默认后台执行</div></div>
-      <div>自定义上下文<div class="remark">硬件驱动 · 事件循环</div></div>
+      <div>ThreadPool<div class="remark">Default background execution</div></div>
+      <div>Custom Context<div class="remark">Hardware driver · Event loop</div></div>
     </div>
   </div>
 </ArchDiagram>
 
-异步框架的实现在 `gx_async.h` 中，并封装在 `gx::async` 命名空间内。该框架提供几种有用的设施：
-- **`async::ResultSession`**：用于单次异步查询，适合读取文件、发起网络请求等场景。
-- **`async::make_timeout()`**：用于创建一个单次定时器，为单次会话附加超时功能。
-- **`async::Signal<T>`**：用于全局事件广播，适合设备状态变化、外部事件通知等场景。
+The asynchronous framework implementation is located in `gx_async.h` and encapsulated within the `gx::async` namespace. The framework provides several useful facilities:
+- **`async::ResultSession`**: Used for one-shot asynchronous queries, suitable for scenarios like reading files or making network requests.
+- **`async::make_timeout()`**: Used to create a single-shot timer that attaches timeout functionality to a one-shot session.
+- **`async::Signal<T>`**: Used for global event broadcasts, suitable for scenarios such as device state changes and external event notifications.
 
-## 单次查询 ResultSession
+## One-Shot Query: ResultSession
 
-`async::ResultSession<T>` 适合“发起查询，等待单个结果”的场景，例如读取一个文件、发起一次网络请求。它是最常用的异步模式，工作方式类似于异步函数调用。
+`async::ResultSession<T>` is suitable for scenarios where you "initiate a query and wait for a single result," such as reading a file or making a network request. It is the most commonly used asynchronous pattern and works much like an asynchronous function call.
 
-### 工作模型
+### Working Model
 
-一个 `ResultSession` 的完整生命周期如下：
+The complete lifecycle of a `ResultSession` is as follows:
 
-1. **创建**：模块函数通过 `async::make<ResultSession<T>>(applet)` 创建会话，会话自动绑定到当前 `Applet`。
-2. **配置**：通过 `session->client()` 访问客户端对象，设置任务所需的纯 C++ 参数。
-3. **提交**：调用 `session->request(resolver)` 提交任务，立即返回一个 `Promise` 给 JavaScript。
-4. **执行**：框架将客户端的 `resolve()` 方法转发到**异步执行器**（默认为后台线程池）执行。
-5. **回报**：`resolve()` 返回后，结果被**自动调度回 UI 线程**，驱动 `Promise` 的 resolve 或 reject。
-6. **清理**：会话对象在回报完成后自动销毁，或随 `Applet` 退出时自动清理。
+1. **Creation**: A module function creates a session via `async::make<ResultSession<T>>(applet)`, and the session is automatically bound to the current `Applet`.
+2. **Configuration**: Access the client object via `session->client()` to set the pure C++ parameters required by the task.
+3. **Submission**: Call `session->request(resolver)` to submit the task, which immediately returns a `Promise` to JavaScript.
+4. **Execution**: The framework forwards the client's `resolve()` method to the **asynchronous executor** (defaulting to a background thread pool) for execution.
+5. **Callback**: After `resolve()` returns, the result is **automatically dispatched back to the UI thread** to drive the resolution or rejection of the `Promise`.
+6. **Cleanup**: The session object is automatically destroyed after the callback completes, or cleaned up automatically when the `Applet` exits.
 
-::: important Client 类的隔离要求
-客户端类（即模板参数 `T`）运行在异步上下文中，**不得持有或访问任何与 JavaScript 交互的对象**，包括 `JsValue`、`Applet *` 等任何 UI 线程专属对象。
+::: important Client Class Isolation Requirements
+The client class (i.e., the template parameter `T`) runs in the asynchronous context and **must not hold or access any objects that interact with JavaScript**, including `JsValue`, `Applet *`, or any other UI-thread-exclusive objects.
 
-客户端类应当是一个**纯 C++ 数据处理单元**，只持有执行任务所需的值类型数据（如 `String`、`int`、或自定义结构等），并在 `resolve()` 方法中完成全部工作。UI 线程与异步线程之间的所有交互由框架自动处理。
+The client class should be a **pure C++ data processing unit**, holding only value-type data required to execute the task (such as `String`, `int`, or custom structures), and completing all work within its `resolve()` method. All interactions between the UI thread and the asynchronous thread are handled automatically by the framework.
 :::
 
-### 基本用法
+### Basic Usage
 
-首先，定义一个客户端类，实现 `resolve()` 方法。该方法在异步上下文中被调用，返回 `async::Result<T>` 包装的结果：
+First, define a client class and implement the `resolve()` method. This method is called in the asynchronous context and returns a result wrapped in `async::Result<T>`:
 
 ```cpp
 #include "gx_async.h"
@@ -76,23 +76,23 @@ Glyphix 通过将异步操作与 JavaScript 的 `Promise` 机制无缝对接来�
 
 using namespace gx;
 
-// 客户端类：纯 C++ 数据处理，不持有任何 JS 对象
+// Client class: pure C++ data processing, holds no JS objects
 class ReadTextClient {
 public:
     void setPath(const String &path) { m_path = path; }
 
-    // 在异步上下文中调用，返回操作结果
+    // Called in the asynchronous context, returns the operation result
     async::Result<String> resolve() {
         File file(m_path);
         if (!file.open(File::ReadOnly | File::Text))
-            return async::Status(300);  // IO 错误
+            return async::Status(300);  // IO error
         int size = int(file.size());
         String text(size);
         text.resize(file.read(text.data(), size));
-        return text;  // 成功：返回文件内容
+        return text;  // Success: return file content
     }
 
-    // 可选：自定义错误消息（当 Promise 被 reject 时使用）
+    // Optional: Custom error message (used when the Promise is rejected)
     static const char *errorMessage(async::Status status) {
         switch (status.value()) {
         case 300: return "io error";
@@ -101,11 +101,11 @@ public:
     }
 
 private:
-    String m_path;  // 已经过安全校验的绝对路径
+    String m_path;  // Absolute path that has already passed security validation
 };
 ```
 
-然后，在模块函数中创建会话并返回 `Promise`。注意：**必须**使用 `Applet::resolveUri()` 对 JavaScript 传入的路径进行安全校验，而不是直接信任应用提供的字符串：
+Next, create the session within the module function and return the `Promise`. Note: You **must** use `Applet::resolveUri()` to perform security validation on the path passed from JavaScript rather than blindly trusting the string provided by the application:
 
 ```cpp
 static JsValue readText(JsCtx ctx) {
@@ -113,42 +113,42 @@ static JsValue readText(JsCtx ctx) {
     if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
         return {};
 
-    // ✅ 安全：通过 resolveUri 校验并转换路径
+    // ✅ Secure: Validate and convert the path via resolveUri
     auto uri = applet->resolveUri(ctx.arg(0)["uri"].toString());
     if (uri.empty())
-        return {};  // URI 校验失败，拒绝访问
+        return {};  // URI validation failed, access denied
 
     using Session = async::ResultSession<ReadTextClient>;
     auto *session = async::make<Session>(applet);
-    session->client().setPath(uri);  // 传入校验后的安全路径
+    session->client().setPath(uri);  // Pass the validated secure path
 
-    // 提交异步任务，传入完整的 options 对象以兼容快应用回调接口
+    // Submit the async task, passing the complete options object for QuickApp callback interface compatibility
     session->request(ctx.arg(0));
     return session->promise();
 }
 ```
 
-::: tip 为什么传入 `ctx.arg(0)`？
-`request()` 接收 JavaScript 侧传入的整个 `options` 对象，即 `ctx.arg(0)`，用于自动适配快应用异步接口的两种[调用风格](/api/README.md#快应用异步接口)：
+::: tip Why pass `ctx.arg(0)`?
+`request()` receives the entire `options` object passed from the JavaScript side (i.e., `ctx.arg(0)`), which is used to automatically adapt to both [calling styles](/api/README.md#quickapp-asynchronous-interfaces) of QuickApp asynchronous interfaces:
 
-- 若 `options` 中包含 `success`、`fail` 或 `complete` 任意属性，判定为**回调风格**，直接调用对应函数，`request()` 不返回有意义的值；
-- 否则判定为 **Promise 风格**，将创建一个新的 `Promise`，`session->promise()` 返回该对象供调用方 `await`。
+- If `options` contains any of the `success`, `fail`, or `complete` properties, it is determined to be **callback style**, and the corresponding function is called directly. `request()` does not return a meaningful value;
+- Otherwise, it is determined to be **Promise style**, creating a new `Promise`, and `session->promise()` returns that object for the caller to `await`.
 
-这使得同一个 C++ 实现无需任何额外代码，就能同时支持快应用标准的回调接口和现代 Promise/async-await 接口。如果确定只支持 Promise 风格，也可以传入空值 `{}`。
+This allows the exact same C++ implementation to support both standard QuickApp callback interfaces and modern Promise/async-await interfaces without any extra code. If you are certain you only want to support the Promise style, you can also pass an empty value `{}`.
 :::
 
-::: danger 不要跳过 URI 校验
-直接使用 JavaScript 传入的字符串作为文件路径是严重的安全漏洞：
+::: danger Do not skip URI validation
+Using a string passed directly from JavaScript as a file path is a severe security vulnerability:
 
 ```cpp
-// ❌ 危险！绕过了沙箱的路径安全检查
+// ❌ Dangerous! Bypasses the sandbox's path security checks
 session->client().setPath(ctx.arg(0)["uri"].toString());
 ```
 
-恶意应用可以通过路径穿越（如 `../../etc/passwd`）访问沙箱外的文件系统。所有来自 JavaScript 的路径**必须**经过 `Applet::resolveUri()` 消毒，它会检测路径穿越攻击、跨应用越权访问和非法 URI 格式，校验失败时返回空字符串。
+Malicious applications can use path traversal (such as `../../etc/passwd`) to access the file system outside the sandbox. All paths coming from JavaScript **must** be sanitized via `Applet::resolveUri()`, which detects path traversal attacks, cross-app unauthorized access, and invalid URI formats, returning an empty string if validation fails.
 :::
 
-JavaScript 侧的用法：
+Usage on the JavaScript side:
 
 ```javascript
 import file from '@system.file'
@@ -165,72 +165,72 @@ async function loadConfig() {
 }
 ```
 
-### 错误与状态码
+### Errors and Status Codes
 
-`async::Status` 封装了一个整数状态码，`0`（即 `async::OK`）表示成功，其他值为业务自定义错误码：
+`async::Status` encapsulates an integer status code, where `0` (i.e., `async::OK`) represents success, and other values represent custom business error codes:
 
 ```cpp
-// 成功：直接返回值，状态码自动为 OK
+// Success: Return value directly, status code defaults to OK
 return async::Result<String>{std::move(content)};
-// 失败：仅返回状态码，值部分被忽略
+// Failure: Return status code only, value part is ignored
 return async::Status(404);
-// 同时携带部分结果和非 OK 状态（例如 HTTP 206 Partial Content）
+// Carry both a partial result and a non-OK status (e.g., HTTP 206 Partial Content)
 return async::Result<ByteArray>{
   std::move(partialData),
   async::Status(206)
 };
 ```
 
-当 `resolve()` 返回错误状态时，`Promise` 会被 reject，JavaScript 的 `catch` 块会收到一个包含 `message` 和 `code` 字段的错误对象。`message` 来自客户端类的 `errorMessage()` 静态方法。
+When `resolve()` returns an error status, the `Promise` is rejected, and JavaScript's `catch` block receives an error object containing `message` and `code` fields. The `message` comes from the `errorMessage()` static method of the client class.
 
-`errorMessage()` 支持多种签名，框架会自动识别：
+`errorMessage()` supports multiple signatures, which the framework automatically recognizes:
 
 ```cpp
-// 形式一：接收 Status（推荐，简洁）
+// Form 1: Accepts Status (Recommended, concise)
 static const char *errorMessage(async::Status status);
 
-// 形式二：接收完整的 Result，可根据值和状态生成消息
+// Form 2: Accepts the complete Result, allowing message generation based on both value and status
 static String errorMessage(const async::Result<MyType> &result);
 ```
 
-若客户端类没有定义 `errorMessage()`，框架会使用默认的 `"unknown async error"`。
+If the client class does not define `errorMessage()`, the framework defaults to `"unknown async error"`.
 
-### 值类型与 JavaScript 转换
+### Value Types and JavaScript Conversion
 
-`resolve()` 返回的值不会原样传给 JavaScript，框架通过 `js_cast()` 函数将 C++ 类型自动转换为 `JsValue`，再驱动 `Promise` 的 resolve。这个过程在框架内部完成，看起来“透明”，但实际上依赖一套**隐式约定**：只有实现了 `js_cast()` 特化的类型才能正确转换，对于自定义的枚举、结构体等类型，需要显式建立转换关系，否则编译将会失败。
+The value returned by `resolve()` is not passed to JavaScript as-is; the framework uses the `js_cast()` function to automatically convert C++ types into `JsValue` before driving the `Promise` resolution. This process happens entirely within the framework and appears "transparent," but it actually relies on a set of **implicit conventions**: only types that implement `js_cast()` specializations can be correctly converted. Custom enums, structs, and other types require explicit conversion relationships to be established, otherwise compilation will fail.
 
-#### 内置支持的类型
+#### Built-in Supported Types
 
-下列类型可以直接作为 `Result<T>` 的类型参数，无需额外工作：
+The following types can be used directly as type parameters for `Result<T>` without extra work:
 
-| C++ 类型 | 对应的 JavaScript 类型 | 备注 |
+| C++ Type | Corresponding JavaScript Type | Remarks |
 | --- | --- | --- |
-| `int`、`double`、`float` | `number` | 数值直接映射 |
-| `bool` | `boolean` | 布尔值直接映射 |
-| `String`、`StringView`、`const char *` | `string` | 字符串直接映射 |
-| `ByteArray` | `ArrayBuffer` | 二进制数据 |
-| `JsonValue` | `object` / `array` | JSON 对象或数组 |
-| [`std::vector<T>`](https://en.cppreference.com/w/cpp/container/vector) | `Array` | 数组，元素递归转换（`T` 本身也需可转换） |
-| `JsValue` | 任意 | 直接传递，不做转换 |
-| `void`（即 `Result<void>`） | `undefined` | 无返回值 |
+| `int`, `double`, `float` | `number` | Direct numerical mapping |
+| `bool` | `boolean` | Direct boolean mapping |
+| `String`, `StringView`, `const char *` | `string` | Direct string mapping |
+| `ByteArray` | `ArrayBuffer` | Binary data |
+| `JsonValue` | `object` / `array` | JSON object or array |
+| [`std::vector<T>`](https://en.cppreference.com/w/cpp/container/vector) | `Array` | Array, elements recursively converted (`T` itself must also be convertible) |
+| `JsValue` | Any | Passed directly without conversion |
+| `void` (i.e., `Result<void>`) | `undefined` | No return value |
 
-这些类型均在 JsVM 框架中内置了 `js_cast<T>()` 特化，它们一部分是 `JsValue` 可直接构造的类型，一部分则通过特化实现了转换逻辑。
+These types all have built-in `js_cast<T>()` specializations in the JsVM framework. Some are types that `JsValue` can construct directly, while others implement conversion logic via specializations.
 
-#### 为自定义类型添加转换支持
+#### Adding Conversion Support for Custom Types
 
-如果使用的类型不在上述列表中，编译器会报错提示无法构造 `JsValue`。有两种方式解决：
+If the type you are using is not in the list above, the compiler will throw an error indicating that `JsValue` cannot be constructed. There are two ways to resolve this:
 
-**方式一：定义 `operator JsValue()` 成员函数**
+**Approach 1: Define an `operator JsValue()` Member Function**
 
-这适合可以修改定义的自定义结构体，好处是转换逻辑内置在类型定义中，紧密耦合：
+This is suitable for custom structs whose definitions you can modify. The advantage is that the conversion logic is built directly into the type definition, creating tight coupling:
 
 ```cpp
 struct DeviceInfo {
     String model;
     int version;
 
-    // 将结构体转换为 JavaScript 对象
-    // 注意：转换在 UI 线程执行，此时有合法的 JsVM 上下文
+    // Convert struct to JavaScript object
+    // Note: Conversion runs on the UI thread, where a valid JsVM context exists
     operator JsValue() const {
         JsVM &vm = JsVM::current();
         JsValue obj = vm.newObject();
@@ -241,26 +241,26 @@ struct DeviceInfo {
 };
 ```
 
-定义后，`Result<DeviceInfo>` 可以直接使用：
+Once defined, `Result<DeviceInfo>` can be used directly:
 
 ```cpp
 async::Result<DeviceInfo> resolve() {
-    return DeviceInfo{"ModelX", 3};  // 框架自动调用 operator JsValue()
+    return DeviceInfo{"ModelX", 3};  // Framework automatically calls operator JsValue()
 }
 ```
 
-`operator JsValue()` 内部使用的 `JsVM::current()`、`vm.newObject()` 等 API 属于 JsVM 桥接层，详见 [Native Module 开发文档](./native-module.md#创建与返回对象)。
+APIs used inside `operator JsValue()`, such as `JsVM::current()` and `vm.newObject()`, belong to the JsVM bridge layer. For details, see the [Native Module Development Documentation](./native-module.md#creating-and-returning-objects).
 
-**方式二：在 `gx` 命名空间中[特化](https://en.cppreference.com/w/cpp/language/template_specialization) `js_cast<T>`**
+**Approach 2: [Specializing](https://en.cppreference.com/w/cpp/language/template_specialization) `js_cast<T>` in the `gx` Namespace**
 
-适合不能修改原始类型定义的情况（例如来自外部定义的类型或枚举）：
+Suitable for situations where the original type definition cannot be modified (such as externally defined types or enums):
 
 ```cpp
-// 必要时在使用前声明该特化
+// Declare the specialization prior to use if necessary
 template<>
 JsValue gx::js_cast<ConnectionState>(const ConnectionState &x);
 
-// 在 gx 命名空间内特化
+// Specialize within the gx namespace
 template<>
 JsValue gx::js_cast<ConnectionState>(const ConnectionState &x) {
     switch (x) {
@@ -272,10 +272,10 @@ JsValue gx::js_cast<ConnectionState>(const ConnectionState &x) {
 }
 ```
 
-特化完成后，`Result<ConnectionState>` 和 `Signal<ConnectionState>` 均可正常工作。
+Once specialized, both `Result<ConnectionState>` and `Signal<ConnectionState>` will work normally.
 
-::: tip 整数枚举的简便做法
-如果枚举值直接对应整数，在 `resolve()` 中手动转换为 `int` 是最省力的方式，无需任何特化：
+::: tip Simple Approach for Integer Enums
+If your enum values directly correspond to integers, manually casting to `int` inside `resolve()` is the easiest method and requires no specializations at all:
 
 ```cpp
 async::Result<int> resolve() {
@@ -284,56 +284,57 @@ async::Result<int> resolve() {
 ```
 :::
 
-#### 运行时转换开销
+#### Runtime Conversion Overhead
 
-`js_cast()` 在异步结果投递回 UI 线程**之后**才执行，不在异步线程中运行。转换的时间开销完全发生在 UI 线程，对于复杂结构需要确保足够快以避免卡帧。各类型的实际代价如下：
+`js_cast()` is executed **after** the asynchronous result is delivered back to the UI thread, not in the asynchronous thread. The time cost of conversion occurs entirely on the UI thread; for complex structures, you must ensure it is fast enough to avoid frame drops. The actual cost of each type is as follows:
 
-- **零开销类型**：`int`、`double`、`bool`、`String`、`const char *` 通过 `JsValue` 构造函数直接映射，无额外拷贝或堆分配。`operator JsValue()` 方式和 `js_cast<T>` 特化同样在编译期内联，没有虚调用或间接层。
-- **线性开销类型**：`std::vector<T>` 需要逐元素调用 `setIndex()`，开销与元素数量成正比。如果返回结构是固定字段的对象，优先用 `operator JsValue()` 手动构造 JS 对象，比数组更高效也更易读。
-- **树形遍历类型**：`JsonValue` 在转换时递归遍历整棵树，逐一构造 JavaScript 节点，是内置类型中开销最大的。如果数据结构在编译期已知，`operator JsValue()` 直接构造对象通常更快，且没有 `JsonValue` 本身的构建成本。
-- **自定义结构体**：如果使用 `operator JsValue()` 或 `js_cast()` 特化，转换性能取决于各成员类型的转换开销，即构造对象的复杂度。
+- **Zero-overhead types**: `int`, `double`, `bool`, `String`, and `const char *` are mapped directly via `JsValue` constructors with no extra copies or heap allocations. The `operator JsValue()` approach and `js_cast<T>` specializations are also inlined at compile-time with no virtual calls or indirection layers.
+- **Linear-overhead types**: `std::vector<T>` requires calling `setIndex()` element by element, with an overhead proportional to the number of elements. If the returned structure is an object with fixed fields, prefer using `operator JsValue()` to manually construct the JS object, which is more efficient and easier to read than an array.
+- **Tree-traversal types**: `JsonValue` recursively traverses the entire tree during conversion, constructing JavaScript nodes one by one, making it the highest-overhead built-in type. If the data structure is known at compile-time, `operator JsValue()` constructing the object directly is usually faster and avoids the construction cost of `JsonValue` itself.
+- **Custom structs**: If you use `operator JsValue()` or `js_cast()` specializations, conversion performance depends on the conversion overhead of each member type, i.e., the complexity of constructing the object.
 
-::: tip 简单判定标准
-如果你的异步数据结构简单（数值、简单结构体对象，或小的 `JsonValue`），那么转换开销通常不会影响 UI 流畅性。
+::: tip Simple Decision Criterion
+If your asynchronous data structures are simple (numbers, simple struct objects, or small `JsonValue`s), the conversion overhead will generally not impact UI fluidity.
 :::
 
-#### 无序列化中间层
+#### No Serialization Intermediary Layer
 
-某些异步框架要求在 worker 线程和 UI 线程之间传递数据时，必须先将结果序列化为 JSON 或其他自描述格式，再在 UI 线程反序列化，这是为了实现线程间的“类型擦除”传递，但代价是每次调用都要承担字符串（或二进制数据流）的拼接、传输和解析开销。更糟的是可能构造多份数据副本（序列化的中间数据和原始数据等）。
+Some asynchronous frameworks require that when passing data between a worker thread and the UI thread, results must first be serialized into JSON or another self-describing format and then deserialized on the UI thread. This is done to achieve "type-erased" passing between threads, but at the cost of incurring string (or binary data stream) concatenation, transmission, and parsing overhead on every call. Worse still, it may construct multiple copies of the data (such as intermediate serialized data alongside the original data).
 
-async 框架**不依赖序列化中间层。** 结果通过 `async::Result<T>` 以 C++ 原生值的形式在线程间移动，完全绕过序列化过程：
+The async framework **does not rely on a serialization intermediary layer.** Results are moved across threads as native C++ values via `async::Result<T>`, completely bypassing the serialization process:
 
 ```
 worker thread                  UI thread
 resolve(Result<MyType>{...}) → js_cast(result.value()) → JsValue (JavaScript)
                   ↑
-             直接内存移动，无 JSON 字符串
+             Direct memory movement, no JSON strings
 ```
 
-`js_cast()` 仅在结果已经安全地回到 UI 线程之后才执行，它的职责是将 C++ 值映射为 JavaScript 引擎的内部表示，而不是充当线程间的通信协议。
+`js_cast()` is only executed after the result has safely returned to the UI thread; its job is to map C++ values to the JavaScript engine's internal representation, not to act as an inter-thread communication protocol.
 
-如果你主动选择将 `JsonValue` 作为 `Result<T>` 的类型参数（用于缓解模板代码膨胀），那么你引入的是 `JsonValue` 的**构建和树遍历**开销，而不是字符串序列化，`JsonValue` 本身也是一种内存中的树形结构，不是文本格式。
+If you voluntarily choose to use `JsonValue` as the type parameter for `Result<T>` (to mitigate template code bloat), you are introducing the **construction and tree traversal** overhead of `JsonValue`, not string serialization. `JsonValue` itself is also an in-memory tree structure, not a text format.
 
-#### 模板代码体积
+#### Template Code Size
 
-`ResultSession<T>` 是模板类，编译器会为每个不同的客户端类型 `T` 生成一份独立的代码。不过框架已将绝大多数与 `T` 无关的逻辑（如 `Promise` 管理、事件投递、`Applet` 生命周期绑定）提取到非模板基类 `detail::ResultSession` 中，因此每个 `T` 实际额外增加的代码量主要集中在薄薄的 `Resolver` 适配层。
+`ResultSession<T>` is a template class, meaning the compiler generates an independent copy of code for each distinct client type `T`. However, the framework extracts the vast majority of logic unrelated to `T` (such as `Promise` management, event dispatching, and `Applet` lifecycle binding) into the non-template base class `detail::ResultSession`. Therefore, the additional code size generated for each `T` is primarily concentrated in the lightweight `Resolver` adaptation layer.
 
-但如果项目中存在**大量仅使用一次的细粒度客户端类型**，累积的实例化数量仍会带来可观的代码量增长。
+However, if a project contains **a large number of fine-grained client types used only once**, the accumulated number of instantiations can still lead to a noticeable increase in code size.
 
-一种常见的压缩手段是以 `JsonValue` 作为类型擦除媒介，将多个零散的小函数合并到单一的客户端类型中：
+A common compression technique is to use `JsonValue` as a type-erasure medium, merging multiple scattered small functions into a single client type:
 
 ```cpp
-// 合并前：每个操作都是独立的客户端类 + 独立的模板实例化
+// Before merging: Each operation is an independent client class + independent template instantiation
 struct GetVersionClient { ... };   // ResultSession<GetVersionClient>
 struct GetModelClient   { ... };   // ResultSession<GetModelClient>
 struct GetSerialClient  { ... };   // ResultSession<GetSerialClient>
 
-// 合并后：共享同一个模板实例化，仅在运行时区分操作
+// After merging: Share the same template instantiation, distinguishing operations at runtime
 struct DeviceQueryClient {
     enum Kind { Version, Model, Serial } kind;
 
-    // 这里演示用 switch 分派，实际也可以用函数指针。但是不要用 BaseClient
-    // 配合派生类重写 resolve() 来实现多态，会比函数指针方案多一些虚表膨胀。
+    // A switch dispatch is demonstrated here, but function pointers can also be used.
+    // However, avoid using BaseClient with derived classes overriding resolve() for polymorphism,
+    // as it introduces more vtable bloat than the function pointer approach.
     async::Result<JsonValue> resolve() {
         switch (kind) {
         case Kind::Version: return JsonValue{getVersion()};
@@ -343,7 +344,7 @@ struct DeviceQueryClient {
     }
 };
 
-// 三个模块函数共用 ResultSession<DeviceQueryClient> 这一个实例化
+// Three module functions share a single instantiation of ResultSession<DeviceQueryClient>
 static JsValue getVersion(JsCtx ctx) {
     using Session = async::ResultSession<DeviceQueryClient>;
     auto *session = async::make<Session>(applet);
@@ -352,18 +353,18 @@ static JsValue getVersion(JsCtx ctx) {
 }
 ```
 
-这种做法的代价是：返回类型退化为 `JsonValue`，需要承担额外的转换运行时开销（见上文）。因此它适合**数据量小、函数数量多**的场景，用少量运行时开销换取有意义的代码体积收益。对于数据量较大或性能敏感的操作，仍应保留独立的强类型客户端类。
+The trade-off of this approach is that the return type degrades to `JsonValue`, incurring extra runtime conversion overhead (see above). Therefore, it is suitable for scenarios with **small data volumes and a high number of functions**, trading a small amount of runtime overhead for meaningful code size savings. For data-intensive or performance-sensitive operations, independent strongly-typed client classes should still be retained.
 
-### 自定义异步上下文
+### Custom Asynchronous Contexts
 
-默认情况下，`session->request()` 将 `resolve()` 提交到框架的**异步执行器**——通常是一个后台线程池。但有些场景需要使用不同的异步上下文，例如自定义事件循环或 AIO 多路复用机制，它们均不希望占用额外的线程资源。
+By default, `session->request()` submits `resolve()` to the framework's **asynchronous executor**—typically a background thread pool. However, some scenarios require using a different asynchronous context, such as a custom event loop or AIO multiplexing mechanism, neither of which wants to consume extra thread resources.
 
-这时可以跳过 `request()`，直接手动控制异步执行流程，客户端类也不需要实现 `resolve()` 执行函数。关键是：**在异步上下文中完成工作后，调用 `session->resolve()` 将结果投递回 UI 线程**。
+In such cases, you can bypass `request()` and manually control the asynchronous execution flow yourself. The client class does not need to implement a `resolve()` execution function either. The key is: **After completing work in the asynchronous context, call `session->resolve()` to deliver the result back to the UI thread.**
 
 ```cpp
-// 客户端类：不需要实现 resolve()，因为不使用默认线程池
+// Client class: No need to implement resolve() since the default thread pool is not used
 struct FirmwareCheckClient {
-    // 仅定义 errorMessage() 用于错误描述
+    // Only define errorMessage() for error description
     static const char *errorMessage(async::Status status) {
         switch (status.value()) {
         case 1: return "firmware not found";
@@ -381,14 +382,14 @@ static JsValue checkFirmwareUpdate(JsCtx ctx) {
     auto *session = async::make<Session>(applet);
     auto version = ctx.arg(0).asString();
 
-    // 手动设置 resolver（不调用 request，不使用默认线程池）
+    // Manually set resolver (do not call request, do not use default thread pool)
     session->setResolver(ctx.arg(0));
     JsValue promise = session->promise();
 
-    // 提交到自定义的硬件驱动线程
+    // Submit to a custom hardware driver thread
     HardwareDriver::checkUpdate(
         version,
-        // 回调可能在任意线程——框架会自动调度回 UI 线程
+        // Callbacks may run on any thread—the framework automatically dispatches back to the UI thread
         [session](bool available) {
             session->resolve<bool>(available);
         },
@@ -401,52 +402,52 @@ static JsValue checkFirmwareUpdate(JsCtx ctx) {
 }
 ```
 
-这里的核心区别：
-- `request()` 同时完成“设置 resolver”和“提交到异步执行器”两个动作；
-- 手动模式下，你需要自己调用 `setResolver()` 设置响应目标，然后在任意时机通过 `session->resolve()` 推送结果或者错误状态。
+The core differences here:
+- `request()` performs both "setting the resolver" and "submitting to the async executor" in one step;
+- In manual mode, you must call `setResolver()` yourself to set the response target, and then push results or error statuses via `session->resolve()` at any arbitrary time.
 
-`resolve()` 是线程安全的，它将结果封装为事件投递回 UI 线程，再完成 `Promise` 的决议。
+`resolve()` is thread-safe; it packages the result as an event, posts it back to the UI thread, and then resolves the `Promise`.
 
-::: tip 何时使用自定义上下文
-- 底层驱动已提供回调接口，你不想再创建额外的线程：直接在驱动回调中 `resolve`。
-- 需要与现有的 AIO/epoll 事件循环集成：在事件完成回调中 `resolve`。
-- 需要串行化执行（如操作必须按顺序）：用自己的任务队列调度，完成后 `resolve`。
+::: tip When to Use Custom Contexts
+- The underlying driver already provides a callback interface and you do not want to create extra threads: simply `resolve` directly inside the driver callback.
+- You need to integrate with an existing AIO/epoll event loop: `resolve` inside the event completion callback.
+- Serialized execution is required (e.g., operations must run in order): schedule using your own task queue and `resolve` when finished.
 
-只要保证最终调用一次 `session->resolve()` 即可，框架不关心结果是从哪个线程投递的。
+As long as you ensure `session->resolve()` is eventually called once, the framework does not care which thread the result is posted from.
 :::
 
-### 值类型语义
+### Value Type Semantics
 
-由于 `resolve()` 返回（或自定义异步上下文主动投递）的 `async::Result<T>` 值会被投递到 UI 线程再转换为 `JsValue`，因此数据类型 `T` 必须是可移动的。内置支持的类型均满足这一要求，对于自定义类型：
-- 如果是一个仅包含内置支持类型成员的结构体，那么 C++ 标准保证它是可移动的。
-- 如果使用了裸指针并自己控制其所有权，那么你需要正确实现[移动构造函数](https://en.cppreference.com/w/cpp/language/move_constructor)。
-- [平凡类型](https://en.cppreference.com/w/cpp/named_req/TrivialType)（如纯 C 结构体、枚举等）默认满足值类型语义。
+Since the `async::Result<T>` value returned by `resolve()` (or proactively posted by a custom async context) is dispatched to the UI thread before being converted to `JsValue`, the data type `T` must be moveable. All built-in supported types satisfy this requirement. For custom types:
+- If it is a struct containing only built-in supported type members, the C++ standard guarantees it is moveable.
+- If you use raw pointers and manage their ownership yourself, you must correctly implement a [move constructor](https://en.cppreference.com/w/cpp/language/move_constructor).
+- [Trivial types](https://en.cppreference.com/w/cpp/named_req/TrivialType) (such as pure C structs and enums) satisfy value type semantics by default.
 
-需要注意的是，非平凡类型通常包含堆上的资源，以下写法可能面临内存峰值问题：
+Note that non-trivial types typically contain resources on the heap, and writing code like this may lead to memory peak issues:
 
 ```cpp
 auto *session = getFetchLargeDataSession();
 std::vector<uint32_t> data = fetchDataFromNetwork(url);
-session->resolve<decltype(data)>(data);  // 会有一次 data 的完整复制
+session->resolve<decltype(data)>(data);  // Results in a full copy of data
 ```
-这是因为 `session->resolve()` 的参数是按值传递的，传入 `data` 时会调用[复制构造函数](https://en.cppreference.com/w/cpp/language/copy_constructor)，导致完整复制一份。如果 `data` 数据量很大，这会导致内存使用量翻倍。此时会出现这类编译警告：
+This happens because parameters in `session->resolve()` are passed by value, and passing `data` invokes the [copy constructor](https://en.cppreference.com/w/cpp/language/copy_constructor), resulting in a full copy. If `data` is large, this will double memory usage. When this occurs, the compiler issues a warning:
 ```
 '...' is deprecated:
 avoid use copy semantics of Result<T> if T is not trivially copyable
 ```
-正确的做法是使用 [`std::move()`](https://en.cppreference.com/w/cpp/utility/move) 显式启用移动语义：
+The correct approach is to explicitly enable move semantics using [`std::move()`](https://en.cppreference.com/w/cpp/utility/move):
 
 ```cpp
 auto *session = getFetchLargeDataSession();
 std::vector<uint32_t> data = fetchDataFromNetwork(url);
-session->resolve<decltype(data)>(std::move(data));  // 使用移动语义
+session->resolve<decltype(data)>(std::move(data));  // Uses move semantics
 ```
 
-### 超时控制
+### Timeout Control
 
-对于可能长时间无响应的异步操作，使用 `async::make_timeout()` 为会话添加超时保护。超时后会自动 reject `Promise`，避免 JavaScript 侧永久挂起。
+For asynchronous operations that may hang indefinitely without a response, use `async::make_timeout()` to add timeout protection to the session. Upon timing out, the `Promise` is automatically rejected, preventing the JavaScript side from hanging permanently.
 
-以下代码片段展示了一个基本示例，演示如何在网络请求中使用超时控制：
+The following code snippet demonstrates a basic example of how to use timeout control in a network request:
 
 ```cpp
 static JsValue fetchData(JsCtx ctx) {
@@ -462,18 +463,18 @@ static JsValue fetchData(JsCtx ctx) {
     session->setResolver(ctx.arg(0));
     JsValue promise = session->promise();
 
-    // 创建超时保护：超时后自动 reject Promise
+    // Create timeout protection: automatically reject Promise upon timeout
     auto handle = async::make_timeout(session, timeoutMs,
         [](Session *s) {
-            // 超时处理：应当在此取消正在进行的异步操作
+            // Timeout handling: ongoing async operations should be cancelled here
             s->fulfill(async::Status(408));  // 408 Request Timeout
             
         });
 
-    // 将 handle 移动到异步执行上下文
+    // Move handle into the asynchronous execution context
     NetworkDriver::fetch(url,
         [handle = std::move(handle)](auto &response) {
-            // 若已超时，resolve 会被安全忽略
+            // If timed out, resolve will be safely ignored
             handle->resolve<String>(std::move(response.body));
         });
 
@@ -481,217 +482,217 @@ static JsValue fetchData(JsCtx ctx) {
 }
 ```
 
-#### 工作原理
+#### How It Works
 
-`make_timeout()` 的关键工作流程：
+Key workflow of `make_timeout()`:
 
-1. 将 `session` 的客户端数据**移动**到一个内部类中，此后不得再访问 `session->client()`。
-2. 启动一个单次定时器，返回 `SharedRef<SingleTimer>` 句柄。
-3. **正常路径**：在超时前调用 `handle->resolve()`，内部原子地取走 session 所有权并投递结果事件，之后定时器触发时发现 session 已为空便不作处理。
-4. **超时路径**：定时触发，**在 UI 线程**执行回调，开发者在回调中调用 `session->fulfill()` 投递错误状态；回调返回后，timer 负责 `delete session`。
-5. **应用退出**：`Applet` 被销毁时，timer 自动解绑，session 被删除，回调不会被触发。
+1. **Moves** the client data of the `session` into an internal class; `session->client()` must not be accessed thereafter.
+2. Starts a single-shot timer, returning a `SharedRef<SingleTimer>` handle.
+3. **Happy path**: `handle->resolve()` is called before the timeout, atomically taking ownership of the session and dispatching the result event. When the timer subsequently fires, it finds the session empty and takes no action.
+4. **Timeout path**: The timer fires, executing the callback **on the UI thread**. The developer calls `session->fulfill()` inside the callback to post an error status; after the callback returns, the timer is responsible for `delete session`.
+5. **App exit**: When the `Applet` is destroyed, the timer is automatically unbound, the session is deleted, and the callback is never triggered.
 
-该机制特别适用于异步操作没有内置超时机制的场景，如某些网络请求的实现。众所周知，正确地实现超时保护有些棘手，你必须正确处理所有路径的竞争条件和生命周期安全问题。
+This mechanism is particularly useful for scenarios where underlying asynchronous operations lack built-in timeout mechanisms, such as certain network request implementations. As is well known, implementing timeout protection correctly can be tricky; you must properly handle race conditions and lifecycle safety across all code paths.
 
-`make_timeout()` 依赖这些前提来保证安全性：
-- 客户端类型（也就是 `ResultSession<T>` 中的 `T`）必须是**可移动的**，这算是一个历史遗留限制。
-- 异步操作必须支持在 UI 线程中安全地取消，这意味着删除任务监听器并释放对 `handle` 的引用。
+`make_timeout()` relies on these preconditions to guarantee safety:
+- The client type (i.e., `T` in `ResultSession<T>`) must be **moveable**, which is somewhat of a legacy limitation.
+- Asynchronous operations must support safe cancellation on the UI thread, which means removing task listeners and releasing references to `handle`.
 
-#### 回调线程与 `fulfill()`
+#### Callback Thread and `fulfill()`
 
-超时回调（`make_timeout()` 的第三个参数）**始终在 UI 线程执行**，因为它由定时器（`Timer`）触发，而定时器事件由主事件循环分发。
+Timeout callbacks (the third argument to `make_timeout()`) **always run on the UI thread** because they are triggered by a `Timer`, whose events are dispatched by the main event loop.
 
-这一点决定了回调中**只能**使用 `session->fulfill()` 而不能使用 `session->resolve()`：
+This dictates that you **must** use `session->fulfill()` inside the callback rather than `session->resolve()`:
 
-| 方法 | 可调用线程 | 对 session 的影响 |
+| Method | Callable Thread | Impact on Session |
 | --- | --- | --- |
-| `resolve(result)` | 任意线程 | 投递 Consume 事件，session 在 UI 线程处理后**被删除** |
-| `fulfill(result)` | **仅限 UI 线程** | 直接分发结果，**不删除** session |
+| `resolve(result)` | Any thread | Posts a Consume event; session is **deleted** after being processed on the UI thread |
+| `fulfill(result)` | **UI Thread Only** | Dispatches results directly **without deleting** the session |
 
-`make_timeout()` 的超时路径由 timer 自身负责在回调结束后 `delete session`。如果在回调中调用 `session->resolve()`，它会同样投递一个删除 session 的事件，与 timer 的 `delete` 形成**双重释放（double free）**，导致未定义行为。`fulfill()` 只投递结果、不触及 session 生命周期，因此是回调中唯一安全的选择。
+The timeout path of `make_timeout()` is handled by the timer itself, which calls `delete session` after the callback finishes. If you were to call `session->resolve()` inside the callback, it would also post an event to delete the session, creating a **double free** conflict with the timer's `delete`, resulting in undefined behavior. `fulfill()` only dispatches results and does not touch the session's lifecycle, making it the only safe choice inside callbacks.
 
-`fulfill()` 接受 `async::Result<R>` 或直接接受 `async::Status`（无结果值时的简写）：
+`fulfill()` accepts `async::Result<R>` or directly accepts an `async::Status` (shorthand when there is no result value):
 
 ```cpp
 auto handle = async::make_timeout(session, 5000, [](Session *s) {
-    s->fulfill(async::Status(408)); // 仅填充错误状态
-    // 或携带值和状态：
+    s->fulfill(async::Status(408)); // Populate error status only
+    // Or carry both value and status:
     s->fulfill(async::Result<String>{"partial", async::Status(206)});
-    // ❌ 不要调用 s->resolve()，会与 timer 的 delete session 形成双重释放
+    // ❌ Do not call s->resolve(); it causes a double free with the timer's delete session
 });
 ```
 
 ::: tip
-判断规则很简单：session 的所有权在哪里，由谁负责删除？
-- **正常路径**：`handle->resolve()` 内部原子地接管 session 所有权，session 随 Consume 事件处理后删除。
-- **超时回调**：timer 接管 session 所有权，回调结束后删除。因此回调中只能用 `fulfill()` 投递结果。
+The rule of thumb is simple: Where does ownership of the session lie, and who is responsible for deleting it?
+- **Happy path**: `handle->resolve()` atomically takes ownership of the session internally, and the session is deleted after the Consume event is processed.
+- **Timeout callback**: The timer takes ownership of the session and deletes it after the callback finishes. Therefore, you can only use `fulfill()` to post results inside the callback.
 :::
 
-#### 访问客户端数据
+#### Accessing Client Data
 
-如果超时回调需要读取客户端数据来决定错误策略，使用扩展回调签名 `(Session *, const T &)`。**不要**在回调中调用 `session->client()`——客户端已被移动到 timer 中：
+If the timeout callback needs to read client data to decide on an error strategy, use the extended callback signature `(Session *, const T &)`. **Do not** call `session->client()` inside the callback—the client has already been moved into the timer:
 
 ```cpp
 auto handle = async::make_timeout(session, 3000,
-    [](Session *s, const HttpClient &client) { // 也可用 auto &client
-        // ✅ 通过第二个参数访问客户端数据
+    [](Session *s, const HttpClient &client) { // auto &client can also be used
+        // ✅ Access client data via the second parameter
         LogWarn() << "request timeout: " << client.url();
         s->fulfill(async::Status(408));
     }
 );
 ```
 
-#### 资源生命周期管理
+#### Resource Lifecycle Management
 
-超时发生时，你需要在回调中取消正在进行的异步任务，以释放对 `handle` 的引用。`SingleTimer` 使用引用计数管理生命周期——如果异步操作持有 `handle` 的引用但永远不会完成，就会产生内存泄漏：
+When a timeout occurs, you need to cancel the ongoing asynchronous task inside the callback to release references to `handle`. `SingleTimer` uses reference counting to manage its lifecycle—if an asynchronous task holds a reference to `handle` but never completes, a memory leak will occur:
 
 ```cpp
 auto task = AioTask::create();
 auto handle = async::make_timeout(session, 5000,
     [task](auto *s) {
-        task->cancel();     // 取消任务，释放对 handle 的引用
+        task->cancel();     // Cancel the task, releasing the reference to handle
         s->fulfill(async::Status(408)); // reject Promise
     });
 
-// 任务完成回调持有 handle 引用
+// Task completion callback holds a reference to handle
 task->start([handle = std::move(handle)](auto &result) {
     handle->resolve(result);
 });
 ```
 
 ::: important
-`make_timeout()` 返回的 `handle` 还**必须**被异步任务引用（上例中由 lambda 捕获），以确保在任务完成前定时器不会被销毁。否则会立即触发超时回调和 Promise reject，导致任务无法正常完成。
+The `handle` returned by `make_timeout()` **must** also be referenced by the asynchronous task (captured by the lambda in the example above) to ensure the timer is not destroyed before the task finishes. Otherwise, it will immediately trigger the timeout callback and `Promise` rejection, preventing the task from completing normally.
 :::
 
-这种内存泄漏由两种原因导致：
-1. **async 框架泄漏**：`handle` 引用被遗忘，导致相关会话对象无法释放。
-2. **底层任务泄漏**：异步任务本身阻塞在未完成的状态，相关资源也不会被清理。
+Such memory leaks are caused by two factors:
+1. **Async framework leak**: The `handle` reference is forgotten, preventing related session objects from being released.
+2. **Underlying task leak**: The async task itself blocks in an uncompleted state, leaving related resources uncleaned.
 
-### 应用退出时的自动清理
+### Automatic Cleanup on Application Exit
 
-当 `Applet` 被销毁时（例如用户关闭应用、系统回收资源），所有绑定到该 `Applet` 的异步会话会被自动清理：
+When an `Applet` is destroyed (e.g., the user closes the app or the system reaps resources), all asynchronous sessions bound to that `Applet` are automatically cleaned up:
 
-- 会话的 `unbind()` 方法被调用，它会关闭会话并释放 `Promise` 引用。
-- 如果正在使用 `make_timeout`，timer 同样会被解绑，内部持有的 session 被删除。
-- JavaScript 侧的 `Promise` 将永远不会被 resolve 或 reject——但此时 JavaScript 环境本身也在被销毁，所以这是安全的。
+- The session's `unbind()` method is called, which closes the session and releases the `Promise` reference.
+- If `make_timeout` is being used, the timer is similarly unbound, and the internally held session is deleted.
+- The `Promise` on the JavaScript side will never be resolved or rejected—but since the JavaScript environment itself is also being destroyed at this point, this is completely safe.
 
-这意味着你**不需要**手动跟踪和取消异步任务——框架保证不会出现以下情况：
-- 向已销毁的 `Applet` 投递结果导致访问悬空指针。
-- 在已释放的 JavaScript 环境中执行回调。
-- 异步会话在应用退出后泄漏。
+This means you **do not** need to manually track and cancel asynchronous tasks—the framework guarantees that:
+- Posting results to a destroyed `Applet` will not lead to dangling pointer accesses.
+- Callbacks will not execute within a released JavaScript environment.
+- Asynchronous sessions will not leak after application exit.
 
-具体来说，当后台线程调用 `resolve()` 投递结果到 UI 线程后，处理函数会检查 `applet()` 是否仍然有效。如果 `Applet` 已被销毁导致 `applet()` 返回 `nullptr`，框架会安全地丢弃结果，不执行任何 JavaScript 操作。
+Specifically, when a background thread calls `resolve()` to post a result back to the UI thread, the handling function checks whether the `applet()` is still valid. If the `Applet` has already been destroyed, causing `applet()` to return `nullptr`, the framework safely discards the result without executing any JavaScript operations.
 
-::: tip 异步上下文中的安全返回
-由于 `resolve()` 是纯数据投递（通过事件队列），即使 `Applet` 已经销毁，在后台线程中调用 `resolve()` 也不会崩溃。后台线程不需要关心 `Applet` 的存活状态，这是框架的职责。
+::: tip Safe Returns in Asynchronous Contexts
+Because `resolve()` is purely data posting (via an event queue), calling `resolve()` in a background thread will not crash even if the `Applet` has already been destroyed. Background threads do not need to care about the liveness state of the `Applet`; that is the framework's responsibility.
 :::
 
-唯一需要注意的是，如果你派生了 `ResultSession` 并引入了其他 `JsValue` 成员变量，则需要在 `unbind()` 中清理这些成员，以避免内存泄漏：
+The only thing to note is that if you subclass `ResultSession` and introduce additional `JsValue` member variables, you must clean up those members in `unbind()` to avoid memory leaks:
 
 ```cpp
 class MySession : public async::ResultSession<MyClient> {
 public:
     void unbind() override {
-        m_callbacks = {}; // 清理任何持有的 JsValue，避免泄漏
-        async::ResultSession::unbind(); // 调用基类清理
+        m_callbacks = {}; // Clean up any held JsValue to prevent leaks
+        async::ResultSession::unbind(); // Call base class cleanup
     }
 
 private:
-    JsValue m_callbacks; // 需要手动清理的成员
+    JsValue m_callbacks; // Members that need manual cleanup
 };
 ```
 
-::: important `ResultSession` 的生命周期延长
-如果应用退出时仍有未完成的异步会话，框架仅会清理与应用相关的资源（如 `Promise` 引用、绑定关系等），但**不会销毁会话对象本身**，这表现为 `ResultSession` 的生命周期被延长到异步操作完成为止。
+::: important Lifespan Extension of `ResultSession`
+If there are still incomplete asynchronous sessions when the app exits, the framework only cleans up resources related to the app (such as `Promise` references and binding relationships), but **does not destroy the session object itself**. This manifests as the lifespan of the `ResultSession` being extended until the asynchronous operation completes.
 
-这本身是为了保证内存安全，但会造成部分资源释放不及时。因此异步任务必须保证在有限的时间内完成，不能无限期地挂起。
+While this ensures memory safety, it causes some resource releases to be delayed. Therefore, asynchronous tasks must guarantee completion within a finite amount of time and cannot hang indefinitely.
 :::
 
-## 多次查询 ListenSession
+## Multi-Shot Query: ListenSession
 
-该类 API 尚不稳定，暂不开放使用。
+This class of APIs is still unstable and is not yet open for public use.
 
-## 全局事件广播 async::Signal
+## Global Event Broadcast: async::Signal
 
-如果一个 C++ 事件需要广播给**多个应用**（而不是针对某一个特定的调用方），使用 `async::Signal<T>`。它将底层的硬件或系统事件“多播”给所有订阅了它的 JavaScript 监听者。
+If a C++ event needs to be broadcast to **multiple applications** (rather than targeting a single specific caller), use `async::Signal<T>`. It "multicasts" underlying hardware or system events to all JavaScript listeners subscribed to it.
 
-`async::Signal<T>` 和 `ResultSession` 的定位不同：
+`async::Signal<T>` and `ResultSession` have different positioning:
 
-| 特性 | ResultSession | Signal |
+| Feature | ResultSession | Signal |
 | --- | :---: | :---: |
-| 通信方向 | 一对一（调用方 → 结果） | 一对多（事件源 → 所有订阅者） |
-| 触发次数 | 单次 | 多次 |
-| 绑定对象 | 单个 Applet | 跨 Applet |
-| 适用场景 | 异步查询、请求 | 系统事件、状态变化 |
+| Communication Direction | One-to-one (Caller → Result) | One-to-many (Event source → All subscribers) |
+| Trigger Count | Single-shot | Multi-shot |
+| Bound Object | Single Applet | Cross-Applet |
+| Use Cases | Async queries, requests | System events, state changes |
 
-### 基本用法
+### Basic Usage
 
-假设有一个电池点亮变化的事件需要通知所有订阅者：
+Suppose there is a battery level change event that needs to be notified to all subscribers:
 
 ```cpp
-// 定义一个全局信号，通常为对应服务的成员变量
+// Define a global signal, typically a member variable of the corresponding service
 async::Signal<int> batteryChanged;
 
-// 当硬件事件发生时触发信号（可在任意线程调用）
+// Trigger the signal when a hardware event occurs (can be called on any thread)
 void onBatteryLevelChanged(int newLevel) {
-    batteryChanged(newLevel);  // 通知所有订阅者
+    batteryChanged(newLevel);  // Notify all subscribers
 }
 ```
 
-#### 绑定 & 解绑
+#### Binding & Unbinding
 
-该模块函数允许 JavaScript 侧订阅该信号，它还返回一个绑定 ID 供 JavaScript 侧取消订阅：
+This module function allows the JavaScript side to subscribe to the signal and returns a binding ID for the JavaScript side to unsubscribe:
 
 ```cpp
 static JsValue subscribeBatteryChange(JsCtx ctx) {
     if (ctx.argc() < 1 || !ctx.arg(0).isFunction())
         return {};
-    // 必须在有效的 applet 环境中才能订阅
+    // Must be in a valid applet environment to subscribe
     auto *applet = Applet::current(ctx.vm());
     if (applet == nullptr) return {};
 
-    // 将 slot 绑定到应用，随应用退出而自动取消订阅
+    // Bind the slot to the app, automatically unsubscribing when the app exits
     auto *slot = batteryChanged.connect(ctx.arg(0));
-    return applet->bindObject(slot); // 返回 slot ID 供 JavaScript 取消
+    return applet->bindObject(slot); // Return slot ID for JavaScript to cancel
 }
 ```
 
-还需要实现一个取消订阅的模块函数。无论何种 `async::Signal` 类型，解绑函数的实现都是非常固定的：
+You also need to implement a module function for unbinding. Regardless of the `async::Signal` type, the implementation of the unbind function is very standardized:
 
 ```cpp
 static JsValue unsubscribeBatteryChange(JsCtx ctx) {
     auto *applet = Applet::current(ctx.vm());
     if (applet && ctx.argc()) {
-        // slotId 默认为 0，可以被安全地忽略而不执行任何操作
+        // slotId defaults to 0 and can be safely ignored without performing any operation
         auto slotId = ctx.arg(0).toInt();
-        // 将 slot 与 applet 解绑后还需要删除 slot 对象
+        // Unbind the slot from the applet and then delete the slot object
         delete applet->unbindObject<async::Slot>(slotId);
     }
     return {};
 }
 ```
 
-#### JavaScript 导出
+#### JavaScript Export
 
-只需要定义一个 [Native Module](./native-module.md) 来导出这些函数即可：
+You simply need to define a [Native Module](./native-module.md) to export these functions:
 
 ```cpp
 static JsModule *createBatteryModule(JsVM &vm) {
     auto mod = vm.newObject();
-    // battery 模块通常还有 getLevel() 之类的函数，这里不展开
+    // The battery module usually has other functions like getLevel(), omitted here
     mod["subscribe"] = subscribeBatteryChange;
     mod["unsubscribe"] = unsubscribeBatteryChange;
     return mod;
 }
-// 别忘了用 GX_JSVM_MODULE_IMPORT 导入模块
+// Don't forget to import the module using GX_JSVM_MODULE
 GX_JSVM_MODULE(vendor_battery, "vendor.battery", createBatteryModule)
 ```
 
-::: tip 复用 `unsubscribe` 函数
-由于解绑函数的实现非常通用，你可以定义一个通用的 `unsubscribe` 函数，然后多次导入到各个模块中使用。
+::: tip Reusing the `unsubscribe` Function
+Since the implementation of the unbind function is very general, you can define a single general `unsubscribe` function and import it into multiple modules.
 :::
 
-JavaScript 侧：
+On the JavaScript side:
 
 ```js
 import battery from '@vendor.battery'
@@ -700,38 +701,38 @@ const sid = battery.subscribe((level) => {
   console.log('battery level:', level)
 })
 
-// 需要取消订阅时调用
+// Call when you need to unsubscribe
 battery.unsubscribe(sid)
 ```
 
-### 信号传递模式
+### Signal Delivery Modes
 
-`Signal` 支持两种传递模式，通过第二个参数控制：
+`Signal` supports two delivery modes, controlled by the second argument:
 
 ```cpp
-// 普通模式（默认）：通知所有订阅者
+// Normal mode (default): Notify all subscribers
 batteryChanged(newLevel, async::NormalSignal);
 
-// 跳过不可见应用：仅通知前台可见的应用，减少不必要的消耗
+// Skip invisible apps: Only notify foreground visible apps to reduce unnecessary resource consumption
 batteryChanged(newLevel, async::SkipInvisible);
 ```
 
-`SkipInvisible` 模式适用于仅在 UI 可见时才有意义的事件（如界面刷新通知）。对于需要后台感知的事件（如电池低电量警告），应使用默认的 `NormalSignal`。
+The `SkipInvisible` mode is suitable for events that only make sense when the UI is visible (such as interface refresh notifications). For events that require background awareness (such as low battery warnings), the default `NormalSignal` should be used.
 
-### 信号值类型
+### Signal Value Types
 
-`Signal<T>` 的类型参数 `T` 与 `ResultSession` 遵循完全相同的转换规则：触发信号时，框架通过相同的 `js_cast()` 机制将 C++ 值转换为 JavaScript 回调的参数。`int`、`bool`、`String`、`JsonValue` 等内置类型可以直接使用；如需传递自定义结构体或枚举，请参阅[值类型与 JavaScript 转换](#值类型与-javascript-转换) 一节中的方法。
+The type parameter `T` in `Signal<T>` follows the exact same conversion rules as `ResultSession`: when a signal is triggered, the framework converts C++ values into JavaScript callback parameters via the same `js_cast()` mechanism. Built-in types like `int`, `bool`, `String`, and `JsonValue` can be used directly. To pass custom structs or enums, refer to the methods in [Value Types and JavaScript Conversion](#value-types-and-javascript-conversion).
 
-## 线程安全说明
+## Thread Safety Notes
 
-异步框架的线程安全模型遵循以下规则：
+The thread safety model of the asynchronous framework follows these rules:
 
-- **`resolve()` 是线程安全的**：`ResultSession::resolve()` 和 `SingleTimer::resolve()` 可以在任意线程调用。它们通过事件系统将结果投递到 UI 线程，不直接操作 JavaScript 对象。
-- **`JsValue` 不是线程安全的**：`JsValue` 基于引用计数管理生命周期，其引用计数操作非原子性。不得在异步线程中创建、拷贝、销毁或访问 `JsValue`。这正是客户端类不得持有 `JsValue` 的原因。
-- **`Promise` 决议在 UI 线程执行**：无论 `resolve()` 从哪个线程调用，最终的 JavaScript `Promise` 回调总是在 UI 线程执行，保证 UI 操作的安全性。
-- **`async::Signal` 通知在 UI 线程分发**：`async::Signal::operator()` 虽然可以跨线程调用，但 JavaScript 回调始终在 UI 线程执行。
+- **`resolve()` is thread-safe**: `ResultSession::resolve()` and `SingleTimer::resolve()` can be called on any thread. They post results to the UI thread via the event system and do not operate on JavaScript objects directly.
+- **`JsValue` is not thread-safe**: `JsValue` manages its lifecycle via reference counting, and its reference-counting operations are not atomic. You must not create, copy, destroy, or access `JsValue` instances in asynchronous threads. This is precisely why client classes must not hold `JsValue` objects.
+- **`Promise` resolution executes on the UI thread**: Regardless of which thread `resolve()` is called from, the final JavaScript `Promise` callback always executes on the UI thread, ensuring UI operation safety.
+- **`async::Signal` notifications are dispatched on the UI thread**: Although `async::Signal::operator()` can be called cross-thread, JavaScript callbacks always execute on the UI thread.
 
-如果客户端类需要与 UI 线程共享状态（例如提供取消标志），使用 [`std::atomic`](https://en.cppreference.com/w/cpp/atomic/atomic) 等原子操作或互斥量保护共享数据：
+If a client class needs to share state with the UI thread (such as providing a cancellation flag), use atomic operations like [`std::atomic`](https://en.cppreference.com/w/cpp/atomic/atomic) or mutexes to protect the shared data:
 
 ```cpp
 class CancellableClient {
@@ -740,11 +741,11 @@ public:
 
     async::Result<String> resolve() {
         for (int i = 0; i < 100 && !m_cancelled.load(); ++i) {
-            // 执行分步任务，定期检查取消标志
+            // Execute step-by-step tasks, periodically checking the cancellation flag
             processChunk(i);
         }
         if (m_cancelled.load())
-            return async::Status(499);  // 客户端取消
+            return async::Status(499);  // Client cancelled
         return std::move(m_result);
     }
 
@@ -754,15 +755,15 @@ private:
 };
 ```
 
-特别的，Glyphix 框架的许多值类型在**本异步框架中**是可以安全地跨线程传递的，如：
-- `String`：可以直接在多线程中赋值、访问，无需额外同步机制。
-- `JsonValue`：该类也是值类型，并具有与 `String` 同等的线程安全特性。
-- `ByteArray`：与 `String` 类似，支持跨线程使用。
-- `SharedRef<T>`：引用计数智能指针本身可以跨线程传递，但托管对象 `T` 的线程安全性取决于其定义。
-- `String::View` 等非拥有类型**不能**跨线程使用。
+Notably, many value types in the Glyphix framework **can** be safely passed across threads **within this asynchronous framework**, such as:
+- `String`: Can be directly assigned and accessed across multi-threads without extra synchronization mechanisms.
+- `JsonValue`: This class is also a value type and possesses the same thread-safety characteristics as `String`.
+- `ByteArray`: Similar to `String`, supporting cross-thread usage.
+- `SharedRef<T>`: The reference-counted smart pointer itself can be passed across threads, but the thread safety of the managed object `T` depends on its own definition.
+- Non-owning types like `String::View` **cannot** be used across threads.
 
-这也是前面所有示例中我们总是直接跨异步上下文捕获和传递 `String` 等类型，使用它们不需要特别处理。也不需要使用 mutex 等同步机制来保护。
+This is why, in all the preceding examples, we always directly capture and pass types like `String` across asynchronous contexts without needing special handling, nor do we need to use mutexes or other synchronization mechanisms to protect them.
 
 ::: important
-上述类型的线程安全性实际上依赖于具体的异步框架内存模型，这意味着它们在所有场景中**并不是自动线程安全**的。本文档中的异步框架保证了这一点，但不能推广到任何情况。
+The thread safety of the aforementioned types actually relies on the specific memory model of the asynchronous framework, meaning they are **not automatically thread-safe** in all scenarios. The asynchronous framework described in this document guarantees this behavior, but it cannot be generalized to every context.
 :::

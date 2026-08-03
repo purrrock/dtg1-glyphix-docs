@@ -1,68 +1,45 @@
 # picker
 
-
-Text selector component. This component displays a group of text. Clicking on the middle text item will trigger the selection event, and the sliding operation can make all text items scroll and display.
-
+A text picker component. This component displays a set of texts. Clicking the middle text item triggers a selection event, while swiping allows all text items to be scrolled.
 
 ::: warning
-
-`picker` The functionality of the component has not been verified and it is not maintained.
+The functionality of the `picker` component is unverified and unmaintained.
 :::
 
-
-
-## property
-
+## Properties
 
 ### `range` <decl type="string[]" set />
 
+All strings in the `range` property value will be displayed in the `picker` component. Users can scroll or select these strings within the `picker` component.
 
-All strings in the `range` attribute value will be displayed in the `picker` component. The user can manipulate the `picker` component to scroll or select these strings.
-
-
-`range` refers to [`index` 属性](#index) for the indexing method of strings in attribute values.
-
+For the indexing method of the strings in the `range` property value, refer to the [`index` property](#index).
 
 ### `loop` <decl type="boolean" set />
 
-
-Configure whether the `picker` component is displayed in a loop (i.e. infinitely long). When the value of this attribute is `true`, the loop display is enabled, and the default is `false`.
-
+Configures whether the `picker` component displays in a looping (i.e., infinite) manner. When this property is set to `true`, looping is enabled. The default value is `false`.
 
 ### `value` <decl type="string" listen />
 
-
-Monitor the text of the current selected item. This monitoring will be triggered when the selected item changes during scrolling operation. The function of this attribute can also be implemented through the `on:index="handle(rangeData[$event])"` method.
-
+Listens to the text of the currently selected item. This listener is triggered when the selected item changes during scrolling. The functionality of this property can also be achieved using `on:index="handle(rangeData[$event])"`.
 
 ### `index` <decl type="Integer" get set listen />
 
-
-`picker` The selected item index value of the component. The indexing rules are: [`range` 属性](#range) The index value of the first string item in the attribute value array is $0$, and the indexes of other strings are increased by one in sequence. Setting the `index` attribute can specify the selected item of the `picker` component, and you can also listen to changes in this attribute to detect changes in the selected item caused by scrolling operations.
-
+The selected item index of the `picker` component. The indexing rule is: the index of the first string item in the [`range` property](#range) value array is $0$, and the indices of subsequent strings increment by one. Setting the `index` property specifies the selected item of the `picker` component, and you can also listen to changes in this property to detect selected item changes caused by scrolling operations.
 
 ### `scroll` <decl type="{ x: number y: number }" get set listen />
 
+The `scroll` property can be used to listen to scrolling operations, as well as to programmatically control scrolling effects in the `picker` component. Similar to aligned list components, the `scroll` operation of the `picker` will snap to the nearest item.
 
-The scrolling operation can be monitored through the `scroll` attribute, and the `picker` component can also be manipulated in code to display the scrolling effect. Similar to aligned list components, the `picker` operation of `scroll` also aligns to the nearest item.
-
-
-Since the `picker` component only supports vertical mode, the `x` field of the `scroll` attribute value is always `0`.
-
+Since the `picker` component only supports vertical mode, the `x` field of the `scroll` property value is always `0`.
 
 ### `scrolled` <decl type="boolean" read listen />
 
+Listens to whether the `picker` is in a scrolling state via the `scrolled` property. A property value of `true` triggered by the event indicates that the `picker` is scrolling, otherwise it means the `picker` has stopped scrolling.
 
-Monitor whether `picker` is in the scrolling state through the `scrolled` attribute. The attribute value triggered by the event is `true` which means that `picker` is scrolling, otherwise it means that `picker` has stopped scrolling.
-
-
-The scrolling operation caused by user touch and scrolling through the `scroll` attribute will trigger the `scrolled` event. When `picker` stops from the scrolling state, the parameter value of the `scrolled` event is `false`.
-
+Both user touch-induced scrolling and programmatic scrolling via the `scroll` property will trigger the `scrolled` event. When the `picker` stops from a scrolling state, the parameter value of the `scrolled` event is `false`.
 
 ### `damping` <decl type="number" set />
 
+Sets the damping coefficient for the `picker` scrolling animation. The valid value range is $[0.1, 50]$ (unsupported values will be automatically clamped to the upper or lower limits), with a default value of $1.5$. A larger damping coefficient causes the animation to stop faster; the default damping coefficient produces a relatively long-distance and long-duration inertial effect.
 
-Set the damping coefficient of `picker` scroll animation. The valid value range is $[ 0.1, 50]$ (unsupported values ​​will be automatically modified to the upper and lower limits). The default value is $ 1.5 $. A larger damping coefficient will cause the animation to stop faster, and the default damping coefficient value can produce an inertial effect with a longer distance and longer duration.
-
-
-The damping coefficient should be set to a constant and not modified. Modifying the damping coefficient will not affect the rebound animation.
+The damping coefficient should be set as a constant rather than modified; modifying the damping coefficient will not affect the bounce-back animation.

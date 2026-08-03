@@ -1,36 +1,36 @@
-# C++ 学习建议
+# C++ Learning Recommendations
 
-这篇文档不是 C++ 教程，而是为准备阅读本目录文档的开发者提供前置知识的快速学习建议。
+This document is not a C++ tutorial, but rather a set of quick learning recommendations to provide prerequisite knowledge for developers preparing to read the documents in this directory.
 
-它假设你已经长期使用 C 开发，熟悉 MCU、RTOS、驱动、LVGL 或类似的嵌入式框架；你应该有大量的编程经验，但可能并不熟悉 Glyphix 所需的那部分 C++ 知识。
+It assumes that you have long-term experience using C, and are familiar with MCUs, RTOS, drivers, LVGL, or similar embedded frameworks; you should have extensive programming experience, but may not be familiar with the subset of C++ required by Glyphix.
 
 ::: tip
-如果你的目标是开发 Native Module、异步功能或 Native Widget，请先看完本文，再继续阅读[对象系统](./object-system.md)和其他章节。这样能避开很多“代码看得懂，但就是写不出来”的问题。
+If your goal is to develop Native Modules, asynchronous features, or Native Widgets, please read this article first before proceeding to the [Object System](./object-system.md) and other chapters. This will help you avoid many issues where "the code makes sense, but you just can't write it."
 :::
 
-## C++ 能力子集
+## C++ Feature Subset
 
-Glyphix 项目禁用了一些 C++ 特性，开发者完全不需要学习它们：
+The Glyphix project disables certain C++ features, so developers do not need to learn them at all:
 
-- 禁用 **RTTI**：不能用 `dynamic_cast`、`typeid` 这一套运行时类型识别机制。需要安全向下转型时，请直接使用 [`dyn_cast`](object-system.md#动态类型转换)。
-- 禁用**异常**：不需要把 `try` / `catch` / `throw` 作为主路径来学习。错误处理优先使用返回值、状态码、对象状态和显式检查。这一点和 C 的错误处理习惯类似。
+- **RTTI** is disabled: You cannot use `dynamic_cast`, `typeid`, or other runtime type identification mechanisms. When you need a safe downcast, use [`dyn_cast`](object-system.md#动态类型转换) directly.
+- **Exceptions** are disabled: There is no need to learn `try` / `catch` / `throw` as a primary path. For error handling, prioritize return values, status codes, object states, and explicit checks. This is similar to C error-handling habits.
 
 
-除此之外，Glyphix 的运行时还有一些特殊约束，这主要是 MCU 系统的碎片化和兼容性限制导致的：
-1. `std::thread` 和 `std::mutex` 等 C++ 标准库的并发工具在 MCU 上不可用。
-2. `std::chrono` 等时间库在 MCU 上也不可用。
-3. 不要使用静态局部变量（function-local static），C++11 起保证的原子初始化在 MCU 上**大概率不可靠**。
-4. 不要使用带堆分配的全局变量（对象），因为 MCU 上的全局构造阶段可能不受控，且堆内存可能不可用。
+In addition, the Glyphix runtime has some special constraints, mainly caused by the fragmentation and compatibility limitations of MCU systems:
+1. Concurrency tools from the C++ standard library, such as `std::thread` and `std::mutex`, are not available on MCUs.
+2. Time libraries such as `std::chrono` are also not available on MCUs.
+3. Do not use function-local static variables. The atomic initialization guaranteed since C++11 is **highly likely to be unreliable** on MCUs.
+4. Do not use global variables (objects) that rely on heap allocation, because the global construction phase on MCUs may be uncontrolled, and heap memory may not be available.
 
-其中，3 和 4 是很常见的情况，要格外注意。
+Among these, points 3 and 4 are very common scenarios and require special attention.
 
-## 需要掌握的 C++ 知识
+## C++ Knowledge to Master
 
-下面这些内容，足以支撑本目录的大部分文档。
+The following content is sufficient to support most of the documentation in this directory.
 
-### 类和面向对象编程
+### Classes and Object-Oriented Programming
 
-至少要能读懂并编写这样的代码：
+You should at least be able to read and write code like this:
 
 ```cpp
 class MyWidget : public Widget {
@@ -43,48 +43,48 @@ public:
 };
 ```
 
-你需要理解：
+You need to understand:
 
-- 类和结构体的区别（没太大区别，主要是默认访问权限）
-- 公有继承的含义（一般只用公有继承）
-- 构造函数和初始化列表
-- 成员函数、**`const` 成员函数**
-- 什么时候是覆写基类接口，什么时候只是声明一个普通成员函数
+- The difference between classes and structs (not much difference, mainly default access permissions)
+- The meaning of public inheritance (generally only public inheritance is used)
+- Constructors and initialization lists
+- Member functions, **`const` member functions**
+- When you are overriding a base class interface versus just declaring a regular member function
 
-这些知识会直接出现在[对象系统](./object-system.md)、[控件开发指南](./widget.md)和[控件注册与导出](./widget-export.md)中。
+This knowledge will appear directly in the [Object System](./object-system.md), [Widget Development Guide](./widget.md), and [Widget Registration and Export](./widget-export.md).
 
-### 指针、引用和 `const`
+### Pointers, References, and `const`
 
-如果你熟悉 C，这部分最容易“自认为已经会了”，但 C++ 用法比 C 更严格。
+If you are familiar with C, this part is the easiest to "assume you already know," but C++ usage is stricter than C.
 
-必须真正掌握的点：
+Key points that must be truly mastered:
 
-- `T *` 和 `T &` 的区别
-- 何时传指针，何时传引用
-- **`const T *`**、`T *const`、**`const T &`** 的含义
-- 为什么 `const` 成员函数很常见
-- 为什么对象不应该像 C 那样随意按字节处理
+- The difference between `T *` and `T &`
+- When to pass by pointer vs. when to pass by reference
+- The meanings of **`const T *`**, `T *const`, and **`const T &`**
+- Why `const` member functions are very common
+- Why objects should not be arbitrarily processed byte by byte like in C
 
-在 Glyphix 里，这些知识直接关系到接口设计和生命周期安全。
+In Glyphix, this knowledge is directly related to interface design and lifecycle safety.
 
-### 生命周期与资源管理
+### Lifecycles and Resource Management
 
-这是从 C 迁移到 C++ 时最重要的一节。
+This is the most important section when migrating from C to C++.
 
-你需要建立这样的习惯：
+You need to build the following habits:
 
-- 对象会在离开作用域时自动析构
-- 构造函数负责建立有效状态
-- 析构函数负责释放资源
-- 不要把“清理资源”放到函数尾部手动收尾
-- 不要把复杂对象当作普通内存块去 `memset` / `memcpy`
+- Objects are automatically destructed when they go out of scope.
+- Constructors are responsible for establishing a valid state.
+- Destructors are responsible for releasing resources.
+- Do not put "resource cleanup" at the end of a function for manual handling.
+- Do not treat complex objects as ordinary memory blocks to `memset` / `memcpy`.
 
 
-Glyphix 的大量设施和特性都建立在 C++ 的对象生命周期模型之上，这包括 RAII 等主题。
+A large number of Glyphix facilities and features are built on top of C++'s object lifecycle model, which includes topics such as RAII.
 
-### 模板的基础用法
+### Basics of Templates
 
-这部分不需要深入理解，但至少要能看懂：
+You don't need to understand this deeply, but you must at least be able to read:
 
 - `Signal<int>`
 - `Pointer<Label>`
@@ -92,18 +92,18 @@ Glyphix 的大量设施和特性都建立在 C++ 的对象生命周期模型之�
 - `async::ResultSession<Client>`
 - `std::vector<T>`
 
-并知道“模板是带类型参数的代码生成机制”，而不是某种只有库作者才会碰的高级技巧。
+And know that "templates are code generation mechanisms with type parameters," rather than some advanced trick that only library authors touch.
 
-在 Glyphix 文档中，模板主要以两种形式出现：
+In Glyphix documentation, templates mainly appear in two forms:
 
-- **泛型容器/工具类型**，例如 `Signal<T>`、`Pointer<T>`
-- **特化点**，例如为自定义类型补充 `js_cast<T>`
+- **Generic containers/utility types**, such as `Signal<T>`, `Pointer<T>`
+- **Specialization points**, such as supplying `js_cast<T>` for custom types
 
-开发者至少应该理解基础术语如“模板参数”、“实例化”、“特化”，并能够读懂模板类型的声明和使用。但不要求能够定义自己的模板类或函数。
+Developers should at least understand basic terminology such as "template parameters," "instantiation," and "specialization," and be able to read template type declarations and usages. However, defining your own template classes or functions is not required.
 
-### lambda 表达式
+### Lambda Expressions
 
-在现代 C++ 中，lambda 是一种很实用的一次性函数写法。你至少要能读懂：
+In modern C++, lambdas are a very practical way to write one-off functions. You should at least be able to read:
 
 ```cpp
 mod["double"] = [](JsCtx ctx) -> JsValue {
@@ -111,7 +111,7 @@ mod["double"] = [](JsCtx ctx) -> JsValue {
 };
 ```
 
-以及：
+And:
 
 ```cpp
 int factor = readScaleFactorFromConfig();
@@ -120,113 +120,113 @@ mod["scale"] = [factor](JsCtx ctx) -> JsValue {
 };
 ```
 
-首先应该熟悉 lambda 的基本语法和捕获机制，并重点理解：
+You should first become familiar with the basic syntax and capture mechanisms of lambdas, and focus on understanding:
 
-- lambda 是匿名函数对象
-- 无捕获 lambda 常可当普通函数指针用
-- 带捕获 lambda 会携带状态
-- 一旦 lambda 被异步持有，捕获对象的生命周期就变得非常重要
+- A lambda is an anonymous function object.
+- A captureless lambda can often be used as a regular function pointer.
+- A lambda with captures carries state.
+- Once a lambda is held asynchronously, the lifecycle of the captured objects becomes critically important.
 
-这直接影响[Native Module 开发](./native-module.md)和[异步开发示例](./async-examples.md)中的代码安全性。
+This directly affects code safety in [Native Module Development](./native-module.md) and [Async Development Examples](./async-examples.md).
 
-::: tip lambda 非常常见
-lambda 实际上完全占据了回调函数的生态位，这意味着它们到处都是。从某种程度上说，lambda 可能是最重要的 C++ 语法点。
+::: tip Lambdas are very common
+Lambdas effectively occupy the entire ecosystem of callback functions, meaning they are everywhere. To some extent, lambdas may be the most important C++ grammar point.
 
-**无捕获**的 lambda 表达式几乎等同于 C 函数指针，只是语法不同并能够缓解“起名困难症”。
+**Captureless** lambda expressions are almost equivalent to C function pointers, except for the syntax and the ability to alleviate "naming fatigue."
 :::
 
-### 标准库的最小工作集
+### Minimum Working Set of the Standard Library
 
-不用系统学习整套 STL，但建议先熟悉这些最常见部件：
+You don't need to systematically study the entire STL, but it is recommended to familiarize yourself with these most common parts:
 
 - `std::vector`
 - `std::array`
 - `std::move`
-- 基本算法 `<algorithm>`、迭代器和范围 `for`
+- Basic algorithms `<algorithm>`, iterators, and range-based `for` loops
 
-::: tip 关联容器
-Glyphix 自己实现了 `HashMap` 和 `HashSet`，它们和 `std::unordered_map` 非常相似。但不推荐使用 `std::map`，`std::unordered_map` 等关联容器，因为它们的性能较差，并且 `std::map` 的代码膨胀明显。
+::: tip Associative Containers
+Glyphix implements its own `HashMap` and `HashSet`, which are very similar to `std::unordered_map`. However, using associative containers like `std::map` and `std::unordered_map` is not recommended because their performance is poor, and `std::map` suffers from significant code bloat.
 :::
 
-### C 与 C++ 互操作
+### C and C++ Interoperability
 
-如果你要对接底层 SDK，这部分几乎一定会用到。
+If you are interfacing with underlying SDKs, you will almost certainly use this part.
 
-至少要会：
+You should at least know:
 
-- `extern "C"` 的作用
-- C 回调函数指针
-- `void *` 上下文参数，以及 `void *` 在 C++ 中的隐式转换限制
-- C 结构体与 C++ 包装层的分工
+- The purpose of `extern "C"`
+- C callback function pointers
+- `void *` context parameters, and the implicit conversion limitations of `void *` in C++
+- The division of labor between C structs and C++ wrapper layers
 
-你在[异步开发示例](./async-examples.md)里会看到很典型的模式：C API 负责真正的异步执行，C++ 层只做参数包装、生命周期管理和结果回传。
+You will see a very typical pattern in the [Async Development Examples](./async-examples.md): the C API handles the actual asynchronous execution, while the C++ layer only handles parameter wrapping, lifecycle management, and result passing.
 
-::: tip 难度预期
-这部分不难，但很容易出链接错误。你可能需要学会解决混用 C/C++ 头文件时的 `extern "C"` 等导致的各种问题。
+::: tip Difficulty Expectation
+This part is not difficult, but it is very prone to link errors. You may need to learn how to resolve issues caused by `extern "C"` and others when mixing C and C++ headers.
 :::
 
-## 推荐的学习顺序
+## Recommended Learning Order
 
-建议按下面的顺序补齐，而不是从一本大部头教材从第一页开始读。
+It is recommended to fill in the gaps in the following order rather than reading a thick textbook from page one.
 
-### 先建立“从 C 到 C++”的迁移视角
+### First, Establish a "From C to C++" Migration Perspective
 
 [ISO C++ FAQ](https://isocpp.org/faq)
-- 优先看“Learning C++ if you already know C”和“How to mix C and C++”相关条目。
-- 这套内容很适合有经验的 C 开发者，因为它默认你已经理解内存、接口、构建和底层约束。
+- Prioritize reading entries related to "Learning C++ if you already know C" and "How to mix C and C++".
+- This content is well-suited for experienced C developers because it assumes you already understand memory, interfaces, building, and underlying constraints.
 
-### 快速建立 Modern C++ 印象
+### Quickly Build an Impression of Modern C++
 
 [A Tour of C++](https://www.stroustrup.com/Tour.html)
-- 如果你愿意接受一本短书，这是最值得投入的一本。
-- 它不是“零基础编程教学”，而是给有经验开发者看的现代 C++ 总览。
-- 目标不是全部记住，而是知道 C++ 的主要构件有哪些，各自解决什么问题。
+- If you are willing to accept a short book, this is the most worthwhile one to invest time in.
+- It is not a "zero-based programming tutorial," but a modern C++ overview for experienced developers.
+- The goal is not to memorize everything, but to know what the main components of C++ are and what problems each solves.
 
-### 语法和标准库查询手册
+### Syntax and Standard Library Reference Manual
 
 [cppreference](https://en.cppreference.com/w/cpp)
-- 适合边做边查，不适合顺序通读。
-- 当你在阅读 Glyphix 文档时遇到 `override`、lambda、初始化列表、模板特化、`std::vector` 等语法或库名，可以直接查这里。
-- 如果你需要回顾 C 语言的某些细节，也可以在这里查。
+- Suitable for looking things up as you go, not for reading sequentially from cover to cover.
+- When you encounter syntax or library names like `override`, lambdas, initialization lists, template specialization, or `std::vector` while reading the Glyphix documentation, you can look them up here directly.
+- If you need to review certain details of the C language, you can also look them up here.
 
-### 把编码习惯切换到现代 C++
+### Switch Coding Habits to Modern C++
 
 [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
-- 这不是教程，而是工程实践指南，也有出版物版本。
-- 不建议全文顺序阅读；优先看这些章节：
-  - `P`：总原则
-  - `I`：接口设计
-  - `F`：函数
-  - `C`：类与对象
-  - `R`：资源管理
-  - `ES`：表达式与语句
-  - `CPL`：与 C 互操作
-  - `SF`：源文件组织
-  - `SL`：标准库使用
-  - `CP`：并发，按需阅读
+- This is not a tutorial, but an engineering practice guide (there is also a published book version).
+- Reading it cover-to-cover sequentially is not recommended; prioritize these sections:
+  - `P`: Philosophy
+  - `I`: Interfaces
+  - `F`: Functions
+  - `C`: Classes and class hierarchies
+  - `R`: Resource management
+  - `ES`: Expressions and statements
+  - `CPL`: Interfacing with C
+  - `SF`: Source files
+  - `SL`: The Standard Library
+  - `CP`: Concurrency (read as needed)
 
-[Embedded Artistry 的 C++ 相关文章](https://embeddedartistry.com/blog/tag/cpp/)
-- 更适合作为专题阅读，而不是系统课程。
-- 比较值得关注的话题包括：不用堆时如何使用 C++、强类型寄存器封装、程序在 `main()` 之前发生了什么。
+[Embedded Artistry's C++ Articles](https://embeddedartistry.com/blog/tag/cpp/)
+- Better suited for topical reading rather than a systematic course.
+- More noteworthy topics include: how to use C++ without the heap, strongly-typed register encapsulation, and what happens before `main()`.
 
-## 建议怎样把这些资源用起来
+## Recommended Way to Utilize These Resources
 
-比较高效的方式不是“先学一阵子 C++ 再开始看 Glyphix”，而是并行进行：
+A more efficient approach is not to "learn C++ for a while before looking at Glyphix," but to do it in parallel:
 
-1. 先通读本文，知道要补哪些知识。
-2. 读一遍[A Tour of C++](https://www.stroustrup.com/Tour.html)或 FAQ 中和 C 迁移相关的部分。
-3. 开始阅读[对象系统](./object-system.md)和[Native Module 开发](./native-module.md)。
-4. 遇到看不懂的语法时，用 [cppreference](https://en.cppreference.com/w/cpp) 精确查询。
-5. 遇到“为什么现代 C++ 倾向这样写”这类问题，再去看 [C++ Core Guidelines]。(https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 的对应章节。
+1. Read this article first to know which knowledge needs to be supplemented.
+2. Read [A Tour of C++](https://www.stroustrup.com/Tour.html) or the sections in the FAQ related to C migration.
+3. Start reading the [Object System](./object-system.md) and [Native Module Development](./native-module.md).
+4. When you encounter syntax you don't understand, use [cppreference](https://en.cppreference.com/w/cpp) for precise queries.
+5. When you encounter questions like "Why does modern C++ tend to be written this way?", refer to the corresponding chapters in the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
-这样学习的节奏更接近真实工作，也更适合已经有嵌入式经验的开发者。
+This learning rhythm is closer to real work and better suited for developers with existing embedded experience.
 
-## 把本文和 cxxdev 文档对应起来
+## Mapping This Article to the cxxdev Documentation
 
-如果你准备继续往下读，可以这样对应重要知识点：
+If you are ready to continue reading, you can map the important knowledge points as follows:
 
-- [对象系统](./object-system.md)：类、继承、生命周期、引用、模板基础
-- [SDK 项目配置](./sdk-setup.md)：头文件、源文件、构建系统、最基本的类声明知识
-- [Native Module 开发](./native-module.md)：函数接口、lambda、对象生命周期、C/C++ 互操作
-- [异步功能开发](./async.md)：模板、线程模型、对象所有权、回调约束
-- [控件开发指南](./widget.md)：继承、成员函数、事件处理、对象树和绘制流程
+- [Object System](./object-system.md): Classes, inheritance, lifecycles, references, template basics
+- [SDK Project Configuration](./sdk-setup.md): Header files, source files, build systems, basic class declaration knowledge
+- [Native Module Development](./native-module.md): Function interfaces, lambdas, object lifecycles, C/C++ interoperability
+- [Async Feature Development](./async.md): Templates, threading models, object ownership, callback constraints
+- [Widget Development Guide](./widget.md): Inheritance, member functions, event handling, object trees, and the rendering pipeline

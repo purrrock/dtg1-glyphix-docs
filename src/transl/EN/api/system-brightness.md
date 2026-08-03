@@ -1,6 +1,6 @@
-# Brightness management
+# Brightness Management
 
-## Import module
+## Import Module
 
 ``` js
 import brightness from '@system.brightness'
@@ -10,32 +10,32 @@ import brightness from '@system.brightness'
 
 ### `getValue` <decl type="(): number" method />
 
-Get the brightness value of the screen, the range is $[0, 1]$.
+Gets the screen brightness value, ranging from $[0, 1]$.
 
 ### `setValue` <decl type="(value: number): void" method />
 
-Set the brightness value of the screen. The range of `value` is $[0, 1]$.
+Sets the screen brightness value. The range of `value` is $[0, 1]$.
 
 ### `getMode` <decl type="(): string" method />
 
-Get the brightness mode of the screen.
+Gets the screen brightness mode.
 
 ### `setMode` <decl type="(mode: number): void" method />
 
-Set the screen brightness mode. When `number` is set to `0`, it is standard mode. When `number` is set to $1$, it is automatic mode.
+Sets the screen brightness mode. When `number` is set to `0`, it is standard mode; when `number` is set to `1`, it is automatic mode.
 
 ### `setKeepScreenOn` <decl type="(mode: Boolean): void" method />
 
-Set whether to keep the screen always on. When `mode` is set to `true`, the screen is always on. When `mode` is set to `false`, the screen is always on.
+Sets whether to keep the screen on. When `mode` is set to `true`, the screen stays on; when `mode` is set to `false`, the screen is no longer kept on.
 
 ### `wakeScreenOn`
 <decl method><pre>
-(options: {
-  screenOn: boolean,
+(options: { 
+  screenOn: boolean, 
   timeout?: number,
 }): void
 </pre></decl>
 
-Turn the screen on or off. The functions of each field of the options parameter are:
-- `screenOn`: whether to light up the screen
-- `timeout`: automatic extinguishing time, no time limit if not filled in
+Turns the screen on or off. The fields of the `options` parameter are as follows:
+- `screenOn`: Whether to turn on the screen
+- `timeout`: Automatic screen-off time, leaving it blank means no time limit

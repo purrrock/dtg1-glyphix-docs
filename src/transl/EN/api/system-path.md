@@ -1,18 +1,18 @@
-# Path operations
+# Path Operations
 
-This module provides an interface for path operations. Including path splicing, segmentation and simplification functions.
+This module provides interfaces for path operations, including path concatenation, splitting, and normalization.
 
-## Import module
+## Import Module
 
 ``` js
 import path from '@system.path'
 ```
 
-## Interface definition
+## Interface Definitions
 
 #### `path.basename` <decl type="(path: string, suffix?: string): string" method />
 
-Returns the file name part of path `path`. The specified file name suffix can also be removed by specifying the `suffix` parameter. For example
+Returns the file name portion of the `path`. The specified file name suffix can also be removed by specifying the `suffix` parameter. For example:
 ``` js
 path.basename('/foo/bar/baz.txt') // 'baz.txt'
 path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
@@ -20,14 +20,14 @@ path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
 
 #### `path.dirname` <decl type="(path:string): string" method />
 
-Returns the path part of `path` (as opposed to `basename()`, which discards the filename part). For example
+Returns the directory name portion of the `path` (opposite of `basename()`, which discards the file name portion). For example:
 ``` js
 path.dirname('/foo/bar/baz') // '/foo/bar'
 ```
 
 #### `path.extname` <decl type="(path: string): string" method />
 
-Get the file suffix in `path`. For example
+Gets the file extension in the `path`. For example:
 ``` js
 path.extname('table.json') // '.json'
 path.extname('/images/icon.png') // '.png'
@@ -35,7 +35,7 @@ path.extname('/images/icon.png') // '.png'
 
 #### `path.isAbsolute` <decl type="(path: string): boolean" method />
 
-Determine whether `path` is an absolute path. For example
+Determines whether the `path` is an absolute path. For example:
 ``` js
 path.isAbsolute('/foo/bar'); // true
 path.isAbsolute('/baz/..');  // true
@@ -45,14 +45,14 @@ path.isAbsolute('.');        // false
 
 #### `path.join` <decl type="(...paths: string[]): string" method />
 
-Splice and simplify multiple paths, for example
+Concatenates multiple paths together and normalizes the result. For example:
 ``` js
 path.join('/foo', 'bar', 'baz/asdf', 'quux', '..') // '/foo/bar/baz/asdf'
 ```
 
 #### `path.normalize` <decl type="(path: string): string" method />
 
-Reduce path `path` to its simplest form, parsing `..` and `.` and removing redundant path separators `/`.
+Normalizes the given `path`, resolving `..` and `.`, and removing redundant path separators `/`.
 
 ``` js
 path.normalize('/foo///bar/.././/baz') // '/foo/baz'
@@ -60,7 +60,7 @@ path.normalize('/foo///bar/.././/baz') // '/foo/baz'
 
 #### `path.relative` <decl type="(from: string, to: string): string" method />
 
-Computes the relative path from `from` to `to`.
+Calculates the relative path from `from` to `to`.
 
 ``` js
 path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb') // '../../impl/bbb'

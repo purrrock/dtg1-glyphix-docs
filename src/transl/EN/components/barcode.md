@@ -1,40 +1,28 @@
 # barcode
 
+The `barcode` component is used to display [Code 128](https://en.wikipedia.org/wiki/Code_128) barcodes. The `barcode` component can display any ASCII string, making it suitable for showing product barcodes, payment codes, and other information.
 
-The `barcode` component is used to display the [Code 128](https://en.wikipedia.org/wiki/Code_128) barcode. The `barcode` component can display any ASCII string and is suitable for displaying product barcodes, payment codes and other information.
+In flow layout, the `barcode` component defaults to a block-level element (`block`) and occupies an entire row by itself.
 
-
-In a fluid layout, the `barcode` component defaults to a block-level element (`block`) and will be displayed on a separate line.
-
-
-## property
-
+## Attributes
 
 ### `value` <decl type="string" get set />
 
+Sets the content to be displayed by the barcode. Supports any ASCII string.
 
-Set the content to be displayed in the barcode. Arbitrary ASCII strings are supported.
+## CSS Notes
 
+To make the barcode easily scannable, you should correctly set the CSS properties of the `barcode` component, which include:
+- `color`: The color of the barcode bars, usually set to black (`black` or `#000`);
+- `background-color`: The background color of the barcode, which should typically be white (`white` or `#fff`);
+- `padding` / `margin`: Sufficient inner and outer margins prevent the barcode from blending with other elements, increasing the scan recognition rate;
+- `width` / `height`: The dimensions of the barcode must be large enough to be easily captured by a camera.
 
-## CSS description
+By default, each bar of the barcode component occupies $2\rm px$ in width and $32\rm px$ in height. This may be too small on small-screen devices such as smartwatches. Developers are advised to manually set the `width` and `height` properties of the barcode component as needed and test them on actual devices.
 
-
-To make barcodes easily scannable, the CSS properties of the `barcode` component should be set correctly, including:
-- `color`: Bar code bar color, generally set to black (`black` or `#000`);
-- `background-color`: The background color of the barcode is usually white (`white` or `#fff`);
-- `padding` / `margin`: Sufficient inner and outer margins can avoid confusion between barcodes and other elements and increase the scanning recognition rate;
-- `width` / `height` : The size of the barcode must be large enough to be easily photographed.
-
-
-By default, each barcode of the barcode component will occupy $2\rm px$ width and $32\rm px$ height, which may be too small on small screen devices such as watches. It is recommended that developers manually set the `width` / `height` attributes of the barcode component as needed and test on the device.
-
-
-The following example shows how to use the barcode component. Please note that various margins are set for the `barcode` component in CSS. This is to ensure that there is enough space between the barcode and other interface elements to avoid interfering with scanning.
-
+The example below demonstrates how to use the barcode component. Please note that various margins are set for the `barcode` component in the CSS to ensure there is enough space between the barcode and other UI elements to avoid interfering with scanning.
 
 <glyphix id="barcode-1" :height="150" :width="350">
-
-
 
 ``` html
 <div>
@@ -43,7 +31,6 @@ The following example shows how to use the barcode component. Please note that v
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
@@ -51,7 +38,6 @@ export default {
   }
 }
 ```
-
 
 ``` css
 div {
@@ -62,8 +48,8 @@ div {
 barcode {
   margin: 8px;
   padding: 8px;
-  color: black; /* 将条形码前景色设置为黑色 */
-  background-color: white; /* 将条形码背景色设置为白色 */
+  color: black; /* Set the barcode foreground color to black */
+  background-color: white; /* Set the barcode background color to white */
   border-radius: 16px;
   height: 80px;
 }
@@ -75,15 +61,10 @@ p {
 }
 ```
 
-
 </glyphix>
 
-
-
 ::: tip
+You should always explicitly set **high-contrast** styles for the barcode component's bar color (`color`) and background (`background-color`). This prevents reduced readability caused by discrepancies in the device's default style themes or inherited style properties.
 
-The codepoint color ( `color` ) and background ( `background-color` ) styles of high-contrast barcode components should always be set explicitly. To avoid deviations between the device's default style theme and inherited style attributes, resulting in reduced recognition.
-
-
-At the same time, please set a large enough padding (`padding`) to ensure easy scanning and recognition.
+Additionally, please set a sufficiently large padding (`padding`) to ensure easy scanning and recognition.
 :::

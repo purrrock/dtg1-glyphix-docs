@@ -1,16 +1,11 @@
 # marquee
 
+The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any child components, including `span`.
 
-The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any subcomponents including `span`.
+`marquee` supports general CSS properties, but due to implementation reasons, the `text-align` property may not be supported at the moment. Since `marquee` only displays a single line of text and scrolls it when the content is too long, properties like `max-lines` have no effect.
 
-
-`marquee` supports common CSS properties, but due to implementation reasons, the `text-align` property may not be supported at this time. Since `marquee` only displays a single line of text and will scroll when the text content is too long, attributes such as `max-lines` also have no effect.
-
-
-## property
-
+## Attributes
 
 ### `text` <decl type="string" get set/>
 
-
-Set the text content in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of `marquee`, the text will automatically scroll.
+Sets the text content, which is used in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of the `marquee`, the text will automatically scroll.

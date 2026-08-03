@@ -1,56 +1,56 @@
-# 全局资源迁移指南
+# Global Resource Migration Guide
 
-本文面向 Glyphix 下游集成项目，帮助你将历史项目中的全局资源加载方式升级到最新方案，获得易于管理、编辑的全局资源布局，不再依赖厂商的打包或转换工具支持。
+This document is intended for downstream Glyphix integration projects, helping you upgrade global resource loading methods from legacy projects to the latest scheme. This provides an easily manageable and editable global resource layout, eliminating the dependency on vendor packaging or conversion tools.
 
-早期 Glyphix 采用 `global.pkg` 二进制归档包管理全局资源（字体文件、字体映射表等），后来逐步演进为直接使用未打包资源文件，最终字体映射文件的格式也从二进制转为标准 JSON <version-badge since="0.9" /> 。如果你维护的入口代码仍沿用旧写法，可以按本文升级。
+In the early days, Glyphix used the `global.pkg` binary archive package to manage global resources (font files, font mapping tables, etc.). Later, it gradually evolved to directly use unpackaged resource files, and finally, the format of the font mapping file was transitioned from binary to standard JSON <version-badge since="0.9" />. If the entry code you maintain still uses the old syntax, you can follow this article to upgrade.
 
 ::: tip
-使用旧模式存在维护麻烦、难以管理和编辑全局资源的问题，建议立即升级。
+Using the old mode brings maintenance hassles and difficulties in managing and editing global resources. It is strongly recommended to upgrade immediately.
 :::
 
-## 去除 `global.pkg`
+## Removing `global.pkg`
 
-### 旧代码特征
+### Characteristics of Old Code
 
-如果你的入口代码中存在类似以下任一模式，说明你正在使用 `global.pkg`：
+If your entry code contains either of the following patterns, it means you are using `global.pkg`:
 
 ```cpp
 EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
 static String globalUri(const String &path) { return "pkg:///" + path; }
 ```
 
-这两行的效果是：将所有 `pkg:///` 协议的资源请求路由到 `/global.pkg` 这个二进制归档包内部的文件。
+The effect of these two lines is to route all resource requests with the `pkg:///` protocol to files inside the `/global.pkg` binary archive package.
 
-为什么需要去除：
-- 每次更换字体等资源，都必须重新运行打包工具生成 `.pkg` 文件
-- 调试时无法直接查看或替换 `.pkg` 内部的单个文件，也难以核对内容
-- 打包流程依赖专用工具，增加沟通和维护成本
+Why it needs to be removed:
+- Every time fonts or other resources are changed, the packaging tool must be re-run to generate the `.pkg` file.
+- Individual files inside `.pkg` cannot be directly viewed or replaced during debugging, making content verification difficult.
+- The packaging workflow depends on dedicated tools, increasing communication and maintenance costs.
 
-### 迁移操作
+### Migration Steps
 
-**第一步：解出 `global.pkg` 中的资源。**
+**Step 1: Extract resources from `global.pkg`.**
 
-如果你已经没有 `.pkg` 源文件，可以从 `global.pkg` 中解出内容（使用 Glyphix 命令行工具或索取原始资源文件）。通常需要解出以下内容：
+If you no longer have the source `.pkg` file, you can extract the contents from `global.pkg` (using the Glyphix command-line tool or by requesting the original resource files). Typically, you need to extract the following:
 
 ```
 fonts/
     NotoSans-Regular.ttf
     NotoSansSC-Regular.ttf
     ...
-    font-faces          ← 字体映射文件（后续会升级为 JSON）
+    font-faces          ← Font mapping file (will be upgraded to JSON later)
 ```
 
-将解出的目录放置到你的项目资源目录中，例如 `/fonts/`。
+Place the extracted directory into your project's resource directory, for example, `/fonts/`.
 
-**第二步：移除 `global.pkg` 相关代码。**
+**Step 2: Remove code related to `global.pkg`.**
 
-1. 删除 `EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg")` 整行
-2. 删除 `globalUri()` 这类包装函数
-3. 将所有 `pkg:///xxx` 的资源引用改为直接文件路径，即 `/xxx`
+1. Delete the entire line `EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg")`.
+2. Delete wrapper functions like `globalUri()`.
+3. Change all resource references of `pkg:///xxx` to direct file paths, i.e., `/xxx`.
 
-**第三步：修改字体加载代码。**
+**Step 3: Modify font loading code.**
 
-假设你的初始化代码原本类似：
+Assuming your initialization code originally looked like this:
 
 ```cpp
 static String globalUri(const String &path) { return "pkg:///" + path; }
@@ -70,7 +70,7 @@ int main() {
 }
 ```
 
-改为直接使用文件路径（没有 `globalUri()` 函数和 `GlobalPackage` 注册）：
+Change it to use direct file paths (without the `globalUri()` function and `GlobalPackage` registration):
 
 ```cpp
 static void setupFont(const String &fontMap) {
@@ -86,31 +86,31 @@ int main() {
 }
 ```
 
-此时资源布局变为：
+At this stage, the resource layout becomes:
 
 ```
 /fonts/
-    font-faces          ← 二进制格式
+    font-faces          ← Binary format
     NotoSans-Regular.ttf
     ...
 ```
 
-这个阶段你仍然使用二进制的 `font-faces` 文件，下一节将其升级为 JSON。
+At this phase, you are still using the binary `font-faces` file. The next section upgrades it to JSON.
 
-## 改用 JSON 字体映射文件
+## Switching to JSON Font Mapping Files
 
-### 旧代码特征
+### Characteristics of Old Code
 
 ```cpp
 FontFaceMap &map = App()->fontManager()->faces();
 map.readFile("/fonts/font-faces");
 ```
 
-`readFile` 读取的是自定义二进制格式文件，这个二进制文件不能手工编辑，必须从 CSS 文件用打包工具转换生成。
+`readFile` reads a custom binary format file. This binary file cannot be edited manually and must be converted and generated from a CSS file using a packaging tool.
 
-### JSON 格式说明
+### JSON Format Description
 
-现在我们直接用 JSON 文件描述字体映射关系。你只需要创建一个 `font-faces.json` 文件，格式如下：
+Now we describe font mapping relationships directly using a JSON file. You only need to create a `font-faces.json` file with the following format:
 
 ```json
 {
@@ -145,31 +145,31 @@ map.readFile("/fonts/font-faces");
 }
 ```
 
-字段说明：
+Field Descriptions:
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
+| Field | Type | Required | Default Value | Description |
 |------|------|------|--------|------|
-| `family` | 字符串 | 是 | - | 字体族名，如 `sans-serif`、`serif` |
-| `weight` | 整数 | 否 | 400 | CSS 字重值（100-900），400 为常规，700 为加粗 |
-| `style` | 字符串 | 否 | normal | 字体样式，可选 `italic` 或 `oblique` |
-| `urls` | 字符串数组 | 是 | - | 字体文件路径，相对于 JSON 文件所在目录 |
+| `family` | String | Yes | - | Font family name, e.g., `sans-serif`, `serif` |
+| `weight` | Integer | No | 400 | CSS font weight value (100-900), 400 is regular, 700 is bold |
+| `style` | String | No | normal | Font style, options are `italic` or `oblique` |
+| `urls` | Array of strings | Yes | - | Font file path, relative to the directory where the JSON file is located |
 
-下面对关键字段做进一步说明。
+Further explanations for key fields are provided below.
 
-**weight 字段**
+**The `weight` Field**
 
-weight 直接填 CSS 字重数值，会舍入到最近的标准值：
+For `weight`, input the CSS font weight numerical value directly, which will be rounded to the nearest standard value:
 
 - `100` Thin
-- `400` Regular（默认值，不填即可）
+- `400` Regular (default value, can be omitted)
 - `700` Bold
 - `900` Black
 
-**urls 路径解析**
+**`urls` Path Resolution**
 
-`urls` 中的路径相对于 JSON 文件所在的目录解析。例如 JSON 文件位于 `/fonts/font-faces.json`，则 `urls` 中写 `"fonts/NotoSans-Regular.ttf"` 最终解析为 `/fonts/fonts/NotoSans-Regular.ttf`。
+Paths in `urls` are resolved relative to the directory where the JSON file is located. For example, if the JSON file is located at `/fonts/font-faces.json`, writing `"fonts/NotoSans-Regular.ttf"` in `urls` will ultimately resolve to `/fonts/fonts/NotoSans-Regular.ttf`.
 
-因此建议 JSON 文件直接放置在字体文件同级目录，这样 URL 可以直接写文件名。例如目录布局为：
+Therefore, it is recommended to place the JSON file directly in the same directory as the font files so that URLs can just use the file names. For example, the directory layout:
 
 ```
 /fonts/
@@ -179,11 +179,11 @@ weight 直接填 CSS 字重数值，会舍入到最近的标准值：
     NotoSans-Bold.ttf
 ```
 
-此时 JSON 内容如上述代码所示。
+In this case, the JSON content is as shown in the code above.
 
-### 代码修改
+### Code Modifications
 
-将初始化代码中的 `readFile` 替换为 `readJSON`：
+Replace `readFile` in the initialization code with `readJSON`:
 
 ```cpp
 #include "gx_fontmanager.h"
@@ -202,13 +202,13 @@ int main() {
 }
 ```
 
-就这一处 API 调用变更，其余代码无需修改。之后你可以直接编辑 `font-faces.json` 来增删字体或调整映射关系，不再需要任何转换工具。
+This is the only API call change; the rest of the code remains unchanged. Afterward, you can directly edit `font-faces.json` to add/remove fonts or adjust mapping relationships, without needing any conversion tools.
 
 ## FAQ
 
-**如何处理同一个 family 有 Regular、Bold、Italic 等多个变体？**
+**How to handle multiple variants (like Regular, Bold, Italic) for the same family?**
 
-在 `font-faces` 数组中为每个变体添加独立条目，用 `weight` 和 `style` 区分：
+Add independent entries for each variant in the `font-faces` array, distinguished by `weight` and `style`:
 
 ```json
 {
@@ -235,11 +235,11 @@ int main() {
 }
 ```
 
-MCU 项目通常只使用 `normal` 字重的 Regular `sans-serif` 字体，系统会自动回退。
+MCU projects typically only use the Regular `sans-serif` font with `normal` weight, and the system will fall back automatically.
 
-**`urls` 数组里可以放多个文件吗？什么时候需要？**
+**Can the `urls` array contain multiple files? When is it needed?**
 
-可以。当一个字体族需要覆盖多语种字符时，将多个字体文件放入同一个 `urls` 数组。例如 `sans-serif` 需要同时支持拉丁字母、中日韩文字、阿拉伯文：
+Yes. When a font family needs to cover multi-language characters, put multiple font files into the same `urls` array. For example, `sans-serif` needs to support Latin letters, CJK characters, and Arabic simultaneously:
 
 ```json
 {
@@ -255,15 +255,15 @@ MCU 项目通常只使用 `normal` 字重的 Regular `sans-serif` 字体，系�
 }
 ```
 
-引擎渲染文本时会按顺序在这些文件中查找字符字形，第一个匹配到的字形将被使用。
+When rendering text, the engine will look up character glyphs in these files sequentially, and the first matched glyph will be used.
 
-**字体文件必须和 JSON 放在同一目录吗？**
+**Must the font files be in the same directory as the JSON?**
 
-不是。`urls` 中的路径相对于 JSON 文件所在目录解析，你可以使用相对路径将字体放在子目录中。也可以使用绝对路径，此时不受 JSON 目录影响。
+No. Paths in `urls` are resolved relative to the directory where the JSON file is located, so you can use relative paths to place fonts in subdirectories. Absolute paths can also be used, in which case they are unaffected by the JSON directory.
 
-**可以直接在代码中传入 JSON 字符串吗？**
+**Can a JSON string be passed directly in the code?**
 
-可以。使用两参数重载版本：
+Yes. Use the two-parameter overloaded version:
 
 ```cpp
 map.readJSON("/fonts/", R"({
@@ -273,4 +273,4 @@ map.readJSON("/fonts/", R"({
 })");
 ```
 
-第一个参数是 baseUri，用于解析 `urls` 中的相对路径。
+The first parameter is `baseUri`, used to resolve relative paths in `urls`.

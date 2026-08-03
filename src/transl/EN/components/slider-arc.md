@@ -1,40 +1,27 @@
 # slider-arc
 
+An arc slider selector. It is a block-level element by default, and style customization is currently not supported.
 
-The arc sliding selector defaults to a block-level element and does not support style modification.
+## Properties
 
-
-## property
-
-
-Inherit the properties of the [slider](slider) component
-
+Inherits properties from the [slider](slider) component.
 
 ### `arc-center` <decl type="{ x: number, y: number }" set />
 
-
-Set the position of the arc center.
-
+Sets the position of the arc's center.
 
 ### `start-angle` <decl type="number" set />
 
-
-Set the arc starting angle, default value: $-90$.
-
+Sets the starting angle of the arc. Default value: $-90$.
 
 ### `progress-angle` <decl type="number" set />
 
-
-Set the maximum rotation angle of the arc, default value: $360$, one circle of arc.
-
+Sets the maximum rotation angle of the arc. Default value: $360$ (a full circle).
 
 ### `arc-width` <decl type="number" set />
 
-
-Set arc width.
-
+Sets the width of the arc.
 
 ### `arc-radius` <decl type="number" set />
 
-
-Set the arc radius.
+Sets the radius of the arc.

@@ -1,15 +1,10 @@
-# Layout tips
+# Layout Tips
 
+## Limit Element Width
 
-## Limit element width
-
-
-You can use the `margin` attribute to limit the width of an element.
-
+You can use the `margin` property to limit the width of an element.
 
 <glyphix id="cookbook-margin-layout-1" width="360" height="100">
-
-
 
 ```html
 <div>
@@ -18,7 +13,6 @@ You can use the `margin` attribute to limit the width of an element.
   </div>
 </div>
 ```
-
 
 ```css
 div {
@@ -38,7 +32,6 @@ p {
 }
 ```
 
-
 ```js
 export default {
   data: { text: 'A' },
@@ -54,6 +47,5 @@ export default {
   }
 }
 ```
-
 
 </glyphix>

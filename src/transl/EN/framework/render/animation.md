@@ -1,102 +1,72 @@
-# animation
+# Animation
 
+## Basics
 
-## basic knowledge
+"Animation" creates transition effects for an interface over a period of time by playing a sequence of frames continuously and rapidly. There are two ways to implement animations in Glyphix:
+- **Slideshow animation**, which rapidly plays a set of images;
+- **Keyframe animation**, where intermediate frames are automatically calculated by the program.
 
+### Keyframe Animation
 
-"Animation" plays several frames continuously and quickly to make the interface present a transition effect over a period of time. There are two ways to implement animation in Glyphix:
-- By quickly playing a **carousel animation** of a group of pictures;
-- **Keyframe animation** for intermediate frames is automatically calculated through the program.
-
-
-### Keyframe animation
-
-
-Carousel animation is implemented through specialized components, and its principle is similar to that of video. This section mainly introduces keyframe animation. The following example demonstrates a keyframe animation:
-
+Slideshow animations are implemented using dedicated components, and their principle is similar to that of videos. This section focuses primarily on keyframe animation. The following example demonstrates a keyframe animation:
 
 <div class="animation-example-box">
-
   <div style="visibility: hidden">Hello World!</div>
-
   <div class="animation-span">Hello World!</div>
-
   <div class="keyframes-from">Hello World</div>
-
   <div class="keyframes-to">Hello World</div>
-
 </div>
 
+To achieve this animation, developers need to define the starting frame (red text) and ending frame (green text) of the animation, while the program automatically calculates each frame in between. The start and end frames specified by the developer are called **keyframes**. Keyframe animations also allow defining intermediate keyframes. The frames calculated by the program are called **interpolation frames** (or tweened frames). In this example, the initial keyframe is the original text component, the ending keyframe is the text translated by $200\rm px$ and scaled by a factor of $0.75$, and the interpolation frames are the intermediate transformation values calculated based on the animation progress. For instance, the interpolation frame at $50\%$ animation progress translates the original text by $100\rm px$ and scales it by $0.875$.
 
+Compared to slideshows, keyframe animations are easier to create and are well-suited for interface element transition effects (such as button press visual effects).
 
-To implement this animation, developers need to define the start frame (red text) and end frame (green text) of the animation. The program will automatically calculate each frame in the animation. The start and end frames specified by the developer are called keyframes. Keyframe animation also allows the definition of intermediate keyframes. The frames calculated by the program are called **interpolated frames**. In this example, the starting keyframe is the original text component, while the ending keyframe translates the text $200\rm px$ and scales it $ 0.75 $ times, and the interpolated frame is the intermediate transformation value calculated based on the animation progress. For example, the interpolation frame when the animation plays to $50\%$ is to translate the original text $100\rm px$ and scale it $ 0.875 $ times.
+Keyframe animations are mainly defined by several elements:
+- Keyframes: Manually specified frames; typically, keyframes are used at $0\%$ and $100\%$ progress.
+- Animation duration: The time required for the animation progress to go from $0\%$ to $100\%$.
+- Easing function: Defines the progress adjustment curve for interpolation frames; linear animation effects tend to look less natural.
+- Repeat count, delay, playback direction (forward, reverse, alternate), etc.
 
+### Property Animation
 
-Compared with carousels, keyframe animations are easier to create and are suitable for transition effects of interface elements (such as button press animations).
-
-
-Keyframe animation is mainly defined by several elements:
-- Keyframe: Manually specified frame, usually keyframes are used at $0\%$ and $100\%$ progress;
-- Animation duration: that is, the time required for the animation progress from $0\%$ to $100\%$;
-- Easing function: defines the progress adjustment curve of the interpolation frame. The linear animation effect has a poor look and feel;
-- Number of repetitions, delay, playback direction (forward, reverse, reciprocating), etc.
-
-
-### Property animation
-
-
-The keyframe animation used in Glyphix is ​​mainly **attribute animation**. That is, keyframes are defined by the element's attributes, while interpolated frames calculate intermediate attribute values. For example, the animation implemented by [`transition` attribute modifier](../component/prop-modifier.md#transition-修饰符) is like this: the animation system will automatically handle the transition effect of attribute changes.
-
+Keyframe animations used in Glyphix are primarily **property animations**. This means that keyframes are defined by the properties of elements, and interpolation frames calculate the intermediate property values. For example, as implemented by the [`transition` property modifier](../component/prop-modifier.md#transition-modifier): the animation system automatically handles transition effects for property changes.
 
 Property animations are mainly divided into two categories:
-- Component property animation: Add animated transitions to component properties, implemented by the `transition` property modifier;
-- CSS Animation: Add animation to style properties.
+- Component property animations: Add animation transitions to component properties, implemented via the `transition` property modifier.
+- CSS animations: Add animations to style properties.
 
+## Easing Functions
 
-## Easing function
+Easing functions define the adjustment curve for animation progress, avoiding monotonous linear interpolation effects. Readers can experience the effects of easing functions at https://cubic-bezier.com/.
 
+In the [`transition` property modifier](../component/prop-modifier.md#transition-modifier) and CSS [`animation` property](../generic/styles.md#animation), the easing function is a string, as shown in the table below.
 
-The easing function defines the adjustment curve of the animation progress, thus avoiding the monotonous linear interpolation effect. Readers can go to https://cubic-bezier.com/ to experience the effect of the easing function.
+|              Value              | Description                                                                                                                                    |
+| :-----------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+|             `ease`              | Default value. The animation starts slowly, then accelerates, and slows down before ending.                                                    |
+|            `ease-in`            | The animation starts at a slow speed.                                                                                                          |
+|           `ease-out`            | The animation ends at a slow speed.                                                                                                            |
+|          `ease-in-out`          | The animation starts and ends at a slow speed.                                                                                                 |
+|            `linear`             | The animation has the same speed from start to finish.                                                                                         |
+|            `spring`             | Simulates a spring rebound animation effect, equivalent to `spring(1,1,1)`.                                                                    |
+| `cubic-bezier(x1, y1, x2, y2)`  | Defines the easing function using a [cubic Bézier curve](https://developer.mozilla.org/en-US/docs/Web/CSS/easing-function#cubic_b%C3%A9zier_easing_function). |
+| `spring(spring, damping, mass)` | Simulates a spring rebound animation effect, allowing you to specify elasticity coefficients, damping, and mass parameters (documentation needed). |
 
+For most animations, the `ease` easing function yields good results, while complex requirements can be handled using the `cubic-bezier()` function. The `spring()` function is suitable for scenarios requiring physical rebound effects, such as rotating pointers.
 
-In [`transition` attribute modifier](../component/prop-modifier.md#transition-修饰符) and CSS's [`animation` property](../generic/styles.md#animation). The easing function is a string whose contents are shown in the following table.
+## Examples
 
-
-| value | description |
-| :-----------------------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
-
-| `ease` | Default value. The animation starts at a slow speed, then speeds up, and slows down before ending. |
-| `ease-in` | The animation starts at a slow speed. |
-| `ease-out` | The animation ends at low speed. |
-| `ease-in-out` | The animation starts and ends at a slow speed. |
-| `linear` | The speed of the animation is the same from beginning to end. |
-| `spring` | Simulates the animation effect of spring rebound, equivalent to `spring(1,1,1)`. |
-| `cubic-bezier(x1, y1, x2, y2)` | Use [cubic bezier curve](https://developer.mozilla.org/en-US/docs/Web/CSS/easing-function#cubic_b%C3%A9zier_easing_function) to define the easing function. |
-| `spring(spring, damping, mass)` | Simulates the animation effect of spring rebound, and can specify elastic coefficient, damping and mass parameters (document required). |
-
-
-For most animations, the `ease` easing function can get good results, and for complex requirements, the `cubic-bezier()` function can be used. The `spring()` function is suitable for scenarios such as pointer rotation that require rebound physical effects.
-
-
-## Example
-
-
-### Button animation
-
+### Button Animation
 
 As shown below, the default button effect has no press animation:
 
-
 <Glyphix id="render-animation-button1" width="200" height="80">
-
-
 
 ``` html
 <div>
   <button>Button</button>
 </div>
 ```
-
 
 ``` css
 button {
@@ -113,14 +83,9 @@ button:active {
 ```
 </Glyphix>
 
-
-
 You can add interactive animations to this button using the CSS [`animation`](../generic/styles.md#animation) property:
 
-
 <Glyphix id="render-animation-button2" width="200" height="80">
-
-
 
 ``` html
 <div>
@@ -128,18 +93,17 @@ You can add interactive animations to this button using the CSS [`animation`](..
 </div>
 ```
 
-
 ``` css
-/* Define active pseudo-class keyframe, do not write from / 0% keyframe
-   The animation will start playing from the current state of the component */
+/* Define keyframes for the active pseudo-class. Omitting the from / 0% keyframe
+   causes the animation to start playing from the component's current state. */
 @keyframes button-active {
   to {
     transform: scale(1.1, 1.1);
   }
 }
 
-/* Define no pseudo-class keyframes, do not write from / 0% keyframes
-   The animation will start playing from the current state of the component */
+/* Define keyframes for the non-pseudo-class state. Omitting the from / 0% keyframe
+   causes the animation to start playing from the component's current state. */
 @keyframes button-normal {
   to {
     transform: scale(1, 1);
@@ -152,33 +116,25 @@ button {
   padding: 8px 16px;
   border-radius: 50%;
   margin: 16px;
-  /* Animate scaling of button to 100% in pseudo-class style */
+  /* Animate the button to scale to 100% in the normal style */
   animation: 0.2s ease button-normal;
 }
 
 button:active {
-  /* Animate scaling button to 120% in active pseudo-class style */
+  /* Animate the button to scale to 120% in the active pseudo-class style */
   animation: 0.2s ease button-active;
 }
 ```
 </Glyphix>
 
+Currently, the CSS `transition` property is not supported, so animations must be defined separately for the button's normal and `active` pseudo-class styles.
 
 
-The CSS `transition` attribute is not currently supported, so animations must be defined separately in the button's unpseudo-classed style and in the `active` pseudo-classed style.
+### `spring` Animation Effect
 
-
-
-
-### `spring` animation effect
-
-
-The `spring` easing function provides an interpolation effect similar to spring-damped vibration, which can be used for moving pointers. The following example demonstrates two methods of implementing pointer animation: uniform pointer rotation on the left, and using the `spring` easing function on the right.
-
+The `spring` easing function provides an interpolation effect similar to spring-damped oscillation, which can be used for moving pointers. The following example demonstrates two ways to implement pointer animation: the left side uses uniform pointer rotation, while the right side uses the `spring` easing function.
 
 <Glyphix id="render-animation-spring" width="400" height="200">
-
-
 
 ``` html
 <div class="window">
@@ -196,7 +152,6 @@ The `spring` easing function provides an interpolation effect similar to spring-
   </div>
 </div>
 ```
-
 
 ``` css
 .window {
@@ -224,7 +179,6 @@ The `spring` easing function provides an interpolation effect similar to spring-
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -236,82 +190,43 @@ export default {
 }
 ```
 
-
 </Glyphix>
 
-
-
-Both animations update the pointer angle at $1$ second intervals, but the `transition` modifier of the component property automatically adds a rotation animation.
-
+Both animations update the pointer angle at $1$-second intervals, but the component property's `transition` modifier automatically adds the rotation animation.
 
 <style scoped>
-
 @keyframes animation-example {
-
   to {
-
     transform: translate(200px, 0) scale(0.75);
-
   }
-
 }
-
-
 
 .animation-example-box {
-
   position: relative;
-
   width: 320px;
-
   margin: 0 auto;
-
   font-family: sans-serif;
-
   font-size: 24px;
-
   user-select: none;
-
 }
-
-
 
 .animation-span {
-
   position: absolute;
-
   left: 0;
-
   top: 0;
-
   animation: 5s ease infinite animation-example;
-
 }
-
-
 
 .keyframes-from, .keyframes-to {
-
   color: red;
-
   position: absolute;
-
   left: 0;
-
   top: 0;
-
   opacity: 0.5;
-
 }
-
-
 
 .keyframes-to {
-
   color: green;
-
   transform: translate(200px, 0) scale(0.75);
-
 }
-
 </style>

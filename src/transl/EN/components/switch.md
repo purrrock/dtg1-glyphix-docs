@@ -1,12 +1,8 @@
 # switch
 
-
-Switch selects components, defaulting to inline elements. Used to represent on/off status and allow the user to switch between the two statuses. The function of `switch` is similar to that of `checkbox`, but the interaction effects and intentions are different, that is, they express switches and checks respectively.
-
+The switch selection component, which is an inline element by default. It is used to represent two states (on/off) and allows the user to toggle between them. The function of `switch` is similar to `checkbox`, but their interaction effects and intents are different, representing switches and checkboxes respectively.
 
 <glyphix id="components-switch" height="30">
-
-
 
 ``` html
 <div>
@@ -14,7 +10,6 @@ Switch selects components, defaulting to inline elements. Used to represent on/o
   <span>switch state: {{ enabled ? 'on' : 'off' }}</span>
 </div>
 ```
-
 
 ``` js
 export default {
@@ -25,53 +20,35 @@ export default {
 ```
 </glyphix>
 
-
-
 ::: note
-
-The `switch` component is typically styled as shown in the example, but may vary depending on the device. In particular, it should be noted that the width of `switch` may be different on different devices, and developers should reserve appropriate layout margin.
+The style of the `switch` component is typically as shown in the example, but it may vary depending on the device. In particular, the width of the `switch` may differ across devices, and developers should reserve appropriate layout margins.
 :::
 
-
-
-## property
-
+## Attributes
 
 ### `value` <decl type="boolean" set get listen/>
 
-
-Indicates the status of `switch`. When the value is `true`, `switch` is in the on state, otherwise it is in the off state. When the `value` attribute is not specified, the `switch` component is turned off by default.
-
+Represents the state of the `switch`. When the value is `true`, the `switch` is in the on state; otherwise, it is in the off state. When the `value` attribute is not specified, the `switch` component is off by default.
 
 ### `checked` <decl type="boolean" set get/>
 
-
-This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
-
+This is a Quick App compatibility attribute. Using [`value`](#value) is generally recommended instead.
 
 ### `change` <decl type="{ checked: boolean }" get listen/>
 
+This is a Quick App compatibility attribute. Using [`value`](#value) is generally recommended instead.
 
-This is a Quick App compatibility attribute, and it is usually more recommended to use [`value`](#value)
+## CSS Behavior
 
+The overall style of the `switch` component is determined by the system and is not controlled by the developer, much like the style differences between [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) and [Material 3](https://m3.material.io/components/switch/overview). Glyphix allows customizing the color of the `switch` in CSS and adjusting its size.
 
-## CSS behavior
-
-
-The overall style of the `switch` component is determined by the system and is not controlled by the developer, just like the style differences between [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) and [Material 3](https://m3.material.io/components/switch/overview). Glyphix allows the color of `switch` to be customized in CSS, and the size of `switch` to be resizable.
-
-
-### CSS properties
-
+### CSS Properties
 
 #### `color`
 
+Sets the color of the `switch` component's thumb. Unlike general CSS [`color`](/framework/generic/styles.md#color), the `color` property of the `switch` does not support inheritance, so you must define it directly on the current `switch` component.
 
-Set the slider color of the `switch` component. Unlike the general CSS [`color`](/framework/generic/styles.md#color), the `color` attribute of `switch` does not support inheritance, so you must define it on the current `switch` component.
-
-
-<glyphix id="components-switch-color" height="36" title="siwtch 滑块颜色">
-
+<glyphix id="components-switch-color" height="36" title="siwtch thumb color">
 
 ``` html
 <div>
@@ -80,34 +57,26 @@ Set the slider color of the `switch` component. Unlike the general CSS [`color`]
 </div>
 ```
 
-
 ``` css
 div {
-  color: red; /* 注意 switch 不会继承 color 属性 */
+  color: red; /* Note: switch does not inherit the color property */
 }
 
 .red {
-  color: red; /* 必须在 switch 组件的样式上定义 color */
+  color: red; /* color must be defined on the switch component's style */
 }
 ```
 </glyphix>
 
-
-
 #### `background-color`
 
-
-Controls the background color of the `switch` component, see the documentation of the [`active`](#active) pseudo-class for details.
-
+Controls the background color of the `switch` component. See the documentation for the [`active`](#active) pseudo-class for details.
 
 #### `font-size`
 
+You can use the [`font-size`](/framework/generic/styles.md#font-size) CSS property to adjust the size of the `switch` so that its inline text size coordinates harmoniously. The following example demonstrates the relationship between `font-size` and the size of the `switch`:
 
-You can adjust the size of `switch` through the [`font-size`](/framework/generic/styles.md#font-size) CSS property to match the inline text size. The following example demonstrates the relationship between `font-size` and `switch` sizes:
-
-
-<glyphix id="components-switch-size" height="100" title="font-size 与 siwtch 大小">
-
+<glyphix id="components-switch-size" height="100" title="font-size and switch size">
 
 ``` html
 <div>
@@ -120,39 +89,29 @@ You can adjust the size of `switch` through the [`font-size`](/framework/generic
 </div>
 ```
 
-
 ``` css
 div {
   line-height: 1.8rem;
 }
 
 .title {
-  color: #415a77; /* 注意 switch 不会继承 color 属性 */
+  color: #415a77; /* Note: switch does not inherit the color property */
   font-size: 1.25rem;
 }
 ```
 </glyphix>
 
-
-
 ::: warning
-
-The display size of `switch` is not controlled by attributes such as `width` and `height`, but is always determined by `font-size`. Therefore, please do not manually specify size attributes such as `width` to avoid abnormal display.
+The display size of the `switch` is not controlled by properties such as `width` and `height`, but is always determined by `font-size`. Therefore, please do not manually specify dimension properties like `width` to avoid abnormal rendering.
 :::
 
-
-
-### CSS pseudo-class
-
+### CSS Pseudo-classes
 
 #### `active`
 
+The `active` pseudo-class is used to define the style of the `switch` when it is in the on state. As shown in the example below, it is usually configured alongside regular style rules:
 
-The `active` pseudo-class is used to define the style in which `switch` is turned on. As shown in the following example, it is usually configured along with regular style rules:
-
-
-<glyphix id="components-switch-colors" height="36" title="siwtch 滑块颜色设置">
-
+<glyphix id="components-switch-colors" height="36" title="siwtch thumb color settings">
 
 ``` html
 <div>
@@ -160,15 +119,14 @@ The `active` pseudo-class is used to define the style in which `switch` is turne
 </div>
 ```
 
-
 ``` css
-/* switch 关闭状态下的样式 */
+/* Style when the switch is off */
 switch {
   color: #415a77;
   background-color: #bde0fe;
 }
 
-/* switch 打开状态下的样式 */
+/* Style when the switch is on */
 switch:active {
   color: #fefae0;
   background-color: #ffafcc;
@@ -176,12 +134,8 @@ switch:active {
 ```
 </glyphix>
 
-
-
-This example uses the `color` and `background-color` CSS properties to control the color style when switching `switch`. The `switch` component will only respond to the configuration of these two CSS properties when the `active` pseudo-class is activated.
-
+This example controls the color style of the `switch` when toggled using the `color` and `background-color` CSS properties. The `switch` component will only respond to the configuration of these two CSS properties even when the `active` pseudo-class is activated.
 
 ::: tip
-
-Please define the `color` and `background-color` attributes in the normal state and `active` state at the same time, otherwise there will be no corresponding color change when `switch` is switched.
+Please define both the `color` and `background-color` properties for both the normal state and the `active` state; otherwise, the `switch` will not transition colors accordingly when toggled.
 :::

@@ -7,9 +7,9 @@ FILE_PATH: src/transl/EN/tutorials/nodejs.md
 ---
 icon: nodejs
 ---
-# Node.js Package Managers
+# Node.js Package Manager
 
-In addition to standalone usage, the `gx` build tool can be used in conjunction with JavaScript package managers such as npm, pnpm, or yarn. The prerequisite is installing the `glyphix` package:
+In addition to using it independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm, or yarn. This requires the `glyphix` package to be installed:
 
 ::: code-tabs
 @tab npm
@@ -33,18 +33,18 @@ $ gx build
 fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
 ```
 
-Using a JavaScript package manager in Glyphix application development mainly offers the following benefits:
-- Use TypeScript instead of JavaScript as the development language, providing type safety and a better development experience
-- Use JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
-- Use tools like ESLint and Prettier to improve code quality and development efficiency
-- Facilitate team collaboration and project maintenance
+The main benefits of using a JavaScript package manager in Glyphix app development include:
+- Using TypeScript instead of JavaScript as the development language, providing type safety and a better developer experience
+- Using JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
+- Using tools like ESLint and Prettier to improve code quality and development efficiency
+- Facilitating team collaboration and project maintenance
 
 ::: warning
-Currently, only standard JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
+Currently, package managers are only supported for managing standard JavaScript or TypeScript dependencies; Glyphix components cannot be reused in this way. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that depend on the DOM, Node.js-specific APIs, or are overly bloated.
 :::
 
 ::: tip
-If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly run commands like `gx build` to bundle the app; otherwise, you need to add `scripts` configuration in `package.json`.
+If the [Glyphix.js](glyphix.js/README.md) devtools are installed globally, you can directly run commands like `gx build` to package your project. Otherwise, you need to add `scripts` configuration in `package.json`.
 :::
 
 ## Project Configuration
@@ -103,26 +103,26 @@ If using TypeScript, you need to create a `tsconfig.json` file in the project ro
 ```
 
 ::: info
-The Glyphix build tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code completion.
+The Glyphix packaging tool automatically handles the compilation of TypeScript files. The configuration above is primarily used for IDE type checking and code hints.
 :::
 
 ## `glyphix.config.js` Configuration
 
-It is recommended to create a `glyphix.config.js` file in the project root directory (the directory containing `src/` or `package.json`) to customize build options:
+It is recommended to create a `glyphix.config.js` file in the project root directory (the directory where `src/` or `package.json` is located) to customize packaging options:
 ```js
 module.exports = {
-  minify: false, // Disable code minification for easier debugging with source line numbers
+  minify: false, // Disable code minification to facilitate debugging and mapping to source code line numbers
 };
 ```
-If you use TypeScript, you can create a `glyphix.config.ts` file instead.
+If you are using TypeScript, you can create a `glyphix.config.ts` file instead.
 
 ::: tip
-Be sure to create this file and configure `minify: false`; otherwise, the bundled code will be minified and obfuscated, making it impossible to map back to source line numbers during debugging.
+Be sure to create this file and configure `minify: false`. Otherwise, the packaged code will be minified and obfuscated, making it impossible to map to source code line numbers during debugging.
 :::
 
 ## Using TypeScript
 
-The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in application development.
+The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in your app development.
 
 ### Basic Component Example
 
@@ -147,16 +147,16 @@ export default defineComponent({
 </script>
 ```
 
-Compared to default JavaScript component scripts, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
+Compared to the default JavaScript component script, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to specify TypeScript as the language type.
 2. Import the `defineComponent` function from the `glyphix` module.
-3. Pass the component object to be exported as an argument to `defineComponent`, and export the return value of this function.
+3. Pass the component object to be exported as an argument to `defineComponent` and export the return value of this function.
 
-After using TypeScript, the `defineComponent` function will make code completion and type checking in the IDE more accurate.
+When using TypeScript, the `defineComponent` function makes code hints and type checking in your IDE much more accurate.
 
 ### `app.ts`
 
-Simply rename `app.js` to `app.ts` to switch to a TypeScript application entry file, and the build tool will handle it automatically.
+Rename `app.js` to `app.ts` to switch to the TypeScript app entry file, and the packaging tool will handle it automatically.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/name-spec.md
@@ -166,11 +166,11 @@ icon: code-tags-check
 ---
 # Component Naming Conventions
 
-This document describes the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strict requirements, and non-compliance may lead to unexpected behavior. Using the recommended naming conventions ensures maximum compatibility.
+This document introduces the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions must be followed; otherwise, unexpected results may occur. Adhering to the recommended naming conventions ensures maximum compatibility.
 
 ## Template Naming Conventions
 
-Tag names in templates must be named in kebab-case or PascalCase:
+Tag names in templates must be in kebab-case or PascalCase:
 ``` html
 <Button></Button>
 <button></button>
@@ -184,30 +184,31 @@ Attribute names must be in kebab-case or camelCase:
 <component propName="expr"></component>
 ```
 
-It is recommended to consistently use kebab-case, which aligns with Web standards.
+It is recommended to uniformly use the Web-compliant kebab-case naming convention.
 
 ## JavaScript Code Naming Conventions
 
-Component names in JavaScript code must use PascalCase, while the corresponding kebab-case names are used in templates.
 
-Component property names in JavaScript code must use camelCase:
+Component names in JavaScript code must be in PascalCase, while the corresponding kebab-case should be used in templates.
+
+Component property names in JavaScript code must be in camelCase:
 ``` js
 export default {
   data: {
-    propName: 0 // The attribute name in the template is prop-name
+    propName: 0 // The property name in the template is prop-name
   }
 }
 ```
-These property names will automatically be converted to the corresponding kebab-case names in template code.
+These property names are automatically converted to their corresponding kebab-case equivalents in template code.
 
 ## File Naming Conventions
 
-UX files must use the same name as the component, which means PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, while the `name` attribute uses PascalCase or kebab-case:
+UX files must use the same name as the component, which is PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute must use either PascalCase or kebab-case:
 ``` html
 <import src="path/to/UxFile" name="UxFile"/>
 <import src="path/to/UxFile" name="ux-file"/>
 ```
-In fact, the naming requirements for the `name` attribute are consistent with the tag names in templates.
+In fact, the naming requirements for the `name` attribute are consistent with those for tag names in templates.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/qa.md
@@ -217,156 +218,156 @@ icon: help-circle-outline
 ---
 # Frequently Asked Questions
 
-## Bundling Tools
+## Bundler
 
 ### Project Build Issues
 
 #### `Lisp Error: thread killed` Error
 
-Specifically, an error message similar to the following appears:
+The specific symptom is an error message similar to the following:
 
 ``` log
 [ 47%] Process image src/assets/images/frame1.png
 error: Lisp Error: thread killed
 ```
 
-This issue is caused by an error in a preceding build task, which causes the ongoing image conversion build task to be canceled. Simply fix the build task that threw the `fatal` error to resolve it; no special handling is required for this error itself.
+This issue occurs because a previous build step failed, causing the ongoing image conversion build operation to be cancelled. You only need to fix the build operation with the `fatal` error to recover; no special handling is required.
 
-### Emulator
+### Simulator
 
-#### Default Emulator Language
+#### Simulator Default Language
 
-The default language for the emulator is `zh-CN`. Therefore, if you have added [i18n](/framework/component/i18n.md) configurations, the `zh-CN.json` translation file will be used by default. When running the emulator with the `gx` command, you can use the `-l` or `--language` option to specify the language:
+The default language of the simulator is `zh-CN`. Therefore, if you have added [internationalization](/framework/component/i18n.md) configuration, it will use the `zh-CN.json` translation file by default. When running the simulator using the `gx` command, you can use the `-l` or `--language` option to specify the language:
 ``` shell
 gx emu -l en-US # Use American English
 ```
-You can also dynamically change the language using the inspector debugging tool while the emulator is running.
+You can also dynamically change the language while the simulator is running using the inspector debugging tool.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/quick-orientation.md
 
 ---
-title: Quick Start: From Web to Glyphix
+title: Quick Overview: From Web to Glyphix
 icon: compass
 ---
 
-# Quick Start: From Web to Glyphix
+# Quick Overview: From Web to Glyphix
 
-This document is designed for developers familiar with Web front-end development (especially Vue.js). We will skip basic syntax tutorials and jump directly into the core mechanisms of the Glyphix framework to help you quickly build the correct mental model.
+This document is designed for developers familiar with Web front-end development (especially Vue.js). We will skip basic syntax tutorials and dive straight into the core mechanisms of the Glyphix framework to help you quickly build the correct mental model.
 
-## Core Concepts and Runtime Environment
+## Core Concepts & Runtime Environment
 
-Glyphix is an application framework running on MCU (Microcontroller Unit) devices. Although it uses HTML/CSS/JS for development, it is **not** a browser. This framework is used to build complete applications rather than refreshable web pages, and each application runs in an independent sandbox container.
+Glyphix is an application framework running on MCU (Microcontroller Unit) devices. Although it uses HTML/CSS/JS for development, it is **not** a browser. This framework is used to develop complete applications rather than refreshable pages, with each app running in an independent sandbox container.
 
 You need to understand the following core differences:
-- **No DOM**: The underlying layer is rendered directly by a native C++ engine; there is no DOM tree.
+- **No DOM**: The underlying layer is directly rendered by a native C++ engine; there is no DOM tree.
 - **No Web APIs**: Browser APIs such as `window`, `document`, and `localStorage` are not supported. System capabilities (network, storage, sensors) are provided via `@system.*` modules.
-- **JS Engine**: It uses a lightweight JS engine (supporting ES6 standards), but memory is extremely limited.
+- **JS Engine**: A lightweight JS engine (supporting the ES6 standard) is used, but memory is extremely limited.
 
 ### Resource Constraints
 
-Resource constraints are the biggest difference compared to Web development. The RAM of MCU devices is typically only a few megabytes. This means you should not use network requests to load massive JSON data or directly [`fetch`](../api/system-fetch.md) an image. Keep the following points in mind:
-- You can use the [`@system.request`](../api/system-request.md) module to download resources as files; `fetch` loads the response directly into memory.
-- Image resources are usually stored inside the application package, and their dimensions should match the screen resolution as closely as possible.
-- **Background Freezing**: After an application enters the background (`onHide`), it will typically be suspended or destroyed by the system within a few tens of seconds. Please make sure to save the application state.
+Resource limitation is the biggest difference compared to Web development. MCU devices typically have only a few megabytes of RAM. This means you should not use network requests to load oversized JSON data, or directly [`fetch`](../api/system-fetch.md) an image. Keep the following in mind:
+- You can use the [`@system.request`](../api/system-request.md) module to download resources as files, whereas `fetch` loads responses into memory.
+- Image resources are typically stored within the application package, and their dimensions should match the screen resolution as closely as possible.
+- **Background Freezing**: When an application enters the background (`onHide`), it is usually suspended or destroyed by the system within tens of seconds. Please make sure to save your state.
 
 ### Device Form Factors
 
-Glyphix applications typically run on small-screen devices such as smartwatches. Watch screens are usually around 1.5 to 2 inches, with a typical resolution of 466×466 pixels, though both circular and rectangular screens exist. Lower-end devices may have lower pixel density, but their dimensions are generally similar. These devices commonly interact via touchscreens and may support physical buttons or rotating crowns; the system transparently handles most interaction details.
+Glyphix applications typically run on small-screen devices such as smartwatches. Watch screens are usually around 1.5 to 2 inches, with a typical resolution of 466x466 pixels, and come in both circular and rectangular shapes. Lower-end devices may have lower pixel densities, but dimensions are largely similar. These devices typically use touchscreens for interaction and may support physical buttons or rotating bezels; the system handles most interaction details transparently.
 
-Emulators are typically used for development and debugging, as physical device deployment and debugging workflows are still relatively fragmented and time-consuming.
+Simulators are generally used for development and debugging, as the deployment and debugging process for physical devices is still somewhat fragmented and time-consuming.
 
 ### Typical Project Structure
 
-This is our recommended project file structure, which is also the standard structure for Quick Apps:
+This is the recommended project file structure, which also follows the QuickApp standard structure:
 ```bash
 src/
-├─ manifest.json  # Application manifest: configure permissions and register page routes
-├─ app.js         # Application entry point: global lifecycles (onCreate, onDestroy)
-├─ pages/         # Pages directory
+├─ manifest.json  # Application manifest: configure permissions, register page routes
+├─ app.js         # Application entry point: global lifecycle (onCreate, onDestroy)
+├─ pages/         # Page directory
 │  └─ Main/
 │     └─ index.ux # Page component
-└─ assets/        # Common assets
+└─ assets/        # Public resources
   └─ icon.png
 ```
-You can introduce the [Node.js](nodejs.md) toolchain to manage dependencies as needed. You can also adjust the directory structure as required, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must remain in these fixed locations.
+You can optionally introduce the [Node.js](nodejs.md) toolchain to manage dependencies. You may also adjust the directory structure as needed, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must remain in their fixed locations.
 
 ## UI Development
 
-Glyphix adopts [`.ux`](../framework/component/README.md) single-file components (similar to Vue SFC), with a style close to the Vue Options API, but with significant differences.
+Glyphix adopts [`.ux`](../framework/component/README.md) Single File Components (similar to Vue SFC), featuring a style close to the Vue Options API, but with notable differences.
 
 ### Flexbox Layout First
 
-Web defaults to Flow Layout, whereas Glyphix pages default to a stacked layout: if you place two `div` elements on a page, they will **overlap** rather than be arranged vertically. This is because the framework supports multiple root nodes in `<template>`, for example:
+The Web defaults to Flow Layout, whereas Glyphix pages default to a stacking layout: if you place two `div` elements on a page, they will **overlap** instead of stacking vertically. This is because the framework supports multiple root nodes inside `<template>`, for example:
 ```html
 <template>
   <image class="background" src="/assets/bg.png" />
   <div class="content"> ... </div>
 </template>
 ```
-The default stacked layout is usually very suitable for this kind of scenario.
+The default stacking layout is usually ideal for this kind of scenario.
 
-Although containers like `div` default to flow layout, Flexbox is recommended for layout control. Most containers should explicitly declare `display: flex`, combined with `flex-direction` to control child element layout.
+Although containers like `div` use flow layout by default, it is recommended to use Flexbox for layout control. The vast majority of containers should explicitly declare `display: flex`, combined with `flex-direction` to control the arrangement of child elements.
 
 Given the significant variations in device screen sizes, pay special attention to the use of length units:
-- Use `px` units for small dimensions; it represents logical pixels and scales automatically based on screen density.
-- Fonts should always use `rem` units, whose baseline is defined by device manufacturers to better align with system UX consistency standards.
-- Percentage (`%`) units can be used to achieve responsive layouts, but there are currently many limitations and flaws, so please be careful when debugging.
+- Use the `px` unit for smaller sizes; it represents logical pixels and scales automatically according to screen density.
+- Fonts should always use the `rem` unit, whose baseline is defined by the device manufacturer, better aligning with system UX consistency guidelines.
+- Percentage (`%`) units can be used for responsive layouts, but currently have several limitations and flaws, so please test carefully.
 
-Because screens are very small, you may particularly need the [`scroll`](../components/scroll.md) component to create scrollable areas. Unlike the Web, `div` containers themselves do not support scrolling, nor can they be controlled using the `overflow` property.
+Due to small screen sizes, you may have a particular need for the [`scroll`](../components/scroll.md) component to implement scrollable areas. Unlike the Web, `div` containers do not support scrolling natively, nor can the `overflow` property be used to control it.
 
 ### Template Syntax Differences
 
-Although it looks like Vue templates, note the following differences:
-- Directives do not have the `v-` prefix: e.g., `<div if="show">` or `<div for="item in items">`.
-- Event binding can use `on` or `@`: e.g., `<p on:click="handler">`.
-- Text components like `<p>` must be used: `<text>Hello</text>` renders correctly, but `<div>Hello</div>` will not render any content.
-- Supports [two-way binding](../framework/commands/model.md) on any component property using `model:prop="state"` or `::prop="state"`, as long as an event with the same name as the property is triggered.
+Although it looks like a Vue template, note the following differences:
+- Directives have no `v-` prefix: e.g., `<div if="show">` or `<div for="item in items">`
+- Event binding can use either `on:` or `@`, e.g., `<p on:click="handler">`
+- You must use text components like `<p>`: `<text>Hello</text>` renders correctly, but `<div>Hello</div>` renders nothing.
+- Supports [two-way binding](../framework/commands/model.md) of arbitrary component properties using `model:prop="state"` or `::prop="state"`, as long as an event with the same name as the property is emitted.
 
 ### Style Limitations
 
 CSS support is a subset:
-- Supports class (`.class`), ID (`#id`), tag (`div`), and descendant (`.a .b`). Complex combinators such as `~`, `+`, and `>` are **not supported**.
-- **Visual effect limitations**: Gradients, shadows, etc., are not supported. `transition` animations are currently not supported.
-- **Performance limitations**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none`, and keeping the default is recommended.
+- Supports classes (`.class`), IDs (`#id`), tags (`div`), and descendants (`.a .b`). Complex relational selectors like `~`, `+`, and `>` are **not supported**.
+- **Visual Effects Limitations**: Gradients, shadows, and other effects are not supported. `transition` animations are not yet supported.
+- **Performance Limitations**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none` and keeping it as default is recommended.
 - Dynamic `class` binding and CSS variables are currently not supported.
 
-## Components and Logic
+## Components & Logic
 
 ### Script Model
 
-Component scripts are very close to the Vue Options API; the following example highlights the main differences:
+Component scripts are very close to the Vue Options API. The following example highlights the primary differences:
 ```js
 export default {
-  // Data model (Data): no need to declare props, data properties are automatically exported as props
+  // Data model: properties do not need to be declared, data properties are automatically exported as instance properties
   data: {
-    count: 0, // Mutating this.count automatically triggers view updates
+    count: 0, // Modifying this.count automatically triggers view updates
   },
-  timer: null, // Non-reactive fields defined directly on the component instance (or left undeclared)
-  // Lifecycle hooks
-  onInit() {}, // Data initialized; network requests can be initiated
+  timer: null, // Non-reactive fields can be defined directly on the component instance without declaration
+  // Lifecycle
+  onInit() {}, // Data initialized, network requests can be initiated
   onReady() {}, // UI rendering completed
-  onDestroy() {}, // Be sure to clear timers and event subscriptions here
+  onDestroy() {}, // Be sure to clear timers and unsubscribe from events here
 
-  // Methods, defined directly in the component object
+  // Methods: defined directly in the component object
   handleTap() {
     this.count++
-    // Emit custom event to parent component
+    // Emit a custom event to the parent component
     this.$emit('change', { value: this.count })
   }
 }
 ```
-Fields in the `data` object are reactive properties, which currently only support JSON-compatible types (no `Date`, `Map`, `Set`, etc.). If reactive updates are not required, it is recommended to define fields on the component instance (`this`).
+Fields within the `data` object are reactive properties, which currently only support JSON-compatible types (`Date`, `Map`, `Set`, etc., are not supported). If reactive updates are not needed, it is recommended to define fields directly on the component instance (`this`).
 
 ::: tip
-Do not wrap methods inside a `methods` object; define them directly in the component object. You also do not need to use `props` to define properties—fields in the `data` object are automatically exported as props.
+Do not use a `methods` object to wrap methods; define them directly in the component object. You also do not need to use `props` to define properties; fields in the `data` object are automatically exported as properties.
 
-DOM APIs like `document.getElementById` cannot be used to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get an element instance with a specified ID.
+Nor can you use DOM APIs such as `document.getElementById` to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get an instance of the element with a specified ID.
 :::
 
-### Pages and Routing
+### Pages & Routing
 
-Glyphix applications consist of multiple pages, navigated via routing. All pages must be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field in `manifest.json`. Page components are similar to regular components, but they support `onShow` and `onHide` lifecycle hooks.
+Glyphix applications consist of multiple pages, and navigation between pages is handled via routing. All pages must be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field within `manifest.json`. Page components are similar to regular components, but they support the `onShow` and `onHide` lifecycle hooks.
 
 Use the `system.router` system module for navigation:
 ```js
@@ -376,14 +377,14 @@ import router from '@system.router'
 router.push({ uri: 'pages/Detail', params: { id: 123 } })
 ```
 ::: tip
-Do not use other routing libraries, and do not pretend to build a single-page application (SPA). Otherwise, you won't be able to utilize existing features such as transition animations and page stack management.
+Do not use other routing libraries, and do not pretend to develop a Single Page Application (SPA). Doing so will prevent you from utilizing existing features such as transition animations and page stack management.
 :::
 
 ### TypeScript Support
 
-If you create a project using the Node.js scaffolding tool and install dependencies such as `glyphix` and `typescript` via npm, pnpm, etc., you can use TypeScript for development.
+If you create a project using the Node.js CLI scaffolding and install dependencies such as `glyphix` and `typescript` via npm or pnpm, you can develop using TypeScript in your project.
 
-For `.ux` single-file components, you can add the `lang="ts"` attribute to the `<script>` tag to enable TypeScript support. For example:
+For `.ux` Single File Components, you can add the `lang="ts"` attribute to the `<script>` tag to enable TypeScript support. For example:
 ```html
 <script lang="ts">
 import { defineComponent } from 'glyphix'
@@ -397,23 +398,23 @@ export default defineComponent({
 </script>
 ```
 
-## System Capabilities Integration
+## System Capability Integration
 
-Do not attempt to use browser APIs; please use the Glyphix [standard library](../api/README.md).
+Do not attempt to use browser APIs; use the Glyphix [standard library](../api/README.md).
 
 ### Common Modules Quick Reference
 
 | Feature | Glyphix Module | Description |
 | :--- | :--- | :--- |
-| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle async callbacks or Promises |
-| **Prompt** | [`@system.prompt`](../api/system-prompt.md) | Provides Toast and Dialog |
-| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronous local storage, reading/writing objects directly instead of strings |
-| **Router** | [`@system.router`](../api/system-router.md) | Manages page stack |
-| **Logging** | `console.log` | Outputs to debug terminal, same as browsers |
+| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle asynchronous callbacks or Promises |
+| **Dialogs** | [`@system.prompt`](../api/system-prompt.md) | Provides Toast and Dialogs |
+| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronous local storage, reads/writes objects directly instead of strings |
+| **Routing** | [`@system.router`](../api/system-router.md) | Manages the page stack |
+| **Logging** | `console.log` | Outputs to the debug terminal, just like a browser |
 
-### Asynchronous Programming Patterns
+### Asynchronous Programming Model
 
-System APIs usually support both asynchronous callback and Promise styles. Using `async/await` is recommended to keep code clean.
+System APIs typically support both asynchronous callback and Promise styles. Using `async/await` is recommended to keep code clean.
 
 ```js
 import fetch from '@system.fetch'
@@ -425,8 +426,8 @@ export default {
     try {
       const response = await fetch.fetch({
         url: 'https://api.example.com/data',
-        method: 'GET', // Defaults to GET
-        responseType: 'json', // Avoids manual parsing with JSON.parse
+        method: 'GET', // GET by default
+        responseType: 'json', // Avoids the need for manual JSON.parse
       })
 
       if (response.data.code === 200)
@@ -440,18 +441,18 @@ export default {
 
 ## Build and Run
 
-Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to launch the emulator, or `gx build` to build the application package. If you are using the Node.js CLI scaffolding, you can also run `gx` commands directly.
+Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to launch the simulator, or use `gx build` to build the application package. If you used the Node.js scaffolding, you can also use the `gx` command directly.
 
-Please refer to the [Quick Start](getting-started.md) tutorial for detailed steps.
+Please refer to the [Getting Started](getting-started.md) tutorial for detailed steps.
 
 ## Comprehensive Example
 
-The following is a complete component example demonstrating the combined usage of layout, data binding, event handling, and system APIs. You can preview this example directly in the browser and click the `>` button to view the full code.
+Below is a complete component example demonstrating the combined use of layout, data binding, event handling, and system APIs. You can view this example directly in the browser by clicking the `>` button to see the full code.
 
 <glyphix id="quick-orientation-example" title="Counter Component Example" height="240">
 
 ```html
-<!-- Flex layout recommended for root container; disabled during loading -->
+<!-- Flex layout is recommended for root containers; operations are disabled while loading -->
 <div class="container" :disabled="loading">
   <text class="title">Hello, {{ name }}</text>
 
@@ -461,24 +462,24 @@ The following is a complete component example demonstrating the combined usage o
   </div>
 </div>
 
-<!-- Overlay loading prompt using page's stacked layout -->
+<!-- Use the page's stacking layout to overlay a loading status indicator -->
 <text if="loading" class="loading">Loading...</text>
 ```
 
 ```css
 .container {
-  /* Page components do not need width/height set; they always fill the screen */
+  /* Page components do not need width and height set; they always fill the screen */
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  /* Note: Page background is rarely set; this is for demonstration only */
+  /* Note: page backgrounds are generally not set; this is for demonstration only */
   background-color: #f5f5f5;
   border-radius: 16px;
   padding: 10%; /* Percentage padding */
 }
 
 .title {
-  font-size: 1.25rem; /* Use rem units for fonts */
+  font-size: 1.25rem; /* Fonts use the rem unit */
   color: #333333;
   align-self: center;
 }
@@ -512,7 +513,7 @@ The following is a complete component example demonstrating the combined usage o
   text-align: center;
 }
 
-/* Dimmed style for disabled state */
+/* Faded styling for the disabled state */
 *:disabled {
   opacity: 0.5;
 }
@@ -528,7 +529,7 @@ export default {
     count: 0,
     loading: false
   },
-  // Lifecycle: component initialized
+  // Lifecycle: Component initialization completed
   onInit() {
     console.log('Component initialized')
     this.simulateFetch()
@@ -544,7 +545,7 @@ export default {
   },
   async simulateFetch() {
     this.loading = true
-    // Simulate async operation, creating a loading state
+    // Simulate an async operation, which generates a loading state
     setTimeout(() => {
       this.loading = false
       this.name = 'Developer'
@@ -559,7 +560,7 @@ export default {
 FILE_PATH: src/transl/EN/tutorials/README.md
 
 ---
-title: Glyphix 应用开发教程
+title: Glyphix Application Development Tutorial
 index: false
 icon: routes
 category:
@@ -568,59 +569,59 @@ category:
 
 ## What is Glyphix
 
-Glyphix is ​​an efficient, lightweight application development framework for MCU (microcontroller) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components and publish applications to various smart devices (such as smart watches).
+Glyphix is an efficient and lightweight application development framework designed for MCU (Microcontroller Unit) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components, and deploy applications to various smart devices (such as smartwatches).  
 
-For more information, please refer to the [Framework](/framework/README.md) chapter.
+For more information, please refer to the [Framework](/framework/README.md) section.
 
-### Web-like framework
+### Web-like Framework
 
-Unlike traditional MCU firmware development, Glyphix is ​​closer to a framework based on a web technology stack. App developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You don’t need to master the complete web development technology stack, such as browser DOM, standard HTML tags, and complex build tool chains. But if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), it will be easy to get started with Glyphix.
+Unlike traditional MCU firmware development, Glyphix is closer to frameworks based on Web technology stacks. Application developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You do not need to master the complete Web development technology stack, such as the browser DOM, standard HTML tags, and complex build toolchains. However, if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), you will find it very easy to get started with Glyphix.
 
 ::: tip
-To be clear, Glyphix is not a “low-code” platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, mastering a solid JavaScript foundation and a good front-end way of thinking will help you fully realize the potential of Glyphix.
+It should be noted that Glyphix is not a "low-code" platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, mastering a solid foundation in JavaScript and a good frontend mindset will help you fully unleash the potential of Glyphix.
 :::
 
-### Declarative UI framework
+### Declarative UI Framework
 
-Traditional interface development is usually imperative: functions need to be called step by step to create controls, update state, and refresh the interface. This method is very flexible, but the business and interface logic are highly coupled. As the application scale expands, the code will quickly become complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.
+Traditional interface development is usually imperative: it requires step-by-step function calls to create controls, update states, and refresh interfaces. While flexible, this approach leads to tight coupling between business and interface logic. As the application scale grows, the code quickly becomes complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.  
 
-Glyphix adopts the declarative UI paradigm. Developers only need to describe "what the interface should look like", and the framework will automatically complete rendering and updates based on changes in data and state. This approach greatly reduces the complexity of interface logic and state management, and allows developers to focus on function and interaction design instead of maintaining the UI hierarchy and refresh process.
+Glyphix adopts a declarative UI paradigm. Developers only need to describe "what the interface should look like," and the framework automatically completes rendering and updates based on data and state changes. This approach significantly reduces the complexity of interface logic and state management, allowing developers to focus primarily on functionality and interaction design rather than maintaining the UI hierarchy and refresh pipeline.
 
-### Application container
+### Application Container
 
-Glyphix is ​​not just a UI framework, it also provides functions such as application life cycle management, permission isolation and system API. Applications run in an independent container and are isolated from each other to ensure system stability and security.
+Glyphix is not just a UI framework; it also provides features such as application lifecycle management, permission isolation, and system APIs. Applications run within independent containers and are isolated from one another, ensuring system stability and security.
 
-Please read the [Quick Start](getting-started.md) tutorial to get started with Glyphix application development immediately.
+Please read the [Getting Started](getting-started.md) tutorial to start developing Glyphix applications right away.
 
-## Other questions
+## Other Questions
 
-### Need to be familiar with MCU and embedded development?
+### Do I need to be familiar with MCU and embedded development?
 
-Application developers generally do not need specific knowledge of MCUs and embedded development. But you should have some understanding of the device's resource limitations. For example, the memory capacity of MCUs is usually only a few MB, and there are also limits on the memory for running JavaScript code. This means that there may be an inability to request very large JSON data from the network, or to encode the entire image as Base64 and obtain it through a GET request.
+Application developers generally do not need to understand the specific details of MCU and embedded development. However, they should have some awareness of device resource constraints. For example, MCU memory capacity is usually only a few megabytes, and there are also limits on the memory available for running JavaScript code. This means you might encounter situations where you cannot request very large JSON data from the network, or you cannot encode an entire image into Base64 and fetch it via a GET request.
 
-These limitations, which are completely different from web development, are indeed caused by the limited resources of the MCU device, but this is not included in the typical MCU body of knowledge.
+These limitations, which are completely different from Web development, are indeed caused by the limited resources of MCU devices, but they are not part of typical MCU knowledge systems.
 
-Intuitively, it's best to confirm that the app experience is good enough by running the app on the device. You can run it multiple times on a real device at different stages of development to ensure the best experience.
+Intuitively, the best way to confirm whether your application's experience is good enough is to run it on the actual device. You can run it on real hardware multiple times at different stages of development to ensure the experience.
 
-### Should C/C++ be used for application development?
+### Do I need to use C/C++ for application development?
 
-Glyphix application development is done entirely using HTML, CSS, and JavaScript, so there is no need to use C/C++ languages.
+Glyphix application development uses HTML, CSS, and JavaScript exclusively, so there is no need to use C/C++.
 
 ### How can embedded developers get started with Glyphix application development?
 
-Embedded developers can use this tutorial [Quick Start](getting-started.md) to gradually understand the core concepts of Glyphix. The framework uses a componentization and data binding mechanism similar to the Vue Options API, which will be a little different for readers who are used to imperative GUIs such as [LVGL](https://lvgl.io/) and Qt widgets. However, Glyphix's declarative design can also bring a more intuitive interface control experience.
+Embedded developers can follow the [Getting Started](getting-started.md) tutorial to gradually understand the core concepts of Glyphix. The framework adopts componentization and data-binding mechanisms similar to the Vue Options API. This may feel a bit different for readers accustomed to imperative GUIs like [LVGL](https://lvgl.io/) or Qt widgets, but Glyphix's declarative design also brings a more intuitive interface control experience.
 
-Developers do not need to fully master HTML, CSS and JavaScript, but familiarity with the basic syntax of JavaScript (such as variables, conditional judgments, function calls, etc.) will help understand Glyphix's rendering logic and event processing. You can familiarize yourself with these contents through sample code and practical operations in tutorials and documents to speed up the development process.
+Developers do not need to completely master HTML, CSS, and JavaScript, though familiarity with basic JavaScript syntax (such as variables, conditional statements, and function calls) will help in understanding Glyphix's rendering logic and event handling. You can familiarize yourself with these aspects through sample code and practical operations in tutorials and documentation to accelerate your development workflow.
 
-### Do you want to pay attention to application performance optimization?
+### Do I need to focus on application performance optimization?
 
-Our framework has been deeply optimized for the resource constraints of embedded systems and can adapt well to a variety of hardware environments. Most applications can run smoothly and stably enough under default settings, so there is usually no need to spend extra time on performance optimization.
+Our framework has been deeply optimized for the resource constraints of embedded systems, making it well-suited for a variety of hardware environments. Most applications can achieve sufficiently smooth and stable running performance under default settings, so there is usually no need to spend extra time on performance optimization.
 
-If there is a need for in-depth understanding of specific optimization solutions in the future, we will provide special performance optimization documents to help developers further improve the operating efficiency of applications.
+If there is a need in the future to dive deeper into specific optimization solutions, we will provide dedicated performance optimization documentation to help developers further improve application runtime efficiency.
 
-### Is there a difference between the Glyphix environment and the browser?
+### Is the Glyphix environment different from a browser?
 
-Yes, there are significant differences between the Glyphix environment and the browser. Glyphix does not have the DOM structure in the browser, nor does it provide objects such as `window` and `document`. Instead, it directly and uniquely provides a set of declarative interfaces through which developers can develop components and interact with interfaces. This design simplifies the development process and is more suitable for embedded environments.
+Yes, the Glyphix environment is significantly different from a browser. Glyphix does not have the DOM structure found in browsers, nor does it provide objects like `window` or `document`. Instead, it directly and exclusively provides a set of declarative interfaces through which developers can perform component development and interface interaction. This design simplifies the development process and is more suitable for embedded environments.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/component-basic.md
@@ -628,13 +629,13 @@ FILE_PATH: src/transl/EN/tutorials/component-basic.md
 ---
 icon: information-outline
 ---
-# Component basics
+# Component Basics
 
-The previous document "[Quick Start](getting-started)" briefly introduced the concept of components. This tutorial will further explain the knowledge about components. Before reading this document, you need to know how to create and build a project, and how to edit source files. If you don't know, please read the "[Quick Start](getting-started)" tutorial.
+The previous document, "[Getting Started](getting-started)", briefly introduced the concept of components. This tutorial will explain components in further detail. Before reading this document, you need to know how to create and build a project, as well as how to edit source files. If you are not familiar with these topics, please read the "[Getting Started](getting-started)" tutorial.
 
 ## Introduction
 
-In Glyphix application development, all interfaces are components - from buttons to pages. Component technology allows the development of interfaces using simple template languages:
+In Glyphix application development, all user interfaces are components—ranging from a button as small as anything to an entire page. Component technology allows you to develop interfaces using a simple template language:
 ``` html
 <!-- main/index.ux -->
 <template>
@@ -655,9 +656,9 @@ In Glyphix application development, all interfaces are components - from buttons
   }
 </script>
 ```
-This is basically the `main/index.ux` file of the default project template. Use the `gx emu` command to observe the display effect. The content in the `<template>` tag is the component's template, which describes the appearance of the component. Here, the `<p>` node will display the `text` property from the component model object. Please note that the component framework internally associates the content of the `<p>` node with the `text` attribute of the component model. As long as the value of the `text` attribute is modified, the interface will be updated synchronously.
+This is basically the `main/index.ux` file of the default project template. You can use the `gx emu` command to observe the display effect. The content inside the `<template>` tag is the component's template, which describes the component's appearance. Here, the `<p>` node will display the `text` property from the component's model object. Note that the component framework internally associates the content of the `<p>` node with the `text` property of the component model; whenever the value of the `text` property is modified, the interface will be updated synchronously.
 
-We can test this with a timer:
+We can use a timer to test this:
 ``` js
 export default {
   data: { text: "begin!" },
@@ -667,31 +668,31 @@ export default {
   }
 }
 ```
-You will now see that the displayed count increases by 1 every second.
+Now, you will see that the displayed count value increases by 1 every second.
 
-## Programming model of components
+## Programming Model of Components
 
-An important function of GUI programs is to change their appearance based on data and input to achieve interaction. In traditional GUI programming and native HTML, developers need to find the target element node in the interface tree and then call the API to update it. It turns out that developing interfaces in this way will be very complicated. Therefore, there are design patterns suitable for GUIs such as MVC, MVP, and MVVM, and some new frameworks have emerged in the field of Web development. These technologies have greatly reduced the difficulty of interface development.
+An important function of a GUI program is to change its appearance based on data and input, thereby achieving interactivity. In traditional GUI programming and native HTML, developers need to find the target element node in the interface tree and then call APIs to update it. Experience has proven that developing interfaces this way can be very complex. Therefore, GUI-applicable design patterns such as MVC, MVP, and MVVM have emerged, and new frameworks have also appeared in the web development field. These technologies have significantly reduced the difficulty of interface development.
 
-The programming model of Glyphix components is very similar to front-end frameworks like Vue. The basic idea of ​​these frameworks is to calculate a new interface based on the state of the interface model, rather than requiring interface elements to be updated when the state changes. Compared with traditional technology, the interface view part in this solution is stateless and therefore simpler. Let's continue using the previous example:
+The programming model of Glyphix components is very similar to front-end frameworks like Vue. The basic idea of these frameworks is to calculate the new interface based on the state of the interface model, rather than requiring you to update interface elements when the state changes. Compared to traditional technology, the interface view part in this approach is stateless and therefore simpler. Let's continue using the previous example to illustrate:
 ``` html
 <template>
   <p>{{ text }}</p>
 </template>
 ```
-We already know that the interface will automatically update when the `text` property of the component model is updated. However, in traditional GUI frameworks, it is often necessary to manually update the `<p>` node after the `text` of the model is updated (which usually comes from changes in input or internal data). Frameworks such as MVC can simplify these operations, but they are not very concise.
+We already know that the interface will automatically update when the `text` property of the component model is updated. However, in traditional GUI frameworks, it is often necessary to manually update the `<p>` node after the model's `text` updates (which generally comes from user input or internal data changes). Frameworks like MVC can simplify these operations, but they are not extremely concise.
 
-Now consider a very simple approach: we write a `render()` function that generates an interface tree based on the current state of the model. If we replace the original interface tree with the value of the `render()` function every frame, then any changes to the model will be reflected in the interface. This solution is very simple, but you will deny it because of the efficiency. In fact, it was to solve the efficiency problem of this solution that the traditional GUI programming model was born: only modified elements in the interface are modified, but it introduces state in the view layer and also brings a lot of complexity.
+Now consider a very simple method: we write a `render()` function that generates an interface tree based on the current state of the model. If we replace the original interface tree with the value of the `render()` function on every frame, any changes to the model will be reflected in the interface. This approach is very simple, but you might reject it due to efficiency concerns. In fact, traditional GUI programming models were born precisely to solve the efficiency problem of this approach: only modify the elements in the interface that change, but doing so introduces state into the view layer, which also brings a lot of complexity.
 
-The Glyphix component framework is based on this simple concept: the content in the `<template>` tag implements the function of the `render()` function, while the js code focuses on maintaining the model, and data changes in the model will automatically be reflected in the relevant interfaces. You can think of the Glyphix component framework as always calculating a new interface based on the state of the model, so we don't have to manually update interface elements.
+The Glyphix component framework is based on this simple concept: the content inside the `<template>` tag implements the functionality of the `render()` function, while the JS code focuses on maintaining the model, and data changes in the model are automatically reflected in the relevant interface. You can think of the Glyphix component framework as always calculating a new interface based on the model's state, so we don't need to manually update interface elements.
 
 ::: tip
-The bottom layer of Glyphix is not a DOM tree, and naturally there is no API for operating DOM elements. In fact, the component framework is the native Glyphix JavaScript API.
+The underlying layer of Glyphix is not a DOM tree, and naturally there are no APIs for operating DOM elements. In fact, the component framework itself is the native Glyphix JavaScript API.
 :::
 
-## Respond to input
+## Responding to Input
 
-There are some components that can respond to user input events. In this case, you can use the `on` directive to specify an event listener. For example, listen for click events on the text component:
+Some components can respond to user input events. In this case, you can use the `on` directive to specify an event listener. For example, listening to the click event on a text component:
 ``` html
 <template>
   <p on:click="text += ' click'">{{text}}</p>
@@ -711,16 +712,16 @@ There are some components that can respond to user input events. In this case, y
   }
 </script>
 ```
-Clicking on the text will automatically update the display. The value of the `on:click` attribute `text += ' click'` is a JavaScript expression, and Glyphix will automatically bind the `this` of the variable in the expression to the component object.
+Clicking the text will automatically update the displayed content. The value of the `on:click` attribute, `text += ' click'`, is a JavaScript expression. Glyphix automatically binds `this` for the variables in the expression to the component object.
 
-## Conditional rendering
+## Conditional Rendering
 
-The `if` directive is used to render component content conditionally. The content area controlled by this directive will be rendered only when the value of the expression in the `if` directive is true.
+The `if` directive is used to conditionally render component content. The content area controlled by this directive will only be rendered when the value of the expression in the `if` directive is true.
 ``` html
 <p if="display">Hello World</p>
 ```
 
-The following example will implement a mutually exclusive switch effect. When clicked continuously, the interface will alternately display the text "Component A" or "Component B".
+The following example implements a mutually exclusive toggle effect. Clicking consecutively will cause the interface to alternately display "Component A" or "Component B".
 ``` html
 <template>
   <p if="display" on:click="display = false">Component A</p>
@@ -743,24 +744,24 @@ The following example will implement a mutually exclusive switch effect. When cl
 </script>
 ```
 
-## List rendering
+## List Rendering
 
 Use the `for` directive to repeatedly render a component to generate a list. The basic usage of the `for` directive is:
 ``` html
 <p for="(index, value) in list">{{index}}: {{value}}</p>
 ```
-Among them, `list` is a list attribute in the component model (must be of type `Array`), `index` and `value` are two iteration variables, the value of `index` is the index of the current item, and the value of `value` is the value of the current item.
+Where `list` is a list property in the component model (must be of type `Array`), and `index` and `value` are two iteration variables. The value of `index` is the index of the current item, and the value of `value` is the value of the current item.
 
-The `for` directive can be abbreviated to the following forms:
+The `for` directive can be abbreviated in several forms:
 ``` html
 <p for="list">{{$idx}}: {{$item}}</p>
 <p for="value in list">{{$idx}}: {{value}}</p>
 <p for="index, value in list">{{$idx}}: {{value}}</p>
 ```
-The first abbreviation is to only write the expression that needs to be iterated, in which case `$idx` and `$item` will be used as the default iteration variable names; the second way of writing explicitly defines the iteration variable of the current value, and the current index variable name uses the default `$idx`; the third way of writing is the abbreviation of the standard way of omitting parentheses.
+The first shorthand only writes the expression to be iterated; in this case, `$idx` and `$item` will be used as the default iteration variable names. The second syntax explicitly defines the iteration variable for the current value, while the current index variable name defaults to `$idx`. The third syntax is the standard syntax with parentheses omitted.
 
 ::: tip
-Due to the scope relationship, the variables used iteratively when writing the `for` directive will only take effect when used after the `for` directive.
+Due to scoping rules, the variables used for iteration when writing a `for` directive will only be active if used after the `for` directive.
 :::
 
 ``` html
@@ -770,15 +771,15 @@ Due to the scope relationship, the variables used iteratively when writing the `
 <button text="{{$item}}" for="list"/>
 ```
 
-### Use both `if` and `for` directives
+### Using `if` and `for` Directives Simultaneously
 
-You can use both the `if` and `for` directives on an element, in which case the `if` directive has higher priority. In this example, when the `display` property is false, the entire `button` component list will not render:
+You can use both `if` and `for` directives on the same element, in which case the `if` directive has a higher priority. In this example, when the `display` property is false, the entire list of `button` components will not be rendered:
 ```html
 <button for="value in items" if="display">Hello {{value}}</button>
 <p if="!display">Paragraph 1</p>
 ```
 
-And if your purpose is to conditionally render some nodes in the list generated by the `for` directive, you need to place the `if` directive on the inner element of the `for` directive.
+If your purpose is to conditionally render some nodes within the list generated by the `for` directive, you need to place the `if` directive on an inner element of the `for` directive.
 ```html
 <button for="value in items">
   <p if="display">item: {{value}}</p>
@@ -786,14 +787,14 @@ And if your purpose is to conditionally render some nodes in the list generated 
 ```
 
 ::: tip
-Using the `if` and `for` directives on the same element is not recommended as it reduces code readability.
-:::
+It is not recommended to use `if` and `for` directives on the same element, as this reduces code readability.
+```
 
-## slot
+## Slots
 
-Similar to the content distribution of other frameworks, Glyphix also implements a set of content distribution APIs. We can use the `slot` component as an outlet to carry distributed content.
+Similar to content distribution in other frameworks, Glyphix also implements a content distribution API. We can use the `slot` component as an outlet for carrying distributed content.
 
-In the child component, use the `slot` component to host the content defined in the parent component. The `slot` component will become the element passed in by the parent component when rendering.
+In a child component, use the `slot` component to host the content defined in the parent component. During rendering, the `slot` component is replaced by the elements passed in from the parent component.
 
 ```html
 <div>
@@ -801,13 +802,13 @@ In the child component, use the `slot` component to host the content defined in 
 </div>
 ```
 
-## Use components in combination
+## Combining Components
 
-Combining multiple components into a larger interface is the Glyphix component framework's approach to interface building. If there is a component named `Menu`, you can import it by using the `<import>` tag under the root node of the UX file that needs to be referenced:
+Combining multiple components into a larger interface is the way user interfaces are built in the Glyphix component framework. Suppose there is a component named `Menu`; you can import it by using the `<import>` tag under the root node of the UX file that needs to reference it:
 ``` html
 <import src="path/to/Menu" name="Menu"/>
 ```
-The `src` attribute is the path of the component, do not add the `.ux` suffix. The `name` attribute is an optional component name. If this attribute is not filled in, the component's file name will be used as the component name.
+The `src` attribute is the path of the component; please do not append the `.ux` suffix. The `name` attribute is an optional component name. If this attribute is omitted, the component's file name will be used as its name.
 
 Use the `<import>` tag multiple times to import all dependent components:
 ``` html
@@ -816,7 +817,7 @@ Use the `<import>` tag multiple times to import all dependent components:
 <import src="path/to/ComC"/>
 ```
 
-Custom components can be used just like native components:
+You can use custom components just like native components:
 ``` html
 <div>
   <menu for="menus" on:click="clickMenu($idx, $item)">
@@ -847,9 +848,9 @@ export default {
 }
 ```
 
-This is a menu interface. We hope that when the user clicks on the menu, the information of the current menu item will be printed through the `clickMenu` method. Therefore, the `Menu` component needs to be able to display menu content and be able to monitor its own click event through `on:click`.
+This is a menu interface. We want to print the information of the current menu item via the `clickMenu` method when the user clicks the menu. Therefore, the `Menu` component needs to be able to display the menu content and listen to its own click event via `on:click`.
 
-This is the content of the `Menu.ux` file:
+Here is the content of the `Menu.ux` file:
 ``` html
 <template>
   <div on:click="$emit('click')"> <slot /> </div>
@@ -863,7 +864,7 @@ This is the content of the `Menu.ux` file:
   export default {}
 </script>
 ```
-We simply use a native component `div` to respond to user clicks and report them. The `div` component will also display the subcomponent passed in last time, finally allowing the menu list to be displayed.
+We simply use a native `div` component to respond to the user's click and report it upward. The inner part of the `div` component will also display the child components passed in from above, ultimately making the menu list visible.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/getting-started.md
@@ -871,88 +872,88 @@ FILE_PATH: src/transl/EN/tutorials/getting-started.md
 ---
 icon: rocket
 ---
-# Quick start
+# Quick Start
 
-In this chapter, we'll show you how to use Glyphix.js to create a simple application. We will start by installing the packaging tools, then create a project and run the simulator to see the effect. Finally, we briefly introduce the structure and main documents of the project. This tutorial does not cover how to run your app on a real device or how to publish it.
+In this chapter, we will introduce how to use Glyphix.js to create a simple application. We will start by installing the packaging tool, then create a project, and run the simulator to see the results. Finally, we will briefly introduce the project structure and main files. This tutorial does not cover how to run applications on real devices or how to publish them.
 
 ## Preparation
 
-Before starting, please refer to [this document](/doc_en/glyphix.js/README.md#npm-installation) to install the Glyphix packaging tool. Simply put, you can use [npm](https://nodejs.org) to install the `glyphix-cli` package:
+Before getting started, please refer to [this document](/tutorials/glyphix.js/README.md#npm-installation) to install the Glyphix packaging tool. Simply put, you can use [npm](https://nodejs.org) to install the `glyphix-cli` package:
 ```bash
 npm install -g glyphix-cli
 ```
 
-Since the development tools of Glyphix are mainly command line, it is recommended to install modern shells such as Zsh and PowerShell 7+, and install some practical plug-ins to improve operational efficiency.
+Since Glyphix development tools are primarily command-line based, it is recommended to install a modern shell such as Zsh or PowerShell 7+, along with some practical plugins to improve operational efficiency.
 
-### Terminal tools
+### Terminal Tools
 
-For Linux or macOS users, it is recommended to install [Oh My Zsh](https://ohmyz.sh/). Windows users are recommended to install [Windows Terminal](https://aka.ms/terminal) and use [Oh My Posh](https://ohmyposh.dev/). Please also refer to the [`gx completion`](/doc_en/glyphix.js/README.md#gx-completion) document to install the auto-completion script for the `gx` command.
+For Linux or macOS users, it is recommended to install [Oh My Zsh](https://ohmyz.sh/). Windows users are recommended to install [Windows Terminal](https://aka.ms/terminal) and use [Oh My Posh](https://ohmyposh.dev/). Please also refer to the [`gx completion`](/tutorials/glyphix.js/README.md#gx-completion) documentation to install the auto-completion script for the `gx` command.
 
-You can use any editor to develop Glyphix applications, such as [VS Code](https://code.visualstudio.com/) or [Quick App IDE](https://www.quickapp.cn/devtool).
+You can use any editor to develop Glyphix applications, such as [VS Code](https://code.visualstudio.com/) or the [Quick App IDE](https://www.quickapp.cn/devtool).
 
 ::: tip
-There is no built-in glyphix.js packaging tool in the Quick App IDE. You still need to install `glyphix-cli` and use the `gx` command in the terminal to build and run the project. When using editors such as VS Code, it is recommended to bind `*.ux` files to `html` format to obtain basic syntax highlighting.
+The Quick App IDE does not have the glyphix.js packaging tool built-in. You still need to install `glyphix-cli` and use the `gx` command in the terminal to build and run your project. When using editors like VS Code, it is recommended to associate `*.ux` files with the `html` format to get basic syntax highlighting.
 :::
 
 ### Using Node.js
 
-If you decide to use npm packages in your project, or any resources from the web development ecosystem, please refer to the [Node.js](/doc_en/nodejs.md) configuration document. Using Node.js is not required, but it can support modern development tools like TypeScript.
+If you decide to use npm packages or any resources from the web development ecosystem in your project, please refer to the [Node.js](/tutorials/nodejs.md) configuration guide. Using Node.js is not mandatory, but it enables modern development tools such as TypeScript.
 
-### Use packaging tools
+### Using the Packaging Tool
 
-After everything is ready, enter the `gx list device` command in the terminal. If you get output similar to the following, the installation is successful:
-```bash
+Once everything is ready, type the `gx list device` command in your terminal. If you see an output similar to the following, it means the installation was successful:
+``` bash
 $ gx list device
   default
   ...
 ```
 
-Next create an application project and simulate running it! Just use the following command:
-```bash
+Next, let's create an application project and run it in the simulator! Just use the following commands:
+``` bash
 gx new myapp # Create a project named myapp, which will create a directory named myapp
-cd myapp # Switch to the myapp directory
-gx emu # Run emulator
+cd myapp     # Switch to the myapp directory
+gx emu       # Run the simulator
 ```
-As expected, you will see a window that says "Hello World!" The following tutorials will further explain how to use the commands of the glyphix.js tool.
+Without any issues, you should see a window displaying "Hello World!". Subsequent tutorials will further explain how to use the commands of the glyphix.js tool.
 
 ::: tip
-See the [`gx build`](/doc_en/glyphix.js/README.md#gx-build) and [`gx emu`](glyphix.js/emulator.html) documentation for more information on building and running the emulator.
+Refer to the [`gx build`](/tutorials/glyphix.js/README.md#gx-build) and [`gx emu`](glyphix.js/emulator.html) documentation for more information about building and running the simulator.
 :::
 
-## Project structure
+## Project Structure
 
-You can use a file browser to view the structure of the `myapp` directory. In the current version its structure is as follows:
-```bash
+You can use a file explorer to view the structure of the `myapp` directory. In the current version, its structure is as follows:
+``` bash
 <app-name>
-├─ README.md # Project readme file
-└─ src # The source code directory of the project
-    ├─ app.js # app entry script file
-    ├─ manifest.json # Configure basic application information
-    ├─ assets # Store public resources (fonts, pictures, etc.)
-    │ ├─ fonts # Store font resources
-    │ └─ images # Store image resources
-    └─ main # Directory to store the main page
-        └─ index.ux #Interface description file of the main page
+├─ README.md         # Project README file
+└─ src               # Project source code directory
+    ├─ app.js        # App entry script file
+    ├─ manifest.json # Configures basic application information
+    ├─ assets        # Stores public resources (fonts, images, etc.)
+    │  ├─ fonts      # Stores font resources
+    │  └─ images     # Stores image resources
+    └─ main          # Directory storing the home page
+        └─ index.ux  # Interface description file for the home page
 ```
 
-In the default project template, the source code is located in the `<app-name>/src` directory, and resources in the project that do not need to be packaged and released can be placed in other directories.
+In the default project template, the source code is located in the `<app-name>/src` directory, while project documents and other resources that do not need to be packaged and released can be placed in other directories.
 
-We recommend preparing a directory for each page (and using the name of the page as the directory name) and placing this directory in the root directory of the source code. Component source files (`*.ux` files) used only in the page should be placed in the directory of the page, while public files can be stored according to the following rules:
-- Public UX files and scripts can be placed in the `common` directory
-- Only script files referenced in the page are stored directly in the page directory
+We recommend preparing a directory for each page (using the page name as the directory name) and placing this directory under the root of the source code. Component source files (`*.ux` files) used exclusively within a page should be placed in that page's directory, while common files can be stored according to the following rules:
+- Common UX files and scripts can be placed in the `common` directory
+- Script files referenced exclusively by a specific page are placed directly in that page's directory
 - Font files are stored in the `assets/fonts` directory
 - Image files are stored in the `assets/images` directory
-- Other assets can be stored in the appropriate location under the `assets` directory
+- Other resources can be placed in appropriate locations within the `assets` directory
 
-### Project files
+### Project Files
 
-Now, you have seen that `myapp` has some files inside it. Please pay attention to the files with the suffix `*.ux` and the `manifest.json` file. These are the files that are most commonly encountered during development. The following tutorial will briefly introduce them.
+By now, you have seen some files inside `myapp`. Please pay attention to files with the `*.ux` extension and the `manifest.json` file, as these are the files you will interact with most frequently during development. The following tutorial will briefly introduce them.
 
-## `manifest.json` file
+## The `manifest.json` File
 
-The `manifest.json` file is the application configuration file, and this file will be used for application packaging. This file contains basic information about the application, including application name, version information, etc. It also contains descriptions and routing information for all pages within the application. In other words, you need to add the page description to `manifest.json` before you can jump to this page in code.
+The `manifest.json` file is the configuration file for the application and is used during app packaging. This file contains basic application information, such as the app name and version information, as well as descriptions and routing information for all pages within the app. In other words, page descriptions must be added to `manifest.json` before you can navigate to those pages in your code.
 
-This is the content of the `manifest.json` file for the template application generated by the `gx` command:
+Here is the content of the `manifest.json` file generated by the `gx` template application:
 ``` json
 {
   "package": "com.example.app",
@@ -961,7 +962,7 @@ This is the content of the `manifest.json` file for the template application gen
   "versionCode": 1,
   "features": [],
   "router": { // Page routing information
-    "entry": "main", // The initial page of the application
+    "entry": "main", // Initial page of the application
     "pages": { // Page description information
       "main": {
         "component": "index"
@@ -972,37 +973,37 @@ This is the content of the `manifest.json` file for the template application gen
 ```
 
 ::: warning
-For educational purposes, there are some comments in this `manifest.json` code snippet, but JSON does not support comments, please do not add any comments in the project's `manifest.json` file.
+For educational purposes, there are some comments in this `manifest.json` code snippet, but JSON does not support comments. Please do not add any comments to the `manifest.json` file in your project.
 :::
 
-### Fill in application information
+### Filling in Application Information
 
 You can fill in your application information in `manifest.json`.
 
-### Add page description information
+### Adding Page Description Information
 
-In the root fields of the `manifest.json` file, the `router` and `pages` fields are related to page descriptions. The `router` field is the page routing table of the application. It must have at least an `entry` field to specify the entry page of the application. The `main` page is usually used as the entry page.
+In the root fields of the `manifest.json` file, the `router` and `pages` fields are related to page descriptions. The `router` field is the application's page routing table and must have at least an `entry` field to specify the entry page of the application, usually using the `main` page.
 
-If you want to add a new page, you need to add content to the `pages` field. For example, if we want to create a new page named `NewPage`, the entry component of this page is `NewPage/index.ux`, then the content of the `pages` field is as follows:
+If you want to add a new page, you need to add content to the `pages` field. For example, if we want to create a new page named `NewPage`, with its entry component being `NewPage/index.ux`, the `pages` field will now look like this:
 ``` json
 "pages": {
   "main": {
     "component": "index"
   },
-  "NewPage": { // This is a newly added page
+  "NewPage": { // This is the newly added page
     "component": "index"
   }
 }
 ```
-The `pages` field is a JSON object, each key of which is the name of the page, and by default the path to the page directory. The value corresponding to the page name is also an object, and its `component` is the name of the entry component of the page. This component must be stored in the page directory. The `component` field is the file name of the page entry component (excluding the suffix). All names are case-sensitive.
+The `pages` field is a JSON object where each key is the name of a page, which by default is also the path of the page directory. The value corresponding to the page name is also an object, and its `component` is the name of the page's entry component, which must be stored in the page directory. The `component` field is the file name of the page entry component (without the extension). All names are case-sensitive.
 
-When you add or delete pages, remember to update the relevant fields in `manifest.json`.
+Remember to update the relevant fields in `manifest.json` whenever you add or remove pages.
 
-For details on the structure of the `manifest.json` file, please refer to the relevant documentation.
+For detailed descriptions of the `manifest.json` file structure, please refer to the related documentation.
 
-## UX file introduction
+## Introduction to UX Files
 
-UX (UI XML) is the interface description file of Glyphix. Taking the original template project as an example, the contents of the `main/index.ux` file are as follows:
+UX (UI XML) is Glyphix's interface description file. Taking the initial template project as an example, the content of the `main/index.ux` file is as follows:
 ``` html
 <template>
   <p>{{text}}</p>
@@ -1023,36 +1024,36 @@ UX (UI XML) is the interface description file of Glyphix. Taking the original te
 </script>
 ```
 
-A UX file is actually an XML file. This UX file has two root nodes: `<template>`, `<style>` and `<script>`. The content in the `<template>` node is the structural description of the interface, the `<style>` node defines the style sheet, and the content in the `<script>` node is a JavaScript script, which implements the interactive logic of this component.
+A UX file is essentially an XML file with three root nodes: `<template>`, `<style>`, and `<script>`. The content within the `<template>` node describes the structure of the interface, the `<style>` node defines the style sheets, and the content within the `<script>` node consists of JavaScript scripts that implement the component's interaction logic.
 
 ::: tip
-VS Code does not perform syntax coloring on UX files. You can switch the language to "HTML" in the lower right corner, which will have better highlighting effects.
+VS Code does not provide syntax coloring for UX files by default. You can switch the language to "HTML" in the bottom-right corner to get better highlighting effects.
 :::
 
-### Introduction to components
+### Introduction to Components
 
-The object that the UX file corresponds to at runtime is called a component. Components are an important concept in the Glyphix JavaScript application framework. Each component is an interface element and has the following characteristics:
-- Components have their own display effects
+The runtime object corresponding to a UX file is called a **component**. Components are an important concept in the Glyphix JavaScript application framework. Each component is an interface element with the following characteristics:
+- Components have their own visual presentation
 - Some components can respond to user input
-- Some components can display corresponding effects based on data and status
-- Components can be embedded into other components for use
+- Some components can display corresponding effects based on data and state
+- Components can be embedded and used within other components
 
-Commonly used interface elements are components in the Glyphix JavaScript application framework, such as:
-- Text: used to display text information
-- Button: The button can also display text information. The most important thing is that it can respond to click events (of course it will also display the effect when clicked)
-- List: The list accommodates other components and arranges them vertically. In addition, element components in the list can be moved through sliding gestures.
+Common interface elements in the Glyphix JavaScript application framework are all components, for example:
+- Text: Used to display textual information
+- Button: Buttons can display text, and most importantly, they can respond to click events (while also showing visual feedback upon clicking)
+- List: Lists contain other components and arrange them vertically; elements within a list can also be moved via swipe gestures
 
-Components like lists that can hold other components are also called container components.
+Components that can contain other components, like lists, are also called **container components**.
 
-As you can imagine, a component has two elements: display appearance and behavioral logic. The `<template>` tag in the UX file declares the appearance of the component, taking `main/index.ux` as an example:
+As you can imagine, a component has two main elements: visual appearance and behavioral logic. The `<template>` tag in a UX file declares the component's appearance. Taking `main/index.ux` as an example:
 ``` html
 <template>
   <p>{{text}}</p>
 </template>
 ```
-The `main/index.ux` component implements content display by a `<p>` component, which is used to display text. The value of the `{{text}}` expression is the text to be displayed.
+The `main/index.ux` component uses a `<p>` component to display content. This type of component is used to display text, and the value of the `{{text}}` expression is the text to be displayed.
 
-The JavaScript script in the `<script>` tag implements the behavioral logic of the component. In this tag, `export default` is always used to export a **component object**. The first thing to focus on is the `data` property of the component object, which is usually an object:
+The JavaScript script inside the `<script>` tag implements the component's behavioral logic, always exporting a **component object** using `export default`. The first thing to focus on is the `data` property of the component object, which is typically an object:
 ``` js
 export default {
   data: {
@@ -1060,19 +1061,19 @@ export default {
   }
 }
 ```
-Here, the `data` object has a `text` attribute, and the value of this attribute will be used as the display content of the previous `<text>` component.
+Here, the `data` object has a `text` property, and the value of this property will be used as the display content of the aforementioned `<text>` (or `<p>`) component.
 
-### Component model and state update
+### Component Model and State Updates
 
-If we need to design a component that displays different text when the component is clicked, then we need to listen to the input events on the component and update the display content. The following code will listen for click events on the `<p>` component:
+Suppose we need to design a component that displays different text when clicked. In this case, we need to listen for input events on the component and update the display content. The following code listens for click events on the `<p>` component:
 ``` html
 <template>
   <p on:click="text += '!'">{{text}}</p>
 </template>
 ```
-The expression in the `on:click` attribute will be executed when the text is clicked. Therefore, when clicked, a `'!'` character will be added to the end of the `text` text displayed in the `<p>` component:
+The expression in the `on:click` attribute is executed when the text is clicked. Therefore, upon clicking, an `'!'` character is appended to the `text` displayed in the `<p>` component:
 
-<glyphix id="getting-started-click-p" height="120" width="360" title="Click event">
+<glyphix id="getting-started-click-p" height="120" width="360" title="Click Event">
 
 ``` html
 <p on:click="text += '!'">{{text}}</p>
@@ -1095,11 +1096,11 @@ p {
 
 </glyphix>
 
-In the following tutorials we will introduce the component update mechanism in detail.
+In subsequent tutorials, we will cover the component update mechanism in detail.
 
-## Start developing applications
+## Start Developing Your App
 
-Now you can start developing your own Glyphix applications! Start writing code from the default project template and run the emulator using the `gx emu` command. Other chapters in this document will introduce how to use Glyphix's built-in mechanisms, APIs, and components to build interfaces, and how to implement application interaction logic.
+Now, you can start developing your own Glyphix application! Begin writing code from the default project template and run the simulator using the `gx emu` command. Other sections of this document will explain how to use Glyphix's built-in mechanisms, APIs, and components to build interfaces, as well as how to implement application interaction logic.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/image-forge.md
@@ -1107,82 +1108,82 @@ FILE_PATH: src/transl/EN/tutorials/glyphix.js/image-forge.md
 ---
 icon: image-filter
 ---
-# Image management
+# Image Management
 
-The glyphix.js packaging tool will manage all PNG image resources in the project (`src` directory). Related modules mainly provide the following functions:
-- Supports configuration files for image resources and provides related configuration interfaces
-- Convert images to device-optimized sizes and formats when packaging
+The glyphix.js packaging tool manages all PNG image resources (`src` directory) in the project. The related modules mainly provide the following features:
+- Support for image resource configuration files and provision of related configuration interfaces
+- Conversion of images into device-optimized sizes and formats during packaging
 
-Application developers only need to configure the packaging parameters of image resources according to their own needs, while device vendors need to define specific image conversion strategies for devices.
+Application developers only need to configure the packaging parameters for image resources according to their needs, while device vendors need to define specific image conversion strategies for their devices.
 
-## Application development configuration
+## Application Development Configuration
 
-In application development, you need to configure image packaging parameters to correctly generate resource packages.
-Configuring `config/image-rules.json` and `config.designWidth` of `src/menifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while the fields in `menifest.json` affect the global scaling of the image (used to adapt to devices with different resolutions).
+In application development, image packaging parameters must be configured to correctly generate resource packages.
+Configuring `config/image-rules.json` and properties such as `config.designWidth` in `src/manifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while fields in `manifest.json` affect the global scaling ratio of images (used for adapting to devices with different resolutions).
 
 ::: tip
-`config/image-rules.json` can be configured using the `gx config` command or other methods, but it is not recommended to edit it directly with a text editor.
+`config/image-rules.json` can be configured using the `gx config` command or other methods, but direct editing with a text editor is not recommended.
 :::
 
-If using the `gx config` command, developers will mainly focus on two parameters: transparent and quality.
+If using the `gx config` command, developers will primarily focus on two parameters: `transparent` and `quality`.
 
-### Transparent parameter
+### Transparent Parameter
 
-Transparent indicates whether the image contains transparent pixels. If it is configured as no (`false`) and the resource image contains transparent pixels, these pixels will be converted to opaque when generated (usually superimposed on a black background). Therefore, necessary images need to be marked as preserving transparent pixels, otherwise incorrect overlay effects will be displayed. Since opaque images perform better on some platforms and require less data, the transparent option is turned off by default.
+The `transparent` parameter indicates whether an image contains transparent pixels. If configured to `false` and the source image does contain transparent pixels, these pixels will be converted to opaque during generation (usually by blending onto a black background). Therefore, necessary images must be marked to retain transparent pixels; otherwise, incorrect overlay effects will be displayed. Because opaque images generally offer better performance on certain platforms and consume less data, the `transparent` option is disabled by default.
 
-### Quality parameters
+### Quality Parameter
 
-The Quality parameter represents the quality of the packaged image and is an integer in the range of $[0, 100]$. However, generally only 3 rough quality levels are used:
-- High: 100, indicating the highest quality
-- Middle: 50, medium quality, default value
+The `quality` parameter represents the quality of the packed image and is an integer in the range $[0, 100]$. However, typically only 3 rough quality levels are used:
+- High: 100, representing the highest quality
+- Middle: 50, medium quality, the default value
 - Low: 0, low quality
 
-When converting image resources, they will be optimized according to quality parameters. Generally speaking, medium quality is a conversion strategy that balances factors such as display effect, drawing/loading performance, and memory resource usage on the target platform, so it is recommended. Using high quality may have better quality, but may incur performance degradation. Low quality can be used for images where quality can be lost to improve performance (such as photos). Specific target platforms may also ignore the quality parameter and use a unified strategy.
+Image resources are optimized based on the quality parameter during conversion. Generally speaking, medium quality is a conversion strategy that balances display effects, rendering/loading performance, and memory resource consumption on the target platform, so it is recommended. Using high quality may yield better fidelity, but could result in performance degradation. Low quality can be used for images where quality can be sacrificed to improve performance (such as photographs). Specific target platforms may also ignore the `quality` parameter and use a unified strategy.
 
-## Device and platform adaptation
+## Device and Platform Adaptation
 
-Assuming that device and platform developers have implemented optimized image resource formats for specific target platforms and support multiple qualities and pixel formats, the following work needs to be done in order to generate these image formats in glyphix.js:
-- Command line tools required to achieve **single image** conversion
-  - Must provide a command line interface for converting PNG images to custom formats, supporting output to a specified path (including overwriting the original file)
-  - It is best to provide a command line interface for converting from a custom format to a PNG image, and support output to a specified path (including overwriting the original file). Without this function, PC break preview will not be possible.
+Assuming that device and platform developers have implemented optimized image resource formats for specific target platforms and support multiple quality and pixel formats, the following work is required to generate these image formats in glyphix.js:
+- Implement a command-line tool required for converting **a single image**
+  - Must provide a command-line interface to convert from PNG images to a custom format, supporting output to a specified path (including overwriting the original file)
+  - It is recommended to provide a command-line interface to convert from the custom format back to PNG images, supporting output to a specified path (including overwriting the original file). Missing this feature will prevent PC-side previews.
 - Write device description files and image conversion scripts
 
-### Image conversion script
+### Image Conversion Scripts
 
-The image conversion script is a scheme file. When an image needs to be converted, glyphix.js will call this script. The latter can determine how to convert the image based on these variables:
-- `env.image-path`: The absolute path of the image to be converted, the converted image is overwritten and written to this path
-- `env.transparent`: the transparency parameter of this image
-- `env.quailty`: the quality parameters of this image
-- `env.target`: Convert target mode, see description below
-- `env.verbose`: Whether to enable verbose mode, if so, detailed logs can be output, otherwise logs should not be output
-- `env.script-dir`: The absolute path where the current script file is located. If the command required for conversion is relative to this script file and not in the `PATH` environment variable, you can use this parameter for splicing
+The image conversion script is a scheme file. When an image needs to be converted, glyphix.js will call this script, which can determine how to convert the image based on the following variables:
+- `env.image-path`: The absolute path of the image to be converted; the converted image is written over this path.
+- `env.transparent`: The transparency parameter of this image.
+- `env.quailty`: The quality parameter of this image.
+- `env.target`: The conversion target mode, described later in this document.
+- `env.verbose`: Whether to enable verbose mode. If true, detailed logs can be output; otherwise, logs should not be output.
+- `env.script-dir`: The absolute path of the current script file. If the command required for conversion is relative to this script file rather than in the `PATH` environment variable, this parameter can be used for path concatenation.
 
-`env.target` represents the **target mode** of image conversion, and its value determines which conversion method is applied:
-- `"device"`: performs a complete conversion process for the target device, such as removing the transparent channel of the opaque image, and then converting it to PGF format (Glyphix picture format) according to the quality parameters
-- `"emulator"`: Execute the conversion process for the simulator. Since the simulator does not support the texture format of specific hardware (such as ETC2, etc.), in order to ensure that the image is displayed normally in the simulator, you can only remove the transparent channel of the opaque image without further conversion to the target device format (or convert to the PGF format supported by the software)
-- `"preprocess"`: Only perform the preprocessing step, that is, remove the transparent channel of the opaque image, and output the result in PNG format
-- `"preview"`: To generate a PNG image for preview, you must first convert the image into a custom target format according to the conversion process of the `"device"` target, and then convert the output image back to PNG for preview use
+`env.target` represents the **target mode** of image conversion, and its value determines the specific conversion method applied:
+- `"device"`: Executes the complete conversion process targeted at the target device, such as removing the transparent channel of opaque images and then converting them to the PGF format (Glyphix Image Format) according to the quality parameter.
+- `"emulator"`: Executes the conversion process targeted at the emulator. Since the emulator does not support specific hardware texture formats (such as ETC2, etc.), to ensure images are displayed properly in the emulator, only the transparent channel of opaque images may be removed without further conversion to the target device format (or converting to a software-supported PGF format).
+- `"preprocess"`: Executes only the preprocessing step, which is removing the transparent channel of opaque images and outputting the result in PNG format.
+- `"preview"`: Generates a preview PNG image. First, the image is converted to the custom target format following the `"device"` target conversion process, and then the output image is converted back to PNG for preview purposes.
 
 ::: tip
-If the command line tool for image conversion does not support converting a custom format to PNG, then do not implement the `"preprocess"` and `"preview"` target modes.
+If the command-line tool for image conversion does not support converting custom formats to PNG, do not implement the `"preprocess"` and `"preview"` target modes.
 :::
 
-### image-forge command line tool
+### The image-forge Command-Line Tool
 
-image-forge is a PGF image format command line tool provided by Glyphix and has the following functions:
-- Supports converting PNG images to PGF format, and converting PGF to PNG images
-- Supports common ARGB and PAL pixel formats, and distinguishes premultiplied alpha modes
-- Supports blending transparent ARGB images onto a specified solid color background to convert them into opaque images (instead of directly discarding the alpha channel)
-- Supports line alignment by pixels or bytes
-- Supports LZ4 compression and can set the minimum compression threshold (image data below the threshold will not be compressed)
+`image-forge` is a command-line tool for the PGF image format provided by Glyphix, featuring the following capabilities:
+- Supports converting PNG images to PGF format and PGF images to PNG.
+- Supports common ARGB and PAL pixel formats, distinguishing between premultiplied alpha modes.
+- Supports blending transparent ARGB images onto a specified solid background to convert them into opaque images (rather than directly discarding the alpha channel).
+- Supports row alignment by pixels or bytes.
+- Supports LZ4 compression with configurable minimum compression thresholds (image data below the threshold will not be compressed).
 
-For platforms using other custom image formats, image-forge can also be used to remove the transparency channel.
+Platforms using other custom image formats can also utilize `image-forge` to remove transparency channels.
 
-## Image conversion script example
+## Image Conversion Script Example
 
-The following example demonstrates how to use commands such as image-forge to convert PNG to PGF images, using the color lookup table (PAL) format first.
+The following example demonstrates how to use commands like `image-forge` to convert PNGs to PGF images, prioritizing the palette (PAL) format.
 
-First define the target format in the opaque and transparent cases:
+First, define the pixel format rules for opaque and transparent conditions:
 ``` scheme
 ; Define pixel format rules for opaque colors
 (define (opaque-formats q)
@@ -1194,119 +1195,119 @@ First define the target format in the opaque and transparent cases:
   (cond ((<= q 50) "pal-argb-premul")
         (else "argb32-premul")))
 
-; Calculate target pixel format under transparency and quality parameters
+; Calculate the target pixel format under the influence of transparency and quality parameters
 (define pixel-format
   ((if env.transparent
       transparent-formats opaque-formats)
     env.quailty))
 
-; Whether the image is converted to color lookup table format
+; Whether the image is converted to a palette format
 (define palette (<= env.quailty 50))
 ```
 
-The above code will use the color lookup table format when the quality is 50 or less, and will use `pal-rgb` or `pal-argb` depending on whether it is transparent or not. Quality above 50 uses RGB or ARGB 8bit sampled pixel format. Finally, the `pixel-format` variable is the name of the actual pixel format used, and `palette` indicates whether to use the color lookup table format.
+The code above will use the palette format when the quality is less than or equal to 50, using `pal-rgb` or `pal-argb` depending on whether it is transparent. When the quality is higher than 50, it uses RGB or ARGB 8-bit sampled pixel formats. Ultimately, the `pixel-format` variable represents the actual pixel format name used, and `palette` indicates whether the palette format is used.
 
-Next define the commands that need to be used in various situations:
+Next, define the commands needed for various situations:
 
 ``` scheme
-; Whether to add the --verbose command line parameter
+; Whether to append the --verbose command-line argument
 (define if-verbose (if env.verbose "--verbose " ""))
 
-; Call the pngquant command to reduce the image color to less than 256 colors. pngquant needs to be installed in the system.
+; Call the pngquant command to reduce image colors to 256 colors or fewer; pngquant must be installed in the system
 (define color-reduction
   (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
 
 ; Convert image to PGF format
 (define convert (string-append "image-forge "
-  "--format=" pixel-format " " ; Specify the output pixel format
-  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, the minimum compression ratio is 5
-  "--align=16 --pixel-align " ; Align the image to 16 pixels
+  "--format=" pixel-format " " ; Specify output pixel format
+  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, with a minimum compression ratio of 5
+  "--align=16 --pixel-align " ; Align images to 16 pixels
   if-verbose
   env.image-path))
 
-; Remove image alpha channel and add background
+; Remove image Alpha channel and add background
 (define remove-alpha (string-append "image-forge --bypass "
-  ; On bes2500ibp watches, non-transparent images can have their alpha channel removed and blended with a black background, which improves image quality after PAL color reduction
+  ; On the bes2500ibp watch, non-transparent images can have their alpha channel removed and blended with a black background; this operation can improve image quality after PAL color reduction
   (if env.transparent "" "--background black ")
   if-verbose
   env.image-path))
 
-; Command to convert PGF image back to PNG
+; Command to decode PGF images back to PNG
 (define decode
   (string-append "image-forge --decode " if-verbose env.image-path))
 ```
 
-In the following code, `execute-try` calls the specified `f` function after the command exits with a non-zero value. The `execute` function prints an error log and exits the script abnormally after the command exits with a non-zero value. The `run-convert` function performs the complete target device image conversion process (calling the `remove-alpha` and `convert` commands).
+In the code below, `execute-try` calls the specified `f` function when a command exits with a non-zero status, while the `execute` function prints an error log and abnormally exits the script when a command exits with a non-zero status. The `run-convert` function executes the complete target device image conversion process (calling `remove-alpha` and `convert` commands).
 
 ``` scheme
-; Execute a command and print the command content in verbose mode, calling function f if the command exits with a non-zero exception
+; Execute a command and print its content in verbose mode; if the command exits abnormally with a non-zero status, call function f
 (define (execute-try cmd f)
   (begin
-    (if env.verbose; If it is verbose mode, print the command content
+    (if env.verbose ; Print command content if in verbose mode
       (display (string-append "Run command: " cmd "\n")))
     (let ((r (system (string-append env.script-dir "/bin/" cmd))))
       (if (= r 0) 0 (f r)))
   ))
 
-; Execute a command and print the command content in verbose mode. If the command exits abnormally, the program will exit.
+; Execute a command, print its content in verbose mode, and exit the program if the command exits abnormally
 (define (execute cmd)
   (execute-try cmd (lambda (x)
-    (begin; print error code and exit abnormally when failure occurs
+    (begin ; Print error code on failure and exit abnormally
       (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
       (exit-fail)
   ))))
 
-;Convert image
+; Convert image
 (define (run-convert)
   (begin
-    (execute remove-alpha) ; Remove the transparent channel first
-    (if palette (execute color-reduction)) ; If it is a color lookup table format, reduce the number of pixels in the image
+    (execute remove-alpha) ; Remove transparency channel first
+    (if palette (execute color-reduction)) ; Reduce pixel count if palette format is used
     (execute convert) ; Execute image conversion command
   ))
 ```
 
-The `targets` macro defines the processing methods for all target modes. For example, the `"device"` mode will call the `run-convert` function, etc.
+The `targets` macro defines the processing methods for all target modes, such as the `"device"` mode calling the `run-convert` function, etc.
 
 ``` scheme
-; Define the conversion strategy corresponding to the target
+; Define conversion strategies corresponding to targets
 (targets env.target
-  ; Device mode: the final image conversion process for the target device
+  ; Device mode: Final image conversion process used for target devices
   ("device" (run-convert))
-  ; Simulator mode: only remove the alpha channel of non-transparent images, without converting the format
+  ; Emulator mode: Only remove the alpha channel of non-transparent images, without format conversion
   ("emulator" (execute remove-alpha))
-  ; Preprocessing mode: remove the alpha channel of non-transparent images and add a background
+  ; Preprocess mode: Remove the alpha channel of non-transparent images and add a background
   ("preprocess" (execute remove-alpha))
-  ; Preview mode: generate a PNG preview image that is consistent with the display effect of the actual device
+  ; Preview mode: Generate PNG preview images consistent with the actual device display effect
   ("preview" (begin
-    (run-convert) ; First convert the image to PGF format
-    (execute decode))) ; Convert the image back to PNG
+    (run-convert) ; Convert image to PGF format first
+    (execute decode))) ; Then convert image back to PNG
   )
 ```
 
-### Use image conversion script
+### Using Image Conversion Scripts
 
-To use the image conversion script, you need to add a field to the device model description file:
+To use an image conversion script, a field needs to be added to the device model description file:
 
-```yaml
+``` yaml
 description: default watch
 
 screen:
   width: 454 # pixels
-  height: 454 #pixels
+  height: 454 # pixels
   dpi: 326 # pixels per inch
 
-# ...
-image-build: image-convert-pal.scm # The path of the image conversion script relative to this Yaml file
+#...
+image-build: image-convert-pal.scm # Path of the image conversion script relative to this Yaml file
 ```
 
-### More complex strategies
+### More Complex Strategies
 
-Since the image conversion script is a complete programming language rather than configuration languages ​​such as Yaml and JSON, we can implement more complex custom conversion strategies without being limited by the functions provided by the framework. Take the above color lookup table format conversion as an example: PAL format does not work well on pictures with rich colors. At this time, the picture can be converted to a format that performs better in such scenes. The specific ideas are:
-1. The `pngquant` command supports exiting abnormally if the quality after conversion to PAL format is lower than the specified value, so configure the command parameters according to this purpose
-2. In the `run-convert` function, the `color-reduction` operation performed by `execute` is changed to be performed by `execute-try`, and the alternative format conversion operation is used in the latter's exception handling function.
-3. Targets such as `preview` are processed in a similar manner, but please note that when converting the output format to PNG, you also need to recognize that the command exits abnormally and continue trying with subsequent commands.
+Since the image conversion script is a fully-featured programming language rather than a configuration language like Yaml or JSON, we can implement more complex custom conversion strategies without being limited by the features provided by the framework. Taking the aforementioned palette format conversion as an example: the PAL format does not perform well on color-rich images. In such cases, images can be converted to formats that perform better in these scenarios. The specific approach is as follows:
+1. The `pngquant` command supports exiting abnormally when the quality falls below a specified value after converting to PAL format; configure the command arguments for this purpose.
+2. Change the `color-reduction` operation executed by `execute` in the `run-convert` function to be executed by `execute-try`, and use alternative format conversion operations in the latter's error handling function.
+3. Handling methods for targets like `preview` are similar, but note that when converting the output format to PNG, command exit anomalies must also be recognized so subsequent commands can continue trying.
 
-All in all, it is similar to the idea of ​​​​a shell script, using the abnormal exit code of the command to control the process.
+In short, it follows the philosophy of shell scripting—using command exit codes to control the flow.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
@@ -1314,7 +1315,7 @@ FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
 ---
 icon: console-line
 ---
-# Command line options
+# Command-Line Options
 
 To be migrated.
 
@@ -1324,131 +1325,133 @@ FILE_PATH: src/transl/EN/tutorials/glyphix.js/emulator.md
 ---
 icon: watch-import-variant
 ---
-# Simulator and debugging
+# Simulator and Debugging
 
-To run the emulator, you need to switch to the root directory of your project on the command line and run the `gx emu` subcommand to start the emulator. The Glyphix simulator has a highly consistent environment with the real device runtime, so you can use the simulator to develop and debug most interfaces and functions without the need to frequently install applications on the real device.
+To run the simulator, you need to switch to the root directory of your project in the command line and run the `gx emu` subcommand. The Glyphix simulator provides an environment that is highly consistent with the runtime on a real device, allowing you to develop and debug most interfaces and features using the simulator without frequently installing the application onto a physical device.
 
 ::: tip
-Due to the limitations of the current [`glyphix`](https://www.npmjs.com/package/glyphix) npm package, please be sure to configure [`glyphix.config.js`](/doc_en/nodejs.md#glyphix-config-js-configuration), otherwise the source code line number of the error message cannot be seen when executing `gx emu`.
+Due to limitations of the current [`glyphix`](https://www.npmjs.com/package/glyphix) npm package, please make sure to configure [`glyphix.config.js`](/tutorials/nodejs.md#glyphix-config-js-配置), otherwise source code line numbers for error messages will not be available when running `gx emu`.
 :::
 
-## `gx emu` subcommand
 
-Run the emulator using the last build target device configuration. This command needs to be executed in the root directory of the Glyphix project. It automatically builds the project and creates the resource files required by the emulator, so there is no need to perform `gx build` first.
+## The `gx emu` Subcommand
 
-#### Command options
+Runs the simulator using the device configuration from the last build. This command must be executed in the root directory of the Glyphix project. It automatically builds the project and creates the resource files required by the simulator, so there is no need to run `gx build` beforehand.
 
-- `-d --device=NAME`: Specify the simulated device name, the default is `default` (resolution is $410 \times 502\rm px$).
-- `-e --emulator-exe=CMD`: Specify the executable file of the emulator, the default is `glyphix-emu`. Usually no modification is required.
-- `-l --language=NAME`: Specify the language environment of the simulator, the default is `zh-CN` (Simplified Chinese). The list of supported languages ​​can be viewed through the `gx list language` command.
-- `--target=URI`: Set the package name or deeplink when the emulator is started, such as `app://com.example.app/SomePage?query=value` or `com.example.app`.
-- `-i --inspector`: Enables the inspector when running the simulator. The inspector is a web page that can debug interface elements in the simulator in the browser.
-- `-m --mobile-network`: (not yet implemented) Enable the mobile SDK's network proxy only in the emulator, without direct access to the network.
-- `-w --watch`: Monitor the project directory when running the simulator, and automatically rebuild and refresh the simulator interface when the source files change.
-- `-r --real-scale`: Display the emulator window using real size instead of scaling the display to the device resolution. This option is recommended for HiDPI screens.
-- `-t --top`: Keep the emulator window on top.
-- `-p --profiling`: Enable profiling mode. Due to the large differences in emulator and device performance, this option is generally not very useful.
+#### Command Options
 
-## Startup mode
+- `-d --device=NAME`: Specifies the name of the simulated device. Defaults to `default` (with a resolution of $410 \times 502\rm px$).
+- `-e --emulator-exe=CMD`: Specifies the emulator executable file. Defaults to `glyphix-emu`. Usually, this does not need to be modified.
+- `-l --language=NAME`: Specifies the emulator's locale, defaulting to `zh-CN` (Simplified Chinese). You can view the list of supported languages using the `gx list language` command.
+- `--target=URI`: Sets the package name or deeplink when the simulator starts, for example, `app://com.example.app/SomePage?query=value` or `com.example.app`.
+- `-i --inspector`: Enables the inspector when running the simulator. The inspector is a web page that allows you to debug UI elements in the simulator via a browser.
+- `-m --mobile-network`: (Not implemented yet) Enables only the mobile SDK's network proxy in the simulator rather than accessing the network directly.
+- `-w --watch`: Watches the project directory while running the simulator, automatically rebuilding and refreshing the simulator interface when source files change.
+- `-r --real-scale`: Displays the simulator window at real scale rather than scaling it according to the device resolution. This option is recommended for use on HiDPI screens.
+- `-t --top`: Keeps the simulator window always on top.
+- `-p --profiling`: Enables profiling mode. Due to significant performance differences between the simulator and the device, this option is usually not very useful.
 
-By default, `gx emu` will start the emulator with the device configuration it was last built with. You can also adjust the emulator's startup behavior through command options.
+## Startup Modes
 
-### Specify device model
+By default, `gx emu` starts the simulator using the device configuration used in the last build. You can also adjust the startup behavior of the simulator using command options.
 
-Use the `-d` or `--device` option to specify the device model you wish to emulate, for example:
+### Specifying the Device Model
+
+You can use the `-d` or `--device` option to specify the device model you wish to simulate, for example:
 ```bash
 gx emu -d generic-watch-466x466
 ```
-Will start the emulator for the device `generic-watch-466x466`. You can view the list of installed devices using the `gx list device` command.
+This will start the simulator for the `generic-watch-466x466` device. You can use the `gx list device` command to view the list of installed devices.
 
-If this option is not specified, the last device specified will be used. The `default` device will be used when starting the emulator for the first time or after `gx clean`.
+If this option is not specified, the device specified last time will be used. When starting the simulator for the first time or after `gx clean`, the `default` device will be used.
 
-### Deeplink startup
+### Deeplink Startup
 
-By default, the simulator will launch the application of the current project, or launch an application menu interface. But when debugging the [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle function, you may want to launch the application through a deeplink to ensure that `onRoute()` receives specific parameters. Deeplinks can be specified using the `--target` option, for example:
+By default, the simulator will start the application of the current project or an application menu interface. However, when debugging the [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle function, you might want to start the application via a deeplink to ensure `onRoute()` receives specific parameters. You can use the `--target` option to specify a deeplink, for example:
 ```bash
 gx emu --target app://com.example.app/SomePage?query=value
 ```
-This will start the application with the package name `com.example.app`, and the path and query fields of the Deeplink URI will be passed to the `onRoute()` function of the application.
+This will start the application with the package name `com.example.app`, and the path (including the root directory `/`, i.e., `/SomePage`) and query fields of the Deeplink URI will be passed to the application's `onRoute()` function.
 
-### Analog device size
+### Simulating Device Dimensions
 
-By default, the simulator uses the actual pixel resolution of the device, which causes the display size on the computer to be larger than the actual screen size of the device and makes it difficult for developers to confirm that UI elements (including design drafts) are sized optimally on the device. The `-r` or `--real-scale` option can simulate real device dimensions:
+By default, the simulator uses the actual pixel resolution of the device, which may make the display size on your computer larger than the actual screen size of the device, making it difficult for developers to confirm whether UI elements (including design drafts) have optimal sizes on the device. The `-r` or `--real-scale` option allows you to simulate based on the real device dimensions:
 ```bash
 gx emu -r
 ```
-When using this option, you don't need to install the app on the device to confirm the actual size of the UI. However, considering that the DPI of most watches exceeds 300, a 1080p display will cause the interface to be too blurry when using real-scale mode. It is recommended to use this option on HiDPI displays (such as 4K displays, or Retina screens on macOS).
+When using this option, you do not need to install the application onto a device to confirm the actual size of the UI. However, considering that the DPI of most watches exceeds 300, a 1080p monitor will cause the interface to appear too blurry in real-scale mode. It is recommended to use this option on HiDPI displays (such as 4K monitors or Retina screens on macOS).
 
 ::: tip
-When using real-scale mode, you should specify the target device you wish to emulate via the `--device` option. It is worth noting that due to different DPI, two devices with the same resolution may have different screen sizes, so the display sizes in real-scale mode will also be different.
+When using real-scale mode, you should use the `--device` option to specify your desired target device. Note that due to differing DPIs, two devices with the same resolution may have different screen sizes, so the display size in real-scale mode will also vary.
 :::
 
-### Automatic refresh
+### Auto-Refresh
 
-The `-w` or `--watch` option can monitor the project directory when running the simulator and automatically rebuild and restart the application when the source files change. It is usually recommended to use it with the `--top` option, for example:
+The `-w` or `--watch` option monitors the project directory while running the simulator, automatically rebuilding and restarting the application when source files change. It is usually recommended to use this in combination with the `--top` option, for example:
 ```bash
 gx emu -wt
 ```
-This keeps the simulator window on top and automatically restarts the application after modifying the source file. This is very useful for development and debugging: switch directly from the code editor to the simulator, no need to manually restart the simulator, and no need to switch windows frequently.
+This keeps the simulator window on top and automatically restarts the application after modifying source files. This is very useful for development and debugging: you can switch directly from your code editor to the simulator without manually restarting the simulator or frequently switching windows.
 
 ::: tip
-Currently, hot update pages are not supported. Instead, the entire application is restarted after modifying the source file. If you want faster debugging, you can adjust [`manifest.router.entry`](/framework/application/manifest.md#entry) to the page under development, so that you will go directly to the page every time you restart the application.
+Hot reloading of pages is currently not supported; instead, the entire application is restarted when source files are modified. If you want faster debugging speeds, you can set [`manifest.router.entry`](/framework/application/manifest.md#entry) to the page currently under development, so that every time the application restarts, it will directly enter that page.
 :::
 
-## Connect to mobile phone
+## Connecting to a Phone
 
-You can connect to the emulator through the [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android mobile application to facilitate debugging functions related to the real device and mobile phone interconnection.
+You can connect to the simulator using the [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android mobile app to facilitate debugging real devices and features related to phone-watch interconnection.
 
 ### Preparation
 
-You need to install the Glyphix Debug app on your phone and make sure your phone and computer are on the same LAN, such as connected to the same Wi-Fi. After starting the simulator and opening the Glyphix Debug application, click the "Socket Connection" button. The application will display a connection interface. You can select the searched simulator IP address, or manually enter the computer IP and simulator port to connect.
+You need to install the Glyphix Debug app on your phone and ensure that your phone and computer are on the same local area network (LAN), such as connected to the same Wi-Fi. After starting the simulator and opening the Glyphix Debug app, tap the "Socket Connection" button. The app will display a connection interface where you can select the discovered simulator IP address or manually enter the computer IP and simulator port to connect.
 
-The emulator listens to network port 7768 by default. If the port is occupied (usually multiple emulators are started), the next available port is automatically selected and the actual port number used is printed when starting. For example:
+The simulator listens on network port 7768 by default. If this port is occupied (usually when multiple simulators are started), it will automatically select the next available port and print the actually used port number upon startup. For example:
 ```bash
 $ gx emu
-[simulator.socket] MAS TCP server bind port 7768 successful
+[simulator.socket] MAS TCP server bind port 7768 successful 
 ```
 
 ::: tip
-Once the emulator port is occupied and a non-7768 port number is selected, the Glyphix Debug application will not be able to automatically search for the emulator and must manually enter the correct IP address and port number to connect.
+Once the simulator port is occupied and a port other than 7768 is selected, the Glyphix Debug app will not be able to automatically discover the simulator. You must manually enter the correct IP address and port number to connect.
 :::
 
-It is strongly recommended that the simulator turns on the mobile network proxy mode in the next section to avoid using the computer network and mobile network at the same time. Otherwise, it may interfere with the normal work of [`@system.interconnect`](/api/system-interconnect.md) and other dependent mobile phone interconnection APIs.
+It is strongly recommended to enable the mobile network proxy mode of the simulator (covered in the next section) to avoid using the computer network and mobile network simultaneously. Otherwise, it may interfere with the normal operation of APIs that rely on phone-watch interconnection, such as [`@system.interconnect`](/api/system-interconnect.md).
 
-### Mobile network proxy
+### Mobile Network Proxy
 
-Use the `-m` or `--mobile-network` option to enable only the network proxy function of the mobile SDK, which is similar to the network environment of a real device. When using this option, the emulator does not automatically launch the target application, but displays an application list interface.
+Using the `-m` or `--mobile-network` option enables only the mobile SDK's network proxy feature, simulating a network environment similar to a real device. When using this option, the simulator will not automatically start the target application, but instead display an application list interface.
 
-Before manually launching the app, you should connect to the emulator via "Socket Network" via the Glyphix Debug mobile app and then click on the target app. Otherwise the application will not be able to access the network.
+Before manually starting the application, you should connect the simulator via the "Socket Network" in the Glyphix Debug mobile app, and then tap the target application. Otherwise, the application will not be able to access the network.
 
 ::: tip
-When using `-m` mobile network proxy, you can simulate network interruption by killing the mobile debugging application and reconnecting the emulator. Otherwise the simulator will automatically switch to the computer network.
+When using the `-m` mobile network proxy, you can simulate network interruptions by killing the mobile debugging app and reconnecting to the simulator. Otherwise, the simulator will automatically switch to the computer network.
 :::
 
-### Common connection issues
+### Common Connection Issues
 
-If you cannot connect to the emulator through the Glyphix Debug app, please check whether the computer and mobile phone are connected to the same LAN, and the emulator program and port are not blocked by firewall rules. If you are connected to a public network, you may not be able to connect due to a firewall or network isolation.
+If you cannot connect to the simulator via the Glyphix Debug app, please check whether your computer and phone are connected to the same LAN, and ensure that the simulator program and port are not blocked by firewall rules. If you are connected to a public network, connection failures may occur due to firewalls or network isolation.
 
-If you use VPN or proxy software, please ensure that the traffic within the LAN is not proxied, otherwise you will not be able to connect.
+If you are using a VPN or proxy software, please ensure that traffic within the LAN is not proxied, otherwise connection will also fail.
 
-## Other operations
+## Other Operations
 
-### Clear application data
+### Clearing Application Data
 
-You can use [`gx clean`](README.md#gx-clean) to clear the application data when the emulator is running. Then when you start the emulator, it will start from the state of first installation.
+You can use [`gx clean`](README.md#gx-clean) to clear the application data of the running simulator. The next time you start the simulator, it will run as if it were in its initial installation state.
 
-### Combine command options
+### Combining Command Options
 
 You can combine multiple options together, for example:
 ```bash
 gx emu -rwt -d default-watch-466x466
 ```
-Equivalent to using separately
+This is equivalent to using them separately:
 ```bash
-gx emu -r -w -t -d devault-watch-466x466
+gx emu -r -w -t -d default-watch-466x466
 gx emu --real-scale --watch --top --device default-watch-466x466
 ```
-It is recommended to install an auto-completion script as described in [`gx completion`](#gx-completion) to select device names and command options in the terminal.
+It is recommended to install the auto-completion script as described in [`gx completion`](#gx-completion) to easily select device names and command options in the terminal.
+
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/README.md
@@ -1456,19 +1459,19 @@ FILE_PATH: src/transl/EN/tutorials/glyphix.js/README.md
 ---
 icon: package-variant-closed
 ---
-# Glyphix.js packaging tool
+# Glyphix.js Packaging Tool
 
-glyphix.js is a packaging tool for Glyphix applications. It contains a command line tool called `gx` that can be used to create, build and run Glyphix applications. The tool also includes a graphical simulator that can simulate running Glyphix applications on your computer.
+glyphix.js is the packaging tool for Glyphix applications. It includes a command-line tool named `gx`, which can be used to create, build, and run Glyphix applications. The tool also includes a graphical simulator for running Glyphix applications on a computer.
 
-This document provides installation and usage instructions for glyphix.js, and the [Quick Start](/doc_en/getting-started.md) tutorial is a simpler getting started guide. Also read [Build and Run](#buildandrun) to learn how to develop, build, and publish a Glyphix application.
+This document provides installation and usage instructions for glyphix.js. The [Getting Started](/tutorials/getting-started.md) tutorial serves as a simpler introductory guide. Please also read [Building and Running](#building-and-running) to learn how to develop, build, and publish a Glyphix application.
 
-## Install
+## Installation
 
-This section introduces how to install the glyphix.js packaging tool. For general use, just know the [npm install](#npm-install) method. [Manual installation](#manual-installation) method is suitable for special scenarios, such as network-limited environments, CI builds, etc.
+This section covers how to install the glyphix.js packaging tool. For general purposes, only the [npm Installation](#npm-installation) method is needed. The [Manual Installation](#manual-installation) method is suitable for special scenarios, such as restricted network environments or CI builds.
 
-### npm installation
+### npm Installation
 
-You can use the [npm](https://nodejs.org) package manager to install the glyphix.js packaging tool. It is recommended to use the `-g` option for global installation:
+You can use the [npm](https://nodejs.org) package manager to install the glyphix.js packaging tool. It is recommended to use the `-g` option for a global installation:
 ::: code-tabs
 @tab npm
 ```bash
@@ -1487,10 +1490,10 @@ yarn global add glyphix-cli
 :::
 
 ::: tip
-Before using pnpm to install globally, you may need to execute `pnpm setup` to configure environment variables. The `pnpm install -g` command will prompt how to configure environment variables.
+Before performing a global installation with pnpm, you may need to run `pnpm setup` to configure environment variables. The `pnpm install -g` command will prompt you on how to configure them.
 :::
 
-After the installation is complete, you can execute `gx --version` in the terminal to check whether the installation is successful. For example:
+Once installed, you can run `gx --version` in your terminal to verify the installation. For example:
 ```bash
 $ npm install -g glyphix-cli
 $ gx --version
@@ -1498,19 +1501,19 @@ gx v0.10.1 - The Glyphix applet development toolchain
 commit a9337cf1 - Tue Sep 23 10:03:48 2025 +0800
 ```
 
-Additionally, [pngquant](#pngquant) must be installed to package app resources for some devices.
+Additionally, [pngquant](#pngquant) must be installed to package application assets for certain devices.
 
-### Manual installation
+### Manual Installation
 
-You can also install it manually from the compressed package of the glyphix.js packaging tool: add the `bin` directory in the unzipped directory to the `PATH` environment variable. The following will introduce the installation methods on mainstream operating systems.
+You can also install glyphix.js manually from its compressed archive: add the `bin` directory from the extracted folder to your `PATH` environment variable. The installation methods for mainstream operating systems are described below.
 
 ::: tip
-The glyphix.js tool is not just an executable file, do not leave out other resource files (including all files in the `bin` and `share` directories).
+The glyphix.js tool is not just a single executable file; please do not omit other resource files (including all files in the `bin` and `share` directories).
 :::
 
-#### macOS/Linux
+#### macOS / Linux
 
-For macOS or Linux, you can use the `tar` command to install the glyphix.js packaging tool. Before that, you also need to install tools such as `xz`:
+For macOS or Linux, you can use the `tar` command to install the glyphix.js packaging tool. Before doing so, you also need to install tools like `xz`:
 
 ::: code-tabs
 @tab macOS
@@ -1518,7 +1521,7 @@ For macOS or Linux, you can use the `tar` command to install the glyphix.js pack
 brew install xz
 ```
 
-@tab Ubuntu/Debian
+@tab Ubuntu / Debian
 ```bash
 sudo apt update
 sudo apt install xz-utils
@@ -1530,7 +1533,7 @@ sudo pacman -S xz
 ```
 :::
 
-After downloading the compressed package of glyphix.js, use the following commands to decompress and install:
+After downloading the glyphix.js compressed archive, use the following commands to extract and install it:
 ::: code-tabs
 @tab macOS
 ```bash
@@ -1542,52 +1545,52 @@ tar -xvJf glyphix-v0.7.2-darwin-arm64.tar.xz -C ~/.local
 tar -xvJf glyphix-v0.7.2-linux-x86_64.tar.xz -C ~/.local
 ```
 :::
-Please be careful to replace the `.tar.xz` file name with the actual downloaded file name that corresponds to your operating system and CPU architecture. After decompression, commands such as `gx` will be located in the `~/.local/bin` directory. Please add this directory to the `PATH` environment variable, for example, update `.bashrc` like this:
+Please replace the `.tar.xz` filename with the actual downloaded filename corresponding to your operating system and CPU architecture. After extraction, commands like `gx` will be located in the `~/.local/bin` directory. Please add this directory to your `PATH` environment variable, for example, by updating `.bashrc` like this:
 ```bash
-# If ~/.local/bin is not in PATH, add
+# If ~/.local/bin is not in PATH, add it
 echo "$PATH" | grep -q "$HOME/.local/bin" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc # Reload bash configuration
 ```
 
 ::: tip
-When using `Zsh`, the `.zshrc` configuration file may import `.bashrc`, so only `.bashrc` needs to be updated. Otherwise, please update `.zshrc` as above.
+When using `Zsh`, your `.zshrc` configuration file may import `.bashrc`, so you only need to update `.bashrc`. Otherwise, update `.zshrc` using the method above.
 
-It is recommended to install the glyphix.js packaging tool in the user's `~/.local` directory to avoid using root privileges for installation.
+It is recommended to install the glyphix.js packaging tool in the user's `~/.local` directory to avoid root permissions.
 :::
 
 #### Windows
 
-To install glyphix.js on Windows, please download the corresponding Windows version compressed package, and then use an decompression tool that supports `7z` format (such as [7-Zip](https://www.7-zip.org/)) to extract it to a directory, such as `C:\glyphix`. Then add `C:\glyphix\bin` to the system's [`PATH` environment variable](https://learn.microsoft.com/zh-cn/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)).
+To install glyphix.js on Windows, download the corresponding Windows version archive, and use an extraction tool that supports the `7z` format (such as [7-Zip](https://www.7-zip.org/)) to extract it to a directory, such as `C:\glyphix`. Then, add `C:\glyphix\bin` to your system's [`PATH` environment variable](https://learn.microsoft.com/zh-cn/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)).
 
-You can also use the `7z` command line tool to decompress, for example:
+You can also use the `7z` command-line tool to extract it, for example:
 ```shell
 7z x -y glyphix-v0.7.2-windows-x64.7z -oC:/glyphix
 ```
-This is similar to the installation method for systems such as macOS.
+This is similar to the installation method on macOS and other systems.
 
-### Install system dependencies
+### Installing System Dependencies
 
 #### pngquant
 
-Linux and macOS users need to install `pngquant` additionally, you can use `npm` to install it:
+Linux and macOS users need to install `pngquant` additionally. You can use `npm` to install it:
 ```bash
-npm install -g pngquant-bin # pngquant-bin only supports installation with npm
+npm install -g pngquant-bin # pngquant-bin only supports installation via npm
 ```
-The Windows `glyphi-cli` includes `pngquant.exe`, so no additional installation is required.
+The Windows version of `glyphix-cli` includes `pngquant.exe`, so no additional installation is required.
 
 ::: tip
-You can also download precompiled binaries from [pngquant.org](https://pngquant.org/) or install from your system's package manager.
+You can also download precompiled binaries from [pngquant.org](https://pngquant.org/) or install them via your system's package manager.
 :::
 
-#### Linux system dependencies
+#### Linux System Dependencies
 
-The Linux installation package of glyphix.js does not distinguish between specific distribution versions. Currently, there are only build packages for the linux-x86_64 architecture. We tested it running on Ubuntu 20.04 (or newer) and Arch Linux.
+The Linux installation package for glyphix.js is distro-agnostic, and currently only includes a build for the `linux-x86_64` architecture. We have tested it to run on Ubuntu 20.04 (or newer) and Arch Linux.
 
-If you just use the `gx` command for packaging (which is commonly used for CI packaging), Linux distributions without a desktop environment should work out of the box. Running the graphical simulator relies on the X Window System, so you may need to install xorg-related software packages, especially for Wayland environments. You also need to install the `xwayland` software package (the simulator does not yet support native Wayland).
+If you only use the `gx` command for packaging (commonly used in CI builds), headless Linux distributions should work out of the box. Running the graphical simulator relies on the X Window System, so you may need to install Xorg-related packages. Especially under a Wayland environment, you will also need to install the `xwayland` package (native Wayland is not yet supported by the simulator).
 
-### uninstall
+### Uninstallation
 
-For glyphix.js installed globally through a package manager such as npm, you can use the corresponding package manager to uninstall, for example:
+For glyphix.js installed globally via a package manager like npm, use the corresponding package manager to uninstall it, for example:
 ::: code-tabs
 @tab npm
 ```bash
@@ -1606,30 +1609,30 @@ yarn global remove glyphix-cli
 :::
 
 ::: tip
-For non-global installation using a package manager such as npm, just remove the `glyphix-cli` dependency in `package.json` and execute `npm install` (or `pnpm install`, `yarn install`) to update the `node_modules` directory.
+For non-global installations using package managers like npm, simply remove the `glyphix-cli` dependency from `package.json` and run `npm install` (or `pnpm install`, `yarn install`) to update the `node_modules` directory.
 :::
 
-For manual installation, just delete the files in the installation compressed package, such as the `tar.xz` installation file for macOS and Linux:
+For manual installations, simply delete the files from the installation archive. For example, for a `tar.xz` installation on macOS and Linux:
 ```bash
 tar -tf glyphix-v0.7.2-darwin-arm64.tar.xz > filelist.txt
-cat filelist.txt # Check the file list to be deleted
+cat filelist.txt # Inspect the list of files to be deleted
 xargs -I {} rm -f "~/.local/{}" < filelist.txt # Execute deletion after confirmation
 ```
-The `tar -tf` command will list the files in the compressed package, and `glyphix-xxx.tar.xz` should be replaced with the actual installation file. Manual uninstallation on Windows is similar.
+The `tar -tf` command lists the files in the archive. Replace `glyphix-xxx.tar.xz` with your actual installation file. Manual uninstallation on Windows is similar.
 
-## Build and run
+## Building and Running
 
-After installing glyphix.js, use the [`gx build`](#gx-build) command in the root directory of the app source code to build the app package, or use the [`gx emu`](#gx-emu) command to run the emulator.
+After installing glyphix.js, use the [`gx build`](#gx-build) command in the root directory of your app source code to build the app package, or use the [`gx emu`](#gx-emu) command to run the simulator.
 
-After building the application, please refer to the [Submit Application Package](#submit-application-package) chapter to learn how to install the application on the device or submit it to the application publishing platform.
+After building the application, refer to the [Submitting Application Packages](#submitting-application-packages) section to learn how to install the app onto a device or submit it to an app publishing platform.
 
-## Command line parameters
+## Command-Line Arguments
 
-### General options
+### General Options
 
 #### `gx --help`
 
-View help information. Help information can also be used in specific subcommands. For example, use `gx build --help` to view the help information of the `build` subcommand separately.
+View help information. Help information can also be used with specific subcommands, for example, `gx build --help` views the help information for the `build` subcommand exclusively.
 
 #### `gx --version`
 
@@ -1637,69 +1640,69 @@ The `-V --version` option is used to view the version number of the `gx` command
 
 #### `gx --verbose`
 
-`-v --verbose` enables verbose logging output, which application developers generally do not need to use.
+`-v --verbose` enables verbose logging output, which is generally unnecessary for application developers.
 
 #### `gx --numeric-version`
 
-Output the purely numeric version number of the `gx` command, for example `0.10.1`.
+Outputs the pure numeric version number of the `gx` command, such as `0.10.1`.
 
 #### `gx --quiet`
 
-`-q --quiet` enables quiet mode and suppresses most non-warning and error log output. This includes build progress logs when using `gx build`, a mode commonly used in CI environments where a large number of application packages need to be built.
+`-q --quiet` enables quiet mode, suppressing most non-warning and non-error log outputs. This includes build progress logs when using `gx build`, which is typically used in CI environments that need to build a large number of app packages.
 
 View the version number.
 
 ### `gx new`
 
-Creating a new project, for example `gx new myapp` will create a new project named `myapp`.
+Creates a new project. For example, `gx new myapp` creates a new project named `myapp`.
 
 ### `gx build`
 
-Build the project (default action), use the `--device` or `-d` option to specify the target device, e.g.
-```bash
-gx build -d default # Specify the default device build
+Builds the project (default action). You can use the `--device` or `-d` option to specify the target device, for example:
+``` bash
+gx build -d default # Specify building for the default device
 ```
-Use the `--dump` option to print compilation details of the UX file.
+Use the `--dump` option to print compilation details of UX files.
 
-Glyphix.js supports incremental builds. When the source code changes, only the changed parts will be rebuilt.
+glyphix.js supports incremental builds; when source code changes, only the modified parts are rebuilt.
 
-The `-r --image-rules` parameter can specify the image packaging rule file, the default is `config/image-rules.json`. The value of this parameter will be cached, and subsequent executions of `gx build` or `gx emu` will be executed according to the previous configuration.
+The `-r --image-rules` parameter can specify the image packaging rules file, which defaults to `config/image-rules.json`. The value of this parameter will be cached, and subsequent executions of `gx build` or `gx emu` will follow the previous configuration.
 
-#### Command options
+#### Command Options
 
-- `-d --device=NAME`: Specify the target device name, which must be the installed device configuration name. You can view the list of installed devices using the `gx list device` command. If this option is not specified, the `default` device is used by default.
-- `-f --full`: Force a complete rebuild of the project instead of an incremental build.
-- `-e --emulator`: Build the project for the emulator instead of the actual device. This option is automatically used when executing the `gx emu` command.
-- `-r --image-rules=PATH`: Specify the image packaging rule file, the default is `config/image-rules.json`.
+- `-d --device=NAME`: Specifies the target device name, which must be an installed device configuration name. You can use the `gx list device` command to view the list of installed devices. If this option is not specified, the `default` device is used.
+- `-f --full`: Forces a complete rebuild of the project instead of an incremental build.
+- `-e --emulator`: Builds the project for the emulator rather than an actual device. This option is automatically used when running the `gx emu` command.
+- `-r --image-rules=PATH`: Specifies the image packaging rules file, defaulting to `config/image-rules.json`.
 
-#### Submit application package
+#### Submitting Application Packages
 
-After building with `gx build`, the `.glyphix-work/dist/<device-name>/<package-name>` directory will be generated in the project directory, which contains the built application package file (`.pkg` file). This file can be installed and run on the device through the mobile phone debugging application, or it can be submitted to the application publishing platform.
+After building with `gx build`, a `.glyphix-work/dist/<device-name>/<package-name>` directory will be generated in your project directory, containing the built app package file (`.pkg` file). You can install this file onto a device for debugging using the mobile debug app, or submit it to an app publishing platform.
 
-Application packages should be built separately for all devices that need support using the `-d` option. Here is an example directory structure:
+You should use the `-d` option to build app packages separately for all supported devices. Here is an example directory structure:
 ```bash
 .glyphix-work/dist
 ├─ generic-watch-368x448
-│ └─ com.example.app
-│ ├─ bundle.pkg
-│ ├─ icon.png
-│ └─ manifest.json
+│  └─ com.example.app
+│     ├─ bundle.pkg
+│     ├─ icon.png
+│     └─ manifest.json
 └─ generic-watch-466x466
    └─ com.example.app
       ├─ bundle.pkg
       ├─ icon.png
       └─ manifest.json
 ```
-When submitting an application package, please package and upload the entire `.glyphix-work/dist` directory instead of just uploading the `.pkg` file or any subdirectory. The platform identifies the app based on information in the `manifest.json` file and may require `icon.png` as a preview icon.
+When submitting the app package, please compress and upload the **entire** `.glyphix-work/dist` directory, rather than just uploading the `.pkg` file or any single subdirectory. The platform identifies the app based on the information in `manifest.json` and may require `icon.png` as a preview icon.
 
 ::: tip
-For Linux or macOS users, you can use this command to package applications for certain types of devices:
+For Linux or macOS users, you can use a command like this to package apps for a specific category of devices:
 ```bash
 gx list device | grep "^generic-" | xargs -n 1 gx build -d
 ```
-This will build app packages for all devices whose names start with `generic-`.
+This builds app packages for all devices whose names start with `generic-`.
 
-You can also use similar PoweShell commands to build in batches under Windows:
+Under Windows, you can also use a similar PowerShell command for batch building:
 ```shell
 gx list device | ? { $_ -match "^generic-" } | % { gx build -d $_ }
 ```
@@ -1707,62 +1710,62 @@ gx list device | ? { $_ -match "^generic-" } | % { gx build -d $_ }
 
 ### `gx emu`
 
-Meet the [Emulator and Debugging](/doc_en/glyphix.js/emulator.md) documentation.
+See the [Simulator and Debugging](/tutorials/glyphix.js/emulator.md) documentation.
 
 ### `gx clean`
 
-Clean the build product. This command will delete the `.glyphix-work` directory under the project folder.
+Cleans build artifacts. This command deletes the `.glyphix-work` directory under the project folder.
 
 ### `gx config`
 
-This command starts a web interface for editing image packaging rule files. Follow the command prompts to open the page in the browser for operation. This command has two uses:
-```bash
-gx config # When in a Glyphix project, there is no need to specify the source directory (currently it can only be used in the project root directory)
-gx config path/to/dir # Configure the specified directory, which can be used to configure non-project image resources
+This command launches a Web interface for editing image packaging rules files. Following the command prompts, you can open the page in a browser to operate. This command has two usages:
+``` bash
+gx config # When inside a Glyphix project, no source directory needs to be specified (currently can only be used in the project root directory)
+gx config path/to/dir # Configures the specified directory, usable for non-project image resource configuration
 ```
 
-The `-r --image-rules` parameter can specify the image packaging rule file, the default is `config/image-rules.json`.
+The `-r --image-rules` parameter can specify the image packaging rules file, defaulting to `config/image-rules.json`.
 
 ### `gx image-forge`
 
-Convert free image files. This command can specify any source path and output path, and does not need to be executed in the Glyphix project:
-```bash
+Converts loose image files. This command can specify arbitrary source and output paths and does not need to be executed inside a Glyphix project:
+``` bash
 gx image-forge src -o dist
 ```
 
-Option description:
-- `src` is the source path to be converted. The `image-forge` command recursively converts all images and generates them according to the relative directory structure to the target path specified by `-o, --output` (default is `dist`).
-- The `-r --image-rules` parameter can specify the image packaging rule file, the default is `config/image-rules.json`.
+Option Descriptions:
+- `src` is the source path to convert. The `image-forge` command recursively converts all images and generates them into the target path specified by `-o, --output` (defaulting to `dist`), preserving the relative directory structure.
+- `-r --image-rules` parameter can specify the image packaging rules file, defaulting to `config/image-rules.json`.
 - `-d --device` specifies the target device for image conversion.
 
 ### `gx list`
 
-List some information. Currently three operations are supported:
-```bash
-gx list device # List all installed device configurations
-gx list template # List all installed project templates
-gx list image # List the relative paths of all image resources in the current directory (similar to the find command)
+Lists certain information. Three operations are currently supported:
+``` bash
+gx list device # Lists all installed device configurations
+gx list template # Lists all installed project templates
+gx list image # Lists relative paths of all image resources in the current directory (similar to the find command)
 ```
 
-Some information can use `-d, --detailed` to list detailed description text, for example:
+Detailed description text for certain information can be listed using `-d, --detailed`, for example:
 ```
 $ gx list device -d
 The following devices have been found:
   default
     Default virtual device, for debugging purposes only.
 
-rtt-watch
+  rtt-watch
     A smartwatch from RT-Thread. With a 1.43 inch screen
     and 4 GB of storage.
 ```
 
 ### `gx completion`
 
-This command is used to generate a shell auto-completion script for the `gx` command. It currently supports [Zsh](https://www.zsh.org/) and [PowerShell 7+](https://github.com/PowerShell/PowerShell). Using `gx completion [SHELL]` will output the auto-completion script for the specified shell (when the `SHELL` parameter is not specified, the current shell will be detected). If you want to install a completion script, use:
+This command is used to generate shell auto-completion scripts for the `gx` command, currently supporting [Zsh](https://www.zsh.org/) and [PowerShell 7+](https://github.com/PowerShell/PowerShell). Using `gx completion [SHELL]` outputs the auto-completion script for the specified shell (detecting the current shell if the `SHELL` argument is omitted). To install the completion script, use:
 ```bash
 gx completion --install
 ```
-After the installation is successful, you will be prompted for the installation path of the command completion script. You can use automatic completion by restarting the shell session, or you can use these commands to take effect immediately:
+Upon successful installation, it will prompt the installation path of the command completion script. Restarting your shell session will enable auto-completion, or you can use these commands to take effect immediately:
 ::: code-tabs
 @tab Oh My Zsh
 ```bash
@@ -1771,85 +1774,81 @@ omz reload
 
 @tab PowerShell
 ```shell
-Import-Module glyphix-Force
+Import-Module glyphix -Force
 ```
 :::
 
-When using the auto-completion script, you can select the device, command line options, etc. of `gx emu` in the terminal without manual input.
+When using the auto-completion script, you can select `gx emu` devices, command-line options, etc., directly in the terminal without manual typing.
 
-PowerShell uses loop completion by default. It is recommended to change to the completion menu:
+PowerShell uses cyclic completion by default; it is recommended to change it to a completion menu:
 ```shell
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 ```
-Add this command to the [`$PROFILE`](https://learn.microsoft.com/en-us/powershell/scripting/learn/shell/creating-profiles#adding-customizations-to-your-profile) profile to make it permanent.
+Add this command to your [`$PROFILE`](https://learn.microsoft.com/en-us/powershell/scripting/learn/shell/creating-profiles#adding-customizations-to-your-profile) configuration file to make it permanently effective.
 
 ::: note
-If the `--install` option cannot be installed automatically, you can also use the `gx completion` command to manually install the completion script, for example:
+If the `--install` option fails to install automatically, you can also manually install the completion script using the `gx completion` command, for example:
 ```shell
 gx completion zsh > ~/.zsh/completion/_gx.zsh
 ```
 :::
 
-## Default configuration path
+## Default Configuration Paths
 
-Configuration, project templates, device information and other information in the glyphix.js tool can be stored in the following path:
-- System-level configuration: `share/glyphix` directory relative to the directory above the `gx`/`gx.exe` executable file. Suppose, for example, that the path of the `gx` executable file is in `/usr/local/glyphix`, then the resource path of the system-level configuration configuration is `/usr/local/share/glyphix`
-- User-level configuration: `~/.local/share/glyphix` on Unix-like systems, `%APPDATA%\AppData\Roaming\glyphix` on Windows
+Configurations, project templates, device information, and other data in the glyphix.js tool can be stored in the following paths:
+- System-level configuration: The `share/glyphix` directory relative to the parent directory of the `gx`/`gx.exe` executable. For example, assuming the `gx` executable path is `/usr/local/glyphix`, the system-level configuration resource path is `/usr/local/share/glyphix`.
+- User-level configuration: `~/.local/share/glyphix` on Unix-like systems, and `%APPDATA%\AppData\Roaming\glyphix` on Windows.
 
-The configuration file can be stored in one of the above paths, where user-level configuration has higher priority. `gx.js` will come with a default configuration file when installed.
+Configuration files can be placed in either of these paths, with user-level configuration taking higher priority. `gx.js` comes with default configuration files bundled upon installation.
 
-## Project template
+## Project Templates
 
-Project templates are stored in the `templates` directory of the configuration path. Currently, only the `simple` template is supported and customization is not supported.
+Project templates are stored in the `templates` directory under the configuration path. Currently, only the `simple` template is supported, and customization is not supported.
 
-## Device configuration file
+## Device Configuration Files
 
-Device configuration files are stored in the `devices` directory of the configuration path. Each device has a YAML configuration file, and the name of the configuration file is `<device-name>.yml`. The format of the configuration file is described as follows:
+Device configuration files are stored in the `devices` directory under the configuration path. Each device has a YAML configuration file named `<device-name>.yml`. The format of the configuration file is explained below:
 
-```yaml
+``` yaml
 # file: default.yml
 description:
   Device description information for developers to view.
 
-screen: # Fields describing the device screen configuration, these fields are required (will affect UI layout and resource scaling)
-  width: 454 # Number of horizontal pixels on the screen
-  height: 454 # Number of vertical pixels on the screen
-  dpi: 326 # The pixel density of the screen, in pixels/inch
+screen: # Fields describing the device screen configuration; all these fields are mandatory (affects UI layout and resource scaling)
+  width: 454 # Horizontal pixels of the screen
+  height: 454 # Vertical pixels of the screen
+  dpi: 326 # Pixel density of the screen, in pixels per inch
 
 ui: # Global interface configuration, all optional fields
-  font-family: sans-serif # System default font family name (default is serif)
-  font-size: 3.5 # The system default font size, the unit is points (pt, points), note not pixels! !
-  font-map: true # Whether to use the global font configuration mapping file, if so, it must exist in the system resources
-                 # font-faces.css file
+  font-family: sans-serif # System default font family name (defaults to serif)
+  font-size: 3.5 # System default font size, in points (pt, point), note: not pixels!!
+  font-map: true # Whether to use a global font configuration mapping file. If true, the system resources must contain
+                 # a font-faces.css file
 
-# Optional system global resource package path, the following configuration means that the global resource package is stored at the same level as default.yml
-# Under the default-global folder. The global resource package contains preset fonts and font configuration mapping files in the system.
+# Optional system global asset package path; the following configuration means the global asset package
+# is stored in a folder named default-global at the same level as default.yml. The global asset package
+# contains pre-installed fonts and font configuration mapping files, etc.
 global-assets: default-global
 
-# Optional image conversion script, the script file path is stored relative to the current device description file. If you do not specify image conversion
-# When the script is packaged, it will output the original PNG material, but resolution scaling will be applied.
+# Optional image conversion script. The script file path is relative to where the current device description file is stored.
+# If no image conversion script is specified, raw PNG assets will be output during packaging, but resolution scaling will be applied.
 image-build: image-convert.scm
 
-# The command to run the emulator will execute glyphix-emu by default. The executable file for the emulator command must be in PATH
-# The path of the environment variable, otherwise it will not be executed.
+# Command to run the simulator, defaults to executing glyphix-emu. The simulator command's executable file
+# must be located in a directory within the PATH environment variable, otherwise execution will fail.
 emulator: glyphix-emu
 ```
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/layout-tricks.md
 
-# Layout tips
+# Layout Tips
 
+## Limit Element Width
 
-## Limit element width
-
-
-You can use the `margin` attribute to limit the width of an element.
-
+You can use the `margin` property to limit the width of an element.
 
 <glyphix id="cookbook-margin-layout-1" width="360" height="100">
-
-
 
 ```html
 <div>
@@ -1858,7 +1857,6 @@ You can use the `margin` attribute to limit the width of an element.
   </div>
 </div>
 ```
-
 
 ```css
 div {
@@ -1878,7 +1876,6 @@ p {
 }
 ```
 
-
 ```js
 export default {
   data: { text: 'A' },
@@ -1895,18 +1892,14 @@ export default {
 }
 ```
 
-
 </glyphix>
-
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
 
-# Swiper page indicator
+# Swiper Page Indicator
 
-
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
-
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper Indicator">
 
 ``` html
 <stack>
@@ -1918,7 +1911,6 @@ FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
   </div>
 </stack>
 ```
-
 
 ``` js
 export default {
@@ -1939,7 +1931,6 @@ export default {
 }
 ```
 
-
 ``` css
 swiper > p {
   background-color: #888;
@@ -1959,228 +1950,191 @@ swiper > p {
 }
 ```
 
-
 </Glyphix>
-
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/game-2048.md
 
-# 2048 game
+# 2048 Game
 
+## Demo
 
-## Effect display
-
-
-Tip: Use the mouse to quickly slide up, down, left, and right to operate in "2048 Game".
-
+Tip: Use the mouse to swipe quickly up, down, left, and right to play the "2048 Game".
 
 <glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
 
-
 </glyphix>
-
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/async.md
 
-# Asynchronous operations
+# Asynchronous Operations
 
+The main purpose of introducing asynchronous operations in JavaScript scripts is to move time-consuming tasks to the background for execution, avoiding the blocking of the JavaScript thread. The tasks moved to the background for processing are primarily I/O-bound operations. Glyphix provides a basic JavaScript asynchronous framework for developers. This framework provides only the necessary abstractions for asynchronous workflows and therefore introduces no extra overhead.
 
-The main purpose of introducing asynchronous operations in JavaScript scripts is to execute time-consuming work in the background to avoid JavaScript thread blocking. The work placed in the background for processing is mainly IO-intensive operations. Glyphix provides a basic JavaScript asynchronous framework for developers to use, which only makes necessary abstractions for asynchronous workflows, so it does not introduce additional overhead.
+## Applicable Scenarios
 
+Applicable scenarios for the asynchronous workflow model:
 
-## Applicable scenarios
+- Requests initiated by JavaScript code, processed by a native asynchronous processing thread, and results returned;
+- Requests initiated by JavaScript code, processed by a native asynchronous processing thread, and messages reported periodically;
+  - JavaScript code can actively request to revoke/cancel the request.
 
+## Data Request Pattern
 
-Applicable scenarios for asynchronous workflow models
+In the data request pattern, JavaScript code calls C++ APIs to create requests, executes operations in an asynchronous thread, and returns the results to the JavaScript code. During this process, data is transmitted through an asynchronous queue. The `async::ResultSession` template class provides a general operation framework for this pattern.
 
+### Scenario Description
 
-- The request is initiated by JavaScript code, and the result is returned after processing by the native asynchronous processing thread;
-- The request is initiated by JavaScript code, and the native asynchronous processing thread reports the message regularly after processing;
-  - JavaScript code can proactively ask for revocation/cancellation requests.
+The following scenarios are typical of the data request pattern:
 
+- **File Read and Write**: When JavaScript initiates a call, it needs to specify the file path, the file offset position, data length, or the data to be written. When the request is sent to the asynchronous thread for execution, the actual file read/write operation is performed, and upon completion, it notifies or returns the result to the JavaScript code.
+- **Network Requests**: Similar to file read and write, when JavaScript initiates a call, it specifies the request parameters, which are then processed in a background thread and the results are returned.
 
-## Data request pattern
+The scenarios of the data request pattern have the following characteristics:
+- The result returned by a request is single-fired, so this pattern is not suitable for sensors or timer listeners that may be triggered multiple times;
+- A request always yields a result: if the request succeeds, it returns the result; otherwise, it returns an error message. The return of the result is also asynchronous;
+- Once a request is initiated, it cannot be revoked.
 
-
-In the data request pattern, JavaScript code calls a C++ API to create a request and returns the result to the JavaScript code after performing the operation in an asynchronous thread. In this process, data will be transmitted through an asynchronous queue. The `async::ResultSession` template class provides a general operation framework for this mode.
-
-
-### Scene description
-
-
-The following scenarios are typical data request patterns:
-
-
-- **File reading and writing**: When JavaScript initiates a call, you need to specify the path of the file, the offset position of the file to be read and written, the data length, or the data to be written; when the request is sent to the asynchronous thread for execution, the actual file read and write operation will be performed, and after the operation is completed, the result will be notified or returned to the JavaScript code.
-- **Network Request**: Similar to file reading and writing, request parameters must be specified when JavaScript initiates a call, and then the background thread processes and returns the result.
-
-
-The scenario of data request mode has the following characteristics:
-- The result returned by the request is a single time, so sensors or timer monitoring that may be triggered multiple times are not suitable for this mode;
-- The request always has a result: if the request is successful, the result is returned, otherwise an error message is returned, and the result is returned asynchronously;
-- Once a request is made it cannot be revoked.
-
-
-### Example: Obtaining power value
-
+### Example: Getting Battery Level
 
 #### JavaScript API
 
-
-Suppose you want to implement an asynchronous JavaScript function to get the battery level:
+Suppose we want to implement an asynchronous JavaScript function to get the battery level:
 ``` ts
-getLevel(): Promise<number> // Promise style API
-getLevel(options: { // Callback style API
+getLevel(): Promise<number> // Promise-style API
+getLevel(options: { // Callback-style API
     success: (level: number) => void,
-    fail: (code: number, msg: string) => void // Battery level reading does not actually fail
+    fail: (code: number, msg: string) => void // Battery level reading actually does not fail
 }): void
 ```
-Use the `getLevel()` function to obtain the battery level asynchronously, which provides two API styles: `Promise` style and callback style. The code for these two styles is as follows:
+Use the `getLevel()` function to asynchronously get the battery level. This function provides two API styles: `Promise` style and callback style. The code for both styles is as follows:
 ``` js
 async function printBatteryLevel() {
-    const level = await getLevel() // Get battery value asynchronously
+    const level = await getLevel() // Asynchronously get the battery level
     console.log(`battery level: ${level}%`)
 }
-printBatteryLevel() // Print the power value, console output example:
+printBatteryLevel() // Print the battery level, console output example:
 // battery level: 59%
 
-// The following is callback style code, which is not recommended:
+// Below is the callback-style code, which is not recommended:
 getLevel({
     success(level) { console.log(`battery level: ${level}%`) }
 })
 ```
 
+#### C++ Native Interface Export
 
-#### C++ native interface export
-
-
-The `getLevel()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will initiate an asynchronous request to obtain the battery power, and after getting the result, the result value will be returned to the JavaScript code through the callback function or `Promise`. The C++ function that implements `getLevel()` is as follows:
+The `getLevel()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it initiates an asynchronous request to get the battery level, and upon obtaining the result, returns the result value to the JavaScript code via a callback function or a `Promise`. The C++ function implementing `getLevel()` is as follows:
 ``` cpp
 static JsValue getLevel(const JsCallContext &ctx) {
     typedef async::ResultSession<BatteryGetLevel> Session;
-    Session *session = new Session; // Create Session object
+    Session *session = new Session; // Create a Session object
     session->request(ctx.argc() ? ctx.arg(0) : JsValue());
     return session->promise();
 }
 ```
 
-
 The template class `async::ResultSession` (the `async` namespace is omitted below) implements the framework required for asynchronous data requests. Each asynchronous data request includes the following steps:
 1. Create a `ResultSession` object
-2. Call the `ResultSession::request()` method to initiate a request
+2. Call the `ResultSession::request()` method to initiate the request
 3. Use `ResultSession::promise()` to return the `Promise` object to JavaScript.
 
-
-this line of code
+This line of code
 ``` cpp
 session->request(ctx.argc() ? ctx.arg(0) : JsValue());
 ```
-In addition to initiating the request, we also pass the $0$th parameter passed in by the JavaScript caller to the `ResultSession::request()` method. `ResultSession` will automatically select the callback and `Promise` style based on whether the parameter exists `success` / `fail` and other callback functions. If it is `Promise` style, then
+In addition to initiating the request, we also pass the 0-th parameter passed by the JavaScript caller to the `ResultSession::request()` method. `ResultSession` automatically selects between the callback and `Promise` styles based on whether `success` / `fail` and other callback functions exist in that parameter. If it is `Promise` style, then
 ``` cpp
 return session->promise();
 ```
-A `Promise` object will be returned to obtain the result of the asynchronous request, otherwise `undefined` will be returned and the callback function will handle the result.
+returns a `Promise` object used to obtain the result of the asynchronous request; otherwise, it returns `undefined` and the callback function handles the result.
 
+#### `ResultSession` Template Class
 
-#### `ResultSession` template class
-
-
-The declaration of `ResultSession` template class is as follows:
+The declaration of the `ResultSession` template class is as follows:
 ``` cpp
 template<class T, class H = ResultHandler> class ResultSession;
 ```
-The template parameter `T` is a class that implements specific asynchronous operations. This example will implement a `BatteryGetLevel` class to achieve asynchronous acquisition of battery power. The template parameter `H` determines how to handle the results of asynchronous requests. The default `ResultHandler` will automatically select the callback or `Promise` style, and developers generally do not need to modify it.
+The template parameter `T` is a class that implements the specific asynchronous operation. This example implements a `BatteryGetLevel` class to achieve asynchronous retrieval of the battery level. The template parameter `H` determines how to handle the result of the asynchronous request. The default `ResultHandler` automatically selects the callback or `Promise` style, and developers generally do not need to modify it.
 
+#### `BatteryGetLevel` Class
 
-#### `BatteryGetLevel` class
-
-
-The `BatteryGetLevel` class is defined as follows:
+The definition of the `BatteryGetLevel` class is as follows:
 ``` cpp
 struct BatteryGetLevel {
     async::Result<int> resolve() const {
         return battery_read_level(); // Get battery level
     }
-    // errorMessage() is used to translate error codes into text. However, the power reading will not go wrong and can be implemented at will.
+    // errorMessage() is used to translate error codes into text. However, reading the battery level does not fail, so it can be implemented arbitrarily.
     static const char *errorMessage(Status) {
         return "get battery level failed";
     }
 };
 ```
-As you can see, `BatteryGetLevel` has two member functions. The `resolve()` function is used to perform specific operations in an asynchronous thread. The return value of a `resolve()` function must be of type `async::Result<T>`, in this case `async::Result<int>`.
+As you can see, `BatteryGetLevel` has two member functions. The `resolve()` function is used to execute specific operations in the asynchronous thread. The return value of the `resolve()` function must be of type `async::Result<T>`, which in this example is `async::Result<int>`.
 
-
-The `resolve()` function's return value `async::Result<T>`'s template parameter `T` type is consistent with the JavaScript API's callback function parameter or `Promise` data type. For example, in this example, `int` corresponds to the JavaScript API's
+The template parameter `T` of the return value `async::Result<T>` of the `resolve()` function is consistent with the type of the callback function parameter of the JavaScript API or the `Promise` data type. For example, in this case, `int` corresponds to the JavaScript API as:
 ``` ts
-// C++ BatteryGetLevel::resolve() function return value type
-// async::Result <int> corresponds to JavaScript's Promise <number>
+// The return value type of C++'s BatteryGetLevel::resolve() function
+// async::Result<int> corresponds to JavaScript's Promise<number>
 getLevel(): Promise<number>
 ```
 
+In other words, if `resolve()` returns an `async::Result<String>` value, it will return a `Promise<string>` in JavaScript, or `{ success(value: string): void }` for a callback function. For details on C++ and JavaScript data type conversion, please refer to [Data Type Conversion](#data-type-conversion).
 
-In other words, if `resolve()` returns the `async::Result<String>` value, then it will return `Promise<string>` in JavaScript, which is `{ success(value: string): void }` for the callback function. Please refer to [数据类型转换](#数据类型转换) for details on conversion between C++ and JavaScript data types.
-
-
-### Example: file reading
-
+### Example: File Reading
 
 #### JavaScript API
 
-
-Suppose you want to implement an asynchronous JavaScript function for file reading:
+Suppose we want to implement an asynchronous JavaScript function for file reading:
 ``` ts
-readfile(url:string): Promise<string> // Promise style API
-readFile(option: {   // Callback style API
+readfile(url:string): Promise<string> // Promise-style API
+readFile(option: {   // Callback-style API
   uri: string,
   success?: (data: string) => void,
   fail?: (code: number, msg: string) => void,
 }): void
 ```
-This function will read the content of the file asynchronously and return it through the `Promise` object. The return value is the file content. The actual JavaScript code looks like this;
+This function will asynchronously read the contents of the file and return them via a `Promise` object, with the return value being the file contents. The actual JavaScript code looks like this:
 ``` js
 async function printReadFile() {
-    const data = await readFile("file.txt") // Get battery value asynchronously
+    const data = await readFile("file.txt") // Asynchronously get the file contents
     console.log('File read successfully:', data)
 }
 
 printReadFile() // Print the file contents as a string, console output example:
 // File read successfully: hello
 
-// Below is the callback style code
+// Below is the callback-style code
 readFile({
-    url: "file.txt",
-    success: (data: string) => {
-        console.log('File read successfully:', data);
+    url: "file.txt", 
+    success: (data: string) => {  
+        console.log('File read successfully:', data);  
     }
 })
 ```
 
+#### C++ Native Interface Export
 
-#### C++ native interface export
-
-
-The `readFile()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will initiate an asynchronous request to read the file, and after getting the result, the result value will be returned to the JavaScript code through the callback function or `Promise`. The C++ function that implements `readFile()` is as follows:
+The `readFile()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it initiates an asynchronous request to read a file, and upon obtaining the result, returns the result value to the JavaScript code via a callback function or a `Promise`. The C++ function implementing `readFile()` is as follows:
 ``` cpp
 JsValue readFile(const JsCallContext &ctx) {
     typedef async::ResultSession<ReadFileRequest> Session;
-    if (ctx.argc() > 0 && ctx.arg(0).isObject()) {
+    if (ctx.argc() > 0 && ctx.arg(0).isObject()) { 
         Session *session = new Session;
-        // Convert JavaScript function parameter url field to C++ String
-        session->client().url = ctx.arg(0)["url"].toString();
+        // Convert the url field of the JavaScript function parameter to a C++ String 
+        session->client().url = ctx.arg(0)["url"].toString(); 
         session->request(ctx.argc() ? ctx.arg(0) : JsValue());
         return JsValue();
     }
 }
 ```
-For explanation of the template class used, refer to [resultsession-模板类](#resultsession-模板类) and for code explanation, refer to [c-原生接口导出](#c-原生接口导出) for obtaining the electric power value.
+For an explanation of the template class used, please refer to [ResultSession Template Class](#resultsession-template-class), and for code explanation, refer to [C++ Native Interface Export](#c-native-interface-export) under Getting Battery Level.
 
+#### ReadFile Class
 
-#### readFile class
-
-
-The `ReadFileRequest` class is defined as follows:
+The definition of the `ReadFileRequest` class is as follows:
 ``` cpp
 struct ReadFileRequest {
     String url; // The url of the file to be read.
@@ -2192,186 +2146,153 @@ struct ReadFileRequest {
     const char *errorMessage(Status) { return "read file error"; }
 };
 ```
-As you can see, `ReadFileRequest` has two member functions. The `resolve()` function is used to perform specific operations in an asynchronous thread. The return value of a `resolve()` function must be of type `async::Result<T>`, in this case `async::Result<String>`. It should be noted that the `resolve()` function cannot process data types in JavaScript. The url is an asynchronous request that is converted to the C++ String type in the `readFile()` function. Similar data conversion cannot be processed in the `resolve()` function.
+As you can see, `ReadFileRequest` has two member functions. The `resolve()` function is used to execute specific operations in the asynchronous thread. The return value of the `resolve()` function must be of type `async::Result<T>`, which in this example is `async::Result<String>`. Note that JavaScript data types cannot be processed inside the `resolve()` function; the `url` is converted to a C++ String type inside the `readFile()` function before initiating the asynchronous request, and such data conversions cannot be processed within the `resolve()` function.
 
+## Listen Pattern
 
-## Listen mode
+In the listen pattern, JavaScript code calls C++ APIs to create requests for multiple asynchronous events, such as listening to sensor data. When the data changes, an asynchronous event is executed to return the result to JavaScript. The `async::ListenSession` and `async::Signal` template classes provide a general operation framework for this pattern.
 
+### Scenario Description
 
-In the listening mode, the JavaScript code calls the C++ API to create a request. For multiple asynchronous requests such as monitoring of sensor data, an asynchronous event will be executed when the data changes and the results will be returned to JavaScript. The `async::ListenSession` and `async::Signal` template classes provide a common operation framework for this mode.
+The following scenarios are typical of the listen pattern:
 
+- **Listening to various sensors**: Initiated by JavaScript by calling the C++ API for listening to the corresponding sensor, which requires specifying a callback function. When the sensor reads data and it changes, an asynchronous thread returns the new data to the JavaScript code as a parameter of the callback function.
+- **Periodic timer tasks**: When JavaScript initiates a call, it needs to set the time for the timer task, the callback function after the task times out, and whether it is periodic. After sending the request, every time the timer task times out, the asynchronous thread returns the result to JavaScript, triggering the callback function set by JavaScript.
 
-### Scene description
+The scenarios of the listen pattern have the following characteristics:
+- Once listening is started, it supports multiple asynchronous requests, so it may not be suitable for single-shot asynchronous events like file reading/writing and network status requests;
+- Once listening is started, it must be canceled when no longer needed, otherwise it will cause a memory leak.
 
-
-The following scenarios are typical monitoring modes:
-
-
-- **Monitoring of various sensors**: Initiated by JavaScript, calling the C++ API for monitoring the corresponding sensor requires specifying a callback function. When the sensor reads data and sends changes, the new data will be returned to the JavaScript code through the asynchronous thread as a formal parameter of the callback function.
-- **Periodic scheduled tasks**: When JavaScript initiates a call, you need to set the time of the scheduled task, the callback function after the task times out, and whether it is periodic; when each timed task times out after sending a request, the asynchronous thread will return the result to JavaScript, triggering the callback function set by JavaScript.
-
-
-The monitoring mode scenario has the following characteristics:
-- After the monitoring is started, multiple asynchronous requests are supported, so asynchronous events for a single file read and write and network status request may not be applicable;
-- After starting the monitoring, you must cancel the monitoring when not in use, otherwise it will cause a memory leak.
-
-
-### Example: Monitor battery power value
-
+### Example: Listening to Battery Level
 
 #### JavaScript API
 
-
-If you want to implement an asynchronous JavaScript function that monitors battery power:
+Suppose we want to implement an asynchronous JavaScript function to listen to the battery level:
 ``` ts
-subscribe(callback: (Level: number) => void): number // Monitor battery power level
-unsubscribe(subscribeID: number): void // Cancel monitoring
+subscribe(callback: (level: number) => void): number // Listen to battery level
+unsubscribe(subscribeID: number): void // Cancel listening
 ```
 
-
-Use the `subscribe()` function to asynchronously monitor the battery power value and the `unsubscribe()` function to cancel monitoring. The usage examples are as follows:
+Use the `subscribe()` function to asynchronously listen to the battery level and the `unsubscribe()` function to cancel listening. An example of usage is as follows:
 ``` js
-// Start monitoring and return an id to cancel monitoring.
+// Start listening and return an ID used to cancel listening
 let id = subscribe(level => {
-  // If the battery power value changes, the listening callback function will be triggered. Example of console printing:
+  // If the battery level changes, the listening callback function is triggered, console print example:
   // now battery level: 59
   console.log(`now battery level: ${level}%`)
 })
 
-unsubscribe(id); // Cancel monitoring
-```
+unsubscribe(id); // Cancel listening
+``` 
 
+#### C++ Listen Interface Export
 
-#### C++ listening interface export
-
-
-The `subscribe()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will monitor the battery power value. Whenever the power value changes, an asynchronous request will be initiated and the result value will be returned to the JavaScript code through the callback function. The C++ function that implements `subscribe()` is as follows:
+The `subscribe()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it listens to the battery level. Whenever the battery level changes, it initiates an asynchronous request and returns the result value to the JavaScript code via a callback function. The C++ function implementing `subscribe()` is as follows:
 ``` cpp
 async::Signal<int> Level; // Create a global object Level
 
-level(45); // The Level value changes and an asynchronous request is sent.
+level(45); // Level value changes, send an asynchronous request
 
 static JsValue subscribe(const JsCallContext &ctx) {
     Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc())  // Check whether the parameters passed in
+    if (applet && ctx.argc())  // Check if parameters are passed
         return applet->bindObject(Level.connect(ctx.arg(0)));
     return JsValue();
 }
 ```
-A global object `Level` must be created. The template class `sync::Signal` used (the `async` namespace is omitted below) implements the framework for monitoring requests. Monitoring requests includes the following steps:
-1. Before listening, an object of the global `Siganal` class must be created;
-2. Use the `Signal::connect()` method to associate the first parameter passed in by JavaScript with `Level`;
-3. Call `Applet::bindObject` to bind the `Level` object; when the state of `Level` changes, call the callback function and return the result to JavaScript code.
+A global object `Level` must be created. The template class `async::Signal` (the `async` namespace is omitted below) used here implements the listening request framework. Listening requests include the following steps:
+1. Before listening, a global `Signal` class object must be created;
+2. Use the `Signal::connect()` method to associate the first parameter passed by JavaScript with `Level`;
+3. Call `Applet::bindObject` to bind the `Level` object; when the state of `Level` changes, call the callback function to return the result to the JavaScript code.
 
-
-this line of code
-```cpp
+This line of code
+``` cpp
 level(45);
 ```
-The value of `Level` changes to $45$, triggering the listening mechanism and will initiate an asynchronous request. The changed value is used as the formal parameter of the callback function, and finally the result is returned to the JavaScript code.
+changes the `Level` value to $45$, triggering the listening mechanism to initiate an asynchronous request, using the changed value as a parameter for the callback function, and finally returning the result to the JavaScript code.
 
+#### C++ Cancel Listen Interface Export
 
-#### C++ Cancel export of listening interface
-
-
-The `unsubscribe()` function in JavaScript is also implemented in C++. When the JavaScript code calls this function, the listening function is cancelled. Avoid memory leaks caused when not using listeners. The C++ function that implements `unsubscribe()` is as follows:
+The `unsubscribe()` function in JavaScript is also implemented by C++. When JavaScript code calls this function, it cancels the listening to avoid memory leaks caused by unused listeners. The C++ function implementing `unsubscribe()` is as follows:
 ``` cpp
 static JsValue unsubscribe(const JsCallContext &ctx) {
     Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // Check whether the passed parameters are correct
-        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());
+    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // Check if the passed parameters are correct
+        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());   
     return JsValue();
 }
 ```
-To cancel the listening request, you need to call `Applet::unbindObject` to unbind, and you need to pass in the return ID of the `subscribe()` function to determine the unbound object.
+Canceling a listen request requires calling `Applet::unbindObject` to unbind, passing the ID returned by the `subscribe()` function to determine the object to be unbound.
 
-
-#### `Signal` template class
-
+#### `Signal` Template Class
 
 ``` cpp
 template<class T, class H = ListenHandler> class Signal;
 ```
-Template parameter T is a class that implements specific asynchronous operations. This example shows a `int` type to monitor battery power. Template parameter H determines how to handle the results of asynchronous requests. The default ResultHandler will automatically choose callback or Promise style, and developers generally do not need to modify it.
+The template parameter `T` is a class that implements the specific asynchronous operation. This example demonstrates using an `int` type to implement battery level listening. The template parameter `H` determines how to handle the result of the asynchronous request. The default `ResultHandler` automatically selects the callback or Promise style, and developers generally do not need to modify it.
 
+## Data Type Conversion
 
-## Data type conversion
-
-
-In `ResultSession` or `ListenSession`, the data of asynchronous operations must be converted into `JsValue` objects before they can be used in JavaScript code. For example, [BatteryGetLevel](#batterygetlevel-类) defines
+In `ResultSession` or `ListenSession`, data for asynchronous operations must be converted into `JsValue` objects to be used in JavaScript code. For example, [BatteryGetLevel](#batterygetlevel-class) defines:
 ``` cpp
 async::Result<int> BatteryGetLevel::resolve() const;
 ```
-Function, this function declaration means that the return data type of the battery power request is `int`, which can be converted to `JsValue`. In fact, the following types can be converted to `JsValue`:
-- `bool`: converted to `boolean` type;
-- `int`: converted to `number` type;
-- `float`, `double`: converted to `number` type;
-- `String`: converted to `string` type.
-
+This function declaration means that the return data type of the battery level request is `int`, which can be converted to `JsValue`. In fact, the following types can be converted to `JsValue`:
+- `bool`: Converted to `boolean` type;
+- `int`: Converted to `number` type;
+- `float`, `double`: Converted to `number` type;
+- `String`: Converted to `string` type.
 
 ::: warning
-
-C-style strings are not supported. It will be converted to type `boolean`.
+C-style strings are not supported. They will be converted to the `boolean` type.
 :::
 
-
-
-The timing of the conversion is automatic and does not require developer intervention.
+The conversion happens automatically without requiring developer intervention.
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/clangd-lsp.md
 
-# Clangd configuration
+# Clangd Configuration
 
+When developing firmware using a cross-compilation toolchain such as `arm-none-eabi-gcc` along with a build system like CMake, you can configure the Clangd language server to enhance your development experience. Specifically, you will gain the following benefits:
+- Accurate jump-to-declaration or definition based on the actual project structure;
+- View API documentation (documentation comments written in Doxygen formats such as `/**` or `//!`);
+- Support for code formatting rules defined by `.clang-format`;
+- Real-time static analysis or error checking without the need for compilation;
+- Code hints and completion while typing;
+- Find references, code refactoring, and more.
 
-When developing firmware with a cross-compilation tool chain, if you use the arm-none-eabi-gcc tool chain, and when using a build system such as CMake, you can configure the Clangd language server to improve the development experience. Specifically you will get these benefits:
-- Accurately jump to declaration or definition based on actual project structure;
-- View the API documentation (documentation comments written using `/**`, `//!` and other Doxygen format comments);
-- Support code formatting rules defined by `.clange-format`;
-- No compilation required, real-time static checking or error checking;
-- Code prompts and completion during input;
-- Find usage, code refactoring, and more.
+## Prerequisites
 
+First, use an editor that supports LSP (Language Server Protocol), such as Visual Studio Code, and install clangd and its related extension. If you need to install clangd manually, you can download a suitable version from [LLVM Releases](https://github.com/llvm/llvm-project/releases) or use your operating system's package manager.
 
-## Preparation
+After installing the necessary extensions, clangd may work out-of-the-box in simple native projects, but further configuration is required in complex cross-compilation environments.
 
+## Cross-Compilation Environment Configuration
 
-Start by using an editor that supports LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and related plugins. If you need to install clangd manually, you can download the appropriate version of [LLVM](https://github.com/llvm/llvm-project/releases) or install it using your operating system's package manager.
+### CMake Options
 
-
-After installing the necessary plugins, clangd may be able to be used in simple host projects without any configuration, but further configuration will be required in complex cross-compilation environments.
-
-
-## Cross-compilation environment configuration
-
-
-### CMake options
-
-
-If using CMake as your build system, then to turn on the `CMAKE_EXPORT_COMPILE_COMMANDS` option you can do this via the command line argument:
+If you use CMake as your build system, you need to enable the `CMAKE_EXPORT_COMPILE_COMMANDS` option. You can do this via a command-line argument:
 ``` bash
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # CMake 配置阶段的命令行参数
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # Command-line argument during the CMake configuration stage
 ```
-If it is not convenient to use command line parameters, you can also define this variable in any `CMakeLists.txt` file:
+If using command-line arguments is inconvenient, you can also define this variable in any `CMakeLists.txt` file:
 ``` cmake
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ```
-Then when using CMake to configure or build the project, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
+Then, when you configure or build the project using CMake, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
 
+### Clangd Configuration
 
-### Clangd configuration
+After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you are likely to encounter the following issues:
+- `compile_commands.json` is located deep in the directory hierarchy, and clangd cannot find it;
+- clangd cannot find the standard header files suitable for the cross-compilation environment, such as `stdint.h`.
 
-
-After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you may encounter the following problems:
-- `compile_commands.json` is located very deep in the directory hierarchy and clangd cannot find it;
-- clangd cannot find standard header files suitable for cross-compilation environments, such as `stdint.h` etc.
-
-
-To solve these problems, first create a `.clangd` file in the root directory of the project (that is, the directory opened by the editor, usually the directory where the `.git` folder is located). It is a YAML file and fill in the following content:
+To solve these problems, you first need to create a `.clangd` file in the project's root directory (i.e., the directory opened by the editor, usually where the `.git` folder resides). This is a YAML file; populate it with the following content:
 ``` yaml
 CompileFlags:
   CompilationDatabase: "Relative path to the directory containing compile_commands.json"
-  Add:
+  Add: 
     - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
     - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
     - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
@@ -2380,14 +2301,13 @@ CompileFlags:
   Remove:
     - -fno-reorder-functions
 ```
-Please modify the file path according to the actual situation. Then add the following command line options to clangd's startup arguments:
+Please modify the file paths according to your actual situation. Next, add the following command-line option to clangd's startup arguments:
 ``` bash
---query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # 路径根据实际情况填写
+--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # Fill in the path based on your actual situation
 ```
-Then restart the language clangd and it should work normally.
+Then restart the language server, and clangd should work properly.
 
-
-vscode can add parameters through `clangd.arguments` in `.vscode/settings.json` of the project:
+In VS Code, you can add arguments via `clangd.arguments` in the project's `.vscode/settings.json`:
 ``` json
 {
   "clangd.arguments": [
@@ -2399,55 +2319,44 @@ vscode can add parameters through `clangd.arguments` in `.vscode/settings.json` 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/blur-overlay.md
 
-# blur overlay menu
+# Blur Overlay Menu
 
+## Demo
 
-## Effect display
+This tutorial demonstrates the development technique of displaying an overlay menu after blurring the background. The following example shows this interactive effect (click the "..." button in the bottom right corner to show the overlay interface).
 
-
-This tutorial demonstrates the development techniques for displaying the overlay menu after blurring the background. The following example demonstrates this interaction effect (clicking the "..." button in the lower right corner will display the occlusion interface).
-
-
-<glyphix id="cookbook-blur-overlay" width="410" height="502" title="模糊覆盖层" inline>
-
+<glyphix id="cookbook-blur-overlay" width="410" height="502" title="Blur Overlay" inline>
 
 </glyphix>
 
+The main purpose of this tutorial is to show how to implement a blurred interface using Glyphix.
 
+## Implementation
 
-The main purpose of this tutorial is to show how to implement an interface with blur using Glyphix.
+### Text Shadow
 
-
-## Implementation method
-
-
-### text shadow
-
-
-The text "Hokkaido sika deer" in the example can be shadowed by overlaying a layer of blurred text:
+The shadow of the text "Hokkaido sika deer" in the example can be achieved by overlaying a layer of blurred text:
 ``` html
 <stack class="wallpaper-title">
   <p class="shadow">Hokkaido sika deer</p>
   <p>Hokkaido sika deer</p>
 </stack>
 ```
-Place two identical pieces of text inside a [`stack`](/components/stack.md) component, with the underlying text as a shadow. This is achieved via the `shadow` CSS class of the underlying text:
+Place two identical texts inside a [`stack`](/components/stack.md) component, and use the bottom text as the shadow. This is achieved through the `shadow` CSS class on the bottom text:
 ``` css
 .shadow {
   color: #0008;
-  /* 为背景文本添加模糊，以呈现阴影效果 */
+  /* Add blur to the background text to create a shadow effect */
   filter: blur(8px);
-  /* 必须使用 transparent 标记元素是透明的 */
+  /* transparent is required to mark the element as transparent */
   transparent: true;
 }
 ```
-Set the color of the background text to a semi-transparent gray and the `<p>` text component as a shadow via the blur filter ( [`filter: blur(8px)`](/framework/generic/styles.md#filter) ) attribute. Please note that the foreground text color should not be transparent, otherwise it may overlap with the `.shadow` layer.
+Set the color of the background text to translucent gray, and use the blur filter ([`filter: blur(8px)`](/framework/generic/styles.md#filter)) property to turn the `<p>` text component into a shadow. Note that the foreground text color should not be transparent, otherwise it may overlap with the `.shadow` layer.
 
+### Custom Fonts
 
-### Custom font
-
-
-The text "Hokkaido sika deer" is rendered through a custom font. Custom fonts can be introduced in Glyphix in the same way as on the Web:
+The text "Hokkaido sika deer" is rendered using a custom font. In Glyphix, custom fonts can be introduced using the same method as on the Web:
 ``` css
 @font-face {
   font-family: 'Playwrite Australia SA';
@@ -2460,13 +2369,11 @@ The text "Hokkaido sika deer" is rendered through a custom font. Custom fonts ca
   margin-top: 25%;
 }
 ```
-As you can see, a font can be declared in CSS via the [`@font-face`](/framework/generic/styles.md#font-face-规则) block and referenced in the element's [`font-family`](/framework/generic/styles.md#font-family) attribute.
+As you can see, a font can be declared in CSS via the [`@font-face`](/framework/generic/styles.md#font-face-规则) block and referenced in the element's [`font-family`](/framework/generic/styles.md#font-family) property.
 
+### Background Blur
 
-### background layer blur
-
-
-Since pages currently popped up through [`router` API](/api/system-router.md) do not support translucent backgrounds, pages cannot be used to implement popup menus. But you can use this trick to simulate a popup "page":
+Since pages popped up via the [`router` API](/api/system-router.md) do not currently support translucent backgrounds, pages cannot be used to implement popup menus. However, this technique can be used to simulate a popped-up "page":
 ``` html
 <stack class="window" :disabled="popups">
   <image class="wallpaper" src="/assets/images/sika-deer.jpg" />
@@ -2476,38 +2383,30 @@ Since pages currently popped up through [`router` API](/api/system-router.md) do
   ...
 </div>
 ```
-You need to add two levels of elements to the page (`stack.window` and `div.overlay` in this case) and control them through a condition (such as `popups`). Specifically:
-- `popups` controls the `disabled` attribute of the underlying element, so when `popups` is true, the underlying element does not respond to input such as gestures;
-- `popups` also controls the rendering of top-level elements. When it is true, the top-level elements will be displayed.
+You need to add two layers of elements to the page (`stack.window` and `div.overlay` in this example), and control them through a condition (such as `popups`). Specifically:
+- `popups` controls the `disabled` property of the underlying element, so when `popups` is true, the underlying element will not respond to inputs such as gestures;
+- `popups` also controls the rendering of the top-level element, which is displayed when it is true.
 
-
-The [`disabled`](/framework/generic/properties.md#disabled) attribute also provides the opportunity to blur underlying elements when the occlusion layer pops up:
+When the overlay pops up, the [`disabled`](/framework/generic/properties.md#disabled) property also provides an opportunity to blur the underlying element:
 ``` css
 .window:disabled {
   filter: blur(40px);
 }
 ```
-When the `disabled` attribute is set on an element, the `:disabled` pseudo-element of the underlying element will also be activated, so the blur effect of the above CSS will work.
-
+When the element is set with the `disabled` property, the `:disabled` pseudo-class of the underlying element is also activated, so the blur effect in the CSS above will take effect.
 
 ::: tip
-
-Since Glyphix does not support the browser's [`backrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) attribute, background blur cannot be achieved directly through the `div.overlay` CSS rule. Instead, the technique in this example must be used.
+Since Glyphix does not support the browser's [`backdrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) property, you cannot achieve background blur directly through CSS rules on `div.overlay`, but instead must use the technique in this example.
 :::
 
+## Performance Risks
 
+Since blur effects are computationally intensive, developers need to pay special attention to their performance burden. We recommend using blur effects only in static interfaces, and preferably adding the [`quiescent`](/framework/generic/properties.md#quiescent) property to elements that need to be blurred.
 
-## performance risk
-
-
-Because the blur effect is computationally intensive, developers need to pay special attention to its performance burden. We recommend using blur effects only in static interfaces, and preferably also adding the [`quiescent`](/framework/generic/properties.md#quiescent) attribute to the elements that need to be blurred.
-
-
-If possible, the interface with obfuscation should be tested on a physical device to see if it meets performance expectations.
+If possible, you should test whether the blurred interface meets performance expectations on physical devices.
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/README.md
 
-# Practical guide
-
+# Practical Guide
 

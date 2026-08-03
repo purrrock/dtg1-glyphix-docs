@@ -1,12 +1,12 @@
-# Apply configuration
+# App Configuration
 
-## Import module
+## Import Module
 
 ```js
 import configuration from '@system.configuration'
 ```
 
-## Interface definition
+## Interface Definition
 
 ### `getLocale`
 <decl method><pre>
@@ -16,6 +16,6 @@ import configuration from '@system.configuration'
 }
 </pre></decl>
 
-Get the current locale of the application. By default, the system locale is used, which may change due to settings or system locale changes.
- - `language` represents the current language, such as 'zh', 'en', etc.,
+Gets the current locale of the application. The system locale is used by default and may change due to settings or system locale changes.
+ - `language` represents the current language, such as 'zh', 'en', etc.
  - `countryOrRegion` represents the current country or region, such as 'CN', 'US', etc.

@@ -1,82 +1,82 @@
 ---
 icon: image-filter
 ---
-# Image management
+# Image Management
 
-The glyphix.js packaging tool will manage all PNG image resources in the project (`src` directory). Related modules mainly provide the following functions:
-- Supports configuration files for image resources and provides related configuration interfaces
-- Convert images to device-optimized sizes and formats when packaging
+The glyphix.js packaging tool manages all PNG image resources (`src` directory) in the project. The related modules mainly provide the following features:
+- Support for image resource configuration files and provision of related configuration interfaces
+- Conversion of images into device-optimized sizes and formats during packaging
 
-Application developers only need to configure the packaging parameters of image resources according to their own needs, while device vendors need to define specific image conversion strategies for devices.
+Application developers only need to configure the packaging parameters for image resources according to their needs, while device vendors need to define specific image conversion strategies for their devices.
 
-## Application development configuration
+## Application Development Configuration
 
-In application development, you need to configure image packaging parameters to correctly generate resource packages.
-Configuring `config/image-rules.json` and `config.designWidth` of `src/menifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while the fields in `menifest.json` affect the global scaling of the image (used to adapt to devices with different resolutions).
+In application development, image packaging parameters must be configured to correctly generate resource packages.
+Configuring `config/image-rules.json` and properties such as `config.designWidth` in `src/manifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while fields in `manifest.json` affect the global scaling ratio of images (used for adapting to devices with different resolutions).
 
 ::: tip
-`config/image-rules.json` can be configured using the `gx config` command or other methods, but it is not recommended to edit it directly with a text editor.
+`config/image-rules.json` can be configured using the `gx config` command or other methods, but direct editing with a text editor is not recommended.
 :::
 
-If using the `gx config` command, developers will mainly focus on two parameters: transparent and quality.
+If using the `gx config` command, developers will primarily focus on two parameters: `transparent` and `quality`.
 
-### Transparent parameter
+### Transparent Parameter
 
-Transparent indicates whether the image contains transparent pixels. If it is configured as no (`false`) and the resource image contains transparent pixels, these pixels will be converted to opaque when generated (usually superimposed on a black background). Therefore, necessary images need to be marked as preserving transparent pixels, otherwise incorrect overlay effects will be displayed. Since opaque images perform better on some platforms and require less data, the transparent option is turned off by default.
+The `transparent` parameter indicates whether an image contains transparent pixels. If configured to `false` and the source image does contain transparent pixels, these pixels will be converted to opaque during generation (usually by blending onto a black background). Therefore, necessary images must be marked to retain transparent pixels; otherwise, incorrect overlay effects will be displayed. Because opaque images generally offer better performance on certain platforms and consume less data, the `transparent` option is disabled by default.
 
-### Quality parameters
+### Quality Parameter
 
-The Quality parameter represents the quality of the packaged image and is an integer in the range of $[0, 100]$. However, generally only 3 rough quality levels are used:
-- High: 100, indicating the highest quality
-- Middle: 50, medium quality, default value
+The `quality` parameter represents the quality of the packed image and is an integer in the range $[0, 100]$. However, typically only 3 rough quality levels are used:
+- High: 100, representing the highest quality
+- Middle: 50, medium quality, the default value
 - Low: 0, low quality
 
-When converting image resources, they will be optimized according to quality parameters. Generally speaking, medium quality is a conversion strategy that balances factors such as display effect, drawing/loading performance, and memory resource usage on the target platform, so it is recommended. Using high quality may have better quality, but may incur performance degradation. Low quality can be used for images where quality can be lost to improve performance (such as photos). Specific target platforms may also ignore the quality parameter and use a unified strategy.
+Image resources are optimized based on the quality parameter during conversion. Generally speaking, medium quality is a conversion strategy that balances display effects, rendering/loading performance, and memory resource consumption on the target platform, so it is recommended. Using high quality may yield better fidelity, but could result in performance degradation. Low quality can be used for images where quality can be sacrificed to improve performance (such as photographs). Specific target platforms may also ignore the `quality` parameter and use a unified strategy.
 
-## Device and platform adaptation
+## Device and Platform Adaptation
 
-Assuming that device and platform developers have implemented optimized image resource formats for specific target platforms and support multiple qualities and pixel formats, the following work needs to be done in order to generate these image formats in glyphix.js:
-- Command line tools required to achieve **single image** conversion
-  - Must provide a command line interface for converting PNG images to custom formats, supporting output to a specified path (including overwriting the original file)
-  - It is best to provide a command line interface for converting from a custom format to a PNG image, and support output to a specified path (including overwriting the original file). Without this function, PC break preview will not be possible.
+Assuming that device and platform developers have implemented optimized image resource formats for specific target platforms and support multiple quality and pixel formats, the following work is required to generate these image formats in glyphix.js:
+- Implement a command-line tool required for converting **a single image**
+  - Must provide a command-line interface to convert from PNG images to a custom format, supporting output to a specified path (including overwriting the original file)
+  - It is recommended to provide a command-line interface to convert from the custom format back to PNG images, supporting output to a specified path (including overwriting the original file). Missing this feature will prevent PC-side previews.
 - Write device description files and image conversion scripts
 
-### Image conversion script
+### Image Conversion Scripts
 
-The image conversion script is a scheme file. When an image needs to be converted, glyphix.js will call this script. The latter can determine how to convert the image based on these variables:
-- `env.image-path`: The absolute path of the image to be converted, the converted image is overwritten and written to this path
-- `env.transparent`: the transparency parameter of this image
-- `env.quailty`: the quality parameters of this image
-- `env.target`: Convert target mode, see description below
-- `env.verbose`: Whether to enable verbose mode, if so, detailed logs can be output, otherwise logs should not be output
-- `env.script-dir`: The absolute path where the current script file is located. If the command required for conversion is relative to this script file and not in the `PATH` environment variable, you can use this parameter for splicing
+The image conversion script is a scheme file. When an image needs to be converted, glyphix.js will call this script, which can determine how to convert the image based on the following variables:
+- `env.image-path`: The absolute path of the image to be converted; the converted image is written over this path.
+- `env.transparent`: The transparency parameter of this image.
+- `env.quailty`: The quality parameter of this image.
+- `env.target`: The conversion target mode, described later in this document.
+- `env.verbose`: Whether to enable verbose mode. If true, detailed logs can be output; otherwise, logs should not be output.
+- `env.script-dir`: The absolute path of the current script file. If the command required for conversion is relative to this script file rather than in the `PATH` environment variable, this parameter can be used for path concatenation.
 
-`env.target` represents the **target mode** of image conversion, and its value determines which conversion method is applied:
-- `"device"`: performs a complete conversion process for the target device, such as removing the transparent channel of the opaque image, and then converting it to PGF format (Glyphix picture format) according to the quality parameters
-- `"emulator"`: Execute the conversion process for the simulator. Since the simulator does not support the texture format of specific hardware (such as ETC2, etc.), in order to ensure that the image is displayed normally in the simulator, you can only remove the transparent channel of the opaque image without further conversion to the target device format (or convert to the PGF format supported by the software)
-- `"preprocess"`: Only perform the preprocessing step, that is, remove the transparent channel of the opaque image, and output the result in PNG format
-- `"preview"`: To generate a PNG image for preview, you must first convert the image into a custom target format according to the conversion process of the `"device"` target, and then convert the output image back to PNG for preview use
+`env.target` represents the **target mode** of image conversion, and its value determines the specific conversion method applied:
+- `"device"`: Executes the complete conversion process targeted at the target device, such as removing the transparent channel of opaque images and then converting them to the PGF format (Glyphix Image Format) according to the quality parameter.
+- `"emulator"`: Executes the conversion process targeted at the emulator. Since the emulator does not support specific hardware texture formats (such as ETC2, etc.), to ensure images are displayed properly in the emulator, only the transparent channel of opaque images may be removed without further conversion to the target device format (or converting to a software-supported PGF format).
+- `"preprocess"`: Executes only the preprocessing step, which is removing the transparent channel of opaque images and outputting the result in PNG format.
+- `"preview"`: Generates a preview PNG image. First, the image is converted to the custom target format following the `"device"` target conversion process, and then the output image is converted back to PNG for preview purposes.
 
 ::: tip
-If the command line tool for image conversion does not support converting a custom format to PNG, then do not implement the `"preprocess"` and `"preview"` target modes.
+If the command-line tool for image conversion does not support converting custom formats to PNG, do not implement the `"preprocess"` and `"preview"` target modes.
 :::
 
-### image-forge command line tool
+### The image-forge Command-Line Tool
 
-image-forge is a PGF image format command line tool provided by Glyphix and has the following functions:
-- Supports converting PNG images to PGF format, and converting PGF to PNG images
-- Supports common ARGB and PAL pixel formats, and distinguishes premultiplied alpha modes
-- Supports blending transparent ARGB images onto a specified solid color background to convert them into opaque images (instead of directly discarding the alpha channel)
-- Supports line alignment by pixels or bytes
-- Supports LZ4 compression and can set the minimum compression threshold (image data below the threshold will not be compressed)
+`image-forge` is a command-line tool for the PGF image format provided by Glyphix, featuring the following capabilities:
+- Supports converting PNG images to PGF format and PGF images to PNG.
+- Supports common ARGB and PAL pixel formats, distinguishing between premultiplied alpha modes.
+- Supports blending transparent ARGB images onto a specified solid background to convert them into opaque images (rather than directly discarding the alpha channel).
+- Supports row alignment by pixels or bytes.
+- Supports LZ4 compression with configurable minimum compression thresholds (image data below the threshold will not be compressed).
 
-For platforms using other custom image formats, image-forge can also be used to remove the transparency channel.
+Platforms using other custom image formats can also utilize `image-forge` to remove transparency channels.
 
-## Image conversion script example
+## Image Conversion Script Example
 
-The following example demonstrates how to use commands such as image-forge to convert PNG to PGF images, using the color lookup table (PAL) format first.
+The following example demonstrates how to use commands like `image-forge` to convert PNGs to PGF images, prioritizing the palette (PAL) format.
 
-First define the target format in the opaque and transparent cases:
+First, define the pixel format rules for opaque and transparent conditions:
 ``` scheme
 ; Define pixel format rules for opaque colors
 (define (opaque-formats q)
@@ -88,116 +88,116 @@ First define the target format in the opaque and transparent cases:
   (cond ((<= q 50) "pal-argb-premul")
         (else "argb32-premul")))
 
-; Calculate target pixel format under transparency and quality parameters
+; Calculate the target pixel format under the influence of transparency and quality parameters
 (define pixel-format
   ((if env.transparent
       transparent-formats opaque-formats)
     env.quailty))
 
-; Whether the image is converted to color lookup table format
+; Whether the image is converted to a palette format
 (define palette (<= env.quailty 50))
 ```
 
-The above code will use the color lookup table format when the quality is 50 or less, and will use `pal-rgb` or `pal-argb` depending on whether it is transparent or not. Quality above 50 uses RGB or ARGB 8bit sampled pixel format. Finally, the `pixel-format` variable is the name of the actual pixel format used, and `palette` indicates whether to use the color lookup table format.
+The code above will use the palette format when the quality is less than or equal to 50, using `pal-rgb` or `pal-argb` depending on whether it is transparent. When the quality is higher than 50, it uses RGB or ARGB 8-bit sampled pixel formats. Ultimately, the `pixel-format` variable represents the actual pixel format name used, and `palette` indicates whether the palette format is used.
 
-Next define the commands that need to be used in various situations:
+Next, define the commands needed for various situations:
 
 ``` scheme
-; Whether to add the --verbose command line parameter
+; Whether to append the --verbose command-line argument
 (define if-verbose (if env.verbose "--verbose " ""))
 
-; Call the pngquant command to reduce the image color to less than 256 colors. pngquant needs to be installed in the system.
+; Call the pngquant command to reduce image colors to 256 colors or fewer; pngquant must be installed in the system
 (define color-reduction
   (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
 
 ; Convert image to PGF format
 (define convert (string-append "image-forge "
-  "--format=" pixel-format " " ; Specify the output pixel format
-  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, the minimum compression ratio is 5
-  "--align=16 --pixel-align " ; Align the image to 16 pixels
+  "--format=" pixel-format " " ; Specify output pixel format
+  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, with a minimum compression ratio of 5
+  "--align=16 --pixel-align " ; Align images to 16 pixels
   if-verbose
   env.image-path))
 
-; Remove image alpha channel and add background
+; Remove image Alpha channel and add background
 (define remove-alpha (string-append "image-forge --bypass "
-  ; On bes2500ibp watches, non-transparent images can have their alpha channel removed and blended with a black background, which improves image quality after PAL color reduction
+  ; On the bes2500ibp watch, non-transparent images can have their alpha channel removed and blended with a black background; this operation can improve image quality after PAL color reduction
   (if env.transparent "" "--background black ")
   if-verbose
   env.image-path))
 
-; Command to convert PGF image back to PNG
+; Command to decode PGF images back to PNG
 (define decode
   (string-append "image-forge --decode " if-verbose env.image-path))
 ```
 
-In the following code, `execute-try` calls the specified `f` function after the command exits with a non-zero value. The `execute` function prints an error log and exits the script abnormally after the command exits with a non-zero value. The `run-convert` function performs the complete target device image conversion process (calling the `remove-alpha` and `convert` commands).
+In the code below, `execute-try` calls the specified `f` function when a command exits with a non-zero status, while the `execute` function prints an error log and abnormally exits the script when a command exits with a non-zero status. The `run-convert` function executes the complete target device image conversion process (calling `remove-alpha` and `convert` commands).
 
 ``` scheme
-; Execute a command and print the command content in verbose mode, calling function f if the command exits with a non-zero exception
+; Execute a command and print its content in verbose mode; if the command exits abnormally with a non-zero status, call function f
 (define (execute-try cmd f)
   (begin
-    (if env.verbose; If it is verbose mode, print the command content
+    (if env.verbose ; Print command content if in verbose mode
       (display (string-append "Run command: " cmd "\n")))
     (let ((r (system (string-append env.script-dir "/bin/" cmd))))
       (if (= r 0) 0 (f r)))
   ))
 
-; Execute a command and print the command content in verbose mode. If the command exits abnormally, the program will exit.
+; Execute a command, print its content in verbose mode, and exit the program if the command exits abnormally
 (define (execute cmd)
   (execute-try cmd (lambda (x)
-    (begin; print error code and exit abnormally when failure occurs
+    (begin ; Print error code on failure and exit abnormally
       (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
       (exit-fail)
   ))))
 
-;Convert image
+; Convert image
 (define (run-convert)
   (begin
-    (execute remove-alpha) ; Remove the transparent channel first
-    (if palette (execute color-reduction)) ; If it is a color lookup table format, reduce the number of pixels in the image
+    (execute remove-alpha) ; Remove transparency channel first
+    (if palette (execute color-reduction)) ; Reduce pixel count if palette format is used
     (execute convert) ; Execute image conversion command
   ))
 ```
 
-The `targets` macro defines the processing methods for all target modes. For example, the `"device"` mode will call the `run-convert` function, etc.
+The `targets` macro defines the processing methods for all target modes, such as the `"device"` mode calling the `run-convert` function, etc.
 
 ``` scheme
-; Define the conversion strategy corresponding to the target
+; Define conversion strategies corresponding to targets
 (targets env.target
-  ; Device mode: the final image conversion process for the target device
+  ; Device mode: Final image conversion process used for target devices
   ("device" (run-convert))
-  ; Simulator mode: only remove the alpha channel of non-transparent images, without converting the format
+  ; Emulator mode: Only remove the alpha channel of non-transparent images, without format conversion
   ("emulator" (execute remove-alpha))
-  ; Preprocessing mode: remove the alpha channel of non-transparent images and add a background
+  ; Preprocess mode: Remove the alpha channel of non-transparent images and add a background
   ("preprocess" (execute remove-alpha))
-  ; Preview mode: generate a PNG preview image that is consistent with the display effect of the actual device
+  ; Preview mode: Generate PNG preview images consistent with the actual device display effect
   ("preview" (begin
-    (run-convert) ; First convert the image to PGF format
-    (execute decode))) ; Convert the image back to PNG
+    (run-convert) ; Convert image to PGF format first
+    (execute decode))) ; Then convert image back to PNG
   )
 ```
 
-### Use image conversion script
+### Using Image Conversion Scripts
 
-To use the image conversion script, you need to add a field to the device model description file:
+To use an image conversion script, a field needs to be added to the device model description file:
 
-```yaml
+``` yaml
 description: default watch
 
 screen:
   width: 454 # pixels
-  height: 454 #pixels
+  height: 454 # pixels
   dpi: 326 # pixels per inch
 
-# ...
-image-build: image-convert-pal.scm # The path of the image conversion script relative to this Yaml file
+#...
+image-build: image-convert-pal.scm # Path of the image conversion script relative to this Yaml file
 ```
 
-### More complex strategies
+### More Complex Strategies
 
-Since the image conversion script is a complete programming language rather than configuration languages ​​such as Yaml and JSON, we can implement more complex custom conversion strategies without being limited by the functions provided by the framework. Take the above color lookup table format conversion as an example: PAL format does not work well on pictures with rich colors. At this time, the picture can be converted to a format that performs better in such scenes. The specific ideas are:
-1. The `pngquant` command supports exiting abnormally if the quality after conversion to PAL format is lower than the specified value, so configure the command parameters according to this purpose
-2. In the `run-convert` function, the `color-reduction` operation performed by `execute` is changed to be performed by `execute-try`, and the alternative format conversion operation is used in the latter's exception handling function.
-3. Targets such as `preview` are processed in a similar manner, but please note that when converting the output format to PNG, you also need to recognize that the command exits abnormally and continue trying with subsequent commands.
+Since the image conversion script is a fully-featured programming language rather than a configuration language like Yaml or JSON, we can implement more complex custom conversion strategies without being limited by the features provided by the framework. Taking the aforementioned palette format conversion as an example: the PAL format does not perform well on color-rich images. In such cases, images can be converted to formats that perform better in these scenarios. The specific approach is as follows:
+1. The `pngquant` command supports exiting abnormally when the quality falls below a specified value after converting to PAL format; configure the command arguments for this purpose.
+2. Change the `color-reduction` operation executed by `execute` in the `run-convert` function to be executed by `execute-try`, and use alternative format conversion operations in the latter's error handling function.
+3. Handling methods for targets like `preview` are similar, but note that when converting the output format to PNG, command exit anomalies must also be recognized so subsequent commands can continue trying.
 
-All in all, it is similar to the idea of ​​​​a shell script, using the abnormal exit code of the command to control the process.
+In short, it follows the philosophy of shell scripting—using command exit codes to control the flow.

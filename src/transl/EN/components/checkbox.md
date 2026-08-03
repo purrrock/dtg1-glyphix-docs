@@ -1,11 +1,8 @@
 # checkbox
 
+The `checkbox` element displays a checked box when activated, indicating that an item has been selected.
 
-The `checkbox` (checkbox) element displays a checked (tickled) box when activated, indicating that an item is selected.
-
-
-<glyphix id="checkbox-1" :height="65" title="单个复选框">
-
+<glyphix id="checkbox-1" :height="65" title="Single Checkbox">
 
 ``` html
 <div>
@@ -14,7 +11,6 @@ The `checkbox` (checkbox) element displays a checked (tickled) box when activate
   <p>checked: {{ checked }}</p>
 </div>
 ```
-
 
 ``` js
 export default {
@@ -25,54 +21,36 @@ export default {
 ```
 </glyphix>
 
-
-
 ::: note
-
-`checkbox` is usually a square that can be ticked, but the exact effect depends on the device. Developers currently cannot modify the color and other styles of `checkbox` through CSS.
+A `checkbox` is typically a square that can be checked, but the exact appearance depends on the device. Developers currently cannot modify the color and other styles of a `checkbox` via CSS.
 :::
 
-
-
-## property
-
+## Properties
 
 ### `checked` <decl type="boolean" get set listen />
 
-
-This property indicates whether this check box is selected. Setting the `checked` attribute can switch the selected state of the check box: when the value is `true`, it is displayed in the selected state. You can also operate on individual checkboxes via two-way binding:
+This property indicates whether the checkbox is selected. Setting the `checked` property toggles the selection state of the checkbox: when the value is `true`, it appears in the checked state. Two-way binding can also be used to operate on a single checkbox:
 ``` html
 <checkbox model:checked="yes" />
 ```
 
+The earlier example in this article demonstrates the usage of this binding. Please note not to bind to the [`value`](#value) property, but to `checked`.
 
-The example earlier in this article demonstrates the use of this binding, please note that you do not bind to the [`value`](#value) attribute, but to `checked`.
-
-
-The event is only fired when the user clicks on the checkbox, causing the `checked` attribute to change.
-
+Events are triggered only when the user clicks the checkbox, causing the `checked` property to change.
 
 ::: warning
-
-Do not set the `checked` attribute in [复选框组](#group) to avoid confusion.
+Do not set the `checked` property in a [checkbox group](#group) to avoid confusion.
 :::
-
-
 
 ### `value` <decl type="any" get set />
 
-
-A JavaScript value that identifies the checkbox value, usually a string or number. This value is not displayed, but it can be used in [分组操作](#group).
-
+A JavaScript value that identifies the checkbox value, typically a string or a number. This value is not displayed, but it can be used in [group operations](#group).
 
 ### `group` <decl type="any[]" get set listen />
 
+If there are multiple associated `checkbox` components, you can combine the `group` and `value` properties; checkboxes within the same group will form an array of selected values. Please refer to the example below:
 
-If you have multiple associated `checkbox` components, you can combine the `group` and `value` attributes; checkboxes within the same group form an array of selected values. Please refer to the following example:
-
-
-<glyphix id="checkbox-group" :height="65" title="复选框组" >
-
+<glyphix id="checkbox-group" :height="65" title="Checkbox Group" >
 
 ``` html
 <div>
@@ -88,7 +66,6 @@ If you have multiple associated `checkbox` components, you can combine the `grou
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
@@ -97,59 +74,45 @@ export default {
 }
 ```
 
-
 ``` css
 label {
   margin-right: 0.5rem;
 }
 ```
 
-
 </glyphix>
 
+This can be achieved by using `model:group` or `::group` to two-way bind the `group` property to a reactive array (`selected` in the example):
+- After the user interacts with a checkbox in the group, the value of the reactive array is updated;
+- Changes to the elements of the reactive array are reflected in the appearance of the `checkbox`.
 
-
-This can be achieved by bidirectionally binding the `group` attribute to a reactive array (`selected` in the example) using `model:group` or `::group`:
-- When the user operates a checkbox in the group, the value of the responsive array will be updated;
-- When the elements of the reactive array change, it will be reflected in the performance of `checkbox`.
-
-
-As shown in the example above: In the initial state, the grouping checkbox is selected based on the value of the `group` attribute. Specifically, for a checkbox like:
+As shown in the example above: in the initial state, the selection status of grouped checkboxes is determined by the value of the `group` property. Specifically, for a checkbox such as:
 ``` html
 <checkbox value="red" model:group="selected" />
 ```
-Since the `value` attribute specifies the `"red"` value, the checkbox will be checked when the value of the reactive attribute `selected` contains `"red"` (such as `["red"]` ). Clicking the checkbox again causes it to become unchecked and the `"red"` element is removed from the `selected` array.
-
+Since the `value` property specifies `"red"`, when the value of the reactive property `selected` contains `"red"` (e.g., `["red"]`), the checkbox will be checked. Clicking the checkbox again causes it to become unchecked, and the `"red"` element is removed from the `selected` array.
 
 ::: tip
-
-If you don't want to group checkboxes, you can also use the [`checked`](#checked) attribute to operate individually. But don't use `checked` and `group` at the same time, Glyphix doesn't take this case into account.
+If you do not want to group checkboxes, you can use the [`checked`](#checked) property to operate them individually. However, do not use `checked` and `group` at the same time; Glyphix does not account for this scenario.
 :::
-
-
 
 ### `indeterminate` <decl type="boolean" get set />
 
+The `indeterminate` property indicates that the checkbox is in an **indeterminate** state. When this property is `true`, the checkbox displays a horizontal line resembling a minus sign in the middle, indicating that its state is uncertain.
 
-The `indeterminate` attribute indicates that the checkbox is in an undefined state. When this property is `true`, the checkbox has a horizontal line like a minus sign in the middle to indicate uncertainty about its status.
+The indeterminate state can be used when an item has multiple sub-items: if all sub-items are checked, the parent is also checked; if all are unchecked, the parent is also unchecked. If some sub-items are checked, the parent will be in an indeterminate state.
 
+The example below demonstrates this usage. This example shows an inventory for crafting an enchanting table; when you select some of the recipes, the "Enchantment table" checkbox enters a partially checked state. As you can see, this example allows you to use the parent checkbox to select or deselect all sub-items.
 
-The indeterminate state can be used when an item has multiple options: if all children are selected, the parent will also be selected; if all are unselected, the parent will not be selected either. If some of the children are selected, the parent will be in an indeterminate state.
-
-
-The following example demonstrates this usage. This example demonstrates crafting a list of enchantment tables so that when you select a partial recipe, the "Enchantment table" checkbox will be partially selected. As you can see, this example allows you to use the parent checkbox to check or uncheck all of its children.
-
-
-<glyphix id="checkbox-indeterminate" :height="140" title="三态复选框" >
-
+<glyphix id="checkbox-indeterminate" :height="140" title="Tri-state Checkbox" >
 
 ``` html
 <div>
   <div>
     <!--
-      当 selected.length == 3 时，entirety 就会选中，否则：
-      - 如果 selected.length == 0，那么未选中；
-      - 其他情况意味着选择了部分配方，因此处于 indeterminate 状态。
+      When selected.length == 3, entirety is checked; otherwise:
+      - If selected.length == 0, it is unchecked;
+      - Otherwise, it means some recipes are selected, so it is in the indeterminate state. 
       -->
     <checkbox id="entirety"
               :indeterminate="selected.length && selected.length < 3"
@@ -169,21 +132,19 @@ The following example demonstrates this usage. This example demonstrates craftin
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
     selected: ['Diamonds'],
   },
   parts: ['Book', 'Diamonds', 'Obsidian'],
-  // This function is called when the entirety checkbox is clicked to set the selected state of all recipes
+  // Called when clicking the entirety checkbox to set the selection state of all recipes
   selectEntirety(status) {
-    // Use [... this.parts ] to copy the list to avoid modifying it in place
+    // Use [...this.parts] to copy the list to avoid mutating in place
     this.selected = status ? [...this.parts] : []
   },
 }
 ```
-
 
 ``` css
 .group {
@@ -191,19 +152,12 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
 ::: tip
-
-When the `checked` attribute is set (note that it is not cleared), the `indeterminate` attribute is automatically cleared. Even if a checkbox has both properties, it will appear selected rather than in an indeterminate state.
+When the `checked` property is set (note: not cleared), the `indeterminate` property is automatically cleared. Even if the checkbox has both properties, it will display as checked rather than indeterminate.
 :::
 
+### CSS Behavior
 
-
-### CSS behavior
-
-
-The checkbox is an inline element by default, its display size is determined by the `font-size` CSS property, and it will be aligned with the display baseline of the text. Please do not manually specify attributes such as `width` and `height`, otherwise the display may be confused.
+Checkboxes are inline elements by default. Their display size is determined by the `font-size` CSS property and they align with the text baseline. Please do not manually specify properties like `width` and `height`, as this may cause rendering issues.

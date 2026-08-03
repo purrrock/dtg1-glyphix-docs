@@ -1,11 +1,8 @@
 # stack
 
+`stack` is a stacked layout component. In a stacked layout, each child component has the same size and position as the `stack` component, and they are stacked and displayed sequentially in the order they are added. The following example shows two text elements overlapping inside a `stack` component.
 
-`stack` stacked layout components. In the stacked layout, the size and position of each subcomponent are the same as the `stack` component, and they are stacked and displayed in order. The following example shows two overlapping text elements within a `stack` component.
-
-
-<glyphix id="components-stack-layout" height="100" width="200" title="堆叠布局">
-
+<glyphix id="components-stack-layout" height="100" width="200" title="Stacked Layout">
 
 ``` html
 <stack>
@@ -13,7 +10,6 @@
   <p class="text2">Text 2</p>
 </stack>
 ```
-
 
 ``` css
 * {
@@ -35,25 +31,17 @@ stack {
 }
 ```
 
-
 </glyphix>
 
-
-
 ::: tip
-
-The `stack` component always uses the stacked display layout strategy and cannot be changed to other layouts (such as flex layout or fluid layout) through CSS properties such as `display`.
+The `stack` component always uses the stacked layout strategy and cannot be changed to other layouts (such as flex layout or flow layout) via CSS properties like `display`.
 :::
 
+## Layout Behavior
 
+The `stack` component has a fixed stacked layout strategy. Its size is determined by two types of constraints:
+1. The size of the `stack` is first specified by size-related CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
+2. The layout of the parent element may directly determine the layout of the `stack`, such as properties like `align-items: stretch` or `flex: 1` in a flex layout;
+3. Otherwise, the size of the `stack` component is determined by the maximum width and maximum height of its child elements.
 
-## layout behavior
-
-
-`stack` components have a fixed stacking layout strategy. Its size is determined by two constraints:
-1. The dimensions of `stack` are first specified by size CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
-2. The layout of the parent element may directly determine the layout of `stack`, such as `align-items: stretch`, `flex: 1` and other attributes in flex layout;
-3. Otherwise the size of the `stack` component is determined by the maximum width and maximum height of the child elements.
-
-
-Once the size of `stack` is determined, all its child elements will have the same outer box size (that is, the size of the child element plus `border` and `margin`). This sometimes causes trouble, for example, if an image is used as the background through `stack`, and the size of the upper element is too large, the image may not fit.
+Once the size of the `stack` is determined, all of its child elements will have the same outer frame size (i.e., the size of the child element plus `border` and `margin`). This can sometimes cause confusion; for example, using a `stack` to set an image as a background might result in the image failing to fill the area if the upper-layer element is too large.

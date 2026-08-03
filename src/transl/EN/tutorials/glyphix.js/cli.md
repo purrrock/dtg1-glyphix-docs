@@ -1,6 +1,6 @@
 ---
 icon: console-line
 ---
-# Command line options
+# Command-Line Options
 
 To be migrated.

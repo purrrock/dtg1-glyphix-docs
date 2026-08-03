@@ -1,36 +1,26 @@
 # a
 
+The anchor component, which is an inline element by default, used to jump to a specified page.
 
-Anchor component, which defaults to an inline element, is used to jump to the specified page.
-
-
-## property
-
+## Attributes
 
 ### `href` <decl type="string" get set />
 
-
-Specify the [页面名称](/framework/application/manifest.md#pages) or URI string to be jumped.
-
+Specifies the [page name](/framework/application/manifest.md#pages) or URI string to jump to.
 
 ``` html
-<a href="page1">跳转到 page1 页面</a>
-```
+<a href="page1">Jump to page1</a>
+``` 
 
+Unlike the `<a>` tag in Web, the `a` component only supports page navigation and does not support hyperlink navigation.
 
-Unlike the `<a>` tag in the Web, the `a` component only supports page jumps but not hyperlink jumps.
-
-
-The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings of the form `PageName?key=value`, which are URIs consisting of the page name (as the path field) and the query field. The query field of the URI will be parsed as the page's jump parameter. For example, when clicking this `<a>` element:
-
+The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings in the form of `PageName?key=value`, which consists of a page name (as the path field) and a query field. The query field of this URI will be parsed as navigation parameters for the page. For example, when clicking this `<a>` element:
 
 ``` html
-<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+<a href="page1?text=test-text&message=hello">Jump to page1</a>
 ```
 
-
-Equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
-
+It is equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
 
 ``` js
 router.push({
@@ -39,8 +29,6 @@ router.push({
 })
 ```
 
-
 ::: tip
-
-Please note that the value of the query field in the URI will only be parsed as a string type, so `100` in `page1?size=100` will be parsed as a string `'100'` instead of a number `100`. If you need to pass parameters of a specific type, use the [`router`](/api/system-router.md) API.
+Please note that the value of the query field in the URI will only be parsed as a string type. Therefore, `100` in `page1?size=100` will be parsed as the string `'100'` rather than the number `100`. If you need to pass parameters of a specific type, please use the [`router`](/api/system-router.md) API.
 :::

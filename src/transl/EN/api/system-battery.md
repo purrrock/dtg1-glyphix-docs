@@ -1,6 +1,6 @@
-# Battery status
+# Battery Status
 
-## Import module
+## Importing Modules
 
 ``` js
 import battery from '@system.battery'
@@ -10,18 +10,18 @@ import battery from '@system.battery'
 
 ### `getStatus` <decl type="(): Promise<{charge: ChargeState, level: number}>" method />
 
-Get the battery's charge state `charge` ([`ChargeState`](#chargestate) type) and power value `level`. The power value is an integer between $[0, 100]$.
+Gets the battery charging state `charge` (of type [`ChargeState`](#chargestate)) and the battery level `level`. The battery level is an integer between $[0, 100]$.
 
-## type
+## Types
 
 ### `ChargeState`
 
-`ChargeState` enumerates all battery charging states, which are defined as follows:
+`ChargeState` enumerates all battery charging states, defined as follows:
 ``` ts
 type ChargeState = 'charging' | 'discharging' | 'not-charging' | 'full'
 ```
-The meaning of each value is:
-- `'charging'`: The battery is in charging state;
-- `'discharging'`: Disconnect charging state;
-- `'not-charging'`: not in charging state;
+The meanings of each value are:
+- `'charging'`: The battery is charging;
+- `'discharging'`: The battery is discharging (disconnected from power);
+- `'not-charging'`: The battery is not charging;
 - `'full'`: The battery is fully charged.

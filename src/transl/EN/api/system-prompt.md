@@ -1,12 +1,12 @@
-# Pop-up window
+# Pop-up
 
-## Import module
+## Import Module
 
 ``` js
 import prompt from '@system.prompt'
 ```
 
-## Interface definition
+## Interface Definition
 
 #### `showToast`
 <decl method><pre>
@@ -17,23 +17,23 @@ import prompt from '@system.prompt'
 }): void
 </pre></decl>
 
-Display a toast pop-up box. Toast is a text pop-up box placed on top of the interface. Only one instance of toast is displayed in the interface. If there are multiple toast contents, they will be queued and displayed in sequence.
+Displays a toast pop-up. A toast is a text pop-up placed at the top layer of the interface. Only one toast instance is displayed in the interface at a time; when there are multiple toast contents, they will be queued and displayed sequentially.
 
-Description of the `options` parameter field:
-- `message`: requires realistic text.
-- `duration`: the display duration of the toast, in ms. The toast will be automatically hidden after the timeout period is reached.
-- `important`: Whether it is an important toast, the default is `false`. If set to `true`, allows this toast to pop up when the app is in the background.
+Description of `options` parameter fields:
+- `message`: The text to be displayed.
+- `duration`: The display duration of the toast in milliseconds (ms). The toast will automatically hide after reaching this timeout.
+- `important`: Whether it is an important toast. The default is `false`. If set to `true`, the application is allowed to pop up this toast while in the background.
 
-The toast display style (font, color, etc.) is determined by the firmware and cannot be modified in the application. There is also a limit on how long a toast can be displayed, ranging from $200$ to $5000$ milliseconds.
+The display style of the toast (font, color, etc.) is determined by the firmware and cannot be modified within the application. There is also a limit on the display duration of the toast, which ranges from $200$ to $5000$ milliseconds.
 
 #### `showPopup` <decl type="(options: { uri: string, params?: Object }): Promise<any>" method />
 
-Display a floating page pop-up window. `options` parameter field description:
-- `uri`: The name of the target page, which needs to be registered in `router` of `mainfest.json`.
-- `params`: The data that needs to be passed when jumping. The attribute of the `params` parameter will replace the `data` attribute value of the target page.
+Displays a floating page pop-up. Description of `options` parameter fields:
+- `uri`: The name of the target page, which needs to be registered in `router` of `manifest.json`.
+- `params`: Data to be passed during navigation. The properties of the `params` parameter will replace the `data` property values of the target page.
 
-A floating page is a system-level pop-up window (similar to a toast or a dialog box), but a floating page is a fully functional page with the highest customizability. Unlike ordinary pages, floating pages are displayed in the system's floating page stack instead of applying their own page stack. Therefore, APIs such as `router.back()` in the [Page Routing](api/system-router) mechanism cannot operate floating pages. If you want to close the floating page, you can use the [`router.close()`](system-router.md#close) method.
+A floating page is a system-level pop-up (similar to a toast or dialog box), but it is a fully functional page with the highest level of customizability. Unlike general pages, a floating page is displayed in the system's floating page stack rather than the application's own page stack. Therefore, APIs such as `router.back()` in the [page routing](api/system-router) mechanism cannot operate on floating pages. To close a floating page, you can use the [`router.close()`](system-router.md#close) method.
 
-The display level of the pop-up window is higher than that of the application, so the floating page will be displayed on top of all application pages. All applications use the same floating page stack. The display level of floating pages is determined by the pop-up order, that is, the page that popped up earlier is at the top. The display level of the floating page is the same as the dialog box, lower than the toast.
+The display hierarchy of a pop-up is higher than that of the application, so floating pages will be displayed above all application pages. All applications share the same floating page stack, and the display hierarchy of floating pages is determined by their pop-up order, meaning that earlier popped-up pages are located at the top. The display hierarchy of a floating page is the same as that of a dialog box, and lower than that of a toast.
 
-Like `router.push()`, `showPopup()` also returns a Promise object, which will be honored and return a custom result after the floating page exits. Please refer to [`router.push()`](system-router.md#push) and [`router.close()`](system-router.md#close) for details.
+Just like `router.push()`, `showPopup()` also returns a Promise object, which will be fulfilled and return a custom result after the floating page exits. For details, please refer to [`router.push()`](system-router.md#push) and [`router.close()`](system-router.md#close).

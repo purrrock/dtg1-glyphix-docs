@@ -1,94 +1,62 @@
 # scroll
 
+A scrollable list container that supports arbitrary child components. The scrolling direction of the list is determined by the specific layout mode: when using flow layout or a flex layout with a `column` direction, elements are laid out vertically, allowing the list to scroll vertically; whereas when using a flex layout with a `row` direction, elements are laid out horizontally, allowing the list to scroll horizontally. The `scroll` component does not support bidirectional scrolling (i.e., scrolling both horizontally and vertically at the same time).
 
-A scrolling list container that supports any subcomponent. The scrolling direction of the list is specified by the specific layout method: when using fluid layout or `column` direction flex layout, the elements are laid out in the vertical direction, and the list can be scrolled vertically; when using `row` direction flex layout, the elements are laid out in the horizontal direction, and the list can be scrolled horizontally. The `scroll` component does not support bidirectional scrolling (that is, horizontal and vertical scrolling at the same time).
+By default, the `scroll` component is a block-level element that uses flow layout.
 
-
-`scroll` components are block-level elements using fluid layout by default.
-
-
-The `scroll` component can be scrolled using gesture interaction, and the vertical `scroll` component also supports encoder (rotating crown on the watch, mouse wheel on the simulator) scrolling.
-
+The `scroll` component can be scrolled using touch gestures, and vertical `scroll` components also support encoder (watch rotating crown, or mouse wheel on the simulator) scrolling.
 
 ::: tip
-
-Some of the interactive examples in this document support mouse wheel interaction (mouse icon icon to the right of the title): you can hover the pointer inside the example and use the mouse wheel to scroll the list.
+Some interactive examples in this document support mouse wheel interaction (indicated by a mouse icon on the right side of the title): you can hover your pointer over the example and use your mouse wheel to scroll the list.
 :::
 
-
-
-## property
-
+## Properties
 
 ### `scroll` <decl type="{ scrollX: number, scrollY: number, scrollState: number }" get listen />
 
+The value of the `scroll` property is an object containing the following fields: `scrollX`, `scrollY`, and `scrollState`. The `scrollX` and `scrollY` properties represent the horizontal and vertical scrolling positions in pixels, respectively; the `scrollState` property represents the scrolling state, with a value of $0$, $1$, or $2$, as detailed in the table below. You can listen to changes in the `scroll` property using the `on` directive. Any change in content position caused by user actions or API operations will trigger the listener.
 
-The `scroll` attribute value is an object containing the following fields: `scrollX`, `scrollY`, and `scrollState`. The `scrollX` and `scrollY` attributes represent the horizontal and vertical scrolling positions respectively, in pixels; the `scrollState` attribute represents the scrolling state, and its value is $0$, $1$ or $2$. The specific meaning is as shown in the following table. Changes to the `scroll` attribute can be monitored through the `on` directive. Any change in content location caused by user operations and API operations will trigger monitoring.
-
-
-| `scrollState` value | Effect description |
+| `scrollState` Value | Description of Effect |
 | :--------------: | ------------------------------------------------------------------- |
-
-| $0$ | Stopped sliding |
-| $1$ | Swiping via user's gesture |
-| $2$ | The user has let go, sliding caused by method calls such as [`scrollTo`](#scrollto) or inertia |
-
+|       $0$        | Scrolling has stopped.                                                        |
+|       $1$        | Scrolling via user gestures.                                              |
+|       $2$        | The user has released their hand; scrolling is caused by methods such as [`scrollTo`](#scrollto) or inertia. |
 
 ::: info
-
-`scroll` The area where the child elements are located is called the "content" area, and the part actually displayed by the list component is called the "view" area. Elements are laid out in the content area, and their size may exceed the view area, and the display position of the content can be changed by scrolling.
+The area where the child elements of `scroll` are located is called the "content" area, while the portion of the list component actually displayed is called the "view" area. Elements are laid out within the content area, and their dimensions may exceed the view area. Scrolling changes the display position of the content.
 :::
 
-
-
-The range of the scroll position is usually within the content area, that is, `scrollX` for horizontal lists is within the range of $[0, \texttt{contentWidth}]$, and `scrollY` for vertical lists is within the range of $[0, \texttt{contentHeight}]$. But when the list is scrolled before the head of the content, `scrollX` or `scrollY` will be less than $0$; similarly, when the list is scrolled to the end of the content, the value of `scrollX` or `scrollY` will be greater than `contentWidth` or `contentHeight`.
-
+The range of the scrolling position is typically within the content area—that is, `scrollX` for a horizontal list is within the range $[0, \texttt{contentWidth}]$, and `scrollY` for a vertical list is within the range $[0, \texttt{contentHeight}]$. However, when the list is scrolled past the beginning of the content, `scrollX` or `scrollY` will be less than $0$; similarly, when scrolled past the end of the content, the value of `scrollX` or `scrollY` will be greater than `contentWidth` or `contentHeight`.
 
 ::: warning
-
-The `scroll` event will be triggered every frame during the scrolling process. Listening to this event in JavaScript code may cause obvious frame drops, so try to avoid using it.
+The `scroll` event is triggered on every frame during scrolling. Listening to this event in JavaScript code may cause noticeable frame drops, so it should be avoided as much as possible.
 :::
-
-
 
 ### `scrollTop` <decl type="number" set get listen />
 
+The vertical scroll position, which is the distance from the top of the content of the `scroll` component to the top of the viewport, in pixels. You can set the scroll position or listen to changes in the scroll position through this property.
 
-The vertical scroll position, that is, the distance from the top of the content of the `scroll` component to the top of the viewport, in pixels. You can set the scroll position through this property, and you can also listen for changes in the scroll position through this property.
-
-
-Unlike the [`scroll`](#scroll) attribute, the listener `scrollTop` attribute itself cannot distinguish between scrolling by the user's gestures and scrolling caused by API calls or inertia.
-
+Unlike the [`scroll`](#scroll) property, listening to the `scrollTop` property itself cannot distinguish whether the scroll was caused by a user gesture, an API call, or inertia.
 
 ### `scrollLeft` <decl type="number" set get listen />
 
+The horizontal scroll position, which is the distance from the left of the content of the `scroll` component to the left of the viewport, in pixels. You can set the scroll position or listen to changes in the scroll position through this property.
 
-The vertical scroll position, that is, the distance from the left side of the content of the `scroll` component to the left side of the viewport, in pixels. You can set the scroll position through this property, and you can also listen for changes in the scroll position through this property.
-
-
-Unlike the [`scroll`](#scroll) attribute, the listener `scrollLeft` attribute itself cannot distinguish between scrolling by the user's gestures and scrolling caused by API calls or inertia.
-
+Unlike the [`scroll`](#scroll) property, listening to the `scrollLeft` property itself cannot distinguish whether the scroll was caused by a user gesture, an API call, or inertia.
 
 ### `scrollWidth` <decl type="number" get listen />
 
-
-`scroll` The width of the component's content area. The width of `scroll` in vertical layout is equal to the view width, while the width of `scroll` in horizontal layout is the sum of the widths of all elements. You can use this to monitor content width changes.
-
+The width of the content area of the `scroll` component. The width of a vertically laid out `scroll` equals the viewport width, while the width of a horizontally laid out `scroll` is the sum of the widths of all elements. You can listen to changes in content width using this.
 
 ### `scrollHeight` <decl type="number" get listen />
 
-
-`scroll` The height of the component's content area. The height of `scroll` in vertical layout is equal to the view height, while the height of `scroll` in horizontal layout is the sum of the heights of all elements. You can use this to monitor content height changes.
-
+The height of the content area of the `scroll` component. The height of a vertically laid out `scroll` equals the viewport height, while the height of a horizontally laid out `scroll` is the sum of the heights of all elements. You can listen to changes in content height using this.
 
 ### `damping` <decl type="number" set />
 
+Sets the damping coefficient for the list scrolling animation. The valid value range is $[0.1, 50]$ (unsupported values are automatically clamped to the upper or lower limits), with a default value of $1.5$. A larger damping coefficient causes the animation to stop faster, while the default damping coefficient produces a longer-distance, longer-duration inertial effect.
 
-Set the damping coefficient of the list scroll animation. The valid value range is $[0.1, 50]$ (unsupported values ​​will be automatically modified to the upper and lower limits). The default value is $1.5$. A larger damping coefficient will cause the animation to stop faster, and the default damping coefficient value can produce an inertial effect with a longer distance and longer duration.
-
-
-<glyphix id="components-scroll-damping" height="360" width="360" title="阻尼效果" wheel>
-
+<glyphix id="components-scroll-damping" height="360" width="360" title="Damping Effect" wheel>
 
 ``` html
 <div>
@@ -102,7 +70,6 @@ Set the damping coefficient of the list scroll animation. The valid value range 
   </scroll>
 </div>
 ```
-
 
 ``` js
 export default {
@@ -121,7 +88,6 @@ export default {
   }
 }
 ```
-
 
 ``` css
 span {
@@ -155,55 +121,37 @@ button {
 }
 ```
 
-
 </glyphix>
 
-
-
 ::: tip
-
-The damping coefficient should be set to a constant and not modified. Modifying the damping coefficient will not affect the rebound animation.
+The damping coefficient should be set as a constant rather than modified dynamically. Modifying the damping coefficient will not affect the bounce-back animation.
 :::
-
-
 
 ### `snapshot` <decl type="boolean" get set />
 
+When the `snapshot` property is enabled, child components in the list will enter snapshot mode. For a related demonstration, refer to the [`quiescent`](/framework/generic/properties.md#quiescent) property of native components.
 
-When the `snapshot` attribute is turned on, the subcomponents in the list will turn on snapshot mode. For related demonstrations, please refer to the [`quiescent`](/framework/generic/properties.md#quiescent) attribute of native components.
+Enabling snapshots may improve the frame rate of complex interfaces. For example, when list items contain a large amount of text and a non-transparent background, snapshot mode can cache and combine numerous drawing operations into a small number of snapshots. The Glyphix framework caches these snapshots across repeated draws to further enhance performance.
 
-
-Enabling snapshots may increase the frame rate of complex interfaces. For example, when a list item contains a large amount of text and contains a non-transparent background, snapshot mode can cache and merge a large number of drawing operations into a small number of snapshots. The Glyphix framework caches these snapshots across repeated draws to further improve performance.
-
-
-However, the `snapshot` attribute does not provide a guarantee that snapshots will be used for subcomponents. This attribute may be ignored when the system has insufficient memory or when there is no need to use snapshots.
-
+However, the `snapshot` property does not guarantee that child components will use snapshots; this property may be ignored when system memory is low or when using snapshots is unnecessary.
 
 ### `deformation` <decl type="string | function" set />
 
+Sets the deformation effect of the list, which can be used to achieve appearances such as a fisheye lens. You can specify a built-in deformation effect by name (string) or define one using a JavaScript function.
 
-Set the deformation effect of the list. Through the deformation effect, you can achieve fish-eye and other appearances. A built-in morph effect can be specified by name (a string), or a morph effect can be defined through a JavaScript function.
-
-
-| Value | Effect Description |
+|     Value     |             Description             |
 | :---------: | :------------------------------: |
+|  `'none'`   |       No deformation effect (default)       |
+| `'fisheye'` |          Built-in fisheye effect          |
+|  function   | Specifies a deformation effect via a JavaScript function |
 
-| `'none'` | No deformation effect (default value) |
-| `'fisheye'` | Built-in fisheye effect |
-| function | Specify deformation effects through JavaScript functions |
+Deformation effects should be constants and should not be modified.
 
+When the list is set to the fisheye deformation effect, it is recommended to set the [`scrollSnap`](#scrollsnap) property to `'center'` to achieve the most reasonable effect.
 
-The deformation effect should be constant and not modified.
+The figure below demonstrates the fisheye deformation effect. You can use the "center" switch to adjust whether to center-align.
 
-
-When the list is set to fisheye deformation effect, it is recommended to set the [`scrollSnap`](#scrollsnap) attribute to `'center'` to get the most reasonable effect.
-
-
-The picture below demonstrates the fisheye deformation effect. You can adjust whether to center the image through the "center" switch.
-
-
-<glyphix id="components-scroll-deformation" height="360" width="360" title="鱼眼效果" wheel>
-
+<glyphix id="components-scroll-deformation" height="360" width="360" title="Fisheye Effect" wheel>
 
 ``` html
 <div>
@@ -215,7 +163,6 @@ The picture below demonstrates the fisheye deformation effect. You can adjust wh
   </scroll>
 </div>
 ```
-
 
 ``` css
 div {
@@ -241,7 +188,6 @@ scroll > p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -250,70 +196,46 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
 ::: tip
-
-Deformation effects generally use snapshots, so there is no need to repeatedly set `snapshot` when setting the `deformation` attribute.
+Deformation effects generally make use of snapshots, so there is no need to separately enable the `snapshot` property when `deformation` is set.
 :::
-
-
 
 ### `scrollSnap` <decl type="'none' | 'start' | 'center' | 'edge'" get set />
 
+Sets the alignment and snapping behavior of list items. For example, you can center-align elements or snap them to element boundaries.
 
-Set the alignment and snapping mode of list items. For example, you can center-align the element or snap it to the edge of the element.
-
-
-| value | description |
+|     Value     | Description                                                                                                           |
 | :--------: | -------------------------------------------------------------------------------------------------------------- |
+|  `'none'`  | Elements have no alignment or snapping effect; child elements can stop at any position according to scrolling inertia. |
+| `'start'`  | When scrolling stops, the start position of the element aligns with the start position of the viewport. This mode is currently not supported. |
+| `'center'` | When scrolling stops, the center position of the element aligns with the center of the viewport. |
+|  `'edge'`  | When scrolling stops, the start or end position of the element snaps to the nearest start or end position of the viewport. However, if scrolling does not cross an element boundary, no snapping is triggered. |
 
-| `'none'` | The element has no suction alignment and attachment effects, that is, the child elements can stop at any position according to scroll inertia. |
-| `'start'` | The starting position of the element is aligned to the starting position of the viewport when scrolling stops. This mode is currently not supported. |
-| `'center'` | The scroll stop is when the center of the element is aligned to the center of the viewport. |
-| `'edge'` | When scrolling stops, the start or end position of the element is aligned to the start or end position of the viewport. But if the scroll does not cross the element boundary, it will not cause adsorption. |
-
-
-The `scrollSnap` attribute does not adjust the element size, but can use mechanisms such as layout to implement a list of equal-sized items.
-
+The `scrollSnap` property does not adjust element dimensions, but you can use layout mechanisms and other methods to create lists of equal-sized items.
 
 ::: warning
-
-This property should be set when the component is initialized and cannot be changed, otherwise interaction errors may occur.
+This property should be set during component initialization and must not be changed afterwards; otherwise, interaction errors may occur.
 :::
-
-
 
 ### `index` <decl type="number" get set listen />
 
+The index of the currently displayed child component. When the `index` property is set, the component will animate and scroll to the specified child component. You can listen to position changes using the `on` directive, and changes to the child component index can be observed via the `index` property.
 
-The index of the currently displayed subcomponent. When the `index` attribute is set, the component will scroll to the specified subcomponent through animation. Position changes can be monitored through the `on` directive, and changes in subcomponent index can be monitored through the `index` attribute.
-
-
-The value of `index` is automatically restricted to ensure that it points to a valid element. When using `index`, you must ensure that all elements of the `scroll` component are static (that is, the [`position`](/framework/generic/styles.md#position) attribute of CSS is the default `static`), otherwise an error will occur.
-
+The value of `index` is automatically clamped to ensure it points to a valid element. When using `index`, you must ensure that all elements of the `scroll` component are static (i.e., the CSS [`position`](/framework/generic/styles.md#position) property is set to the default `static`), otherwise errors will occur.
 
 ### `finalChanged` <decl type="bool" get set />
 
-
-Set whether the [`index`](#index) change event is only triggered when scrolling stops. By default (that is, `finalChanged` is `false`), whenever the scroll gesture or other reasons cause the `index` attribute of the `scroll` component to change, its listening event will be triggered. However, doing so can easily cause animation frames to drop, or trigger too frequent and unnecessary events. When `finalChanged` is set, the `index` changed event will only be triggered when scrolling stops.
-
+Sets whether to trigger the [`index`](#index) change event only when scrolling stops. By default (i.e., when `finalChanged` is `false`), the listening event is triggered whenever scrolling gestures or other reasons cause the `index` property of the `scroll` component to change. However, doing so can easily lead to animation frame drops or overly frequent, unnecessary event triggers. When `finalChanged` is set, the `index` change event is triggered only when scrolling completely stops.
 
 ::: tip
-
-When implementing effects such as point indicators by monitoring the `index` attribute, it is recommended to set `finalChanged` to `true`. This can avoid frame drops caused by event-triggered rendering updates during the sliding process.
+When implementing dot indicators or similar effects by listening to the `index` property, it is recommended to set `finalChanged` to `true`. This avoids frame drops during the sliding process caused by event-triggered render updates.
 :::
 
+The following example demonstrates the effect of `finalChanged`. You can try toggling the "final-changed" checkbox, then swipe the list to observe the frequency and timing of `index` changes.
 
-
-The following example demonstrates the effect of `finalChanged`. You can try switching the "final-changed" checkbox, then slide the list and observe the frequency and timing of changes to `index`.
-
-
-<glyphix id="components-scroll-final-changed" height="360" width="360" title="延迟 index 事件" wheel>
-
+<glyphix id="components-scroll-final-changed" height="360" width="360" title="Delayed Index Event" wheel>
 
 ``` html
 <div>
@@ -329,7 +251,6 @@ The following example demonstrates the effect of `finalChanged`. You can try swi
   </scroll>
 </div>
 ```
-
 
 ``` css
 div {
@@ -353,7 +274,6 @@ scroll > p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -363,31 +283,22 @@ export default {
 }
 ```
 
-
 </glyphix>
-
-
 
 ### `bounces` <decl type="'none' | 'start' | 'end' | 'edge'" get set />
 
+Sets whether a bounce-back effect is triggered when `scroll` is scrolled past its boundaries via gestures. The initial value of this property is `edge`, which allows bounce-back at both the start and end positions.
 
-Set whether to trigger rebound after scrolling `scroll` to the boundary through gestures. The initial value of this property is `edge`, which allows rebounding of the start and end positions.
-
-
-| value | description |
+|    Value     | Description                                   |
 | :-------: | -------------------------------------- |
+| `'none'`  | Disables all boundary bounce-back effects.                     |
+| `'start'` | Allows bounce-back only when dragged past the start position of the content.     |
+|  `'end'`  | Allows bounce-back only when dragged past the end position of the content.     |
+| `'edge'`  | Allows bounce-back when dragged past either the start or end position of the content. |
 
-| `'none'` | Disables all boundary bounce. |
-| `'start'` | Only allows rebound after dragging to the starting position of the content. |
-| `'end'` | Only allows rebound after dragging to the end of the content. |
-| `'edge'` | Allows rebound after dragging to the start or end of the content. |
+The example below demonstrates the effect of each `bounces` value. You can try dragging each item left and right beyond the boundaries and observe the corresponding interaction behavior.
 
-
-The following example shows the role of each `bounces` value. You can try sliding each item left or right beyond the boundary and observe the corresponding interaction behavior.
-
-
-<glyphix id="components-scroll-bounces" height="360" width="400" title="拖拽回弹动画">
-
+<glyphix id="components-scroll-bounces" height="360" width="400" title="Drag Bounce Animation">
 
 ``` html
 <scroll class="column-box">
@@ -399,7 +310,6 @@ The following example shows the role of each `bounces` value. You can try slidin
 </scroll>
 ```
 
-
 ```js
 export default {
   data: {
@@ -407,7 +317,6 @@ export default {
   }
 }
 ```
-
 
 ```css
 .column-box {
@@ -439,113 +348,77 @@ export default {
 }
 ```
 
-
 </glyphix>
 
 
-
-
-
 ::: note
+Currently, the `bounces` property only affects the bounce behavior of gesture operations, while ignoring fast inertial animation bounces. The example above uses a technique to avoid unintended behavior:
+- `.row-box` uses the edge snap strategy (`snap-type="edge"`) to avoid gesture animations with bouncing.
+- Each element of `.row-box` does not exceed `100%` width, ensuring that the edge snap strategy does not trigger internal boundary bouncing.
 
-Currently the `bounces` attribute only affects the rebound of gesture operations, but ignores the rebound of fast inertial animations. The example above uses a trick to avoid unexpected behavior:
-- `.row-box` Use edge snapping strategy ( `snap-type="edge"` ) to avoid gesture animations with bounce.
-- Each element of `.row-box` does not exceed the width of `100%`, ensuring that the edge snapping strategy does not cause internal boundary rebound.
-
-
-This technique can be used for interfaces such as sliding delete menus.
+This technique can be used for interfaces such as swipe-to-delete menus.
 :::
 
-
-
-The `bounces` attribute will also play a similar role to [`weakGesture`](#weakgesture). Specifically, when the edge that prohibits rebounding is crossed, scroll gesture events are automatically allowed to bubble up and be delivered. Therefore, there is no need to set both the `bounces` and `weakGesture` attributes.
-
+The `bounces` property also plays a role similar to [`weakGesture`](#weakgesture). Specifically, once you scroll past a boundary where bouncing is disabled, rolling gesture events are automatically allowed to bubble up. Therefore, there is no need to set both the `bounces` and `weakGesture` properties simultaneously.
 
 ::: tip
-
-The scroll gesture bubbling behavior of `bounces` and `weakGesture` is "opposite". For example, the `end` mode bounce policy allows the user to bounce back after scrolling past the end position of the list, and this policy allows the scroll gesture to bubble at the starting position. This corresponds to the effect of the `weakGesture` attribute with value `'start'`.
+The scrolling gesture bubbling behavior of `bounces` and `weakGesture` are "inverse". For example, the `end` mode bounce strategy allows the user to bounce back after scrolling past the end of the list, and this strategy permits scroll gestures to bubble up at the start position. This corresponds to the effect of the `weakGesture` property with a value of `'start'`.
 :::
-
-
 
 ### `weakGesture` <decl type="'none' | 'start' | 'end' | 'edge'" get set />
 
+Sets under which circumstances the `scroll` component should bubble up scrolling gestures. By default, `scroll` prevents the gestures it responds to from bubbling, so its parent elements cannot receive gestures that cause `scroll` to scroll. `weakGesture` allows bubbling of gesture events when dragged to the content boundary positions, enabling parent elements to receive those gestures.
 
-Set the circumstances under which the `scroll` component will bubble scroll gestures. By default `scroll` blocks bubbling of gestures it responds to, so its parent element cannot receive gestures that cause `scroll` to scroll. `weakGesture` allows bubbling of gesture events when dragging into content boundaries, allowing the parent element to receive these gestures.
-
-
-| value | description |
+|    Value     | Description                                             |
 | :-------: | ------------------------------------------------ |
+| `'none'`  | Does not bubble up responded gesture events.                     |
+| `'start'` | Bubbles up responded gesture events after being dragged to the start position of the content.       |
+|  `'end'`  | Bubbles up responded gesture events after being dragged to the end position of the content.       |
+| `'edge'`  | Bubbles up responded gesture events after being dragged to either the start or end position of the content. |
 
-| `'none'` | Do not bubble the corresponding gesture event. |
-| `'start'` | Bubbles the corresponding gesture event after dragging to the starting position of the content. |
-| `'end'` | Bubbles the corresponding gesture event after dragging to the end of the content. |
-| `'edge'` | Bubbles the corresponding gesture event after dragging to the beginning or end of the content. |
-
-
-If the underlying element of the page is a horizontal `scroll` component, but you want the right swipe gesture to return the page, you can configure it like this:
+If the underlying element of the page is a horizontal `scroll` component, but you want a right-swipe gesture to allow navigating back in the page, you can configure it like this:
 ``` html
 <scroll weak-gesture="start"> ... </scroll>
 ```
-When the user slides to the head of the `scroll` component and continues to slide right to exit the page.
-
+When the user scrolls to the head of the `scroll` component and continues to swipe right, they can exit the page.
 
 ::: warning
-
-This property should be set when the component is initialized and cannot be changed, otherwise interaction errors may occur.
+This property should be set during component initialization and must not be changed afterwards; otherwise, interaction errors may occur.
 :::
-
-
 
 ### `scrollbar` <decl type="boolean" get set />
 
-
-Mark whether the `scroll` component should display scroll bars (not displayed by default). Only the `scroll` component with vertical layout is supported. The `scrollbar` attribute must be a constant and cannot be modified with reactive attributes, for example:
+Indicates whether the `scroll` component should display a scrollbar (hidden by default). This is only supported for vertically laid out `scroll` components. The `scrollbar` property must be a constant and cannot be modified using reactive properties. For example:
 ``` html
 <scroll scrollbar>
   ...
 </scroll>
 ```
-A `scroll` component with a scrollbar will be created. For the effect of the scroll bar, please refer to the example of the [`setIndex`](#setindex) method.
+This will create a `scroll` component with a scrollbar. For the appearance of the scrollbar, please refer to the example of the [`setIndex`](#setindex) method.
 
-
-The style of the scroll bar is determined by the system. For example, it may appear as an arc on a circular screen, or as a straight bar on a rectangular screen.
-
+The style of the scrollbar is determined by the system—for example, it may appear as an arc on circular screens and as a straight bar on rectangular screens.
 
 ### `scrolled` <decl type="boolean" listen />
 
+Use the `scrolled` property to listen to whether the list is in a scrolling state. An event-triggered property value of `true` indicates that the list is currently scrolling, while `false` means the list has stopped scrolling.
 
-Monitor whether the list is in scrolling state through the `scrolled` attribute. An event-triggered attribute with a value of `true` means that the list is scrolling, otherwise it means that the list has stopped scrolling.
-
-
-The scrolling operation caused by user touch and scrolling through the `scroll` attribute will trigger the `scrolled` event. When the list stops scrolling, the parameter value of the `scrolled` event is `false`.
-
+Both scrolling operations generated by user touch and programmatic scrolling via the `scroll` property will trigger the `scrolled` event. When the list stops moving from a scrolling state, the parameter value of the `scrolled` event is `false`.
 
 ### `setIndex`
 <decl method><pre>
-
 (options: {
-
   index: number,
-
   behavior?: 'instant' | 'smooth'
-
 }): void
-
 </pre></decl>
 
+Moves the viewport to the child component specified by the index. If this movement would cross the viewport boundary, the viewport position will stay at the first or last component. The properties of the `options` parameter are:
+- `index`: The index of the target child component to move to, where $0$ represents the first child component.
+- `behavior`: When set to `'smooth'`, an animated transition is used; when set to `'instant'` (default), it moves immediately to the specified child component position.
 
+When calling `setIndex()`, you must ensure that all elements of the `scroll` component are static, otherwise errors will occur.
 
-Moves the viewport to the child component specified by index. If this movement crosses the viewport boundary, the viewport position will stay at the first or last component. The function of `options` parameter attribute is:
-- `index`: The index of the target subcomponent to be moved, $0$ represents the first subcomponent.
-- `behavior`: Use animation transition when `'smooth'`, move to the specified sub-component position immediately when `'instant'` (default value).
-
-
-When calling `setIndex()`, you must ensure that all elements of the `scroll` component are static, otherwise an error will occur.
-
-
-<glyphix id="components-scroll-setindex" height="360" width="400" title="setIndex 方法">
-
+<glyphix id="components-scroll-setindex" height="360" width="400" title="setIndex Method">
 
 ``` html
 <div class="window">
@@ -562,7 +435,6 @@ When calling `setIndex()`, you must ensure that all elements of the `scroll` com
 </div>
 ```
 
-
 ``` js
 import prompt from '@system.prompt'
 
@@ -576,7 +448,6 @@ export default {
   }
 }
 ```
-
 
 ``` css
 .window {
@@ -620,81 +491,54 @@ button {
 }
 ```
 
-
 </glyphix>
-
-
 
 ### `scrollTo`
 <decl method><pre>
-
 (options: {
-
   left?: number,
-
   top?: number,
-
   behavior?: 'instant' | 'smooth'
-
 }): void
-
 </pre></decl>
 
+Scrolls the content to the specified position. The properties of the `options` parameter are:
+- `left`: Specifies the scroll position of the content along the y-axis. Omitting `left` or having the scroll component use a vertical layout will result in no scrolling along the y-axis.
+- `top`: Specifies the scroll position of the content along the x-axis. Omitting `top` or having the scroll component use a horizontal layout will result in no scrolling along the x-axis.
+- `behavior`: Specifies the transition effect for scrolling. `'instant'` (default) means jumping directly to the target position without a transition effect, while `'smooth'` performs smooth scrolling with a transition effect.
 
-
-Scrolls the content to the specified position. The function of `options` parameter attribute is:
-- `left`: Specifies the position where the content scrolls along the y-axis. If `left` is ignored or the scroll component has a vertical layout, scrolling on the y-axis will not occur.
-- `top`: Specifies the position where the content scrolls along the x-axis. If `top` is ignored or the scroll component has a horizontal layout, scrolling on the x-axis will not occur.
-- `behavior`: Specifies the transition effect of scrolling. `'instant'` (default value) means jumping directly to the target position without a transition effect, while `'smooth'` will scroll smoothly and produce a transition effect.
-
-
-The `scrollTo` method ignores the adsorption effect of elements.
-
+The `scrollTo` method ignores element snapping effects.
 
 ### `scrollBy`
 <decl method><pre>
-
 (options: {
-
   left?: number,
-
   top?: number,
-
   behavior?: 'instant' | 'smooth'
-
 }): void
-
 </pre></decl>
 
+Scrolls the content by a specified distance. Unlike [`scrollTo()`](#scrollTo), `scrollBy()` scrolls relative to the current content position. The properties of the `options` parameter are:
+- `left`: Specifies the distance to scroll the content along the y-axis. Omitting `left` or having the scroll component use a vertical layout will result in no scrolling along the y-axis.
+- `top`: Specifies the distance to scroll the content along the x-axis. Omitting `top` or having the scroll component use a horizontal layout will result in no scrolling along the x-axis.
+- `behavior`: Specifies the transition effect for scrolling. `'instant'` (default) means jumping directly to the target position without a transition effect, while `'smooth'` performs smooth scrolling with a transition effect.
 
+The `scrollBy` method ignores element snapping effects.
 
-Scroll content a certain distance. Unlike [`scrollTo()`](#scrollTo), `scrollBy()` scrolls relative to the current content position. The function of `options` parameter attribute is:
-- `left`: Specifies the distance for scrolling the content along the y-axis. If `left` is ignored or the scroll component has a vertical layout, scrolling on the y-axis will not occur.
-- `top`: Specifies the distance for scrolling the content along the x-axis. If `top` is ignored or the scroll component has a horizontal layout, scrolling on the x-axis will not occur.
-- `behavior`: Specifies the transition effect of scrolling. `'instant'` (default value) means jumping directly to the target position without a transition effect, while `'smooth'` will scroll smoothly and produce a transition effect.
+## CSS Specifications
 
+### Layout Direction Control
 
-The `scrollBy` method ignores the adsorption effect of elements.
+The scrolling direction of the `scroll` component is determined by its layout mode. When using flow layout (default layout) or a flex layout with a `column` direction, elements are laid out vertically, allowing the list to scroll vertically; whereas when using a flex layout with a `row` direction, elements are laid out horizontally, allowing the list to scroll horizontally.
 
-
-## CSS specifications
-
-
-### Layout direction control
-
-
-The scrolling direction of the `scroll` component is determined by its layout method. When using fluid layout (default layout) or `column` direction flex layout, the elements are laid out in the vertical direction, and the list can be scrolled vertically; when using the `row` direction flex layout, the elements are laid out in the horizontal direction, and the list can be scrolled horizontally.
-
-
-<glyphix id="components-scroll-layout" height="360" width="740" title="布局方式控制滚动方向">
-
+<glyphix id="components-scroll-layout" height="360" width="740" title="Layout Mode Controlling Scroll Direction">
 
 ``` html
 <div>
   <scroll>
     <p for="20">vertical scroll</p>
   </scroll>
-  <!-- 用于占位元素，因为 flex 布局现在还不支持 gap -->
+  <!-- Used as a spacer element because flex layout does not support gap yet -->
   <div style="width: 20px"></div>
   <scroll style="display: flex; flex-direction: row;">
     <p for="20">horizontal<br>scroll</p>
@@ -702,7 +546,6 @@ The scrolling direction of the `scroll` component is determined by its layout me
 </div>
 ```
 
-
 ``` css
 div {
   display: flex;
@@ -722,26 +565,20 @@ p {
 }
 ```
 
-
 </glyphix>
-
-
 
 ### `padding` and `overflow` <version-badge since="0.9" />
 
+By default (`overflow: clip`), the padding of the `scroll` component directly clips the visible area. Once content is scrolled, the padding area is always invisible. Setting `overflow: visible` allows the padding area to remain visible even when the content is scrolled.
 
-By default ( `overflow: clip` ), the `scroll` component's padding directly clips the visible area. When content is scrolled, the padding area is always invisible. Setting `overflow: visible` allows the padding area to remain visible as the content scrolls.
-
-
-<glyphix id="components-scroll-padding-overflow-visible" height="360" width="740" title="overflow: visible 的内边距">
-
+<glyphix id="components-scroll-padding-overflow-visible" height="360" width="740" title="Padding with overflow: visible">
 
 ``` html
 <div>
   <scroll :index="2">
     <p for="20">overflow: clip</p>
   </scroll>
-  <!-- 用于占位元素，因为 flex 布局现在还不支持 gap -->
+  <!-- Used as a spacer element because flex layout does not support gap yet -->
   <div style="width: 20px"></div>
   <scroll style="overflow: visible;" :index="2">
     <p for="20">overflow: visible</p>
@@ -749,7 +586,6 @@ By default ( `overflow: clip` ), the `scroll` component's padding directly clips
 </div>
 ```
 
-
 ``` css
 div {
   display: flex;
@@ -770,26 +606,19 @@ p {
 }
 ```
 
-
 </glyphix>
 
+Even with `overflow: visible` set, `scroll` clips its content to the padding-box rather than allowing it to extend beyond that range, which differs from regular elements like `div`. This is because the scrolling behavior and layout mechanism of `scroll` require content to scroll within a defined region, rather than allowing content to expand indefinitely into external areas.
 
+For ordinary containers like `div` under similar `overflow: visible` conditions, content can overflow the entire `div` range (such as outside the red `border`):
 
-Even if `overflow: visible` is set, `scroll` will clip the content to the padding-box instead of allowing it to exceed that range, unlike regular elements like `div`. This is because the scrolling behavior and layout mechanism of `scroll` need to ensure that the content scrolls within a certain area, rather than allowing the content to expand unlimitedly to the outside area.
-
-
-In a similar situation to `overflow: visible`, the content of ordinary containers such as `div` can exceed the scope of the entire `div` (such as outside the red `border`):
-
-
-<glyphix id="components-scroll-overflow-div" height="360" width="360" title="div 的 overflow: visible">
-
+<glyphix id="components-scroll-overflow-div" height="360" width="360" title="div's overflow: visible">
 
 ``` html
 <div style="overflow: visible;">
   <p for="20">div {overflow: visible}</p>
 </div>
 ```
-
 
 ``` css
 div {
@@ -811,22 +640,15 @@ p {
 }
 ```
 
-
 </glyphix>
 
+#### Recommended Settings for i18n Scenarios
 
+In i18n (internationalization) scenarios, text inside `scroll` may need to overflow to avoid potential truncation. For such cases, the recommended setting is `overflow: visible`, which allows [text overflow](/framework/application/i18n.md#text-overflow) content to extend beyond the content boundaries of `scroll` during scrolling, making maximum use of space to display text.
 
-#### Recommended settings for i18n scenarios
+#### Relationship with HTML/CSS Specifications
 
-
-In i18n (internationalization) scenarios, the text within `scroll` may need to be overflowed to avoid possible truncation. For this case, the recommended setting is `overflow: visible`, to allow the [文本溢出](/framework/application/i18n.md#文本溢出) content to exceed the content boundaries of `scroll` when scrolled, to maximize the use of space for text display.
-
-
-#### Relationship to HTML/CSS specifications
-
-
-The behavior of `scroll` when setting `overflow: visible` is similar to `div { overflow-y: scroll; }` in the HTML/CSS specification. The padding at this time can keep the content visible during scrolling, such as this CSS:
-
+The behavior of `scroll` when `overflow: visible` is set is similar to `div { overflow-y: scroll; }` in the HTML/CSS specifications. In this case, padding keeps content visible during scrolling—for example, CSS like this:
 
 ```css
 div {
@@ -835,20 +657,12 @@ div {
 }
 ```
 
-
-The following effect will be obtained, that is, the padding area will not crop the content when scrolling:
-
+Will produce the following effect, where the padding area does not clip the content during scrolling:
 
 <div style="padding: 20px; background-color: var(--vp-c-grey-bg); overflow-y: scroll; height: 100px; width: 200px; border: 2px dotted red; font-family: sans-serif;">
-
   Michaelmas term lately over, and the Lord Chancellor sitting in Lincoln's Inn Hall.
-
   Implacable November weather. As much mud in the streets as if the waters had but
-
   newly retired from the face of the earth.
-
 </div>
 
-
-
-HTML's `div` does not directly correspond to the behavior of `scroll` in `overflow: clip`.
+HTML's `div` does not have a behavior that directly corresponds to `scroll` when `overflow: clip` is set.

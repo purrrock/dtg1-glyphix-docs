@@ -1,193 +1,149 @@
-# media inquiries
+# Media Queries
 
+Media queries allow developers to use different styles for different device types. Currently, media queries support CSS `@media` rules, but do not yet support the `media` attribute of components.
 
-Media queries allow developers to use different styles based on different device types. Currently, media queries support the `@media` rule of CSS, but the `media` attribute of components is not yet supported.
+## CSS `@media` Rules
 
-
-## CSS `@media` rules
-
-
-The grammatical form of the `@media` rule is
+The syntax for the `@media` rule is:
 ``` css
-@media <查询条件> {
+@media <query> {
   <css-rules>
 }
 ```
-[`<query condition>`](#查询条件) is used to query media types and media characteristics, and can be combined using a variety of logical operators. The CSS rules in `<css-rules>` will take effect when the media query conditions are met. For example
+[`<query>`](#query-conditions) is used to query media types and media features, and can be combined using various logical operators. When the media query condition is met, the CSS rules within `<css-rules>` will take effect. For example:
 ``` css
 @media screen and (shape: circle) {
   @import "circle.css";
 }
 ```
-Use the `@import "circle.css"` rule only on devices with round screens. `<css-rules>` can be any CSS rule, including any number of `@import`, `@font-face`, selectors, `@media` rules, etc.
+The `@import "circle.css"` rule is only used on devices with circular screens. `<css-rules>` can be any CSS rules, including any number of `@import`, `@font-face`, selectors, and `@media` rules.
 
+## The `media-query` Attribute of Components
 
-## Component's `media-query` attribute
-
-
-You can use the `media-query` attribute on any component to use media [Query conditions](#查询条件) to determine whether the component is rendered. For example
+The `media-query` attribute can be used on any component to determine whether the component should be rendered using media [query conditions](#query-conditions). For example:
 ``` html
 <div media-query="(shape: circle)">
   ...
 </div>
 ```
-The `<div>` in is a component that will only be rendered on devices with round screens.
+The `<div>` in the example above is a component that is only rendered on devices with circular screens.
 
+The `media-query` attribute is processed only during the build stage, and components that do not meet the media query conditions are directly removed. When elements selected by the `media-query` attribute are relatively complex, consider using [Template Macros](../component/template-macro.md).
 
-The `media-query` attribute will only be processed during the packaging phase, and components that do not meet the media query conditions will be deleted directly. When the elements that need to be selected using the `media-query` attribute are more complex, you can consider using [template macro](../component/template-macro.md)
+## Query Conditions
 
-
-## Query conditions
-
-
-The query condition is an expression with the following structure:
+A query condition is an expression with the following structure:
 ``` ebnf
-(* 媒体查询表达式 *)
-<query> := <query> and | or | , <query>  (* 可以使用 and or , 来组合逻辑 *)
-         | (not <query>) (* not 表达式 *)
-         | <media-type>  (* 媒体类型 *)
+(* Media query expression *)
+<query> := <query> and | or | , <query>  (* Logical combination using and, or, , *)
+         | (not <query>) (* not expression *)
+         | <media-type>  (* Media type *)
          | (<feature>: <value>)
          | (<feature> <relop> <value>)
          | (<value> <relop> <feature> <relop> <value>)
-(* 关系运算符 *)
+(* Relational operators *)
 <relop> := < | <= | > | >=
 ```
-Among them, `<media-type>` is a kind of [media type](#媒体类型), `<feature>` is any kind of [media properties](#媒体特性), and `<value>` is a value supported by this media feature. The following are legal query condition expressions:
+Where `<media-type>` is a [media type](#media-types), `<feature>` is any [media feature](#media-features), and `<value>` is the value supported by that media feature. All of the following are valid query condition expressions:
 ``` css
 @media screen { ... }
 @media screen and (shape: rect) and (width < 500px) { ... }
-@media not (shape: rect) { ... } /* This is equivalent to selecting a circular screen */
+@media not (shape: rect) { ... } /* This is equivalent to selecting circular screens */
 ```
 
+### Logical Operators
 
-### Logical operators
-
-
-Use `and`, `or` and `,` to combine multiple query condition expressions, and use the `not` operator to negate the query condition. You can also use parentheses to increase operator precedence:
+Multiple query condition expressions can be combined using `and`, `or`, and `,`. The `not` operator can be used to negate a query condition. Parentheses can also be used to increase operator precedence:
 ``` css
 @media (not (width < 500px)) or (orientation: portrait) { ... }
 ```
 The meanings of the various operators are as follows:
-- `A and B` is satisfied when `A` and `B` are satisfied at the same time;
-- Satisfies `A and B` and `A, B` when one of `A` or `B` is satisfied;
-- `not A` is not satisfied when `A` is satisfied, and vice versa.
+- `A and B` is satisfied when both `A` and `B` are met;
+- `A and B` (referring to `or` logic context) and `A, B` are satisfied when either `A` or `B` is met;
+- `not A` is not satisfied when `A` is met, and vice versa.
 
+### Relational Operators
 
-### Relational operators
-
-
-Some media properties support relational operators, such as `width`:
+Certain media features support relational operators, such as `width`:
 ``` css
-@media (width > 500px) { ... } /* Select devices wider than 500px */
-@media (400px < width <= 600px) { ... } /* Support range comparison */
+@media (width > 500px) { ... } /* Selects devices with a width greater than 500px */
+@media (400px < width <= 600px) { ... } /* Range comparison is supported */
 ```
-There are 4 types of relational operators: `<`, `<=`, `>`, `>=`.
+There are 4 relational operators: `<`, `<=`, `>`, `>=`.
 
+## Query Properties
 
-## Query properties
+### Media Types
 
+A media type is a name. Currently, only the `screen` media type is supported. `screen` is also the default media type, so it can be omitted.
 
-### media type
-
-
-The media type is a name. Currently, only the `screen` media type is supported. `screen` is also the default media type, so it does not need to be written.
-
-
-### media properties
-
+### Media Features
 
 #### `width`
 
-
-Query the width of the device screen, supporting relational operators. Values ​​must be in units of `px`, for example `500px`.
-
+Queries the width of the device screen, supporting relational operators. The unit of the value must be `px`, for example, `500px`.
 
 #### `max-width`
 
-
-Specifies the maximum width of the screen. The value must be in `px` units. `(max-width: 500px)` is equivalent to `(width <= 500px)`.
-
+Specifies the maximum width of the screen. The unit of the value must be `px`. `(max-width: 500px)` is equivalent to `(width <= 500px)`.
 
 #### `min-width`
 
-
-Specifies the minimum width of the screen. The value must be in `px` units. `(min-width: 500px)` is equivalent to `(width >= 500px)`.
-
+Specifies the minimum width of the screen. The unit of the value must be `px`. `(min-width: 500px)` is equivalent to `(width >= 500px)`.
 
 #### `height`
 
-
-Query the height of the device screen, supporting relational operators. Values ​​must be in units of `px`, for example `500px`.
-
+Queries the height of the device screen, supporting relational operators. The unit of the value must be `px`, for example, `500px`.
 
 #### `max-height`
 
-
 Specifies the maximum height of the screen. The unit of the value must be `px`. `(max-height: 500px)` is equivalent to `(height <= 500px)`.
-
 
 #### `min-height`
 
-
-Specifies the minimum height of the screen. The value must be in `px` units. `(min-height: 500px)` is equivalent to `(height >= 500px)`.
-
+Specifies the minimum height of the screen. The unit of the value must be `px`. `(min-height: 500px)` is equivalent to `(height >= 500px)`.
 
 #### `shape`
 
-
-Specifies the shape of the screen. Supported values ​​are:
-- `rect`: represents a rectangular screen;
-- `circle`: indicates a circular screen;
-
+Specifies the shape of the screen. Supported values are:
+- `rect`: Represents a rectangular screen;
+- `circle`: Represents a circular screen;
 
 #### `aspect-ratio`
 
-
-Query the aspect ratio of the screen, supporting relational operators. The value can be a number or a fraction, for example `1.5` and `3/2` both represent an aspect ratio of $3 / 2$.
-
+Queries the aspect ratio of the screen, supporting relational operators. The value can be a number or a fraction, for example, both `1.5` and `3/2` represent an aspect ratio of $3 / 2$.
 
 #### `max-aspect-ratio`
 
-
-Specifies the device's maximum screen aspect ratio.
-
+Specifies the maximum screen aspect ratio of the device.
 
 #### `min-aspect-ratio`
 
-
-Specifies the device's minimum screen aspect ratio.
-
+Specifies the minimum screen aspect ratio of the device.
 
 #### `orientation`
 
-
-Specifies the shape of the screen. Supported values ​​are:
-- `portrait`: indicates a vertical screen device;
-- `landscape`: Indicates horizontal screen device.
-
+Specifies the screen orientation. Supported values are:
+- `portrait`: Represents a portrait screen device;
+- `landscape`: Represents a landscape screen device.
 
 #### `memory-profile`
 
-
-The Memory profile attribute is a reference value used to guide developers in reducing functionality under different memory budgets. It is set based on parameters such as the device's actual memory capacity and screen resolution. Memory profiles can help developers optimize and adjust functions according to the set memory budget to ensure that applications can run smoothly on low-end devices.
-
+The memory profile attribute is a reference value used to guide developers in trimming features under different memory budgets. It is set based on parameters such as the device's actual memory capacity and screen resolution. The memory profile helps developers optimize and adjust features according to a set memory budget, ensuring that applications run smoothly even on low-end devices.
 
 The `memory-profile` attribute supports the following syntax:
 ``` ebnf
- memory-profile := <number>   (* 内存配置大小，默认单位为 KiB *)
-                 | <number> K (* 内存配置大小，单位为 KiB *)
-                 | <number> M (* 内存配置大小，单位为 MiB，可以带有小数 *)
+ memory-profile := <number>   (* Memory profile size, default unit is KiB *)
+                 | <number> K (* Memory profile size, unit is KiB *)
+                 | <number> M (* Memory profile size, unit is MiB, can include decimals *)
 ```
 
+Note that `memory-profile` is not the device's actual memory capacity. Generally, the values of this attribute are categorized as follows:
+- $2048$ ($2\rm M$): Less than $2\rm MiB$ belongs to low-end devices. Applications should cut features like fish-eye lists, long lists with a large number of images, etc. Some complex pages may also need to be simplified or removed.
+- $4096$ ($4\rm M$): Less than $4\rm MiB$ belongs to mid-to-low-end devices. Applications can use a small number of fish-eye lists, but overly long lists with images are not recommended.
+- $8192$ ($8\rm M$): Less than $8\rm MiB$ belongs to mid-to-high-end devices. Basically, all features can be used, but performance improvements can still be achieved with larger capacity.
 
-Note that `memory-profile` is not the actual memory capacity of the device. Generally speaking, the values ​​of this attribute are broken down as follows:
-- $2048$ ($2\rm M$): Devices less than $2\rm MiB$ are low-end devices. Applications should cut off fisheye lists, long lists with a large number of pictures, etc. Some complex pages may also need to be simplified or eliminated.
-- $4096$ ($4\rm M$): Devices less than $4\rm MiB$ are mid- to low-end devices. A small number of fisheye lists can be used in applications, but it is not recommended to use too long lists with pictures.
-- $8192$ ($8\rm M$): Less than $8\rm MiB$ is a mid-to-high-end device that can basically use all functions, but performance can be improved with larger capacity.
-
-
-For example, the following ligand query matches devices with memory profiles between $2{\rm MiB}\sim 4{\rm MiB}$:
-
+For example, the following media query statement matches devices with a memory profile between $2{\rm MiB}$ and $4{\rm MiB}$:
 
 ``` css
 @media (2M < memory-profile <= 4M) {
@@ -195,5 +151,4 @@ For example, the following ligand query matches devices with memory profiles bet
 }
 ```
 
-
-If you need to get a device's memory profile in JavaScript, use the `@system.device` module's [`memoryProfile`](/api/system-device.md#memoryprofile) attribute.
+If you need to get the device's memory profile in JavaScript, please use the [`memoryProfile`](/api/system-device.md#memoryprofile) property of the `@system.device` module.

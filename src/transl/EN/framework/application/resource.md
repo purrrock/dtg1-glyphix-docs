@@ -1,31 +1,22 @@
-# resource access
+# Resource Access
 
+## URIs and Paths
 
-## URIs and paths
+Resources within an application can be accessed via URIs or paths. These resources include files within the application installation package, the application's runtime data files, and shared data files. Unlike Web environments, URIs and paths in Glyphix applications are primarily used to access local files rather than resources on the network.
 
-
-You can access resources in the application through URI or path. These resources include files in the application installation package, application runtime data files and shared data files, etc. Unlike the web environment, URIs and paths in Glyphix applications are mainly used to access local files and cannot access resources on the network.
-
-
-Many [API](/api/README.md) and [Native components](/components/README.md) use URIs or paths to access resources, and URIs or paths can generally be mixed in these interfaces.
-
+Many [APIs](/api/README.md) and [native components](/components/README.md) use URIs or paths to access resources, and these two can generally be used interchangeably in these interfaces.
 
 ### URI
 
-
-The format of URI is similar to [URL](https://developer.mozilla.org/docs/Glossary/URL), and the syntax definition is as shown in the figure below:
-
+The format of a URI is similar to a [URL](https://developer.mozilla.org/docs/Glossary/URL), and its syntax is defined as shown in the figure below:
 
 ![](./figures/uri-syntax.svg)
 
-
-
-The description of each field is:
+Descriptions of each field:
 - **scheme**: Specifies the protocol for resource access, such as `app`, `internal`, etc.;
-- **authority**: usually represents the package name or domain name, and its meaning is determined by the specific resource agreement;
-- **path**: The path of the resource inside the resource package, which must be a string starting with the `/` character (just like the path in Unix);
-- **query**: Specify query data, generally only used to pass parameters when application jumps.
-
+- **authority**: Usually represents the package name or domain name, and its meaning is determined by the specific resource protocol;
+- **path**: The path of the resource inside the resource package, which must be a string starting with the `/` character (just like paths in Unix);
+- **query**: Specifies query data, generally used only to pass parameters during application navigation.
 
 Here are some examples of URIs:
 ```
@@ -46,125 +37,92 @@ app://com.example.app/icon.png?key=value
 scheme               path
 ```
 
+URIs can be used to locate resources in other applications as well as system resources, and can also access application caches or temporary files. Pay attention to whether the application has the corresponding permissions when accessing external resources. Unlike the Web platform, Glyphix URIs are usually used to access local resources and cannot access network resources. Please use the [`system.fetch`](/api/system-fetch.md) or [`system.request`](/api/system-request.md) module instead.
 
-URIs can be used to locate resources in other applications and system resources, and can also access the application's cache or temporary files. When accessing external resources, pay attention to whether the application has the corresponding permissions. Unlike the web platform, Glyphix URIs are typically used to access local resources and cannot access network resources. Please use the [`system.fetch`](/api/system-fetch.md) or [`system.request`](/api/system-request.md) module.
+### Paths
 
-
-### path
-
-
-Path is another way to locate resources, it can only define resources inside the application package. There are two ways to write paths, one is an absolute path starting with `/`, such as `/assets/images/icon.png`; the other is a relative path, such as `images/icon.png`. Absolute paths are relative to the root directory of the application resource bundle (that is, the project's `src` directory), while relative paths are relative to the current resource file. therefore
+A path is another way to locate resources, and it can only define resources inside the application package. There are two ways to write a path: one is an absolute path starting with `/`, such as `/assets/images/icon.png`; the other is a relative path, such as `images/icon.png`. Absolute paths are relative to the root directory of the application resource package (which is the project's `src` directory), while relative paths are relative to the current resource file. Therefore, in
 ``` js
 // in file: /Common/module-a.js
 import x from '/Common/module-b.js'
 import y from 'module-b.js'
 ```
-, `x` and `y` actually import the same module.
+`x` and `y` actually import the same module.
 
+`..` can be used to locate the parent directory, such as `../fonts/Times.ttf` or `/images/../fonts/Times.ttf`. However, `..` cannot go beyond the root directory of the project, so `/a/../..` will be restricted to `/`.
 
-Use `..` to locate the upper directory, such as `../fonts/Times.ttf` or `/images/../fonts/Times.ttf`. However, `..` cannot transcend the level of the project root directory, so `/a/../..` will be limited to `/`.
+Absolute paths can be used for the path field of a URI.
 
-
-Absolute paths can be used in the path field of a URI.
-
-
-## URI protocol
-
+## URI Protocols
 
 ### `app`
 
+Under this protocol, the authority field is the application's package name, which is the `manifest.package` field. The `path` field is the path of the resource within the application resource package.
 
-Under this protocol, the authority field is the application package name, which is the `mainfest.package` field. The `path` field is the path to the resources in the application resource package.
-
-
-Use the `app` protocol to access resources from other applications.
-
+Resources of other applications can be accessed using the `app` protocol.
 
 ### `file`
 
-
 To be added
-
 
 ### `pkg`
 
-
 To be added
-
 
 ### `internal`
 
+The `internal` URI protocol is used to access resource files inside the application, especially those that cannot be accessed through regular static [paths](#paths). For example, an application might generate temporary files, cache files, or private files that cannot be accessed via paths (paths can only access static resources within the resource package) and should instead be accessed and managed through the internal protocol.
 
-The `internal` URI protocol is used to access resource files within an application, especially those that are not accessible through regular static [path](#路径). For example, an application may generate temporary files, cache files, or private files that cannot be accessed through paths (paths can only access static resources within resource bundles), but should be accessed and managed through the internal protocol.
-
-
-The basic format of the common `internal` URI protocol is as follows:
+The basic format of common `internal` URI protocols is as follows:
 ``` ebnf
 internal://<authority>/<path>
 ```
-- **authority**: Determines the storage location of resource files. See below for specific functions.
-- **path**: The path relative to the specified storage location, pointing to a specific file.
+- **authority**: Determines the storage location of the resource file, see below for specific functions.
+- **path**: The path relative to the specified storage location, pointing to the specific file.
 
+#### authority Field
 
-#### authority field
+The **authority** field determines the category and storage location of the internal resource. Depending on its value, the meaning of the `authority` field is as follows:
+- `cache`: Indicates that the URI points to the application's cache directory, usually used to store cache files. Files in this directory are temporary files generated during application runtime and can be deleted or rebuilt at any time.
+- `files`: Indicates that the URI points to the application's private file directory. This is a storage location dedicated to the application for saving file data that needs to be persisted.
+- `mass`: Indicates that the URI points to a file directory shared by all applications. This is usually a public directory where multiple applications can store and read files.
+- `tmp`: Indicates that the URI points to the system's temporary file directory, usually used to store short-term temporary files. Files stored here have a short lifespan and may be cleared when the system or application restarts.
 
-
-The **authority** field determines the category and storage location of internal resources. Depending on the value, the meaning of the `authority` field is as follows:
-- `cache`: Indicates that this URI locates the cache directory of the application, usually used to store cache files. The files in this directory are temporary files generated when the application is running and can be deleted or rebuilt at any time.
-- `files`: Indicates that the URI locates the private file directory of the application. This is an application-specific storage location for file data that needs to be persisted.
-- `mass`: Indicates that the URI locates the file directory shared by all applications. This is usually a common directory where multiple applications can store and read files.
-- `tmp`: Indicates that this URI locates the temporary file directory of the system, which is usually used to store temporary files for short-term use. Files are stored here for a short period of time and may be cleared when the system or application is restarted.
-
-
-For example, `internal://cache/images/avatar.png` means accessing the image file `avatar.png` in the cache directory. This URI can be used in multiple scenarios such as [image](/components/image.md) components:
+For example, `internal://cache/images/avatar.png` represents accessing the image file `avatar.png` in the cache directory. This URI can be used in multiple scenarios such as the [image](/components/image.md) component:
 ``` html
 <image src="internal://cache/images/avatar.png" />
 ```
 
-
 ::: warning
+The **authority** field does not support URI encoding and must directly use literal values such as `cache` and `files`, rather than encodings in the form of `%63%61%63%68%65`. The **path** field supports URI encoding (though not recommended), but in addition to regular file path rules, it must comply with the following restrictions: the `%` character must not appear in the path, and it cannot traverse up to the root directory using `..`.
 
-The **authority** field does not support URI encoding. Literal values ​​such as `cache` and `files` must be used directly, and encoding in the form of `%63%61%63%68%65` cannot be used. The **path** field supports URI encoding (but is not recommended), but is subject to the following restrictions in addition to the normal file path rules: `%` characters cannot appear in the path, and the root directory cannot be traced back as `..`.
-
-
-These restrictions are intended to prevent potential security risks by preventing bypassing of internal resource access rules through encoding or path uptracing.
+These restrictions are designed to prevent bypassing internal resource access rules through encoding or path traversal, thereby avoiding potential security risks.
 :::
 
+#### Application File Isolation
 
+When using the `internal` URI protocol, the `cache`, `files`, and `tmp` categories are all private storage areas of the application, and only the current application can access the files in these directories. Therefore, the same `internal` URI may point to different files in different applications. Each application has an independent private storage space for caches, files, and temporary files, ensuring file isolation and data security between applications.
 
-#### Apply file isolation
-
-
-When using the `internal` URI protocol, the `cache`, `files` and `tmp` categories are private storage areas for applications, and only the current application can access files in these directories. Therefore, the same `internal` URI may point to different files in different applications. Each application has independent private cache, file and temporary file storage space, ensuring file isolation and data security between applications.
-
-
-Suppose there are two different applications A and B, each using the same URI to access private files:
+Suppose there are two different applications A and B, both using the same URI to access a private file:
 ```
 internal://files/config/settings.json
 ```
-So
-- The URI in **Application A** points to the `settings.json` file in its private file directory.
-- This URI in **Application B** points to the `settings.json` file in its private file directory.
+Then
+- In **Application A**, this URI points to the `settings.json` file in its private file directory.
+- In **Application B**, this URI points to the `settings.json` file in its private file directory.
 
+This mechanism ensures that applications manage their own files independently without interfering with each other, and also avoids potential data leaks.
 
-This mechanism ensures that applications manage their own files without interfering with each other, and avoids potential data leaks.
-
-
-Different from this, `internal://mass/` is a common file storage area shared by all applications. The same `internal` URI points to the same file in different applications. Therefore, files in the `mass` directory can be accessed and shared by multiple applications. For example, both application A and application B use:
+In contrast, `internal://mass/` is a public file storage area shared by all applications. The same `internal` URI points to the same file in different applications. Therefore, files under the `mass` directory can be jointly accessed and shared by multiple applications. For example, if both Application A and Application B use:
 ```
 internal://mass/public/shared_image.png
 ```
-Then the URI points to the same common file `shared_image.png` in both applications, allowing them to share the file resource.
-
+Then the URI points to the same public file `shared_image.png` in both applications, allowing them to share this file resource.
 
 ::: warning
-
-If one application stores sensitive data in `mass` space, other applications may be able to read that data. Therefore, developers should avoid storing any sensitive or private information in the `mass` directory and ensure that files stored there are publicly accessible and shareable resources.
+If an application stores sensitive data in the `mass` space, other applications may read that data. Therefore, developers should avoid storing any sensitive or private information in the `mass` directory, and ensure that the files stored therein are publicly accessible and shareable resources.
 :::
 
+## Resource APIs
 
-
-## Resource API
-
-
-[`URI`](/api/global.md#uri) global function, [`@system.path`](/api/system-path.md), [`@system.file`](/api/system-file.md) and other interfaces provide the ability to operate resources in JavaScript. Please refer to the relevant documentation for details.
+The [`URI`](/api/global.md#uri) global function, [`@system.path`](/api/system-path.md), [`@system.file`](/api/system-file.md), and other interfaces provide the capability to manipulate resources in JavaScript. Please refer to the relevant documentation for details.

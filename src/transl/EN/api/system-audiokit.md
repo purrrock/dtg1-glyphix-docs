@@ -1,47 +1,47 @@
-# Audio player manager
+# Audio Player Manager
 
-## Import module
+## Import Module
 
 ``` ts
 import audiokit from '@system.audiokit'
 ```
 
-## Interface definition
+## Interface Definitions
 
 ### `getPlayers` <decl type="(): AudioPlayer" method />
 
-Query the list of audio player [`AudioPlayer`](#AudioPlayer) objects available in the system.
+Queries the list of available audio player [`AudioPlayer`](#AudioPlayer) objects in the system.
 
 ### `getActivePlayer` <decl type="(): AudioPlayer" method />
 
-Query the active audio player [`AudioPlayer`](#AudioPlayer) object in the system.
+Queries the active audio player [`AudioPlayer`](#AudioPlayer) object in the system.
 
 ### `subscribe` <decl type="(callback: (PlayerEvent) => void): number" method/>
 
-Listen for changes in the audio player on the system. The parameter `PlayerEvent` of `callback` is [notification event](#PlayerEvent). The ID returned by this method can be used to unsubscribe using the [`unsubscribe()`](#unsubscribe) method.
+Listens for changes to audio players in the system. The `PlayerEvent` parameter of `callback` is a [notification event](#PlayerEvent). The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to stop listening.
 
 Type signature of `PlayerEvent`:
 
 ```ts
 type PlayerEvent = {
   notify: string; // Change event type
-  player: string; // Change player name
+  player: string; // Name of the changed player
 }
 ```
 
-Change event type
+Change event types:
 
-- `active`: The currently active player in the system has changed
-- `append`: The player is added to the system
-- `remove`: The player has been removed from the system
+- `active`: The currently active player in the system has changed.  
+- `append`: A player has been added to the system.
+- `remove`: A player has been removed from the system.
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
-Cancel player change monitoring. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
+Cancels the player change listener. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
 
-## `AudioPlayer` object
+## `AudioPlayer` Object
 
-::: details type signature
+::: details Type Signature
 ``` ts
 interface AudioPlayer {
   src: string,
@@ -87,20 +87,20 @@ interface AudioPlayer {
 ```
 :::
 
-- The `AudioPlayer` object (hereinafter referred to as: `audiokit.Player`) and the `AudioPlayer` object (hereinafter referred to as: `media.Player`) created in the `system.media` module are different js objects, but they manage the same player. At the same time, the `audiokit.Player` object has more functions than the `media.Player` object, such as: `next()`, `previous()` and other methods. Users can use Operations such as `play()` performed by the `audiokit.Player` object will also be notified to the listener of the `media.Player` object.
+- The `AudioPlayer` object (hereinafter referred to as `audiokit.Player`) and the `AudioPlayer` object created in the `system.media` module (hereinafter referred to as `media.Player`) are different JS objects, but they manage the same player. Additionally, the `audiokit.Player` object provides more features than the `media.Player` object, such as `next()`, `previous()`, etc. Operations like `play()` executed by the user through the `audiokit.Player` object will also trigger notifications to the listeners of the `media.Player` object.
 
 ### `src` <decl type="string" set get />
 
-Set or read the url that needs to play audio. Supports [local resource path](/framework/application/resource.md#uri-and path) and network resource path using http and https protocols (for example: `https://www.rt-thread.com/service/test/001.mp3`). Here's a simple example of setting src and then starting playback:
+Sets or reads the URL of the audio to be played. Supports [local resource paths](/framework/application/resource.md#uri-和路径) and network resource paths using HTTP and HTTPS protocols (e.g., `https://www.rt-thread.com/service/test/001.mp3`). Below is a simple example of setting `src` and starting playback:
 
 ```ts
 import audiokit from '@system.audiokit'
-//Query the active audio players in the system
+// Query the active audio player in the system
 let player = audiokit.getActivePlayer()
 if (player != null) {
-  //First stop the currently playing audio
+  // First, stop the currently playing audio
   player.stop()
-  //Set the audio url to be played
+  // Set the audio URL to play
   player.src = 'https://www.rt-thread.com/service/test/001.mp3'
   // Start playing audio
   player.play()
@@ -109,103 +109,103 @@ if (player != null) {
 
 ### `name` <decl type="string" set get />
 
-The name of the player object. If not set, it defaults to the name of the application that created the player. It should be noted that the name of the player object is not globally unique, and the name cannot be used to identify the player object.
+The name of the player object. If not set, defaults to the name of the application that created the player. Note that the player object's name is not guaranteed to be globally unique and cannot be used to uniquely identify a player object.
 
 ### `icon` <decl type="string" set get />
 
-The player object's icon url. Support [local resource path](/framework/application/resource.md#uri-and path)
+The icon URL of the player object. Supports [local resource paths](/framework/application/resource.md#uri-和路径).
 
 ### `mode` <decl type="string" set get />
 
-playback mode. The function corresponding to this attribute should be implemented by the player application. The player object does not process it by default and only provides this attribute.
+Playback mode. The functionality corresponding to this property should be implemented by the player application; the player object does not process it by default and only provides the property.
 
-- `sequential`: play sequentially
-- `random`: play randomly
-- `singleloop`: single loop
-- `listloop`: list loop
+- `sequential`: Sequential playback  
+- `random`: Random playback  
+- `singleloop`: Single-track loop  
+- `listloop`: Playlist loop  
 
 ### `status` <decl type="string" get />
 
-Read the current playback status
+Reads the current playback status.
 
-- `play`: playing status
-- `pause`: Pause playback state
-- `stop`: Stop playing status
-- `ended`: playback end status
-- `error`: playback error status
+- `play`: Playing status  
+- `pause`: Paused status  
+- `stop`: Stopped status  
+- `ended`: Playback ended status  
+- `error`: Playback error status  
 
 ### `duration` <decl type="number" get />
 
-Total audio duration, unit: seconds
+Total duration of the audio, in seconds.
 
 ### `position` <decl type="number" set get />
 
-The time position of the current audio playback, unit: seconds
+Current playback time position of the audio, in seconds.
 
 ### `songAttribute` <decl type="songAttribute" set get />
 
-Song property object
+Song attribute object.
 
-::: details type signature
+::: details Type Signature
 ```ts
 type songAttribute = {
-  title: string; // The name of the song
-  artist: string; //The name of the performer, which can be an individual or a band
-  album: string; // The name of the album to which the song belongs
-  year: string; // The year the song was released
-  genre: string; // The type of song, such as pop, rock, classical, etc.
-  track: string; // The number of the current song in the album, for example: "1/12" means the 1st song, a total of 12 songs
+  title: string; // Title of the song
+  artist: string; // Name of the performer, can be an individual or a band
+  album: string; // Name of the album the song belongs to
+  year: string; // Release year of the song
+  genre: string; // Genre of the song, such as pop, rock, classical, etc.
+  track: string; // Track number in the album, e.g., "1/12" means track 1 of 12
   coverArt: string; // URL of the song cover image
-  lyrics: string; // URL of lyrics text
-  comments: string; // Additional information, such as copyright remarks, etc.
+  lyrics: string; // URL of the lyrics text
+  comments: string; // Additional information, such as copyright notes
 }
 ```
 :::
 
-The songAttribute object is a Proxy object like the AudioPlayer object. It cannot be serialized and deserialized using JSON, and cannot be referenced in the responsive framework. Here's a simple usage example:
+Like the `AudioPlayer` object, the `songAttribute` object is a Proxy object, meaning it cannot be serialized/deserialized with JSON, nor can it be referenced in a reactive framework. Below is a simple usage example:
 
 ```ts
-//Set the name of the song
+// Set the song title
 this.player.songAttribute.title = "Unknown"
-//Set the singer of the song
+// Set the song artist
 this.player.songAttribute.artist = "Unknown"
-// Check the name of the song
+// View the song title
 console.dir(this.player.songAttribute.title)
 ```
 
 ### `volume` <decl type="number" set get />
 
-The volume of the current player, range: [0.0, 1.0]
+Current volume of the player, range: [0.0, 1.0].
 
 ### `nextAvailable` <decl type="bool" set get />
 
-Set or query whether the next song can be switched
+Sets or queries whether switching to the next track is available.
 
 ### `prevAvailable` <decl type="bool" set get />
 
-Set or query whether the previous song can be switched
+Sets or queries whether switching to the previous track is available.
 
 ### `play` <decl type="(): void" method />
 
-Start playing the audio specified in the src attribute
+Starts playing the audio specified in the `src` property.
 
-- If the src attribute is not set before calling this method, playback will fail and the onerror event will be triggered;
-- This method is a synchronous interface. After executing this interface, you need to wait for the onplay event or onerror event to determine whether the playback is successful or failed. Before the event is triggered, other operations performed will be ignored;
+- If the `src` property is not set before calling this method, playback will fail and trigger the `onerror` event.
+- This method is synchronous. After executing this interface, you need to wait for the `onplay` event or `onerror` event to determine whether playback succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
 
-The following is a simple example of calling the play() interface:
+Below is a simple example of calling the `play()` interface:
 
 ```ts
 import audiokit from '@system.audiokit'
-//Query the active audio players in the system
+// Query the active audio player in the system
 let player = audiokit.getActivePlayer()
 if (player != null) {
-  //First stop the currently playing audio
+  // First, stop the currently playing audio
   player.stop()
-  //Set the audio url to be played
+  // Set the audio URL to play
   player.src = 'https://www.rt-thread.com/service/test/001.mp3'
-  //Set onplay event
-  player.onplay = () => { console.dir("Start playing") }
-  //Set onerror event
+  // Set the onplay event
+  player.onplay = () => { console.dir("Started playing") }
+  // Set the onerror event
   player.onerror = () => { console.dir("Playback error") }
   // Start playing audio
   player.play()
@@ -214,91 +214,91 @@ if (player != null) {
 
 ### `pause` <decl type="(): void" method />
 
-Pause the current audio
+Pauses the playback of the current audio.  
 
-- This method is a synchronous interface. After executing this interface, you need to wait for the onpause event or onerror event to determine whether the pause is successful or failed. Before the event is triggered, other operations performed will be ignored;
+- This method is synchronous. After executing this interface, you need to wait for the `onpause` event or `onerror` event to determine whether pausing succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
 
 ### `stop` <decl type="(): void" method />
 
-Stop audio playback and replay the audio via play
+Stops audio playback. Playback can be resumed using `play`.  
 
-- This method is a synchronous interface. After executing this interface, you need to wait for the onstop event or onerror event to determine whether the stop is successful or failed. Before the event is triggered, other operations performed will be ignored;
+- This method is synchronous. After executing this interface, you need to wait for the `onstop` event or `onerror` event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
 
 ### `release` <decl type="(): void" method />
 
-Release audio resources
+Releases audio resources.  
 
-- Executing this interface will stop playing the current audio. You need to wait for the onstop event or onerror event to determine whether the stop is successful or failed. Before the event is triggered, other operations performed will be ignored;
+- Executing this interface will stop the playback of the current audio. You need to wait for the `onstop` event or `onerror` event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored.   
 
 ### `next` <decl type="(): void" method />
 
-Notify the player application to play the next song. After executing this interface, the onnext event will be triggered to notify the player application that listens to this event, and the player application will execute the logic of song switching.
+Notifies the player application to play the next track. Executing this interface will trigger the `onnext` event to notify the player application listening to this event, which then executes the song-switching logic.
 
 ### `previous` <decl type="(): void" method />
 
-Notify the player application to play the next song. After executing this interface, the onprevious event will be triggered to notify the player application that listens to this event, and the player application will execute the song switching logic.
+Notifies the player application to play the previous track. Executing this interface will trigger the `onprevious` event to notify the player application listening to this event, which then executes the song-switching logic.
 
-### `requestFocus` <decl type="({acquireType: string，volumeType: string}): void" method />
+### `requestFocus` <decl type="({acquireType: string, volumeType: string}): void" method />
 
-Request audio focus. After executing this interface, the underlying layer will be notified to request or release the audio focus, and the underlying layer will control the switching and interruption logic of different types of audio.
+Requests audio focus. Executing this interface will notify the underlying system to request or release audio focus, allowing the underlying system to control switching and interruption logic for different types of audio.
 
 The `acquireType` parameter indicates the request type:
 - `gain`: Request audio focus
 - `loss`: Release audio focus
 
 The `volumeType` parameter indicates the audio type:
-- `system`: system prompt
-- `media`: media music
-- `tts`: voice broadcast
+- `system`: System prompts
+- `media`: Media music
+- `tts`: Voice broadcasts
 
-The following example demonstrates how the `requestFocus` function requests audio focus:
+The following example demonstrates how to use `requestFocus` to request audio focus:
 ``` ts
 import audiokit from '@system.audiokit'
-//Query the active audio players in the system
+// Query the active audio player in the system
 let player = audiokit.getActivePlayer()
 if (player != null) {
-  // Get the audio focus of the media music type
+  // Acquire audio focus for media music type
   player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
 }
 ```
 
 ### `releaseFocus` <decl type="(): void" method />
 
-Release audio focus. After executing this interface, the bottom layer will be notified to release the audio focus, and the bottom layer will control the switching and interruption logic of different types of audio.
+Releases audio focus. Executing this interface will notify the underlying system to release audio focus, allowing the underlying system to control switching and interruption logic for different types of audio.
 
 ### `onplay` <decl type="?: () => void" set />
 
-Callback event after audio play is successful
+Callback event triggered when audio `play` succeeds.
 
 ### `onpause` <decl type="?: () => void" set />
 
-Callback event after audio pause is successful
+Callback event triggered when audio `pause` succeeds.
 
 ### `onstop` <decl type="?: () => void" set />
 
-Callback event after audio stop is successful
+Callback event triggered when audio `stop` succeeds.
 
 ### `onended` <decl type="?: () => void" set />
 
-Callback event after audio playback ends
+Callback event triggered when audio playback ends.
 
 ### `onerror` <decl type="?: () => void" set />
 
-Execute callback events for interface errors such as `play` `pause` `stop` `position` and other interfaces. When an error occurs, the corresponding onplay and other events will not be triggered.
+Callback event triggered when errors occur during interfaces such as `play`, `pause`, `stop`, or `position`. When an error occurs, corresponding events like `onplay` will not be triggered.
 
 ### `ontimeupdate` <decl type="?: () => void" set />
 
-A callback event that will be triggered when the position property is updated. This event will only be triggered when the application is in the foreground, and will stop dispatching when the application is in the background.
+Callback event triggered when the `position` property updates. This event is only triggered when the application is in the foreground and will stop dispatching when the application enters the background.
 
 ### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
 
-The callback function when an audio interruption event occurs. When the current audio is snatched by audio of the same audio type or other audio types, it will be notified that it is temporarily interrupted or completely interrupted.
+Callback function when an audio interruption event occurs, notifying temporary or permanent interruption when the current audio is preempted by audio of the same or another type.
 
-The `interruptHint` of the `action` parameter indicates the type of interrupt event:
-- `1`: brief interruption (can be automatically restored, such as: music is interrupted)
-- `2`: Completely interrupted (cannot be automatically restored, such as: NetEase Cloud was interrupted by Himalaya)
+The `interruptHint` parameter of `action` indicates the type of interruption event:
+- `1`: Transient interruption (can recover automatically, e.g., music being interrupted by a notification)
+- `2`: Permanent interruption (cannot recover automatically, e.g., NetEase Cloud Music being interrupted by Ximalaya)
 
-The following example demonstrates how to register an `oninterrupt` callback function, which is called when an event occurs:
+The following example demonstrates how to register the `oninterrupt` callback function, which will be called when the event occurs:
 ``` js
 player.oninterrupt = (action) => {
   console.log(action.interruptHint)
@@ -307,44 +307,44 @@ player.oninterrupt = (action) => {
 
 ### `onnext` <decl type="?: () => void" set />
 
-Callback event when the next song needs to be played
+Callback event when the next track needs to be played.
 
 ### `onprevious` <decl type="?: () => void" set />
 
-Callback event when the previous song needs to be played
+Callback event when the previous track needs to be played.
 
 ### `onrequestplay` <decl type="?: () => void" set />
 
-When the bottom layer needs to start playback, the callback event is triggered to notify the js application, and the js application executes the logic of starting playback.
+Callback event triggered when the underlying system needs to start playback, notifying the JS application to execute the start playback logic.
 
 ### `onrequestpause` <decl type="?: () => void" set />
 
-When the bottom layer needs to pause playback, the callback event is triggered to notify the js application, and the js application executes the logic of pausing playback.
+Callback event triggered when the underlying system needs to pause playback, notifying the JS application to execute the pause playback logic.
 
 ### `onrequeststop` <decl type="?: () => void" set />
 
-When the bottom layer needs to stop playing, the callback event is triggered to notify the js application, and the js application executes the logic of stopping the playback.
+Callback event triggered when the underlying system needs to stop playback, notifying the JS application to execute the stop playback logic.
 
 ### `onsongattribute` <decl type="?: () => void" set />
 
-Callback event when the song attribute object changes
+Callback event when the song attribute object changes.
 
 ### `onposition` <decl type="?: () => void" set />
 
-Execute `position` to set the time and position of the current audio playback. The callback event is successful.
+Callback event when setting the current audio playback time position via `position` succeeds.
 
 ### `onrequestfocus` <decl type="?: () => void" set />
 
-Callback event when requesting audio focus successfully
+Callback event when requesting audio focus succeeds.
 
 ### `onreleasefocus` <decl type="?: () => void" set />
 
-Callback event when audio focus is released successfully
+Callback event when releasing audio focus succeeds.
 
 ### `onmodechanged` <decl type="?: () => void" set />
 
-Callback event when playback mode changes
+Callback event when the playback mode changes.
 
 ### `onvolumechange` <decl type="?: () => void" set />
 
-Callback event when player volume changes
+Callback event when the player volume changes.

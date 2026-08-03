@@ -1,200 +1,170 @@
-# Asynchronous operations
+# Asynchronous Operations
 
+The main purpose of introducing asynchronous operations in JavaScript scripts is to move time-consuming tasks to the background for execution, avoiding the blocking of the JavaScript thread. The tasks moved to the background for processing are primarily I/O-bound operations. Glyphix provides a basic JavaScript asynchronous framework for developers. This framework provides only the necessary abstractions for asynchronous workflows and therefore introduces no extra overhead.
 
-The main purpose of introducing asynchronous operations in JavaScript scripts is to execute time-consuming work in the background to avoid JavaScript thread blocking. The work placed in the background for processing is mainly IO-intensive operations. Glyphix provides a basic JavaScript asynchronous framework for developers to use, which only makes necessary abstractions for asynchronous workflows, so it does not introduce additional overhead.
+## Applicable Scenarios
 
+Applicable scenarios for the asynchronous workflow model:
 
-## Applicable scenarios
+- Requests initiated by JavaScript code, processed by a native asynchronous processing thread, and results returned;
+- Requests initiated by JavaScript code, processed by a native asynchronous processing thread, and messages reported periodically;
+  - JavaScript code can actively request to revoke/cancel the request.
 
+## Data Request Pattern
 
-Applicable scenarios for asynchronous workflow models
+In the data request pattern, JavaScript code calls C++ APIs to create requests, executes operations in an asynchronous thread, and returns the results to the JavaScript code. During this process, data is transmitted through an asynchronous queue. The `async::ResultSession` template class provides a general operation framework for this pattern.
 
+### Scenario Description
 
-- The request is initiated by JavaScript code, and the result is returned after processing by the native asynchronous processing thread;
-- The request is initiated by JavaScript code, and the native asynchronous processing thread reports the message regularly after processing;
-  - JavaScript code can proactively ask for revocation/cancellation requests.
+The following scenarios are typical of the data request pattern:
 
+- **File Read and Write**: When JavaScript initiates a call, it needs to specify the file path, the file offset position, data length, or the data to be written. When the request is sent to the asynchronous thread for execution, the actual file read/write operation is performed, and upon completion, it notifies or returns the result to the JavaScript code.
+- **Network Requests**: Similar to file read and write, when JavaScript initiates a call, it specifies the request parameters, which are then processed in a background thread and the results are returned.
 
-## Data request pattern
+The scenarios of the data request pattern have the following characteristics:
+- The result returned by a request is single-fired, so this pattern is not suitable for sensors or timer listeners that may be triggered multiple times;
+- A request always yields a result: if the request succeeds, it returns the result; otherwise, it returns an error message. The return of the result is also asynchronous;
+- Once a request is initiated, it cannot be revoked.
 
-
-In the data request pattern, JavaScript code calls a C++ API to create a request and returns the result to the JavaScript code after performing the operation in an asynchronous thread. In this process, data will be transmitted through an asynchronous queue. The `async::ResultSession` template class provides a general operation framework for this mode.
-
-
-### Scene description
-
-
-The following scenarios are typical data request patterns:
-
-
-- **File reading and writing**: When JavaScript initiates a call, you need to specify the path of the file, the offset position of the file to be read and written, the data length, or the data to be written; when the request is sent to the asynchronous thread for execution, the actual file read and write operation will be performed, and after the operation is completed, the result will be notified or returned to the JavaScript code.
-- **Network Request**: Similar to file reading and writing, request parameters must be specified when JavaScript initiates a call, and then the background thread processes and returns the result.
-
-
-The scenario of data request mode has the following characteristics:
-- The result returned by the request is a single time, so sensors or timer monitoring that may be triggered multiple times are not suitable for this mode;
-- The request always has a result: if the request is successful, the result is returned, otherwise an error message is returned, and the result is returned asynchronously;
-- Once a request is made it cannot be revoked.
-
-
-### Example: Obtaining power value
-
+### Example: Getting Battery Level
 
 #### JavaScript API
 
-
-Suppose you want to implement an asynchronous JavaScript function to get the battery level:
+Suppose we want to implement an asynchronous JavaScript function to get the battery level:
 ``` ts
-getLevel(): Promise<number> // Promise style API
-getLevel(options: { // Callback style API
+getLevel(): Promise<number> // Promise-style API
+getLevel(options: { // Callback-style API
     success: (level: number) => void,
-    fail: (code: number, msg: string) => void // Battery level reading does not actually fail
+    fail: (code: number, msg: string) => void // Battery level reading actually does not fail
 }): void
 ```
-Use the `getLevel()` function to obtain the battery level asynchronously, which provides two API styles: `Promise` style and callback style. The code for these two styles is as follows:
+Use the `getLevel()` function to asynchronously get the battery level. This function provides two API styles: `Promise` style and callback style. The code for both styles is as follows:
 ``` js
 async function printBatteryLevel() {
-    const level = await getLevel() // Get battery value asynchronously
+    const level = await getLevel() // Asynchronously get the battery level
     console.log(`battery level: ${level}%`)
 }
-printBatteryLevel() // Print the power value, console output example:
+printBatteryLevel() // Print the battery level, console output example:
 // battery level: 59%
 
-// The following is callback style code, which is not recommended:
+// Below is the callback-style code, which is not recommended:
 getLevel({
     success(level) { console.log(`battery level: ${level}%`) }
 })
 ```
 
+#### C++ Native Interface Export
 
-#### C++ native interface export
-
-
-The `getLevel()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will initiate an asynchronous request to obtain the battery power, and after getting the result, the result value will be returned to the JavaScript code through the callback function or `Promise`. The C++ function that implements `getLevel()` is as follows:
+The `getLevel()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it initiates an asynchronous request to get the battery level, and upon obtaining the result, returns the result value to the JavaScript code via a callback function or a `Promise`. The C++ function implementing `getLevel()` is as follows:
 ``` cpp
 static JsValue getLevel(const JsCallContext &ctx) {
     typedef async::ResultSession<BatteryGetLevel> Session;
-    Session *session = new Session; // Create Session object
+    Session *session = new Session; // Create a Session object
     session->request(ctx.argc() ? ctx.arg(0) : JsValue());
     return session->promise();
 }
 ```
 
-
 The template class `async::ResultSession` (the `async` namespace is omitted below) implements the framework required for asynchronous data requests. Each asynchronous data request includes the following steps:
 1. Create a `ResultSession` object
-2. Call the `ResultSession::request()` method to initiate a request
+2. Call the `ResultSession::request()` method to initiate the request
 3. Use `ResultSession::promise()` to return the `Promise` object to JavaScript.
 
-
-this line of code
+This line of code
 ``` cpp
 session->request(ctx.argc() ? ctx.arg(0) : JsValue());
 ```
-In addition to initiating the request, we also pass the $0$th parameter passed in by the JavaScript caller to the `ResultSession::request()` method. `ResultSession` will automatically select the callback and `Promise` style based on whether the parameter exists `success` / `fail` and other callback functions. If it is `Promise` style, then
+In addition to initiating the request, we also pass the 0-th parameter passed by the JavaScript caller to the `ResultSession::request()` method. `ResultSession` automatically selects between the callback and `Promise` styles based on whether `success` / `fail` and other callback functions exist in that parameter. If it is `Promise` style, then
 ``` cpp
 return session->promise();
 ```
-A `Promise` object will be returned to obtain the result of the asynchronous request, otherwise `undefined` will be returned and the callback function will handle the result.
+returns a `Promise` object used to obtain the result of the asynchronous request; otherwise, it returns `undefined` and the callback function handles the result.
 
+#### `ResultSession` Template Class
 
-#### `ResultSession` template class
-
-
-The declaration of `ResultSession` template class is as follows:
+The declaration of the `ResultSession` template class is as follows:
 ``` cpp
 template<class T, class H = ResultHandler> class ResultSession;
 ```
-The template parameter `T` is a class that implements specific asynchronous operations. This example will implement a `BatteryGetLevel` class to achieve asynchronous acquisition of battery power. The template parameter `H` determines how to handle the results of asynchronous requests. The default `ResultHandler` will automatically select the callback or `Promise` style, and developers generally do not need to modify it.
+The template parameter `T` is a class that implements the specific asynchronous operation. This example implements a `BatteryGetLevel` class to achieve asynchronous retrieval of the battery level. The template parameter `H` determines how to handle the result of the asynchronous request. The default `ResultHandler` automatically selects the callback or `Promise` style, and developers generally do not need to modify it.
 
+#### `BatteryGetLevel` Class
 
-#### `BatteryGetLevel` class
-
-
-The `BatteryGetLevel` class is defined as follows:
+The definition of the `BatteryGetLevel` class is as follows:
 ``` cpp
 struct BatteryGetLevel {
     async::Result<int> resolve() const {
         return battery_read_level(); // Get battery level
     }
-    // errorMessage() is used to translate error codes into text. However, the power reading will not go wrong and can be implemented at will.
+    // errorMessage() is used to translate error codes into text. However, reading the battery level does not fail, so it can be implemented arbitrarily.
     static const char *errorMessage(Status) {
         return "get battery level failed";
     }
 };
 ```
-As you can see, `BatteryGetLevel` has two member functions. The `resolve()` function is used to perform specific operations in an asynchronous thread. The return value of a `resolve()` function must be of type `async::Result<T>`, in this case `async::Result<int>`.
+As you can see, `BatteryGetLevel` has two member functions. The `resolve()` function is used to execute specific operations in the asynchronous thread. The return value of the `resolve()` function must be of type `async::Result<T>`, which in this example is `async::Result<int>`.
 
-
-The `resolve()` function's return value `async::Result<T>`'s template parameter `T` type is consistent with the JavaScript API's callback function parameter or `Promise` data type. For example, in this example, `int` corresponds to the JavaScript API's
+The template parameter `T` of the return value `async::Result<T>` of the `resolve()` function is consistent with the type of the callback function parameter of the JavaScript API or the `Promise` data type. For example, in this case, `int` corresponds to the JavaScript API as:
 ``` ts
-// C++ BatteryGetLevel::resolve() function return value type
-// async::Result <int> corresponds to JavaScript's Promise <number>
+// The return value type of C++'s BatteryGetLevel::resolve() function
+// async::Result<int> corresponds to JavaScript's Promise<number>
 getLevel(): Promise<number>
 ```
 
+In other words, if `resolve()` returns an `async::Result<String>` value, it will return a `Promise<string>` in JavaScript, or `{ success(value: string): void }` for a callback function. For details on C++ and JavaScript data type conversion, please refer to [Data Type Conversion](#data-type-conversion).
 
-In other words, if `resolve()` returns the `async::Result<String>` value, then it will return `Promise<string>` in JavaScript, which is `{ success(value: string): void }` for the callback function. Please refer to [数据类型转换](#数据类型转换) for details on conversion between C++ and JavaScript data types.
-
-
-### Example: file reading
-
+### Example: File Reading
 
 #### JavaScript API
 
-
-Suppose you want to implement an asynchronous JavaScript function for file reading:
+Suppose we want to implement an asynchronous JavaScript function for file reading:
 ``` ts
-readfile(url:string): Promise<string> // Promise style API
-readFile(option: {   // Callback style API
+readfile(url:string): Promise<string> // Promise-style API
+readFile(option: {   // Callback-style API
   uri: string,
   success?: (data: string) => void,
   fail?: (code: number, msg: string) => void,
 }): void
 ```
-This function will read the content of the file asynchronously and return it through the `Promise` object. The return value is the file content. The actual JavaScript code looks like this;
+This function will asynchronously read the contents of the file and return them via a `Promise` object, with the return value being the file contents. The actual JavaScript code looks like this:
 ``` js
 async function printReadFile() {
-    const data = await readFile("file.txt") // Get battery value asynchronously
+    const data = await readFile("file.txt") // Asynchronously get the file contents
     console.log('File read successfully:', data)
 }
 
 printReadFile() // Print the file contents as a string, console output example:
 // File read successfully: hello
 
-// Below is the callback style code
+// Below is the callback-style code
 readFile({
-    url: "file.txt",
-    success: (data: string) => {
-        console.log('File read successfully:', data);
+    url: "file.txt", 
+    success: (data: string) => {  
+        console.log('File read successfully:', data);  
     }
 })
 ```
 
+#### C++ Native Interface Export
 
-#### C++ native interface export
-
-
-The `readFile()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will initiate an asynchronous request to read the file, and after getting the result, the result value will be returned to the JavaScript code through the callback function or `Promise`. The C++ function that implements `readFile()` is as follows:
+The `readFile()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it initiates an asynchronous request to read a file, and upon obtaining the result, returns the result value to the JavaScript code via a callback function or a `Promise`. The C++ function implementing `readFile()` is as follows:
 ``` cpp
 JsValue readFile(const JsCallContext &ctx) {
     typedef async::ResultSession<ReadFileRequest> Session;
-    if (ctx.argc() > 0 && ctx.arg(0).isObject()) {
+    if (ctx.argc() > 0 && ctx.arg(0).isObject()) { 
         Session *session = new Session;
-        // Convert JavaScript function parameter url field to C++ String
-        session->client().url = ctx.arg(0)["url"].toString();
+        // Convert the url field of the JavaScript function parameter to a C++ String 
+        session->client().url = ctx.arg(0)["url"].toString(); 
         session->request(ctx.argc() ? ctx.arg(0) : JsValue());
         return JsValue();
     }
 }
 ```
-For explanation of the template class used, refer to [resultsession-模板类](#resultsession-模板类) and for code explanation, refer to [c-原生接口导出](#c-原生接口导出) for obtaining the electric power value.
+For an explanation of the template class used, please refer to [ResultSession Template Class](#resultsession-template-class), and for code explanation, refer to [C++ Native Interface Export](#c-native-interface-export) under Getting Battery Level.
 
+#### ReadFile Class
 
-#### readFile class
-
-
-The `ReadFileRequest` class is defined as follows:
+The definition of the `ReadFileRequest` class is as follows:
 ``` cpp
 struct ReadFileRequest {
     String url; // The url of the file to be read.
@@ -206,128 +176,105 @@ struct ReadFileRequest {
     const char *errorMessage(Status) { return "read file error"; }
 };
 ```
-As you can see, `ReadFileRequest` has two member functions. The `resolve()` function is used to perform specific operations in an asynchronous thread. The return value of a `resolve()` function must be of type `async::Result<T>`, in this case `async::Result<String>`. It should be noted that the `resolve()` function cannot process data types in JavaScript. The url is an asynchronous request that is converted to the C++ String type in the `readFile()` function. Similar data conversion cannot be processed in the `resolve()` function.
+As you can see, `ReadFileRequest` has two member functions. The `resolve()` function is used to execute specific operations in the asynchronous thread. The return value of the `resolve()` function must be of type `async::Result<T>`, which in this example is `async::Result<String>`. Note that JavaScript data types cannot be processed inside the `resolve()` function; the `url` is converted to a C++ String type inside the `readFile()` function before initiating the asynchronous request, and such data conversions cannot be processed within the `resolve()` function.
 
+## Listen Pattern
 
-## Listen mode
+In the listen pattern, JavaScript code calls C++ APIs to create requests for multiple asynchronous events, such as listening to sensor data. When the data changes, an asynchronous event is executed to return the result to JavaScript. The `async::ListenSession` and `async::Signal` template classes provide a general operation framework for this pattern.
 
+### Scenario Description
 
-In the listening mode, the JavaScript code calls the C++ API to create a request. For multiple asynchronous requests such as monitoring of sensor data, an asynchronous event will be executed when the data changes and the results will be returned to JavaScript. The `async::ListenSession` and `async::Signal` template classes provide a common operation framework for this mode.
+The following scenarios are typical of the listen pattern:
 
+- **Listening to various sensors**: Initiated by JavaScript by calling the C++ API for listening to the corresponding sensor, which requires specifying a callback function. When the sensor reads data and it changes, an asynchronous thread returns the new data to the JavaScript code as a parameter of the callback function.
+- **Periodic timer tasks**: When JavaScript initiates a call, it needs to set the time for the timer task, the callback function after the task times out, and whether it is periodic. After sending the request, every time the timer task times out, the asynchronous thread returns the result to JavaScript, triggering the callback function set by JavaScript.
 
-### Scene description
+The scenarios of the listen pattern have the following characteristics:
+- Once listening is started, it supports multiple asynchronous requests, so it may not be suitable for single-shot asynchronous events like file reading/writing and network status requests;
+- Once listening is started, it must be canceled when no longer needed, otherwise it will cause a memory leak.
 
-
-The following scenarios are typical monitoring modes:
-
-
-- **Monitoring of various sensors**: Initiated by JavaScript, calling the C++ API for monitoring the corresponding sensor requires specifying a callback function. When the sensor reads data and sends changes, the new data will be returned to the JavaScript code through the asynchronous thread as a formal parameter of the callback function.
-- **Periodic scheduled tasks**: When JavaScript initiates a call, you need to set the time of the scheduled task, the callback function after the task times out, and whether it is periodic; when each timed task times out after sending a request, the asynchronous thread will return the result to JavaScript, triggering the callback function set by JavaScript.
-
-
-The monitoring mode scenario has the following characteristics:
-- After the monitoring is started, multiple asynchronous requests are supported, so asynchronous events for a single file read and write and network status request may not be applicable;
-- After starting the monitoring, you must cancel the monitoring when not in use, otherwise it will cause a memory leak.
-
-
-### Example: Monitor battery power value
-
+### Example: Listening to Battery Level
 
 #### JavaScript API
 
-
-If you want to implement an asynchronous JavaScript function that monitors battery power:
+Suppose we want to implement an asynchronous JavaScript function to listen to the battery level:
 ``` ts
-subscribe(callback: (Level: number) => void): number // Monitor battery power level
-unsubscribe(subscribeID: number): void // Cancel monitoring
+subscribe(callback: (level: number) => void): number // Listen to battery level
+unsubscribe(subscribeID: number): void // Cancel listening
 ```
 
-
-Use the `subscribe()` function to asynchronously monitor the battery power value and the `unsubscribe()` function to cancel monitoring. The usage examples are as follows:
+Use the `subscribe()` function to asynchronously listen to the battery level and the `unsubscribe()` function to cancel listening. An example of usage is as follows:
 ``` js
-// Start monitoring and return an id to cancel monitoring.
+// Start listening and return an ID used to cancel listening
 let id = subscribe(level => {
-  // If the battery power value changes, the listening callback function will be triggered. Example of console printing:
+  // If the battery level changes, the listening callback function is triggered, console print example:
   // now battery level: 59
   console.log(`now battery level: ${level}%`)
 })
 
-unsubscribe(id); // Cancel monitoring
-```
+unsubscribe(id); // Cancel listening
+``` 
 
+#### C++ Listen Interface Export
 
-#### C++ listening interface export
-
-
-The `subscribe()` function in JavaScript is actually implemented in C++. When the JavaScript code calls this function, it will monitor the battery power value. Whenever the power value changes, an asynchronous request will be initiated and the result value will be returned to the JavaScript code through the callback function. The C++ function that implements `subscribe()` is as follows:
+The `subscribe()` function in JavaScript is actually implemented by C++. When JavaScript code calls this function, it listens to the battery level. Whenever the battery level changes, it initiates an asynchronous request and returns the result value to the JavaScript code via a callback function. The C++ function implementing `subscribe()` is as follows:
 ``` cpp
 async::Signal<int> Level; // Create a global object Level
 
-level(45); // The Level value changes and an asynchronous request is sent.
+level(45); // Level value changes, send an asynchronous request
 
 static JsValue subscribe(const JsCallContext &ctx) {
     Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc())  // Check whether the parameters passed in
+    if (applet && ctx.argc())  // Check if parameters are passed
         return applet->bindObject(Level.connect(ctx.arg(0)));
     return JsValue();
 }
 ```
-A global object `Level` must be created. The template class `sync::Signal` used (the `async` namespace is omitted below) implements the framework for monitoring requests. Monitoring requests includes the following steps:
-1. Before listening, an object of the global `Siganal` class must be created;
-2. Use the `Signal::connect()` method to associate the first parameter passed in by JavaScript with `Level`;
-3. Call `Applet::bindObject` to bind the `Level` object; when the state of `Level` changes, call the callback function and return the result to JavaScript code.
+A global object `Level` must be created. The template class `async::Signal` (the `async` namespace is omitted below) used here implements the listening request framework. Listening requests include the following steps:
+1. Before listening, a global `Signal` class object must be created;
+2. Use the `Signal::connect()` method to associate the first parameter passed by JavaScript with `Level`;
+3. Call `Applet::bindObject` to bind the `Level` object; when the state of `Level` changes, call the callback function to return the result to the JavaScript code.
 
-
-this line of code
-```cpp
+This line of code
+``` cpp
 level(45);
 ```
-The value of `Level` changes to $45$, triggering the listening mechanism and will initiate an asynchronous request. The changed value is used as the formal parameter of the callback function, and finally the result is returned to the JavaScript code.
+changes the `Level` value to $45$, triggering the listening mechanism to initiate an asynchronous request, using the changed value as a parameter for the callback function, and finally returning the result to the JavaScript code.
 
+#### C++ Cancel Listen Interface Export
 
-#### C++ Cancel export of listening interface
-
-
-The `unsubscribe()` function in JavaScript is also implemented in C++. When the JavaScript code calls this function, the listening function is cancelled. Avoid memory leaks caused when not using listeners. The C++ function that implements `unsubscribe()` is as follows:
+The `unsubscribe()` function in JavaScript is also implemented by C++. When JavaScript code calls this function, it cancels the listening to avoid memory leaks caused by unused listeners. The C++ function implementing `unsubscribe()` is as follows:
 ``` cpp
 static JsValue unsubscribe(const JsCallContext &ctx) {
     Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // Check whether the passed parameters are correct
-        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());
+    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // Check if the passed parameters are correct
+        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());   
     return JsValue();
 }
 ```
-To cancel the listening request, you need to call `Applet::unbindObject` to unbind, and you need to pass in the return ID of the `subscribe()` function to determine the unbound object.
+Canceling a listen request requires calling `Applet::unbindObject` to unbind, passing the ID returned by the `subscribe()` function to determine the object to be unbound.
 
-
-#### `Signal` template class
-
+#### `Signal` Template Class
 
 ``` cpp
 template<class T, class H = ListenHandler> class Signal;
 ```
-Template parameter T is a class that implements specific asynchronous operations. This example shows a `int` type to monitor battery power. Template parameter H determines how to handle the results of asynchronous requests. The default ResultHandler will automatically choose callback or Promise style, and developers generally do not need to modify it.
+The template parameter `T` is a class that implements the specific asynchronous operation. This example demonstrates using an `int` type to implement battery level listening. The template parameter `H` determines how to handle the result of the asynchronous request. The default `ResultHandler` automatically selects the callback or Promise style, and developers generally do not need to modify it.
 
+## Data Type Conversion
 
-## Data type conversion
-
-
-In `ResultSession` or `ListenSession`, the data of asynchronous operations must be converted into `JsValue` objects before they can be used in JavaScript code. For example, [BatteryGetLevel](#batterygetlevel-类) defines
+In `ResultSession` or `ListenSession`, data for asynchronous operations must be converted into `JsValue` objects to be used in JavaScript code. For example, [BatteryGetLevel](#batterygetlevel-class) defines:
 ``` cpp
 async::Result<int> BatteryGetLevel::resolve() const;
 ```
-Function, this function declaration means that the return data type of the battery power request is `int`, which can be converted to `JsValue`. In fact, the following types can be converted to `JsValue`:
-- `bool`: converted to `boolean` type;
-- `int`: converted to `number` type;
-- `float`, `double`: converted to `number` type;
-- `String`: converted to `string` type.
-
+This function declaration means that the return data type of the battery level request is `int`, which can be converted to `JsValue`. In fact, the following types can be converted to `JsValue`:
+- `bool`: Converted to `boolean` type;
+- `int`: Converted to `number` type;
+- `float`, `double`: Converted to `number` type;
+- `String`: Converted to `string` type.
 
 ::: warning
-
-C-style strings are not supported. It will be converted to type `boolean`.
+C-style strings are not supported. They will be converted to the `boolean` type.
 :::
 
-
-
-The timing of the conversion is automatic and does not require developer intervention.
+The conversion happens automatically without requiring developer intervention.

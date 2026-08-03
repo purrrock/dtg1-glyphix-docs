@@ -1,38 +1,38 @@
-# Network status
+# Network Status
 
-## Import module
+## Import Module
 
 ```js
 import network from '@system.network';
 ```
 
-## Interface definition
+## Interface Definition
 
 ### `subscribe` <decl type="(callback: (status: NetworkState) => void): number" method/>
 
-Monitor changes in network status. The parameter `status` of `callback` is the new [network state](#networkstate). The ID returned by this method can be used to unsubscribe using the [`unsubscribe()`](#unsubscribe) method.
+Listens for changes in network status. The `status` parameter of the `callback` is the new [Network State](#networkstate). The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to stop listening.
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
-Cancel network status monitoring. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
+Cancels network status listening. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
 
 ### `getType` <decl type="(): Promise<NetworkState>" method/>
 
-Get the current network status and return a [`NetworkState`](#networkstate) value.
+Gets the current network status and returns a [`NetworkState`](#networkstate) value.
 
-## Type definition
+## Type Definitions
 
 ### `NetworkState`
 
-This object is used to represent the current network status. The type signature is as follows:
+This object is used to represent the current network status, with the following type signature:
 
 ```ts
 type NetworkState = {
-  device: string; //The name of the network device
-  type: string; // Type of network device
-  linkUp: boolean; // Whether the network device has been opened
-  online: boolean; // Whether the device is online (whether it can access the Internet)
+  device: string; // The name of the network device
+  type: string; // The type of the network device
+  linkUp: boolean; // Whether the network device is turned on
+  online: boolean; // Whether the device is online (whether the internet can be accessed)
 };
 ```
 
-You can usually use the `online` property of `NetworkState` to check whether the device can access the Internet.
+Typically, the `online` property of `NetworkState` can be used to check whether the device has internet access.

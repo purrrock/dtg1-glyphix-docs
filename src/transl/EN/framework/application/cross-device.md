@@ -1,25 +1,19 @@
-# Cross-device adaptation
+# Cross-Device Adaptation
 
+When your application needs to run on multiple types of devices, you may encounter various interaction compatibility issues. For example:
+- Different devices have different screen resolutions and sizes, so applications should layout and scale appropriately across different devices;
+- Different devices have different system fonts and font sizes, so applications should adhere to the system style;
+- Interface layouts must account for different screen shapes, such as circular screens which often use fisheye-distorted lists;
+- Safe margins of pages may vary under different screen shapes and resolutions.
 
-When your application needs to run on multiple device vendors, you may encounter a variety of cross-compatibility issues, such as:
-- Different devices have different screen resolutions and sizes, and applications should be appropriately laid out and scaled on different devices;
-- The system fonts and font sizes of different devices are different, and the application should follow the system style;
-- Interface layout should consider different screen shapes. For example, circular screens often use a list of fisheye deformations;
-- The safe margins of the page may be different under different screen shapes and screen resolutions.
+This document describes how to use the Glyphix application framework to develop watch applications compatible with a wide range of devices while writing minimal adaptation code.
 
+## Simulator Parameters
 
-This document describes how to use the Glyphix application framework to develop watch applications compatible with a wide range of devices while writing less adaptation code.
-
-
-## Simulator parameters
-
-
-When using the `gx emu` command to start the emulator, the `-d` or `--device` parameter can specify the device to be simulated. For example, `gx emu -d default-watch-466x466` will emulate a round screen device with a resolution of $466\times 466$ pixels. `gx emu` will remember the last device specified by `-d` instead of automatically falling back to the default device.
-
+When starting the simulator using the `gx emu` command, the `-d` or `--device` parameter can specify the target simulated device. For example, `gx emu -d default-watch-466x466` will simulate a circular screen device with a resolution of $466\times 466$ pixels. `gx emu` will remember the device specified by the last `-d` instead of automatically falling back to the default device.
 
 ::: tip
-
-If you have installed the PowerShell or Zsh completion script for the gx command, you can complete available device names through the `Tab` key after typing `gx emu -d`. Otherwise please use `gx list device` to view the device list first, for example:
+If you have installed the PowerShell or Zsh completion script for the `gx` command, you can press the `Tab` key to autocomplete available device names after typing `gx emu -d`. Otherwise, please use `gx list device` first to view the device list, for example:
 ``` bash
 $ gx list device
 default-watch-466x466
@@ -27,58 +21,42 @@ default
 ```
 :::
 
+By default, the simulator's screen resolution matches that of the actual device. You can use the `-r` or `--real-scale` parameter (`gx emu -r`) to simulate the actual physical screen size of the device rather than its resolution. It is not recommended to use the `-r` parameter on non-high-resolution displays, as it may cause the display to appear overly blurry.
 
+Using the `-d` and `-r` parameters allows you to test the display effects of various devices through the simulator without needing physical hardware.
 
-By default, the emulator's screen resolution is the same as the actual device's, you can pass the `-r` or `--real-scale` parameter ( `gx emu -r` ) to simulate the device's actual screen size instead of the resolution. It is not recommended to use the `-r` parameter on non-high-resolution displays, as it will cause the display to be too blurry.
+## Multi-Resolution Adaptation
 
+In Web development, developers typically rely on media queries and units like `px` for precise layout and style adjustments. However, on wearable devices, the optimal font sizes vary too greatly between different devices, making precise planning during development difficult. More importantly, ensuring consistent readability and operational experience for all applications on a given device through a unified visual specification is one of the core issues in wearable UI design.
 
-Through the `-d` and `-r` parameters, you can use the simulator to test the display effects of multiple devices without having to prepare physical devices.
+Taking smartwatches as an example, the screen width of different devices may range between $360\rm px$ and $466\rm px$, while the height ranges from around $450\rm px$ to $500\rm px$. Therefore, despite the [`designWidth`](manifest.md#designwidth) configuration, it is usually impossible to specify the sizes of most interface elements using `px` units. No matter how it is scaled, the `px` unit always presents these issues:
+- Devices have different DPIs or sizes, making it impossible to achieve ideal font sizes through fixed pixel dimensions;
+- Circular and rectangular screens have large aspect ratio differences, making it difficult to specify large padding gaps using pixel values.
 
+This section will introduce layout techniques to address these issues.
 
-## Multi-resolution adaptation
+### Font Size Specifications
 
+Please refer to the [`rem` font size units](font-config.md#rem-字号单位) guide in the font specifications to standardize font sizes in your application. **Do not** use `px` as a font size unit.
 
-In web development, developers often rely on media queries and units like `px` for fine-grained layout and style adjustments. However, on wearable devices, the optimal font sizes for different devices vary greatly, making it difficult to plan accurately during development. More importantly, how to ensure consistent readability and operating experience for all applications on a device through unified visual specifications is one of the core issues in wearable device UI design.
+### Margin Configuration
 
-
-Taking a smart watch as an example, the screen width of different devices may range from $360\rm px$ to $466\rm px$, while the height ranges from about $450\rm px$ to $500\rm px$. Therefore, despite the existence of [`designWidth`](manifest.md#designwidth) configuration, the dimensions of most interface elements cannot generally be specified in `px` units. No matter how you scale, `px` units always have these problems:
-- The DPI or size of the device is different, and the ideal font size cannot be obtained through a fixed pixel size;
-- The large difference in aspect ratio between circular and rectangular screens makes it difficult to specify large filling gaps through pixel values.
-
-
-This section introduces layout techniques to address these issues.
-
-
-### Font size specifications
-
-
-Please refer to the [`rem` font size unit](font-config.md#rem-字号单位) guidelines of the font specification to standardize font sizes in your application, **Do not** use `px` as the font size unit.
-
-
-### Margin configuration
-
-
-You can use any [length](/framework/render/style-and-layout.md#长度) unit such as `px` to specify smaller margin values, for example:
-
+You can use `px` or any other [length](/framework/render/style-and-layout.md#长度) unit to specify smaller margin values, for example:
 
 ``` css
 p {
   border: 2px solid gray;
   font-size: 1.25rem;
-  padding: 8px; /* Use px as margin unit */
+  padding: 8px; /* Use px as the margin unit */
   margin: 8px;
 }
 ```
 
-
 <glyphix id="font-config-margins-pixel" height="80" width="300" inline>
-
-
 
 ```html
 <p>The message text.</p>
 ```
-
 
 ```css
 p {
@@ -89,35 +67,26 @@ p {
 }
 ```
 
-
 </glyphix>
 
+Except for `font-size` which uses `rem`, the other properties use `px` units. This is because Glyphix automatically scales the proportion of `px` units for the target device, and smaller `px` values usually carry no risk of overflow or clipping.
 
-
-Except for `font-size` which uses `rem`, several other attributes use `px` units. This is because Glyphix automatically scales `px` units for the target device, and smaller `px` values ​​usually have no risk of overflow or clipping.
-
-
-But when the size value is large, it is more recommended to use a percentage value, for example:
-
+However, when size values are large, it is recommended to use percentage values instead, for example:
 
 ``` css
 p {
   border: 2px solid gray;
   font-size: 1.25rem;
-  /* Use percentage units for left padding, please note the margin to the left of the example text */
+  /* Left padding uses percentage unit, please note the margin on the left side of the sample text */
   padding: 8px 8px 8px 40%;
 }
 ```
 
-
 <glyphix id="font-config-margins-percent" height="80" width="300" inline>
-
-
 
 ```html
 <p>Message</p>
 ```
-
 
 ```css
 p {
@@ -127,28 +96,19 @@ p {
 }
 ```
 
-
 </glyphix>
 
-
-
-This allows for better adaptation to devices with widely different resolutions.
-
+This allows better adaptation to devices with vastly different resolutions.
 
 ::: warning
-
-The screen heights of watch devices vary greatly, and large margins in the vertical direction require more attention to compatibility issues.
+Watch device screen heights vary significantly, and large vertical margins require extra attention regarding compatibility issues.
 :::
 
+### Flex Layout
 
+In addition to percentage length units, flex layout provides more flexible interface adaptability. Flex layout should be prioritized over percentage length units. Manual layouts—i.e., directly specifying the `width` and `height` CSS properties of elements—should be avoided.
 
-### flex layout
-
-
-In addition to percentage length units, flex layout can provide more flexible interface adaptability. Flex layout should be used first, then percentage length units. And manual layout, i.e. directly specifying the `width` and `height` CSS properties of the element, should be avoided.
-
-
-One exception where manual layout should be done is for interfaces that display network icons, for example:
+An exception where manual layout should be used is an interface displaying network icons, for example:
 ``` html
 <scroll>
   <div class="item" for="item in items">
@@ -157,7 +117,7 @@ One exception where manual layout should be done is for interfaces that display 
   </div>
 </scroll>
 ```
-If the size of the image pointed to by `item.icon` is not fixed, then it would be more beautiful to specify the appropriate width and height for the `image` element, for example:
+If the image size pointed to by `item.icon` is not fixed, specifying appropriate width and height for the `image` element makes it more aesthetically pleasing, for example:
 ``` css
 scroll {
   display: flex;
@@ -173,39 +133,30 @@ scroll {
   width: 92px;
   height: 92px;
   border-radius: 10px;
-  object-fit: fill; /* Stretch or scale the image if necessary */
+  object-fit: fill; /* Stretch or scale the image when necessary */
 }
 
-/* The text in item occupies the remaining space on the line */
+/* The text in the item occupies the remaining space on the line */
 .item > p {
   flex: 1;
 }
 ```
 
+Since the [`image`](/components/image.md) component automatically centers images, you do not need to worry about differences in image aspect ratios.
 
-Since the [`image`](/components/image.md) component automatically displays the image in the center, you don't have to worry about the difference in aspect ratio of the image.
+### Media Queries
 
+When no layout strategy can accommodate resolution differences, you can also use [media queries](/framework/render/media-query.md) to make targeted adjustments.
 
-### media inquiries
+## Screen Shape Adaptation
 
+Smartwatches typically come in two screen shapes: circular and rectangular. Circular screens require larger safe margins in the four corners and may use fisheye-effect lists.
 
-When any layout strategy cannot adapt to the difference in resolution, you can also use [media inquiries](/framework/render/media-query.md) to make targeted adjustments.
+### Media Queries
 
+Taking the top bar as an example, circular screens may require top bar text to be center-aligned, while rectangular screens have left-aligned top bar text. The following example demonstrates the layout differences corresponding to the two screen shapes.
 
-## Screen shape adaptation
-
-
-Smartwatches usually come in two screen shapes, round and rectangular. Among them, large safety margins need to be left at the four corners of the circular screen, and a fisheye effect may be used.
-
-
-### media inquiries
-
-
-Taking the top bar as an example, a circular screen may require the top bar text to be center-aligned, while a rectangular screen may require the top bar text to be left-aligned. The following example shows the layout differences for the two screen shapes.
-
-
-<glyphix id="circle-square-screens" height="400" width="800" title="异形屏幕布局">
-
+<glyphix id="circle-square-screens" height="400" width="800" title="Irregular Screen Layout">
 
 ```html
 <div class="screens">
@@ -217,7 +168,6 @@ Taking the top bar as an example, a circular screen may require the top bar text
   </div>
 </div>
 ```
-
 
 ```css
 p {
@@ -244,7 +194,7 @@ p {
 
 .circle-screen {
   border-radius: 50%;
-  /* The left and right sides of a circular screen are usually left blank to improve the display */
+  /* The left and right sides of circular screens are usually left blank to improve display effects */
   padding: 0 48px;
 }
 
@@ -256,41 +206,33 @@ p {
 }
 ```
 
-
 </glyphix>
 
-
-
-The two screen shapes can be processed separately through the [`shape`](/framework/render/media-query.md#shape) attribute of media queries, for example:
+You can use the [`shape`](/framework/render/media-query.md#shape) feature of media queries to handle the two screen shapes separately, for example:
 ``` css
 .title {
   font-size: 1.25rem;
   color: #353535;
-  /* By default, the title is simply surrounded by a safe margin of 32px. */
+  /* By default, the title simply leaves a 32px safe margin around all sides. */
   margin: 32px;
 }
 
-/* These style rules only take effect for round screens. */
+/* These style rules only apply to circular screens. */
 @media (shape: circle) {
   .title {
-    /* On round screens, title text should be centered. Other properties are inherited from the .title rule above. */
+    /* On circular screens, the title text should be centered. Other properties are inherited from the .title rule above. */
     text-align: center;
   }
 }
 ```
-This CSS code first defines the style rules for square screens and then overrides them in a media query block to apply to round screens.
+This CSS code first defines style rules for square screens, and then overrides them in a media query block for rules applicable to circular screens.
 
+### Template Macros
 
-### template macro
+While media queries can define CSS rules for different types of devices, combining [template macros](/framework/component/template-macro.md) with the [`media-query` attribute](/framework/render/media-query.md#组件的-media-query-属性) allows applying different UX template structures for different devices. This technique can automatically add fisheye distortion effects to list interfaces on circular devices.
 
+For specific usage methods, please refer to the [Template Macros](/framework/component/template-macro.md) section.
 
-Use media queries to define CSS rules for different types of devices, and combine [template macro](/framework/component/template-macro.md) and [`media-query` attribute](/framework/render/media-query.md#组件的-media-query-属性) to apply different UX template structures for different devices. This technology can automatically add a fisheye distortion effect to list interfaces on round devices.
+## JavaScript Adaptation
 
-
-Please refer to chapter [template macro](/framework/component/template-macro.md) for specific usage methods.
-
-
-## JavaScript adaptation
-
-
-If you need to write different logic for different devices, you can also get [Device information](/api/system-device.md). For example, you can get the device's screen shape enumeration value at runtime through [`device.screenShape`](/api/system-device.md#screenshape).
+If you need to write different logic for different devices, you can also retrieve [device information](/api/system-device.md). For example, you can obtain the screen shape enum value of the device at runtime via [`device.screenShape`](/api/system-device.md#screenshape).

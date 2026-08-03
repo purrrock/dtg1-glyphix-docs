@@ -1,56 +1,40 @@
 ---
-
 icon: alternate-email
-
 ---
+# on Directive
 
-# on command
+The `on` directive is used to listen for changes in property values that support listening.
 
-
-The `on` directive is used to monitor changes in attribute values ​​that support monitoring.
-
-
-## grammar
-
+## Syntax
 
 ``` html
 <div on:attribute="expr"></div>
-<div onattribute="expr"></div> <!-- Syntax compatible with quick apps -->
-<div @attribute="expr"></div>  <!-- Vue style syntax -->
+<div onattribute="expr"></div> <!-- Syntax compatible with Quick App -->
+<div @attribute="expr"></div>  <!-- Vue-style syntax -->
 ```
 
+`attribute` is the name of the property to listen for changes on, and `expr` is the expression to execute when the property changes. The standard `on` directive uses the `on:` prefix, and `on` and `@` character prefixes are also supported.
 
-`attribute` is the name of the attribute that needs to be monitored for changes, and `expr` is the expression that needs to be executed when the attribute changes. The standard `on` directive uses the `on:` prefix, and the `on` and `@` character prefixes are also supported.
-
-
-The attribute value of the `on` directive supports the [directive attribute value](/framework/component/template.md#指令属性值) syntax.
-
+The property value of the `on` directive supports the [directive property value](/framework/component/template.md#指令属性值) syntax.
 
 ::: tip
-
-It is recommended to use the `on:attribute` format, as `onattribute` can easily cause developers to unknowingly confuse `on` directives with ordinary attributes. In addition, attribute names such as `oneself` will be parsed into instructions of `on:eself`, so special attention should be paid.
+It is recommended to use the `on:attribute` format. `onattribute` can easily lead developers to unconsciously confuse the `on` directive with regular properties. In addition, property names like `oneself` will be parsed as the `on:eself` directive, which requires special attention.
 :::
 
+## Listening Expressions
 
+### Basic Usage
 
-## Listen expression
-
-
-### Basic usage
-
-
-The following code listens for touch events on a `div` component:
+The following code listens to a touch event on a `div` component:
 ``` html
 <div on:touchmove="console.log($event)"></div>
 ```
-In the example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to and [touch event object](../generic/properties.md#touchevent) is printed directly here. The `$event` variable is used to obtain the event value, which is a variable defined by the `on` directive (scoped only within the `on` directive expression).
-
+In this example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to, and the [touch event object](../generic/properties.md#touchevent) is printed directly. The `$event` variable is used to get the event value, which is defined by the `on` directive (its scope is limited to the `on` directive expression).
 
 You can also call methods defined in the component object:
 ``` html
 <div on:touchmove="onTouch('move', $event)"></div>
 ```
-
 
 ``` js
 export default {
@@ -60,18 +44,14 @@ export default {
 }
 ```
 
+For methods on custom events, please refer to [Inter-component Communication](../component/communicate.md).
 
-For methods of customizing events, please refer to [Communication between components](../component/communicate.md).
+### Function Expressions
 
-
-### function expression
-
-
-If the value of the listener expression is a function, the function will be called automatically:
+If the value of the listening expression is a function, that function will be called automatically:
 ``` html
 <div on:click="onClick" />
 ```
-
 
 ``` js
 export default {
@@ -80,21 +60,15 @@ export default {
   }
 }
 ```
-As shown in the example, the event value is passed to the function as the only parameter.
-
+As shown in the example, the event value will be passed as the sole argument to the function.
 
 ::: tip
-
-The listener expression does not have to be a function variable, but can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function then it will be called by the `on` directive.
+The listening expression does not necessarily have to be a function variable; it can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function, it will be invoked by the `on` directive.
 :::
 
+## Listening to Component Property Value Changes
 
-
-## Monitor changes in component property values
-
-
-Some components will generate events when their attribute values ​​change, which can be monitored through the `on` directive:
-
+Some component property values generate events when they change, which can be listened to using the `on` directive:
 
 ``` html
 <list on:index="indexChanged($event)">
@@ -102,5 +76,4 @@ Some components will generate events when their attribute values ​​change, w
 </list>
 ```
 
-
-As described in [Property document specification](../component/README.md#属性文档规范), properties that support **listening** can use the `on` directive to listen for value changes.
+As described in the [Property Documentation Specification](../component/README.md#属性文档规范), properties that support **listening** can have their value changes listened to using the `on` directive.

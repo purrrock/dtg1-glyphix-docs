@@ -1,8 +1,8 @@
-# Internal interface
+# Internal Interfaces
 
-The `system.internal` module provides some internal interfaces for use by the system. This module can only be used in launcher applications.
+The `system.internal` module provides internal interfaces for system use. This module can only be used in the launcher application.
 
-## Import module
+## Import Module
 
 ``` js
 import internal from '@system.internal'
@@ -12,22 +12,22 @@ import internal from '@system.internal'
 
 ### `globalComponent` <decl type="(name: string, uri: string): void" method />
 
-Register a [global component](/framework/component/README.md#global component). Global components can be introduced in all applications. The parameter `name` is the name of the global component, and `uri` is the path or URI of the global component UX file relative to the current source file. For example
+Registers a [global component](/framework/component/README.md#全局组件), which can be imported in all applications. The `name` parameter is the name of the global component, and the `uri` parameter is the relative path or URI of the global component UX file to the current source file. For example:
 ``` js
 internal.globalComponent('TopBar', '/global/TopBar.ux')
 ```
-You can then use `<import name="TopBar" />` to reference the global component `TopBar` in all applications.
+Afterwards, the global component `TopBar` can be referenced in all applications using `<import name="TopBar" />`.
 
-The `globalComponent()` method is best executed in the `app.js` execution phase of the launcher application, so that global component information can be registered before any interface is loaded.
+It is best to execute the `globalComponent()` method during the execution phase of the launcher application's `app.js`, so that global component information can be registered before any interface is loaded.
 
 ### `setDefaultKeyHandler` <decl type="(handler: (event: KeyEvent) => void): void" method />
 
-Register the system's default key handler. The parameter `handler` is a callback function. The `KeyEvent` type prototype is:
+Registers the system's default key handler. The `handler` parameter is a callback function. The prototype of the `KeyEvent` type is:
 ``` ts
-interface KeyEvent {
-  type: 'keydown' | 'keyup', // Type of key event
-  key: string, // key name
-  timestamp: number, // timestamp of key event reporting, unit is milliseconds
+interface KeyEvent  {
+  type: 'keydown' | 'keyup', // Type of the key event
+  key: string, // Name of the key
+  timestamp: number, // Timestamp when the key event was reported, in milliseconds
 }
 ```
-The default key handler can only be registered once, because multiple registrations will overwrite previous operations.
+The default key handler can only be registered once, as multiple registrations will overwrite previous operations.

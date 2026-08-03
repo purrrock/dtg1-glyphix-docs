@@ -1,29 +1,29 @@
-# File system operations
+# File System Operations
 
-This module provides a Promise-style file system operation API. Compared with callback style, Promise style can avoid callback hell and reduce code complexity.
+This module provides Promise-style file system operation APIs. Compared to the callback style, the Promise style avoids callback hell and reduces code complexity.
 
 ::: warning
-Since the callback file API is prone to pitfalls in timing, concurrency and error handling, it is strongly recommended to use [Promise/`await` API](./README.md#Quick Application Asynchronous Interface); for detailed suggestions, please refer to [Common Traps and Suggestions](#Common Traps and Suggestions).
+Since callback-style file APIs are extremely prone to pitfalls in timing, concurrency, and error handling, it is strongly recommended to use the [Promise/`await` API](./README.md#quickapp-asynchronous-interfaces). For detailed suggestions, please refer to [Common Pitfalls and Recommendations](#common-pitfalls-and-recommendations).
 
-The APIs in `@system.file` are all [asynchronous file operations](#asynchronous file operations), which are essentially different from synchronous IO access. Be sure to understand the basic concepts of asynchronous programming and be familiar with the use of Promise and `async/await`.
+The APIs in `@system.file` are all [asynchronous file operations](#asynchronous-file-operations), which are fundamentally different from synchronous I/O access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
 :::
 
-## Import module
+## Importing the Module
 
 ``` js
 import file from '@system.file'
 ```
 
-## Instructions for use
+## Instructions
 
-### Error code
+### Error Codes
 
-The error code returned means:
-- `202`: Parameter error;
-- `300`: IO operation failed;
+The meanings of the returned error codes are:
+- `202`: Invalid parameter;
+- `300`: I/O operation failed;
 - `400`: Insufficient permissions;
 
-## Interface definition
+## API Definitions
 
 ### `readText`
 <decl method><pre>
@@ -32,8 +32,8 @@ The error code returned means:
 }): Promise&lt;string>
 </pre></decl>
 
-Read the contents of a text file. `params` parameter field description:
-- `uri`: URI of the file to be read.
+Reads the contents of a text file. Description of `params` fields:
+- `uri`: The URI of the file to be read.
 
 ### `writeText`
 <decl method><pre>
@@ -44,10 +44,10 @@ Read the contents of a text file. `params` parameter field description:
 }): Promise&lt;void>
 </pre></decl>
 
-Writes text to a file, or creates a new file if it does not exist. This function also automatically creates the parent directory. `params` parameter field:
-- `uri`: URI of the file to be written.
+Writes text to a file. If the file does not exist, a new file will be created. This function also automatically creates parent directories. `params` fields:
+- `uri`: The URI of the file to be written.
 - `text`: The text content to be written to the file.
-- `append`: The value is `true` to append data to the end of the file, the value is `false` to overwrite the original content. Default `false`.
+- `append`: If `true`, the data is appended to the end of the file; if `false`, it overwrites the original content. Defaults to `false`.
 
 ### `read`
 <decl method><pre>
@@ -58,10 +58,10 @@ Writes text to a file, or creates a new file if it does not exist. This function
 }): Promise&lt;ArrayBuffer>
 </pre></decl>
 
-Read the contents of the file into an `ArrayBuffer` object. `params` parameter field:
-- `uri`: URI of the file to be read.
-- `position`: the offset of the file reading position, the default is $0$.
-- `length`: The number of bytes expected to be read. If not specified, it will be read to the end of the file.
+Reads file contents into an `ArrayBuffer` object. `params` fields:
+- `uri`: The URI of the file to be read.
+- `position`: The offset position for reading the file, defaulting to $0$.
+- `length`: The number of bytes expected to be read. If not specified, it reads to the end of the file.
 
 ### `write`
 <decl method><pre>
@@ -73,13 +73,13 @@ Read the contents of the file into an `ArrayBuffer` object. `params` parameter f
 }): Promise&lt;void>
 </pre></decl>
 
-Writes the bytes in the `ArrayBuffer` to a file, or creates a new file if it does not exist. This function also automatically creates the parent directory.
+Writes byte data from an `ArrayBuffer` into a file. If the file does not exist, a new file will be created. This function also automatically creates parent directories.
 
-`params` parameter field description:
-- `uri`: URI of the file to be written.
-- `data`: data to be written.
-- `position`: the offset of the file writing position, default is $0$.
-- `append`: A value of `true` will append the data to the end of the file and ignore the `position` parameter.
+Description of `params` fields:
+- `uri`: The URI of the file to be written.
+- `data`: The data to be written.
+- `position`: The offset position for writing to the file, defaulting to $0$.
+- `append`: If `true`, appends the data to the end of the file and ignores the `position` parameter.
 
 ### `copy`
 <decl method><pre>
@@ -89,9 +89,9 @@ Writes the bytes in the `ArrayBuffer` to a file, or creates a new file if it doe
 }): Promise&lt;void>
 </pre></decl>
 
-Copy the source file to the specified location and the target directory will be automatically created. `params` parameter field:
-- `srcUri`: URI of the source file.
-- `dstUri`: URI of the target file.
+Copies a source file to a specified location, automatically creating the target directory. `params` fields:
+- `srcUri`: The URI of the source file.
+- `dstUri`: The URI of the target file.
 
 ### `rename`
 <decl method><pre>
@@ -101,9 +101,9 @@ Copy the source file to the specified location and the target directory will be 
 }): Promise&lt;void>
 </pre></decl>
 
-Renaming a file or directory will automatically create the target directory. `params` parameter field:
-- `oldUri`: URI of the file or directory before renaming.
-- `newUri`: URI after renaming.
+Renames a file or directory, automatically creating the target directory. `params` fields:
+- `oldUri`: The URI of the file or directory before renaming.
+- `newUri`: The URI after renaming.
 
 ### `list`
 <decl method><pre>
@@ -112,10 +112,10 @@ Renaming a file or directory will automatically create the target directory. `pa
 }): Promise&lt;Array>
 </pre></decl>
 
-List all items (files or directories) in the specified directory. `params` parameter field:
-- `uri`: Directory URI with enumeration. Files in the application resource package do not support enumeration.
+Lists all items (files or directories) under a specified directory. `params` fields:
+- `uri`: The URI of the directory to list. Files within the application resource package do not support listing.
 
-The parameter of `Promise` is an array containing file information, in the form
+The parameter of the `Promise` is an array containing file information, structured like this:
 ``` js
 [
   {
@@ -128,7 +128,7 @@ The parameter of `Promise` is an array containing file information, in the form
 ```
 
 ::: tip
-You cannot enumerate files in the application resource package, so `await file.list({ uri: "/assets/images" })` and other methods that directly use [path](/framework/application/resource.md#uri-and path) are invalid. In fact, various [`internal`](/framework/application/resource.md#internal) URI protocols should be used.
+You cannot list files inside the application resource package. Therefore, usages that directly use [paths](/framework/application/resource.md#uri-and-paths), such as `await file.list({ uri: "/assets/images" })`, are invalid. In fact, various [`internal`](/framework/application/resource.md#internal) URI schemes should be used instead.
 :::
 
 ### `access`
@@ -138,8 +138,8 @@ You cannot enumerate files in the application resource package, so `await file.l
 }): Promise&lt;boolean>
 </pre></decl>
 
-Check if a file exists. `params` parameter field:
-- `uri`: URI of the file to be detected.
+Checks whether a file exists. `params` fields:
+- `uri`: The URI of the file to check.
 
 ### `mkdir`
 <decl method><pre>
@@ -149,9 +149,9 @@ Check if a file exists. `params` parameter field:
 }): Promise&lt;void>
 </pre></decl>
 
-Create a directory. `params` parameter field:
-- `uri`: URI of the directory to be created.
-- `recursive`: Whether to create recursively (if the parent directory does not exist, create the parent directory first), the default is `false`.
+Creates a directory. `params` fields:
+- `uri`: The URI of the directory to be created.
+- `recursive`: Whether to create recursively (if the parent directory does not exist, create the parent directory first). Defaults to `false`.
 
 ### `remove`
 <decl method><pre>
@@ -161,9 +161,9 @@ Create a directory. `params` parameter field:
 }): Promise&lt;void>
 </pre></decl>
 
-Delete a directory or file. `params` parameter field:
-- `uri`: URI of the directory to be created.
-- `recursive`: Whether to delete recursively, the default is `false`. Without recursive deletion, only files or empty directories can be deleted.
+Deletes a directory or file. `params` fields:
+- `uri`: The URI of the directory to be deleted.
+- `recursive`: Whether to delete recursively. Defaults to `false`. When non-recursive, it can only delete files or empty directories.
 
 ### `stat`
 <decl method><pre>
@@ -172,139 +172,139 @@ Delete a directory or file. `params` parameter field:
 }): Promise&lt;{size: number}>
 </pre></decl>
 
-Get the attribute information of the file. Each field of the `options` parameter is described as follows:
-- `uri`: the file URI of the attribute to be obtained.
+Gets the attribute information of a file. The fields of the `options` parameter are described as follows:
+- `uri`: The URI of the file whose attributes are to be retrieved.
 
-`stat()` returns an object asynchronously containing the following file attributes:
-- `size`: The size of the file, in bytes.
+`stat()` asynchronously returns an object containing the following file attributes:
+- `size`: The size of the file in bytes.
 
-## Common pitfalls and suggestions
+## Common Pitfalls and Recommendations
 
-The following examples are all based on the typical problems of "callback-style" writing, showing why it is easily invalid or difficult to maintain in file IO, and provide equivalent rewriting of Promise/`await`.
+The following examples are based on typical problems of the "callback-style" approach, demonstrating why they easily fail or become hard to maintain in file I/O, and providing equivalent rewrites using Promise/`await`.
 
-### Asynchronous file operations
+### Asynchronous File Operations
 
-All APIs in the `@system.file` module are **asynchronous operations**. This means that when you call a file operation function, the function returns immediately without waiting for the actual I/O operation to complete. The read and write operations of the file will be performed in the background, and you will be notified of the result through Promise after the operation is completed.
+All APIs in the `@system.file` module are **asynchronous operations**. This means that when you call a file operation function, it will **return immediately** without waiting for the actual I/O operation to complete. File read and write operations are performed in the background, and you will be notified of the result via a Promise once the operation completes.
 
-:::danger A must-read for newbies
-If you are new to asynchronous programming, be sure to read this section carefully. **Ignoring the return value of an asynchronous operation** or **Not waiting for a Promise to complete** can lead to serious program errors that may not manifest in the simulator, but can result in data loss or program errors on a real device.
+::: danger Must-Read for Beginners
+If you are not familiar with asynchronous programming, please carefully read this section. **Ignoring the return value of an asynchronous operation** or **failing to wait for the Promise to complete** will lead to serious program errors. These errors may not manifest in the simulator, but on real devices, they will cause data loss or program errors.
 :::
 
-#### What is an asynchronous operation?
+#### What is an Asynchronous Operation?
 
-In synchronous programming, code is executed sequentially, and each line of code is executed before the next line is executed:
+In synchronous programming, code executes sequentially, and each line of code finishes executing before the next one starts:
 
 ```js
-// Synchronous code example (pseudocode, file API does not provide a synchronous version): blocking waiting for file reading
+// Synchronous code example (pseudocode, the file API does not provide synchronous versions): blocks and waits for file reading
 const text = file.readTextSync({ uri: 'internal://files/data.txt' });
-console.log(text); // The file content will definitely be output
-console.log('Reading completed');
+console.log(text); // Will definitely output the file content
+console.log('Read completed');
 ```
 
-But in asynchronous programming, I/O operations do not block code execution. When you call an asynchronous function, it returns a Promise object immediately, and the actual file operations occur in the background:
+However, in asynchronous programming, I/O operations do not block code execution. When you call an asynchronous function, it immediately returns a Promise object, while the actual file operation takes place in the background:
 
 ```js
-// Error: Ignore Promise, do not wait for operation to complete (call returns immediately)
+// Error: Ignoring the Promise, not waiting for the operation to complete (returns immediately)
 file.readText({ uri: 'internal://files/data.txt' });
-console.log('This line of code will be executed immediately, and the file may not be finished reading at this time!');
+console.log('This line of code executes immediately, at which point the file may not have finished reading yet!');
 
-// Correct: use await to wait for the operation to complete
+// Correct: Using await to wait for the operation to complete
 const text = await file.readText({ uri: 'internal://files/data.txt' });
-console.log(text); // At this point the file has been read and can be used safely
-console.log('Reading completed');
+console.log(text); // At this point the file has been read and can be safely used
+console.log('Read completed');
 ```
 
-#### Why must we use await?
+#### Why Must You Use `await`?
 
-Not using `await` to wait for an asynchronous operation to complete can lead to the following serious problems.
+Failing to use `await` to wait for asynchronous operations to complete leads to the following serious problems.
 
-Data is used before it is ready:
+Data being used before it is ready:
 ```js
-// Error example: ignore return value
+// Error example: Ignoring the return value
 function loadConfig() {
   let config = null;
   file.readText({ uri: 'internal://files/config.json' })
-    .then(text => config = JSON.parse(text)); // This callback function will be executed at some point in the future
-  // Here config is still null because the file reading has not been completed yet!
-  console.log(config.theme); // Error: Trying to access null.theme will crash
-  return config; // return null
+    .then(text => config = JSON.parse(text)); // This callback function will execute at some point in the future
+  // Here config is still null because file reading is not finished yet!
+  console.log(config.theme); // Error: Trying to access null.theme, will crash
+  return config; // Returns null
 }
 
-// Correct example: wait for data to be ready
+// Correct example: Waiting for data to be ready
 async function loadConfig() {
   const text = await file.readText({ uri: 'internal://files/config.json' });
   const config = JSON.parse(text);
-  console.log(config.theme); // Correct: the file has been read and is safe to access
-  return config; // Return the actual configuration object
+  console.log(config.theme); // Correct: File is read, safe to access
+  return config; // Returns the actual configuration object
 }
 ```
 
-The order of operations is confusing:
+Disordered operation sequences:
 ```js
-// Error example: Not waiting for write to complete
+// Error example: Not waiting for the write to complete
 async function saveAndLoad() {
-  //Write new data, but don't wait for completion
+  // Writes new data, but does not wait for completion
   file.writeText({ uri: 'internal://files/score.txt', text: '100' });
-
-  // Read immediately. The writing may not be completed at this time, and the old data may be read!
+  
+  // Reads immediately; at this point, the write may not be finished, and old data might be read!
   const score = await file.readText({ uri: 'internal://files/score.txt' });
-  console.log(score); // Might output the old value instead of '100'
+  console.log(score); // May output the old value instead of '100'
 }
 
-// Correct example: wait for writing to complete before reading
+// Correct example: Waiting for the write to complete before reading
 async function saveAndLoad() {
-  // Use await to wait for writing to complete
+  // Use await to wait for the write to finish
   await file.writeText({ uri: 'internal://files/score.txt', text: '100' });
-
-  // Now read, make sure you read the data just written
+  
+  // Now read, ensuring the newly written data is retrieved
   const score = await file.readText({ uri: 'internal://files/score.txt' });
-  console.log(score); // Output '100'
+  console.log(score); // Outputs '100'
 }
 ```
 
-Resource contention and data corruption:
+Race conditions and data corruption:
 
 ```js
-//Error example: multiple concurrent writes to the same file
+// Error example: Multiple concurrent writes to the same file
 async function appendLog(message) {
   const log = await file.readText({ uri: 'internal://files/log.txt' });
-  // No need to wait for writing to complete, continue execution
+  // Continuing execution without using await to wait for the write to complete
   file.writeText({ uri: 'internal://files/log.txt', text: log + message + '\n' });
 }
 
-// Concurrent calls: no await appendLog
+// Concurrent calls: not awaiting appendLog
 appendLog('Event A'); // Read -> Write A
 appendLog('Event B'); // Read -> Write B
-// Result: Two reads may read the same old content, and the later write will overwrite the previous one, causing 'event A' to be lost
+// Result: Both reads may fetch the exact same old content, and the later write will overwrite the earlier one, causing 'Event A' to be lost.
 
-// Correct example: wait for each write to complete
+// Correct example: Waiting for each write to complete
 async function appendLog(message) {
   const log = await file.readText({ uri: 'internal://files/log.txt' });
   await file.writeText({ uri: 'internal://files/log.txt', text: log + message + '\n' });
 }
 
-// serial call
-await appendLog('Event A'); // Complete read -> write -> complete
-await appendLog('Event B'); // Complete read -> write -> complete
-// Result: Both events were logged correctly
+// Sequential calls
+await appendLog('Event A'); // Complete Read -> Write -> Finish
+await appendLog('Event B'); // Complete Read -> Write -> Finish
+// Result: Both events are correctly recorded.
 ```
 
-#### Emulator trap
+#### Simulator Pitfalls
 
-::: warning The simulator cannot expose all asynchronous issues
-In a development simulator, file operations are almost instantaneous due to the extremely fast I/O speed of the computer. Therefore, code may appear to "just work" in the simulator even if it does not use `await` correctly.
+::: warning The Simulator Cannot Expose All Asynchronous Issues
+In the development simulator, due to the extremely fast I/O speed of the computer, file operations complete almost instantaneously. Therefore, even if code does not correctly use `await`, it may still appear to "work normally" in the simulator.
 :::
 
 File system I/O on real embedded devices has the following limitations:
-- The read and write speed of Flash memory is slow;
-- The file system cache capability is weak, and reading and writing files usually directly accesses the storage medium;
-- System resources are limited and I/O operations will be queued and delayed.
+- Flash storage read and write speeds are relatively slow;
+- File system caching capability is weak, and reading/writing files typically accesses the storage medium directly;
+- System resources are limited, and I/O operations are queued and delayed.
 
-Code that does not use `await` will almost certainly break on a real device! Don't ignore asynchronous programming conventions just because the simulator tests pass.
+Code that fails to use `await` will **almost certainly fail** on real devices! Do not ignore asynchronous programming standards just because testing passes in the simulator.
 
-#### Rules for correct use of async/await
+#### Rules for Correctly Using `async/await`
 
-1. Any function calling the file API should be declared as `async`:
+1. Any function that calls a file API should be declared as `async`:
    ```js
    async function saveData(data) {
      await file.writeText({ uri: 'internal://files/data.txt', text: data });
@@ -314,24 +314,24 @@ Code that does not use `await` will almost certainly break on a real device! Don
    ```js
    const content = await file.readText({ uri: 'internal://files/data.txt' });
    ```
-3. Use `try/catch` to handle possible errors:
+3. Use `try/catch` to handle potential errors:
    ```js
    try {
      await file.writeText({ uri: 'internal://files/data.txt', text: 'hello' });
    } catch (err) {
-     console.error('Writing failed:', err);
+     console.error('Write failed:', err);
    }
    ```
-4. Operations that need to be performed sequentially must `await` in order:
+4. Operations that need to be executed sequentially must be `await`ed in order:
    ```js
-   // Correct: write first, then read and verify
+   // Correct: Write first, then read to verify
    await file.writeText({ uri: 'internal://files/data.txt', text: 'test' });
    const verify = await file.readText({ uri: 'internal://files/data.txt' });
    console.log(verify === 'test' ? 'Verification successful' : 'Verification failed');
    ```
-5. Irrelevant operations can be executed in parallel, but wait for all to complete:
+5. Unrelated operations can be executed in parallel, but you must wait for all of them to complete:
    ```js
-   // Correct: read multiple files in parallel, but wait for them all to complete
+   // Correct: Read multiple files in parallel, but wait for all to complete
    const [file1, file2, file3] = await Promise.all([
      file.readText({ uri: 'internal://files/a.txt' }),
      file.readText({ uri: 'internal://files/b.txt' }),
@@ -339,7 +339,7 @@ Code that does not use `await` will almost certainly break on a real device! Don
    ]);
    ```
 
-#### Complete example: User configuration management
+#### Complete Example: User Configuration Management
 
 ```js
 import file from '@system.file'
@@ -353,8 +353,8 @@ class ConfigManager {
       const text = await file.readText({ uri: CONFIG_URI });
       return JSON.parse(text);
     } catch (err) {
-      //The file does not exist or has a wrong format, return to the default configuration
-      console.warn('Failed to load configuration, use default value:', err.message);
+      // File does not exist or format error, return default configuration
+      console.warn('Failed to load config, using default values:', err.message);
       return { theme: 'dark', language: 'zh-CN' };
     }
   }
@@ -366,12 +366,12 @@ class ConfigManager {
       console.log('Configuration saved');
     } catch (err) {
       console.error('Failed to save configuration:', err.message);
-      throw err; // Rethrow to let the caller know the save failed
+      throw err; // Re-throw to let the caller know saving failed
     }
   }
 
   async update(changes) {
-    // Read -> Modify -> Save the complete process
+    // Complete read -> modify -> save workflow
     const config = await this.load();
     Object.assign(config, changes);
     await this.save(config);
@@ -382,15 +382,15 @@ class ConfigManager {
 // Usage example
 async function main() {
   const manager = new ConfigManager();
-  //Load configuration
+  // Load configuration
   const config = await manager.load();
   console.log('Current theme:', config.theme);
-  //Update configuration
+  // Update configuration
   await manager.update({ theme: 'light' });
-  console.log('Theme has been updated');
+  console.log('Theme updated');
 }
 
-// Note: main itself is also asynchronous and needs to be called correctly
+// Note: main is also asynchronous and needs to be called correctly
 main().catch(err => {
   console.error('Program execution error:', err);
 });
@@ -399,25 +399,25 @@ main().catch(err => {
 #### Summary
 
 - All `@system.file` APIs are asynchronous and must use `await` to wait for completion.
-- Not using `await` can lead to serious problems, such as unprepared data, out-of-order operations, lost errors, and data corruption.
-- Passing the simulator test does not mean that the code is correct. I/O on the real device is slower and problems will be exposed.
-- Using `async/await` + `try/catch` is the correct and most concise way of writing.
+- Failing to use `await` leads to severe issues such as unprepared data, out-of-order operations, lost errors, and data corruption.
+- Passing tests in the simulator does not mean the code is correct; I/O is slower on real devices, which will expose the problems.
+- Using `async/await` + `try/catch` is the correct and most concise writing style.
 - Never ignore the return value of a Promise.
 
-### Callback trap
+### Callback Pitfalls
 
-#### Callback order illusion and race coverage
+#### Callback Order Illusion and Race Condition Overwrites
 
-This type of scenario involves a sequence of operations in which a set of files are read-modified-written. Here is the code in question using callback parameters to trigger the callback style:
+This scenario involves a sequence of operations where a set of files is read, modified, and written. This is problematic code using callback parameters to trigger callback style:
 ```js
-// Expect +1 to count file, but two concurrent calls may overwrite each other
+// Expected to increment a counter file by 1, but two concurrent calls might overwrite each other
 function increment(uri, done) {
   file.readText({
     uri,
     success(text) {
       const n = Number(text || '0') + 1;
       console.log(`read ${text}, write ${n}`);
-      // Nested file writing operation in readText() success callback
+      // Nesting write file operation inside readText() success callback
       file.writeText({
         uri,
         text: String(n),
@@ -429,51 +429,51 @@ function increment(uri, done) {
   });
 }
 
-//Create the counter file first, and then trigger it twice concurrently +1
+// Create counter file first, then trigger two increments concurrently
 file.writeText({
   uri: 'internal://files/counter',
   text: '0',
   success() {
-    //Trigger increment twice concurrently, but without any synchronization
+    // Trigger two increments concurrently without any synchronization
     increment('internal://files/counter');
     increment('internal://files/counter');
   }
 })
 ```
-After running the script, you may only see two `read 0, write 1` logs, and the final `counter` file content is `1` instead of the expected `2`. The failure mechanism is: both reads read the same old value, and the later write overwrites the first write, resulting in a result of only +1.
+After running this script, you may only see two `read 0, write 1` logs, and the final `counter` file content will be `1` instead of the expected `2`. The failure mechanism is: both reads fetch the same old value, and the later write overwrites the earlier one, resulting in the result only incrementing by 1.
 
 ::: note
-The above script looks very complicated, and it is difficult to pass the `done` callback function correctly, which can easily lead to incorrect implementation. In fact, after rewriting it using `async/await`, the code becomes very concise and easy to understand.
+The script above looks extremely complex and makes it hard to correctly pass the `done` callback function, which easily induces incorrect implementations. In fact, when rewritten using `async/await`, the code becomes very concise and easy to understand.
 :::
 
-A complex trick is to use mutual exclusion + serialization technology, which can completely retain the original concurrency `increment` semantics and ensure the atomicity of the entire read file + increment count operation:
+A complex technique is to use mutual exclusion + serialization techniques, which can completely preserve the original concurrent `increment` semantics and ensure the atomicity of the entire read file + increment counter operation:
 ```js
-// Mutually exclusive execution by key based on Promise chain
+// Key-based mutual exclusion execution using Promise chains
 const lock = new Map();
 
 /**
- * Execute asynchronous tasks for the same key serially. This is a utility function.
+ * Serially executes asynchronous tasks for the same key. This is a utility function.
  * @param {string} key
  * @param {() => Promise<any>} fn
- * @returns {Promise<any>} returns the result of fn
+ * @returns {Promise<any>} Returns the result of fn
  */
 function withLock(key, fn) {
-  // Get the "tail" before the key (if not, use the completed Promise)
+  // Get the previous "tail" for this key (or an already resolved Promise if none)
   const prev = lock.get(key) || Promise.resolve();
-  // Even if prev fails, the subsequent queue must continue, so first .catch(() => {})
+  // Even if prev fails, we must continue the subsequent queue, so .catch(() => {}) first
   const p = prev.catch(() => {}).then(async () => {
     try {
-      return await fn(); // The real task is only executed when it is its turn
+      return await fn(); // The actual task only runs when it's its turn
     } finally {
-      // If you are still the current tail, it means that no new tasks have come in and you can clean it up.
+      // If we are still the current tail, it means no new tasks have come in, so we can clean up
       if (lock.get(key) === p) lock.delete(key);
     }
   });
-  lock.set(key, p); // Hang the new tail
+  lock.set(key, p); // Hang the new tail on
   return p;
 }
 
-// Now, the actual IO inside the increment is serialized by withLock:
+// Now, the actual I/O inside increment is serialized by withLock:
 async function increment(uri) {
   await withLock(uri, async () => {
     const n = Number(await file.readText({ uri })) || 0;
@@ -486,14 +486,14 @@ file.writeText({
   uri: 'internal://files/counter',
   text: '0'
 }).then(() => {
-  // Trigger increment twice concurrently without any synchronization
+  // Trigger two increments concurrently without any synchronization
   increment('internal://files/counter');
   increment('internal://files/counter');
 });
 ```
-After running this script, the content of the `counter` file must be `2`, and the log sequence must be `read 0, write 1` → `read 1, write 2`.
+After running this script, the `counter` file content will definitely be `2`, and the log sequence will definitely be `read 0, write 1` → `read 1, write 2`.
 
-But such code looks very complicated. The simplest way is to call `await increment()` directly (shown as `await` infection):
+However, such code looks quite complex. The simplest approach is to call `await increment()` directly (manifesting as `await` propagation):
 ```js
 async function increment(uri) {
   const n = Number(await file.readText({ uri })) || 0;
@@ -511,9 +511,9 @@ file.writeText({
 })
 ```
 
-#### Callback levels and resource leaks
+#### Callback Nesting Levels and Resource Leaks
 
-The following example shows resource leaks and logic errors caused by multiple levels of nesting and too many branches in callback writing:
+The following example shows resource leaks and logic errors caused by multi-level nesting and too many branches in callback-style code:
 
 ```js
 function exportReport(uri, cb) {
@@ -546,11 +546,11 @@ function exportReport(uri, cb) {
 }
 ```
 
-Because the callback nesting level is too deep, `stopBusyIndicator()` and `cb()` are prone to omission or misuse:
-- Missing cleanup logic, causing the "busy indicator" to never stop, or the caller never getting a callback;
-- The cleanup logic was called prematurely, causing the caller to mistakenly believe that the write was completed.
+Due to overly deep callback nesting levels, `stopBusyIndicator()` and `cb()` are easily omitted or misused:
+- Omitting cleanup logic, causing the "busy indicator" to never stop, or the caller to never receive a callback;
+- Calling cleanup logic prematurely, causing the caller to mistakenly believe the write has completed.
 
-Recommended writing method (structured cleaning):
+Recommended writing style (structured cleanup):
 
 ```js
 async function exportReport(uri) {
@@ -560,35 +560,35 @@ async function exportReport(uri) {
     const out = await transform(t);
     await file.writeText({ uri: `${uri}.bak`, text: out });
   } finally {
-    stopBusyIndicator(); // Always called after file IO is completed (or abnormal)
+    stopBusyIndicator(); // Always called after file I/O completes (or throws an exception)
   }
 }
 ```
 
-#### Mixing await and callback leads to style switching (await fails)
+#### Mixing `await` and Callbacks Causing Style Switching (`await` Invalidation)
 
-Any callback handler function will not return a Promise object, making `await` wait invalid:
+No callback handler function returns a Promise object, rendering `await` invalid:
 
 ```js
-// Because the complete callback is passed in, this call will enable the callback style and will not return a Promise
+// Because the complete callback is passed, this call enables callback style and does not return a Promise
 await file.writeText({
   uri: 'internal://files/a.txt',
   text: 'x',
-  complete() {}, // Do not pass in the success/fail/complete parameter field
+  complete() {}, // Do not pass success/fail/complete parameter fields
 });
-//The above line will not actually wait for the writing to complete, and subsequent code may be executed in advance
+// The line above will not truly wait for the write to complete, and subsequent code may execute prematurely
 ```
 
-Recommended writing method:
+Recommended writing style:
 
 ```js
-// Do not pass in success/fail/complete when using await
+// Do not pass success/fail/complete when using await
 await file.writeText({ uri: 'internal://files/a.txt', text: 'x' });
 ```
 
 ### Best Practices
 
-#### Clear order and error handling
+#### Clear Ordering and Error Handling
 
 ```js
 import file from '@system.file'
@@ -600,18 +600,18 @@ export async function updateConfig(uri, patch) {
     Object.assign(json, patch);
     await file.writeText({ uri, text: JSON.stringify(json, null, 2) });
   } catch (err) {
-    // Handle/record errors uniformly, don't swallow them
+    // Handle/log errors uniformly; do not swallow them
     console.error('updateConfig failed:', uri, err);
     throw err;
   }
 }
 ```
 
-The key point is to use `await` to clarify the serial timing; use `try/catch` to ensure that errors are sensed and thrown up. If the error is not handled at all, the runtime will log the exception and interrupt the entire call chain.
+The key points are making sequential timing explicit via `await`; using `try/catch` to ensure errors are perceived and re-thrown. If errors are completely ignored, the runtime will record exception logs and interrupt the entire call chain.
 
-#### Avoid TOCTTOU (check-use race conditions)
+#### Avoiding TOCTTOU (Time-of-Check to Time-of-Use Race Conditions)
 
-Don't do `access()` first and then `write*()` and then rely on the state between the two to remain unchanged. For example this code:
+Do not call `access()` followed by `write*()` while relying on the state between them to remain unchanged. For example, code like this:
 
 ```js
 file.access({
@@ -620,7 +620,7 @@ file.access({
     if (exists) {
       file.writeText({ uri: 'internal://files/a.txt', text: 'x' });
     } else {
-      // If the file does not exist, mkdir first and then write the file
+      // If the file does not exist, mkdir first then write file
       file.mkdir({
         uri: '/data',
         recursive: true,
@@ -633,26 +633,26 @@ file.access({
 });
 ```
 
-The recommended way to write is to directly try to write, and the parent directory will be automatically created when running:
+The recommended approach is to attempt writing directly, and the runtime will automatically create the parent directories:
 ```js
 async function safeWriteText(uri, text) {
   try {
     await file.writeText({ uri, text });
   } catch (e) {
-    // Errors should be handled here and there is no need to write files after mkdir
+    // Errors should be handled here, and there is no need for mkdir before writing files
   }
 }
 ```
 
-#### Half-write and crash interrupt
+#### Half-Writes and Crash Interruptions
 
-On MCU devices, system exceptions are usually directly reset and the application will not continue executing in a "semi-crash" state. Even if the app is killed, already committed file writes will not be interrupted (but may not be executed at all), so you generally don't need to worry about the "half-written file" problem:
+On MCU devices, system exceptions usually result in a direct reset, and the application does not continue executing in a "half-crashed" state. Even if the application is killed, file write operations that have already been submitted will not be interrupted (though they might not execute at all), so there is generally no need to worry about "half-written files":
 ```js
-// Direct overwrite, which may leave half-written files in case of power interruption/system crash
+// Direct overwrite write; power interruption / system crash may leave a half-written file
 file.writeText({ uri: '/data/config.json', text: bigJson });
 ```
 
-For critical configuration file updates, you can use the "temporary file + same directory rename" mode to enhance stability:
+For critical configuration file updates, you can use the "temporary file + same-directory rename" pattern to reinforce stability:
 ```js
 async function atomicWriteText(uri, text) {
   const tmp = `${uri}.tmp`;

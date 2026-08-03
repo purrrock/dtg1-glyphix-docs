@@ -1,4 +1,3 @@
 # text
 
-
-Text components, `text` components and [`p` 组件](p) are identical except for the component name.
+The text component, the `text` component and the [`p` component](p) are identical except for their component names.

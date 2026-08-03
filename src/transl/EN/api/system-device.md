@@ -1,14 +1,14 @@
-# Device information
+# Device Information
 
-## Import module
+## Import Module
 
 ``` js
 import device from '@system.device'
 ```
 
-Developers need to declare the application's access permissions to `watch.permission.DEVICE_INFO` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare the application's access permission to `watch.permission.DEVICE_INFO` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
-## Interface definition
+## Interface Definition
 
 ### `getInfo`
 <decl method><pre>
@@ -27,18 +27,18 @@ Developers need to declare the application's access permissions to `watch.permis
 }>
 </pre></decl>
 
-Get basic information about the device. The meaning of the attribute fields of the returned object is:
-- `brand`: The brand name of the device.
-- `manufacturer`: Equipment manufacturer.
-- `model`: device model.
-- `product`: device code name.
-- `osType`: operating system name.
-- `osVersionName`: operating system version name.
-- `platformVersionName`: running platform version name.
-- `platformVersionCode`: running platform version number.
-- `language`: system language.
-- `region`: system region.
-- `deviceName`: device name.
+Gets the basic information of the device. The meanings of the property fields in the returned object are:
+- `brand`: Device brand name.
+- `manufacturer`: Device manufacturer.
+- `model`: Device model.
+- `product`: Device product code.
+- `osType`: Operating system name.
+- `osVersionName`: Operating system version name.
+- `platformVersionName`: Runtime platform version name.
+- `platformVersionCode`: Runtime platform version code.
+- `language`: System language.
+- `region`: System region.
+- `deviceName`: Device name.
 
 ### `getId`
 <decl method><pre>
@@ -51,53 +51,53 @@ Get basic information about the device. The meaning of the attribute fields of t
 }>
 </pre></decl>
 
-Obtain device identification information in batches. The parameter `types` specifies the type of information to be obtained. It is an Array object composed of `'device'`, `'mac'`, `'user'` or `'advertising'` elements. Depending on the `types` value, the meaning of each field of the returned object's properties is:
+Batch gets device identification information. The `types` parameter specifies the categories of information to be obtained, which is an Array object consisting of elements `'device'`, `'mac'`, `'user'`, or `'advertising'`. Depending on the values in `types`, the meanings of the property fields in the returned object are:
 - `type`: .
-- `device`: unique identifier of the device, only exists when `types` contains the `'device''` element.
-- `mac`: MAC address of the device, present only if `types` contains a `'mac'` element.
-- `user`: The user's unique identifier, only exists when `types` contains the `'user'` element.
-- `advertising`: A unique identifier for advertising, present only when `types` contains an `'advertising'` element.
+- `device`: Unique device identifier, present only when `types` contains the `'device'` element.
+- `mac`: Device MAC address, present only when `types` contains the `'mac'` element.
+- `user`: Unique user identifier, present only when `types` contains the `'user'` element.
+- `advertising`: Unique advertising identifier, present only when `types` contains the `'advertising'` element.
 
 ### `getDeviceId` <decl type="(): Promise<{deviceId: string}>" method />
 
-Get the unique identifier of the device.
+Gets the unique device identifier.
 
 ### `getSerial` <decl type="(): Promise<{serial: string}>" method />
 
-Get the device serial number.
+Gets the device serial number.
 
 ### `getTotalStorage` <decl type="(): Promise<{totalStorage: number}>" method />
 
-Get the total size of storage space in bytes.
+Gets the total size of the storage space, in bytes.
 
 ### `getAvailableStorage` <decl type="(): Promise<{availableStorage: number}>" method />
 
-Get the available size of storage space in bytes.
+Gets the available size of the storage space, in bytes.
 
 ::: tip
-The values ​​returned by the `getTotalStorage()` and `getAvailableStorage()` methods on the emulator may be inaccurate and do not change as the storage space changes.
+The values returned by `getTotalStorage()` and `getAvailableStorage()` on the simulator may not be accurate and will not change as the storage space changes.
 :::
 
 ### `screenWidth` <decl type="number" get />
 
-The device's screen width in pixels.
+The screen width of the device, in pixels.
 
 ### `screenHeight` <decl type="number" get />
 
-The device's screen height in pixels.
+The screen height of the device, in pixels.
 
 ### `screenDensity` <decl type="number" get />
 
-The device's screen pixel density in $\rm PPI$.
+The screen pixel density of the device, in $\rm PPI$.
 
 ### `screenShape` <decl type="'rect' | 'circle'" get />
 
-The screen shape of the device. The meaning of the values is as follows:
+The screen shape of the device. The values mean the following:
 - `'rect'`: The device has a rectangular screen.
 - `'circle'`: The device has a circular screen.
 
 ### `memoryProfile` <decl type="number" get />
 
-Gets the device's memory profile properties. This attribute is the JavaScript API version of the [`memory-profile`](/framework/render/media-query.md#memory-profile) media query attribute. For details, please refer to the documentation of the media query attribute.
+Gets the memory profile property of the device. This property is the JavaScript API version of the [`memory-profile`](/framework/render/media-query.md#memory-profile) media query property. For details, please refer to the documentation of media query properties.
 
-Unlike the `memory-profile` media query attribute, the value of the `memoryProfile` attribute is an integer, with the unit fixed at $\rm KiB$.
+Unlike the `memory-profile` media query property, the value of the `memoryProfile` property is an integer with a fixed unit of $\rm KiB$.

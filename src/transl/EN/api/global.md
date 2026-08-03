@@ -1,14 +1,14 @@
-# global object
+# Global Objects
 
-## Global function
+## Global Functions
 
 ### `encodeURIComponent` <decl type="(str: string): string" function />
 
-The `encodeURIComponent()` global function is used to encode the URI component `str`. It escapes certain special characters to their UTF-8 encoded equivalent percent sign (`%`) escape sequences, which ensures that the component is interpreted correctly when used as part of a URL, especially within a query string parameter, path, or fragment.
+The `encodeURIComponent()` global function is used to encode a URI component `str`. It escapes certain special characters into their corresponding UTF-8 percentage (`%`) escape sequences, ensuring that the component can be correctly interpreted when used as part of a URL, particularly in query string parameters, paths, or fragments.
 
-Letters, numbers, `- _ . ! ~ * ' ( )` will not be encoded. Other characters are encoded as percent sign escape sequences (e.g. spaces are encoded as `%20`).
+Letters, numbers, and `- _ . ! ~ * ' ( )` are not encoded. Other characters are encoded into percentage escape sequences (for example, a space is encoded as `%20`).
 
-`encodeURIComponent()` behaves the same as the function of the same name in Web.
+The behavior of `encodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -18,9 +18,9 @@ console.log(encodeURIComponent("https://example.com/page?id=100"));
 
 ### `decodeURIComponent` <decl type="(str: string): string" function />
 
-The `decodeURIComponent()` global function is used to decode the URI component `str` encoded by `encodeURIComponent()`. It converts percent sign (`%`) escape sequences back to their original character forms, thereby restoring the original URI components. For example, it will convert `%20` back to a space.
+The `decodeURIComponent()` global function is used to decode a URI component `str` encoded by `encodeURIComponent()`. It converts percentage (`%`)-encoded sequences back to their original character forms, thereby restoring the original URI component. For example, it converts `%20` back to a space.
 
-`decodeURIComponent()` behaves the same as the function of the same name in Web.
+The behavior of `decodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -30,15 +30,15 @@ console.log(decodeURIComponent("https%3A%2F%2Fexample.com%2Fpage%3Fid%3D100"));
 
 ### `URI` <decl type="(uri: string | Uri): Uri" function />
 
-This function accepts a string and parses it into a `Uri` object for subsequent processing. The parameter `uri` is the URI string to be parsed.
+This function takes a string and parses it into a `Uri` object for subsequent processing. The `uri` parameter is the URI string to be parsed.
 
-The return value is an object with the following fields:
-- `scheme: string`: the scheme field parsed from the parameter;
-- `authority: string`: the authority field parsed from the parameter;
-- `path: string`: the path field parsed from the parameter;
-- `query: string`: query field parsed from the parameter;
-- `origin: string`: the original URI string in the parameter
-- `toString: (string`: This method can re-encode this object into a URI string.
+The return value is an object containing the following fields:
+- `scheme: string`: The scheme field parsed from the parameter;
+- `authority: string`: The authority field parsed from the parameter;
+- `path: string`: The path field parsed from the parameter;
+- `query: string`: The query field parsed from the parameter;
+- `origin: string`: The original URI string from the parameter;
+- `toString: () => string`: This method can re-encode the object back into a URI string.
 
 For example:
 ``` js
@@ -53,7 +53,7 @@ console.log(URI("https://app-name/icon.png"))
 // }
 ```
 
-The `URI` function also accepts an object as a parameter. In this case, the `URI` function will add a `toString` method to the parameter object, through which the URI object can be encoded into a string:
+The `URI` function also accepts an object as a parameter. In this case, the `URI` function adds a `toString` method to the parameter object, which can be used to encode the URI object into a string:
 ``` js
 let uri = {
   scheme: 'https',

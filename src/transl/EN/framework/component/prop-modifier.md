@@ -1,42 +1,30 @@
-# attribute modifier
+# Property Modifiers
 
+Standard property operations allow for setting and observing properties. However, certain scenarios have common requirements for property operations—for example, requiring that setting a component's property value does not immediately change to the new value, but instead transitions using an animation. The direct solution is to write logic code to implement the transition effect, but in reality, such logic is common to any property.
 
-Ordinary attribute operations can realize attribute setting and monitoring functions. However, in some situations, there are some common requirements for attribute operations. For example, it is required that a certain attribute value setting operation of a component is not changed to a new value immediately, but uses animation to transition. The immediate solution is to code logic to implement the transition effect, but in reality this logic is universal for any property.
-
-
-In order to simplify or reuse the code of some common attribute operations, Glyphix has several built-in attribute modifiers. Modifiers are attribute suffixes represented using `.`, e.g.
-
+To simplify or reuse code for certain common property operations, Glyphix includes several built-in property modifiers. Modifiers are property suffixes denoted by `.`, for example:
 
 ``` html
 <progress :value="progress" value.transition="{curve: 'ease'}"/>
 ```
 
+The property modifier key-value pair `value.transition="{curve: 'ease'}"` and the property key-value pair `value="{{progress}}"` filled in the component's XML attributes are independent of each other, and they may require completely different parameters.
 
-The attribute modifier key-value pair `value.transition="{curve: 'ease'}"` and the attribute key-value pair `value="{{progress}}"` filled in the component's XML attributes are independent of each other, and they may require completely different parameters.
+This document will introduce the functions of each property modifier.
 
+## The `transition` Modifier
 
-This document will introduce the functions of each attribute modifier.
-
-
-## `transition` modifier
-
-
-This modifier will proxy the assignment operation of the attribute, transforming the process of assigning the attribute directly into a gradual assignment according to the animation transition method specified by the `transition` modifier. For example
-
+This modifier proxies the property assignment operation, transforming the process of directly assigning a value to the property into a gradient assignment according to the animation transition method specified by the `transition` modifier. For example:
 
 ``` html
-<!-- The transition modifier defines the transition effect of the value attribute -->
+<!-- The transition modifier defines the transition effect for the value property -->
 <progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
 <!-- No transition effect -->
 <progress :max="1000" :value="progress" />
 ```
 
 
-
-
 <glyphix id="prop-modifier-transition" height="68" width="480" inline>
-
-
 
 ``` html
 <div>
@@ -45,14 +33,12 @@ This modifier will proxy the assignment operation of the attribute, transforming
 </div>
 ```
 
-
 ``` css
 div > * {
   margin: 8px;
   height: 0.75rem;
 }
 ```
-
 
 ``` js
 export default {
@@ -65,46 +51,31 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
-Since the `value.transition` modifier of the [`progress`](/components/progress.md) component is defined, each time `this.progress` is modified, the displayed value of the `progress` component will not directly jump to the new value, but will gradually change through an animation. This effect can be achieved without writing any animation logic.
-
+Because the `value.transition` modifier of the [`progress`](/components/progress.md) component is defined, every time `this.progress` is modified, the displayed value of the `progress` component does not jump directly to the new value, but instead transitions smoothly via an animation. This effect can be achieved without writing any animation logic.
 
 ::: tip
-
-The `value` attribute of the `progress` component in the example is an integer. Since the default $[0, 100]$ range tends to create a sense of segmentation in transition animations, the example uses `:max="1000"` to increase the value range of `value` to make the animation smoother.
+The `value` property of the `progress` component in the example is an integer. Since the default range of $[0, 100]$ is prone to segmentation artifacts during transition animations, the example uses `:max="1000"` to increase the value range of `value`, thereby making the animation smoother.
 :::
 
+### Interpolation Calculation
 
+Currently, only some properties of native components support the `transition` modifier. Supported properties must have an "interpolatable" value type. Specifically: for all property value types $a$ and $b$ and progress $p \in [0,1]$, the operation $(1-p)*a+p*b$ must be valid.
 
-### Interpolation calculation
+The JavaScript `number` type is interpolatable. In addition, transformations and color values can also be interpolated.
 
+#### Transformations
 
-Currently, only some properties of native components support the `transition` modifier. Supported properties must have "interpolable" value types, specifically: for all property value types $a$ and $b$ and progress $p \in [0,1]$, the operation $(1-p)*a+p*b$ is valid.
+Transformations are usually defined using strings, such as `scale(2) rotate(30deg)`. The string itself is not interpolatable, but when used for transformation properties, it is interpolatable (because these strings are parsed into sequences of transformation operations, which are interpolatable). Generally speaking, interpolation is performed step by step for each transformation operation. For example, in the interpolation between `scale(2) rotate(30deg)` and `scale(1) rotate(90deg)`, the transformation in each frame includes two steps: scaling and rotation. The scale factor transitions from $2$ to $1$, while the rotation angle transitions from $30\deg$ to $90\deg$.
 
+#### Colors
 
-JavaScript's `number` type is interpolable, in addition to transform and color values.
+Colors are usually represented using string codes, such as `#ff0000`. Color interpolation is calculated individually for the red, green, blue, and alpha channels.
 
+### The `Transition` Object
 
-#### transform
-
-
-Transformations are usually defined using strings, such as `scale(2) rotate(30deg)`. Strings themselves are not interpolable, but they are when used with transform properties (because these strings are parsed as sequences of transform operations, which are interpolable). Normally interpolation is done one transform at a time. For example, the transformation of each frame of `scale(2) rotate(30deg)` and `scale(1) rotate(90deg)` during the interpolation process includes two steps of scaling and rotation, where the scaling factor transitions from $2$ to $1$, and the rotation angle transitions from $30\deg$ to $90\deg$.
-
-
-#### color
-
-
-Colors are usually represented using string codes, such as `#ff0000`. Color interpolation is calculated individually for the red, green, blue, and transparency channels.
-
-
-### `Transition` object
-
-
-The value type of the `transition` modifier is a `Transition` object:
+The value type of the `transition` modifier is the `Transition` object:
 ``` ts
 interface Transition {
   curve?: string,
@@ -112,14 +83,10 @@ interface Transition {
 }
 ```
 
-
 #### `curve` <decl type="?: string"/>
 
-
-Specify the [Easing function](../render/animation.md#缓动曲线) of the transition animation, the default is `'ease'`.
-
+Specifies the [easing function](../render/animation.md#easing-curves) for the transition animation. The default is `'ease'`.
 
 #### `duration` <decl type="?: number"/>
 
-
-The duration of the animation, in seconds, defaults to `1`.
+The duration of the animation in seconds. The default is `1`.

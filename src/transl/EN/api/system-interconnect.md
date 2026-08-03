@@ -1,16 +1,16 @@
-# Device interconnection
+# Device Interconnection
 
-## Import module
+## Import Module
 
 ``` ts
 import interconnect from '@system.interconnect'
 ```
 
-## Interface definition
+## Interface Definitions
 
 ### `instance` <decl type="(options: {package: string, fingerprint: string}): Connect" method/>
 
-Create a [`Connect`](#connect-interface) instance
+Creates a [`Connect`](#connect-interface) instance.
 
 ```js
 const connect = interconnect.instance({
@@ -19,14 +19,14 @@ const connect = interconnect.instance({
 })
 ```
 
-- package: the package name of the mobile application
-- fingerprint: fingerprint information, which needs to be consistent with the fingerprint information passed in when the mobile application creates a connection.
+- package: The package name of the mobile application.
+- fingerprint: Fingerprint information, which must be consistent with the fingerprint information passed when creating the connection in the mobile application.
 
-## `Connect` interface
+## `Connect` Interface
 
 ### `onopen` <decl type="?: () => void" set />
 
-Used to specify a callback when the connection is opened
+Used to specify the callback when the connection is opened.
 
 ```js
 connect.onopen = () => {
@@ -36,7 +36,7 @@ connect.onopen = () => {
 
 ### `onclose` <decl type="?: () => void" set />
 
-Used to specify a callback when the connection is closed
+Used to specify the callback when the connection is closed.
 
 ```js
 connect.onclose = () => {
@@ -46,7 +46,7 @@ connect.onclose = () => {
 
 ### `onerror` <decl type="?: () => void" set />
 
-Used to specify a callback after a connection failure
+Used to specify the callback after a connection failure.
 
 ```js
 connect.onerror = (data: any) => {
@@ -56,7 +56,7 @@ connect.onerror = (data: any) => {
 
 ### `onmessage` <decl type="?: () => " set />
 
-Used to specify the callback for receiving data from the mobile app
+Used to specify the callback for receiving data from the mobile App side.
 
 ```js
 connect.onmessage = (msg => {
@@ -70,7 +70,7 @@ connect.onmessage = (msg => {
 
 ### `send` <decl type="(options: {data: any}): Promise<any>" method />
 
-Send data to mobile app
+Sends data to the mobile App side.
 
 ```js
 connect.send({

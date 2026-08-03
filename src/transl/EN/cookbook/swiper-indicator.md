@@ -1,8 +1,6 @@
-# Swiper page indicator
+# Swiper Page Indicator
 
-
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
-
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper Indicator">
 
 ``` html
 <stack>
@@ -14,7 +12,6 @@
   </div>
 </stack>
 ```
-
 
 ``` js
 export default {
@@ -35,7 +32,6 @@ export default {
 }
 ```
 
-
 ``` css
 swiper > p {
   background-color: #888;
@@ -54,6 +50,5 @@ swiper > p {
   margin: 0 4px 56px 4px;
 }
 ```
-
 
 </Glyphix>

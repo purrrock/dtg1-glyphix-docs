@@ -1,12 +1,12 @@
 # API
 
-Glyphix provides a complete set of runtime JavaScript APIs, including [`setInterval`](timer.md), [`console`](console.md) and other APIs similar to the browser environment, as well as various system capability interfaces used to implement the entire application.
+Glyphix provides a full set of runtime JavaScript APIs, including browser-like APIs such as [`setInterval`](timer.md) and [`console`](console.md), as well as various system capability interfaces essential for building the entire application.
 
-However, unlike the browser environment, Glyphix does not provide a DOM interface, so there are no `window`, `document` and other objects, and no DOM operations can be performed.
+However, unlike the browser environment, Glyphix does not provide DOM interfaces. Therefore, it lacks objects like `window` and `document`, and cannot perform any DOM operations.
 
-## Quick App asynchronous interface
+## QuickApp Asynchronous Interfaces
 
-Glyphix supports the watch Quick App standard, but we mainly use the Promise style asynchronous interface instead of the callback function style. For example, the callback mode of the `file.readText()` interface in the watch quick app is used like this:
+Glyphix supports the Watch QuickApp standard, but we primarily use Promise-style asynchronous interfaces rather than callback-style ones. For example, the callback pattern for the `file.readText()` interface in Watch QuickApp is used like this:
 ``` js
 import file from '@system.file'
 
@@ -20,11 +20,11 @@ file.readText({
   }
 })
 ```
-But Promise style is often used in Glyphix:
+However, the Promise style is commonly used in Glyphix:
 ``` js
 import file from '@system.file'
 
-// Assume that in an asynchronous function
+// Assuming inside an async function
 try {
   const content = await file.readText({ uri: 'internal://files/test.txt' })
   console.log(content)
@@ -32,11 +32,11 @@ try {
   console.error('read text failed:', e)
 }
 ```
-Since the Promise style API is more in line with usage habits after the ES6 standard, this document only retains the type signature of the Promise version.
+Since Promise-style APIs better align with modern usage habits established after the ES6 standard, this documentation only retains the type signatures for the Promise version.
 
-### Promise vs. callback interface
+### Promise vs. Callback Interfaces
 
-Unless otherwise specified, all interfaces with a return type of `Promise<...>` support callback functions (lower versions of Quick App standards) and Promise asynchronous interface styles. Callback function-style asynchronous interfaces typically have the following types:
+Unless otherwise specified, all interfaces with a return type of `Promise<...>` support both callback functions (older QuickApp standards) and Promise asynchronous interface styles. Callback-style asynchronous interfaces typically have the following type:
 ``` ts
 type CallbackAPI = (options: {
   success: (data: any) => void,
@@ -45,20 +45,20 @@ type CallbackAPI = (options: {
   // Other parameters...
 }) => void
 ```
-The asynchronous interface in Promise style is of the following types:
+Whereas Promise-style asynchronous interfaces have the following type:
 ``` ts
 type PromiseAPI = (options: any) => Promise<any>
 ```
 
-When any `success`, `fail` or `complete` attribute exists in the parameter `options`, the API will automatically use the callback function style (no return value), otherwise it will use the Promise return value style.
+When any `success`, `fail`, or `complete` property is present in the `options` parameter, the API will automatically use the callback function style (with no return value); otherwise, it will use the Promise return value style.
 
 ::: warning
-When using the callback function style, the asynchronous API does not return any value, so the `await` syntax cannot be used. So make sure you don't pass in any `success`/`fail` or `complete` callback functions when using Promise/`await` syntax.
+When using the callback function style, asynchronous APIs do not return any value, so the `await` syntax cannot be used. Therefore, make sure not to pass any `success`, `fail`, or `complete` callback functions when using the Promise/`await` syntax.
 :::
 
-### API Example
+### API Examples
 
-Taking the [`system.file`](system-file.md) module as an example, all its functions support both Promise and callback-style asynchronous calling modes. The code snippet below gives a comparison of the two API usages.
+Taking the [`system.file`](system-file.md) module as an example, all of its functions support both Promise and callback styles of asynchronous invocation modes. The code snippet below provides a comparison of the two API usages.
 
 ::: code-tabs#js
 
@@ -67,7 +67,7 @@ Taking the [`system.file`](system-file.md) module as an example, all its functio
 ``` js
 import file from '@system.file'
 
-// async/await is actually syntactic sugar for Promise
+// async/await is actually syntactic sugar for Promises
 async function readFile() {
   let text = await file.readText({ uri: '/app.js' })
   console.log(text)
@@ -82,7 +82,7 @@ readFile()
 import file from '@system.file'
 
 file.readText({ uri: '/app.js' })
-  .then(console.log) // Tip: The console.log() type matches Promise.then() and there is no need to use arrow functions.
+  .then(console.log) // Tip: The type of console.log() matches Promise.then(), so arrow functions are not required
   .fail((error) => console.log(`${error.message}: ${error.code}`))
 ```
 
@@ -107,14 +107,14 @@ file.readText({
 
 :::
 
-This document will only give Promise-style API types, and examples of asynchronous operations only use await/async syntax.
+This documentation will only provide Promise-style API types, and examples of asynchronous operations will exclusively use the await/async syntax.
 
 ::: tip
-It is not recommended that developers additionally encapsulate the Glyphix API, especially manually encapsulate its callback function compatibility style into Promise mode. This practice requires writing additional code and hurts performance.
+Developers are not recommended to additionally wrap Glyphix APIs, especially manually wrapping their callback-compatible styles into Promise modes. This practice requires writing extra code and will hurt performance.
 :::
 
-## Subscription interface
+## Subscription Interfaces
 
-The API of the subscription class registers a callback function with a module instead of returning the result directly. Unlike general asynchronous interfaces, the callback function of the subscription interface can be executed multiple times. All subscription interfaces support the registration of multiple subscription callback functions, and will return a subscription ID, and you can use the corresponding interface to cancel the subscription.
+Subscription-style APIs register a callback function with a module instead of returning a result directly. Unlike general asynchronous interfaces, the callback function of a subscription interface can be executed multiple times. All subscription interfaces support registering multiple subscription callback functions, return a subscription ID, and allow unsubscribing using the corresponding interface.
 
-Glyphix currently does not support the quick app style subscription `fail` callback function, but it may directly throw an exception when the subscription fails.
+Glyphix currently does not support QuickApp-style subscription `fail` callback functions, but may throw exceptions directly when a subscription fails.

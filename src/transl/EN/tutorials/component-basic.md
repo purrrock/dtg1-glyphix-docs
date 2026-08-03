@@ -1,13 +1,13 @@
 ---
 icon: information-outline
 ---
-# Component basics
+# Component Basics
 
-The previous document "[Quick Start](getting-started)" briefly introduced the concept of components. This tutorial will further explain the knowledge about components. Before reading this document, you need to know how to create and build a project, and how to edit source files. If you don't know, please read the "[Quick Start](getting-started)" tutorial.
+The previous document, "[Getting Started](getting-started)", briefly introduced the concept of components. This tutorial will explain components in further detail. Before reading this document, you need to know how to create and build a project, as well as how to edit source files. If you are not familiar with these topics, please read the "[Getting Started](getting-started)" tutorial.
 
 ## Introduction
 
-In Glyphix application development, all interfaces are components - from buttons to pages. Component technology allows the development of interfaces using simple template languages:
+In Glyphix application development, all user interfaces are components—ranging from a button as small as anything to an entire page. Component technology allows you to develop interfaces using a simple template language:
 ``` html
 <!-- main/index.ux -->
 <template>
@@ -28,9 +28,9 @@ In Glyphix application development, all interfaces are components - from buttons
   }
 </script>
 ```
-This is basically the `main/index.ux` file of the default project template. Use the `gx emu` command to observe the display effect. The content in the `<template>` tag is the component's template, which describes the appearance of the component. Here, the `<p>` node will display the `text` property from the component model object. Please note that the component framework internally associates the content of the `<p>` node with the `text` attribute of the component model. As long as the value of the `text` attribute is modified, the interface will be updated synchronously.
+This is basically the `main/index.ux` file of the default project template. You can use the `gx emu` command to observe the display effect. The content inside the `<template>` tag is the component's template, which describes the component's appearance. Here, the `<p>` node will display the `text` property from the component's model object. Note that the component framework internally associates the content of the `<p>` node with the `text` property of the component model; whenever the value of the `text` property is modified, the interface will be updated synchronously.
 
-We can test this with a timer:
+We can use a timer to test this:
 ``` js
 export default {
   data: { text: "begin!" },
@@ -40,31 +40,31 @@ export default {
   }
 }
 ```
-You will now see that the displayed count increases by 1 every second.
+Now, you will see that the displayed count value increases by 1 every second.
 
-## Programming model of components
+## Programming Model of Components
 
-An important function of GUI programs is to change their appearance based on data and input to achieve interaction. In traditional GUI programming and native HTML, developers need to find the target element node in the interface tree and then call the API to update it. It turns out that developing interfaces in this way will be very complicated. Therefore, there are design patterns suitable for GUIs such as MVC, MVP, and MVVM, and some new frameworks have emerged in the field of Web development. These technologies have greatly reduced the difficulty of interface development.
+An important function of a GUI program is to change its appearance based on data and input, thereby achieving interactivity. In traditional GUI programming and native HTML, developers need to find the target element node in the interface tree and then call APIs to update it. Experience has proven that developing interfaces this way can be very complex. Therefore, GUI-applicable design patterns such as MVC, MVP, and MVVM have emerged, and new frameworks have also appeared in the web development field. These technologies have significantly reduced the difficulty of interface development.
 
-The programming model of Glyphix components is very similar to front-end frameworks like Vue. The basic idea of ​​these frameworks is to calculate a new interface based on the state of the interface model, rather than requiring interface elements to be updated when the state changes. Compared with traditional technology, the interface view part in this solution is stateless and therefore simpler. Let's continue using the previous example:
+The programming model of Glyphix components is very similar to front-end frameworks like Vue. The basic idea of these frameworks is to calculate the new interface based on the state of the interface model, rather than requiring you to update interface elements when the state changes. Compared to traditional technology, the interface view part in this approach is stateless and therefore simpler. Let's continue using the previous example to illustrate:
 ``` html
 <template>
   <p>{{ text }}</p>
 </template>
 ```
-We already know that the interface will automatically update when the `text` property of the component model is updated. However, in traditional GUI frameworks, it is often necessary to manually update the `<p>` node after the `text` of the model is updated (which usually comes from changes in input or internal data). Frameworks such as MVC can simplify these operations, but they are not very concise.
+We already know that the interface will automatically update when the `text` property of the component model is updated. However, in traditional GUI frameworks, it is often necessary to manually update the `<p>` node after the model's `text` updates (which generally comes from user input or internal data changes). Frameworks like MVC can simplify these operations, but they are not extremely concise.
 
-Now consider a very simple approach: we write a `render()` function that generates an interface tree based on the current state of the model. If we replace the original interface tree with the value of the `render()` function every frame, then any changes to the model will be reflected in the interface. This solution is very simple, but you will deny it because of the efficiency. In fact, it was to solve the efficiency problem of this solution that the traditional GUI programming model was born: only modified elements in the interface are modified, but it introduces state in the view layer and also brings a lot of complexity.
+Now consider a very simple method: we write a `render()` function that generates an interface tree based on the current state of the model. If we replace the original interface tree with the value of the `render()` function on every frame, any changes to the model will be reflected in the interface. This approach is very simple, but you might reject it due to efficiency concerns. In fact, traditional GUI programming models were born precisely to solve the efficiency problem of this approach: only modify the elements in the interface that change, but doing so introduces state into the view layer, which also brings a lot of complexity.
 
-The Glyphix component framework is based on this simple concept: the content in the `<template>` tag implements the function of the `render()` function, while the js code focuses on maintaining the model, and data changes in the model will automatically be reflected in the relevant interfaces. You can think of the Glyphix component framework as always calculating a new interface based on the state of the model, so we don't have to manually update interface elements.
+The Glyphix component framework is based on this simple concept: the content inside the `<template>` tag implements the functionality of the `render()` function, while the JS code focuses on maintaining the model, and data changes in the model are automatically reflected in the relevant interface. You can think of the Glyphix component framework as always calculating a new interface based on the model's state, so we don't need to manually update interface elements.
 
 ::: tip
-The bottom layer of Glyphix is not a DOM tree, and naturally there is no API for operating DOM elements. In fact, the component framework is the native Glyphix JavaScript API.
+The underlying layer of Glyphix is not a DOM tree, and naturally there are no APIs for operating DOM elements. In fact, the component framework itself is the native Glyphix JavaScript API.
 :::
 
-## Respond to input
+## Responding to Input
 
-There are some components that can respond to user input events. In this case, you can use the `on` directive to specify an event listener. For example, listen for click events on the text component:
+Some components can respond to user input events. In this case, you can use the `on` directive to specify an event listener. For example, listening to the click event on a text component:
 ``` html
 <template>
   <p on:click="text += ' click'">{{text}}</p>
@@ -84,16 +84,16 @@ There are some components that can respond to user input events. In this case, y
   }
 </script>
 ```
-Clicking on the text will automatically update the display. The value of the `on:click` attribute `text += ' click'` is a JavaScript expression, and Glyphix will automatically bind the `this` of the variable in the expression to the component object.
+Clicking the text will automatically update the displayed content. The value of the `on:click` attribute, `text += ' click'`, is a JavaScript expression. Glyphix automatically binds `this` for the variables in the expression to the component object.
 
-## Conditional rendering
+## Conditional Rendering
 
-The `if` directive is used to render component content conditionally. The content area controlled by this directive will be rendered only when the value of the expression in the `if` directive is true.
+The `if` directive is used to conditionally render component content. The content area controlled by this directive will only be rendered when the value of the expression in the `if` directive is true.
 ``` html
 <p if="display">Hello World</p>
 ```
 
-The following example will implement a mutually exclusive switch effect. When clicked continuously, the interface will alternately display the text "Component A" or "Component B".
+The following example implements a mutually exclusive toggle effect. Clicking consecutively will cause the interface to alternately display "Component A" or "Component B".
 ``` html
 <template>
   <p if="display" on:click="display = false">Component A</p>
@@ -116,24 +116,24 @@ The following example will implement a mutually exclusive switch effect. When cl
 </script>
 ```
 
-## List rendering
+## List Rendering
 
 Use the `for` directive to repeatedly render a component to generate a list. The basic usage of the `for` directive is:
 ``` html
 <p for="(index, value) in list">{{index}}: {{value}}</p>
 ```
-Among them, `list` is a list attribute in the component model (must be of type `Array`), `index` and `value` are two iteration variables, the value of `index` is the index of the current item, and the value of `value` is the value of the current item.
+Where `list` is a list property in the component model (must be of type `Array`), and `index` and `value` are two iteration variables. The value of `index` is the index of the current item, and the value of `value` is the value of the current item.
 
-The `for` directive can be abbreviated to the following forms:
+The `for` directive can be abbreviated in several forms:
 ``` html
 <p for="list">{{$idx}}: {{$item}}</p>
 <p for="value in list">{{$idx}}: {{value}}</p>
 <p for="index, value in list">{{$idx}}: {{value}}</p>
 ```
-The first abbreviation is to only write the expression that needs to be iterated, in which case `$idx` and `$item` will be used as the default iteration variable names; the second way of writing explicitly defines the iteration variable of the current value, and the current index variable name uses the default `$idx`; the third way of writing is the abbreviation of the standard way of omitting parentheses.
+The first shorthand only writes the expression to be iterated; in this case, `$idx` and `$item` will be used as the default iteration variable names. The second syntax explicitly defines the iteration variable for the current value, while the current index variable name defaults to `$idx`. The third syntax is the standard syntax with parentheses omitted.
 
 ::: tip
-Due to the scope relationship, the variables used iteratively when writing the `for` directive will only take effect when used after the `for` directive.
+Due to scoping rules, the variables used for iteration when writing a `for` directive will only be active if used after the `for` directive.
 :::
 
 ``` html
@@ -143,15 +143,15 @@ Due to the scope relationship, the variables used iteratively when writing the `
 <button text="{{$item}}" for="list"/>
 ```
 
-### Use both `if` and `for` directives
+### Using `if` and `for` Directives Simultaneously
 
-You can use both the `if` and `for` directives on an element, in which case the `if` directive has higher priority. In this example, when the `display` property is false, the entire `button` component list will not render:
+You can use both `if` and `for` directives on the same element, in which case the `if` directive has a higher priority. In this example, when the `display` property is false, the entire list of `button` components will not be rendered:
 ```html
 <button for="value in items" if="display">Hello {{value}}</button>
 <p if="!display">Paragraph 1</p>
 ```
 
-And if your purpose is to conditionally render some nodes in the list generated by the `for` directive, you need to place the `if` directive on the inner element of the `for` directive.
+If your purpose is to conditionally render some nodes within the list generated by the `for` directive, you need to place the `if` directive on an inner element of the `for` directive.
 ```html
 <button for="value in items">
   <p if="display">item: {{value}}</p>
@@ -159,14 +159,14 @@ And if your purpose is to conditionally render some nodes in the list generated 
 ```
 
 ::: tip
-Using the `if` and `for` directives on the same element is not recommended as it reduces code readability.
-:::
+It is not recommended to use `if` and `for` directives on the same element, as this reduces code readability.
+```
 
-## slot
+## Slots
 
-Similar to the content distribution of other frameworks, Glyphix also implements a set of content distribution APIs. We can use the `slot` component as an outlet to carry distributed content.
+Similar to content distribution in other frameworks, Glyphix also implements a content distribution API. We can use the `slot` component as an outlet for carrying distributed content.
 
-In the child component, use the `slot` component to host the content defined in the parent component. The `slot` component will become the element passed in by the parent component when rendering.
+In a child component, use the `slot` component to host the content defined in the parent component. During rendering, the `slot` component is replaced by the elements passed in from the parent component.
 
 ```html
 <div>
@@ -174,13 +174,13 @@ In the child component, use the `slot` component to host the content defined in 
 </div>
 ```
 
-## Use components in combination
+## Combining Components
 
-Combining multiple components into a larger interface is the Glyphix component framework's approach to interface building. If there is a component named `Menu`, you can import it by using the `<import>` tag under the root node of the UX file that needs to be referenced:
+Combining multiple components into a larger interface is the way user interfaces are built in the Glyphix component framework. Suppose there is a component named `Menu`; you can import it by using the `<import>` tag under the root node of the UX file that needs to reference it:
 ``` html
 <import src="path/to/Menu" name="Menu"/>
 ```
-The `src` attribute is the path of the component, do not add the `.ux` suffix. The `name` attribute is an optional component name. If this attribute is not filled in, the component's file name will be used as the component name.
+The `src` attribute is the path of the component; please do not append the `.ux` suffix. The `name` attribute is an optional component name. If this attribute is omitted, the component's file name will be used as its name.
 
 Use the `<import>` tag multiple times to import all dependent components:
 ``` html
@@ -189,7 +189,7 @@ Use the `<import>` tag multiple times to import all dependent components:
 <import src="path/to/ComC"/>
 ```
 
-Custom components can be used just like native components:
+You can use custom components just like native components:
 ``` html
 <div>
   <menu for="menus" on:click="clickMenu($idx, $item)">
@@ -220,9 +220,9 @@ export default {
 }
 ```
 
-This is a menu interface. We hope that when the user clicks on the menu, the information of the current menu item will be printed through the `clickMenu` method. Therefore, the `Menu` component needs to be able to display menu content and be able to monitor its own click event through `on:click`.
+This is a menu interface. We want to print the information of the current menu item via the `clickMenu` method when the user clicks the menu. Therefore, the `Menu` component needs to be able to display the menu content and listen to its own click event via `on:click`.
 
-This is the content of the `Menu.ux` file:
+Here is the content of the `Menu.ux` file:
 ``` html
 <template>
   <div on:click="$emit('click')"> <slot /> </div>
@@ -236,4 +236,4 @@ This is the content of the `Menu.ux` file:
   export default {}
 </script>
 ```
-We simply use a native component `div` to respond to user clicks and report them. The `div` component will also display the subcomponent passed in last time, finally allowing the menu list to be displayed.
+We simply use a native `div` component to respond to the user's click and report it upward. The inner part of the `div` component will also display the child components passed in from above, ultimately making the menu list visible.

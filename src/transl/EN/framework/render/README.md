@@ -1,1 +1,1 @@
-# rendering mechanism
+# Rendering Mechanism

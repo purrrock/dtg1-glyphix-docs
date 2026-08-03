@@ -1,28 +1,21 @@
 # div
 
+`div` is the most basic container component. `div` supports child components and layout, but does not support scrolling (content exceeding the boundaries will be clipped directly). If you want content to scroll, please use the [scroll](scroll) component.
 
-`div` is the most basic container component. `div` supports subcomponents and layout, but does not support scrolling (content will be cropped directly if it exceeds the boundary). If you want content to scroll, use the [scroll](scroll) component.
+## Notes
 
+### Text Display
 
-## Things to note
-
-
-### text display
-
-
-The `div` component cannot be used directly to display text. Instead, text components such as `p` must be used to display text, for example:
-
+The `div` component cannot be used to display text directly; instead, text components such as `p` must be used. For example:
 
 ```html
-<!-- 错误的写法，不会显示文本 -->
+<!-- Incorrect usage, text will not be displayed -->
 <div>text content.</div>
-<!-- 正确的写法 -->
+<!-- Correct usage -->
 <p>text content.</p>
 ```
 
-
-However, if `div` has multiple child elements, you can use text as its child element:
-
+However, if there are multiple child elements inside the `div`, text can be included as its child element:
 
 ```html
 <div>
@@ -30,18 +23,14 @@ However, if `div` has multiple child elements, you can use text as its child ele
   <span style="color: #f0f">second element.</span>
 </div>
 ```
-
 
 <Glyphix id="components-div-text-element" height="48" width="360" inline >
 
-
-
 ```html
 <div>
   first element,
   <span style="color: #f0f">second element.</span>
 </div>
 ```
-
 
 </Glyphix>

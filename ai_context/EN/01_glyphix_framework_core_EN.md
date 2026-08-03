@@ -4,137 +4,99 @@
 ============================================================
 FILE_PATH: src/transl/EN/framework/README.md
 
-# frame
+# Framework
 
+Glyphix is an efficient, lightweight application development framework designed for MCU (Microcontroller Unit) devices, aiming to provide developers with an application development experience close to Web development. Through a declarative UI framework using HTML templates, CSS, and JavaScript, developers can easily build components and pages, and publish applications to various smart devices (such as smart watches). Glyphix solves the complexity and stability issues of UI and application development in traditional MCU systems, and provides critical cross-device application development and publishing capabilities, thereby empowering developers with unprecedented flexibility and ease of use.
 
-Glyphix is ​​an efficient, lightweight application development framework for MCU (microcontroller) devices, aiming to provide developers with an application development solution that is close to the web development experience. With a declarative UI framework using HTML templates, CSS, and JavaScript, developers can easily build components and pages and publish apps to a variety of smart devices, such as smartwatches. Glyphix solves the complexity and stability issues of UI and application development for traditional MCU systems and provides critical cross-device application development and publishing capabilities, giving developers unprecedented flexibility and ease of use.
+In addition to an efficient development framework, Glyphix places special emphasis on application safety and stability. We have implemented robust memory management and security mechanisms in the underlying architecture to avoid common memory errors and resource waste, providing developers with a more reliable runtime environment. This security guarantees the operational stability of applications and significantly shortens the debugging cycle during development.
 
+At the same time, Glyphix boasts exceptional performance, capable of running applications with near-native fluency and resource utilization even in resource-constrained MCU environments. The runtime has been deeply optimized by the framework, automatically managing resources and utilizing them efficiently. Consequently, developers can focus on feature implementation and user experience optimization without worrying about performance issues.
 
-In addition to an efficient development framework, Glyphix pays special attention to the safety and stability of applications. We have implemented powerful memory management and security mechanisms in the underlying architecture to avoid common memory errors and resource waste, and provide developers with a more reliable runtime environment. This kind of security ensures the stability of application operation and will also significantly shorten the debugging cycle during the development process.
+## Core Features
 
+### Web Development Experience
 
-At the same time, Glyphix excels in performance, running applications with near-native fluency and resource usage even in resource-constrained MCU environments. The framework has deeply optimized the runtime, automatically manages resources and utilizes them efficiently. Therefore, developers can focus on implementing features and optimizing user experience without worrying about performance issues.
+- **Declarative UI Paradigm**: Similar to [Vue Options API](https://vuejs.org/guide/introduction#options-api), using HTML templates, CSS, and JavaScript, allowing developers to write applications in a way close to Web development and lowering the learning curve.
+- **Component-Based Development**: Supports modular and component-based development, facilitating code reuse and maintenance, and making application development more efficient and readable.
+- **Standardized Interfaces**: Supports Quick App standard system APIs, such as [HTTP Network](/api/system-fetch.md) and [Audio Streaming](/api/system-media.md), making it easy to develop device-agnostic internet applications.
 
+### Cross-Device Support
 
-## Core features
+- **Multi-Device Compatibility**: Glyphix supports running applications on various smart devices (such as smart watches, smart bands, etc.), achieving true cross-device development and deployment, and reducing the difficulty of adapting to different hardware platforms.
+- **Unified Runtime Environment**: Leveraging Glyphix framework capabilities, applications can be automatically managed and executed across different devices, ensuring a consistent application interaction experience.
+- **Quick App Standard Support**: Developers can publish applications to other ecosystems that support Quick Apps, further expanding the application's coverage.
 
+### High Performance
 
-### Web development experience
+- **Native-Level Performance**: Deeply optimized for MCU environments, achieving near-native fluency and low resource consumption even under limited resources.
+- **Native Reactive Framework**: A reactive framework and GUI system implemented entirely in C++, avoiding the performance overhead issues of JavaScript implementations.
 
+### Stability
 
-- **Declarative UI paradigm**: Similar to [Vue Options API](https://vuejs.org/guide/introduction#options-api), using HTML templates, CSS and JavaScript, allowing developers to write applications in a way close to web development, reducing learning costs.
-- **Component-based development**: Supports modular and component-based development methods to facilitate code reuse and maintenance, making application development efficiency and readability higher.
-- **Standardized interface**: Supports Quick App standard system APIs, such as [HTTP network](/api/system-fetch.md) and [audio streaming](/api/system-media.md) bodies, which can easily develop device-independent Internet applications.
+- **Memory Management**: An underlying automated memory management mechanism prevents common memory errors, as well as the waste and inefficiency of manual memory allocation.
+- **Lifecycle Model**: The application framework provides a comprehensive resource lifecycle model to ensure no resource leaks after the application exits, reducing stability risks.
 
+### Debugging Support
 
-### Cross-device support
+- **Full-Featured Simulator**: Provides a simulator environment consistent with real devices, including simulations of multi-device screen sizes, enabling application development without physical devices.
+- **Hot-Reloading Applications**: Developers can update and test applications without restarting the device, completely eliminating the need to flash firmware, which greatly improves development efficiency.
 
+### Publishing Workflow
 
-- **Multi-device compatibility**: Glyphix supports applications running on a variety of smart devices (such as smart watches, bracelets, etc.), achieving true cross-device development and deployment, and reducing the difficulty of adapting to different hardware platforms.
-- **Unified runtime** environment: With the help of Glyphix framework capabilities, applications can be automatically managed and executed on different devices and ensure a consistent application interaction experience.
-- **Quick App Standard** support: Developers can publish their applications to other ecosystems that support Quick Apps to further expand the coverage of their applications.
+- **Cross-Device Publishing**: Supports developing an application once and publishing it multiple times across different device platforms. The Glyphix publishing tool supports automatic packaging and optimization for target devices, ensuring applications run stably on various devices.
+- **App Store Distribution**: Supports aftermarket channel distribution such as app stores. Users can browse, download, and install applications without OTA firmware upgrades.
+- **Independent Application Management**: Supports independent application installation and uninstallation, eliminating the need for unified firmware integration and version control.
 
+## Comparison with Other Solutions
 
-### Efficient performance
+### Embedded C/C++ GUI Libraries
 
+Glyphix is not just a GUI library providing C++ APIs, but a complete standard application runtime framework. It not only provides UI rendering capabilities but also manages application lifecycles, event handling, and data binding, endowing it with more complete application running and management capabilities.
 
-- **Native-level performance**: Deeply optimized for the MCU environment, it can achieve near-native fluency and low resource usage even when resources are limited.
-- **Native responsive framework**: A responsive framework and GUI system implemented entirely in C++, avoiding the performance overhead issues of JavaScript implementation.
+Developing application logic using C/C++ typically requires recompiling and redeploying the entire program, whereas Glyphix supports application hot-reloading, allowing developers to quickly release and test updates without restarting the device, greatly enhancing development and maintenance efficiency.
 
+On the other hand, traditional C/C++ development approaches usually require customization for different hardware and operating systems, whereas Glyphix provides a unified runtime environment capable of delivering a consistent application development experience across multiple MCU devices, reducing adaptation work.
 
-### stability
+### System-Level Solutions
 
+Complete firmware system solutions typically cover the entire device OS, drivers, communications, and all other functions, whereas Glyphix focuses on providing an efficient application runtime framework. It does not replace or reconstruct the device's firmware system; instead, it acts as a component on the device to manage and run applications, ensuring the independence and flexibility of the applications relative to the firmware system.
 
-- **Memory Management**: The underlying automatic memory management mechanism prevents common memory errors and the waste and inefficiency of manual allocation of memory.
-- **Life cycle model**: The application framework provides a complete resource life cycle model to ensure that there is no resource leakage after the application exits, reducing stability risks.
+In complete firmware systems, applications are usually tightly coupled with the system, resulting in high costs for development, updates, and maintenance. In contrast, as an independent application runtime, Glyphix allows developers to quickly add, update, and manage applications in a standard environment, reducing complexity and maintenance costs.
 
+Furthermore, firmware systems are often deeply bound to specific hardware, whereas Glyphix can run across different systems, providing a unified development and runtime environment to achieve true cross-device support.
 
-### Debugging support
+### Other Application Frameworks
 
+Unlike application runtimes like Web, React Native, or Flutter, Glyphix—while offering a Vue-like development experience—is specifically designed for resource-constrained MCU environments, ensuring efficient operation even when memory and computing power are limited. It delivers near-native performance with lower resource consumption, adapting to the needs of small embedded devices.
 
-- **Full-featured simulator**: Provides a simulator environment that is consistent with real devices, including simulation of multiple device screen sizes. Applications can be developed without a real device.
-- **Hot update application**: Developers can update and test applications without restarting the device, and there is no need to flash the firmware at all, which greatly improves development efficiency.
+Other application runtimes usually require execution in more powerful hardware environments (such as mobile phones or PCs), requiring more system resources for startup and operation. In contrast, the Glyphix runtime is extremely lightweight, capable of running on small devices like smart watches with ultra-low power consumption and memory footprint.
 
+## Benefits for Developers
 
-### Release process
+Glyphix is a friendly framework oriented toward Web developers. Developers can use familiar HTML, CSS, and JavaScript for development, eliminating the need to deeply learn C/C++ languages and complex MCU hardware development knowledge. This lowers the barrier to entry for MCU application development, enabling more Web developers to get started quickly and saving learning costs and time.
 
+### Improving Development Efficiency
 
-- **Cross-device publishing**: Supports developing applications once and publishing them to different device platforms multiple times. Glyphix publishing tools support automatic packaging and optimization for target devices to ensure that applications run stably on each device.
-- **App Store Distribution**: Supports app distribution through post-installation channels such as app stores. Users can browse, download and install apps without the need for OTA firmware upgrades.
-- **Independent application management**: Supports independent application installation and uninstallation without unified firmware integration and version control.
+- **Web Development Experience**: Through a Web-like technology stack and hot-reloading support, developers can write MCU applications just like Web apps, fully leveraging their existing skills and dramatically increasing efficiency.
+- **Write Once, Run Across Devices**: Glyphix provides robust cross-device compatibility. Code needs to be written only once, and the system automatically adapts and optimizes resources based on different device characteristics, without requiring independent development for each device. This effectively reduces the maintenance costs and complexity brought by device fragmentation.
+- **Deeply Optimized System**: Developers do not need to invest a massive amount of energy into optimizing interaction fluency and lag issues, nor do they need to constantly watch out for device crashes, allowing them to focus entirely on feature implementation and user experience.
 
+### Continuous Iteration
 
-## Comparison with other options
-
-
-### Embedded C/C++ GUI library
-
-
-Glyphix is ​​not a GUI library that provides a C++ API, but a standard application runtime framework. It not only provides UI rendering capabilities, but also manages the application life cycle, event processing, and data binding, giving it more complete application running and management capabilities.
-
-
-Using C/C++ to develop application logic usually requires recompiling and deploying the entire program. However, Glyphix supports hot updates of applications. Developers can quickly release and test updates without restarting the device, which greatly improves development and maintenance efficiency.
-
-
-On the other hand, traditional C/C++ development methods usually require customization for different hardware and operating systems, while Glyphix provides a unified runtime environment that can achieve a consistent application development experience on a variety of MCU devices and reduce adaptation work.
-
-
-### system level solution
-
-
-A complete firmware system solution usually covers all functions such as the entire device operating system, drivers, and communications, while Glyphix focuses on providing an efficient application runtime framework. It does not need to replace or reconstruct the device's firmware system, but serves as a component on the device to manage and run applications, ensuring the independence and flexibility of applications and firmware systems.
-
-
-In a complete firmware system, applications are usually deeply coupled with the system, and the costs of development, updates, and maintenance are high. Glyphix runs as an independent application, allowing developers to quickly add, update and manage applications in a standard environment, reducing complexity and maintenance costs.
-
-
-In addition, firmware systems are often deeply bound to specific hardware, while Glyphix can run in different systems, providing a unified development and operating environment to achieve true cross-device support.
-
-
-### Other application frameworks
-
-
-Unlike application runtime frameworks such as Web, React Native or Flutter, although Glyphix provides a development experience similar to Vue, it is designed for resource-constrained MCU environments to ensure that it can still run efficiently even with limited memory and computing power. It provides near-native performance with lower resource usage and adapts to the needs of small embedded devices.
-
-
-Other application runtime frameworks usually need to run in more powerful hardware environments (such as mobile phones or computers), requiring more system resources to start and run. The Glyphix runtime is extremely lightweight and can run on small devices such as smart watches with extremely low power consumption and memory usage.
-
-
-## Developer revenue
-
-
-Glyphix is ​​a friendly framework for web developers. Developers can use familiar HTML, CSS and JavaScript to develop without having to learn C/C++ language and complex MCU hardware development knowledge in depth. This lowers the threshold for MCU application development, allowing more web developers to get started quickly, saving learning costs and time.
-
-
-### Improve development efficiency
-
-
-- **Web development experience**: Through a web-like technology stack and hot update support, developers can write MCU applications just like developing web applications, making full use of existing skills and greatly improving efficiency.
-- **Develop once, run across devices**: Glyphix provides strong cross-device compatibility. You only need to write code once, and the system will automatically adapt and optimize resources according to the characteristics of different devices. There is no need to develop independently for each device. This effectively reduces maintenance costs and complexity caused by equipment fragmentation.
-- **Deeply optimized system**: Developers do not need to invest a lot of energy in optimizing interaction smoothness and lag issues, nor do they need to constantly pay attention to device crashes, so they can focus on function implementation and user experience.
-
-
-### Continuous iteration
-
-
-- **Long-term application availability**: Glyphix’s cross-device nature and long-term support for MCU devices ensure that applications can continue to run on multiple generations of devices. Even if a certain device is withdrawn from the market, developers do not need to worry about losing the running environment of the application and can easily migrate it to other devices to extend the life cycle of the application.
-- **Compatibility of future devices**: The framework will continue to be iteratively updated to maintain compatibility with new hardware. Developers' applications can automatically adapt to future devices to avoid additional maintenance costs caused by hardware updates.
-- **Tools and documentation support**: In addition to development tools, documentation will also be continuously maintained as the framework is updated to ensure accuracy and timeliness, so that developers can always access the latest framework features and best practices, helping with continuous iteration and optimization of applications.
-
+- **Long-Term Usability of Applications**: Glyphix's cross-device capabilities and long-term support for MCU devices ensure that applications can run continuously across multiple generations of devices. Even if a specific device is discontinued, developers do not need to worry about the application losing its runtime environment and can easily migrate to other devices, extending the application's lifecycle.
+- **Compatibility with Future Devices**: The framework will continuously iterate and update to maintain compatibility with new hardware, and developers' applications can automatically adapt to future devices, avoiding extra maintenance costs caused by hardware updates.
+- **Tooling and Documentation Support**: Alongside development tools, documentation will be continuously maintained along with framework updates to ensure accuracy and timeliness, enabling developers to always access the latest framework features and best practices to empower continuous application iteration and optimization.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/life-cycle.md
 
-# life cycle
+# Lifecycle
 
+Components, pages, and applications all have lifecycles. You can invoke specific features during particular lifecycle stages using **lifecycle functions**.
 
-Components, pages, and applications all have life cycles. Specified functions can be called at specific life cycle stages of the object through **lifecycle functions**.
+## Component and Page Lifecycles
 
-
-## Component and page lifecycle
-
-
-Defining lifecycle functions in component and page objects can trigger calls. For example:
+You can trigger calls by defining lifecycle functions within component and page objects. For example:
 ``` html
 <script>
 export default {
@@ -144,104 +106,71 @@ export default {
 }
 </script>
 ```
-The `onInit()` lifecycle function will be called after the component is instantiated. Lifecycle functions have no parameters and do not use return values.
+The `onInit()` lifecycle function is called after the component is instantiated. Lifecycle functions take no parameters and do not use return values.
 
+### Component Lifecycle Functions
 
-### Component life cycle functions
-
-
-These lifecycle functions are common to components and pages.
-
+These lifecycle functions are common to both components and pages.
 
 #### `onInit` <decl type="(): Promise<any> | void" method />
 
-
-At this point, the component has been instantiated and the data in the view-model is ready. The data can be accessed through the `this` keyword. Developer-defined initialization logic is usually executed in this life cycle function.
-
+At this point, the component has been instantiated, and the data in the view-model is ready. You can access this data using the `this` keyword. Developers usually perform custom initialization logic in this lifecycle function.
 
 #### `onReady` <decl type="(): Promise<any> | void" method />
 
-
-At this point the component has been rendered. The component tree at this time has a corresponding control tree (similar to the DOM tree).
-
+At this point, the component rendering is complete. The component tree now has a corresponding control tree (similar to a DOM tree).
 
 #### `onDestroy` <decl type="(): Promise<any> | void" method />
 
+The component is about to be destroyed. Data in the view-model can still be accessed at this point. Custom resource release operations are usually performed in `onDestroy()`.
 
-The component is ready for destruction. The data in the view-model can still be accessed at this point. Custom resource release operations are usually performed in `onDestroy()`.
+### Page Lifecycle Functions
 
-
-### Page life cycle functions
-
-
-These lifecycle functions only exist within the page.
-
+These lifecycle functions exist only in pages.
 
 #### `onShow` <decl type="(): Promise<any> | void" method />
 
-
-Called when the page is about to be displayed. When returning using `router.back()`, `onShow()` will be called when the underlying page is about to be displayed; `onShow()` will also be called before the new page just created is displayed for the first time.
-
+Called when the page is about to be displayed. When returning via `router.back()`, `onShow()` is called when the underlying page is about to be displayed; it is also called before a newly created page is displayed for the first time.
 
 #### `onHide` <decl type="(): Promise<any> | void" method />
 
+Called when the page is about to be hidden. `onHide()` is called when the underlying page is hidden due to `router.push()`. However, the page is not hidden before it is destroyed, so `onHide()` will not be called in that case.
 
-Called when the page is about to be hidden. `onHide()` is called when using `router.push()` causes the underlying page to be hidden. However, the page will not be hidden until it is destroyed, so `onHide()` will not be called.
-
-
-When the device screen is closed, `onHide()` of the foreground page will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+When the device screen turns off, `onHide()` for the foreground page is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onBackPress` <decl type="(): boolean" method />
 
-
-This lifecycle function is called when the user swipes back. Developers can handle return logic in this function. If `true` is returned, it means that the developer has processed the return operation, and the system will not perform the default return behavior; if `false` is returned, it means that the developer has not processed the return operation, and the system will perform the default return behavior (that is, close the current page and return to the previous page).
-
+Called when the user swipes back from the edge. Developers can handle the return logic in this function. If it returns `true`, it indicates that the developer has handled the return operation, and the system will not execute the default back behavior; if it returns `false`, it indicates that the developer has not handled the return operation, and the system will execute the default back behavior (i.e., close the current page and return to the previous page).
 
 ::: warning
-
-This lifecycle function causes interactive slide returns (i.e. follow-up slides) to be disabled. It is generally not recommended to use this lifecycle function, nor to define a normal method named `onBackPress`. If you want to prevent the default return interaction, please refer to [The default event handling of the page](/framework/generic/properties.md#页面的默认事件处理), so that the interaction effect can be preserved.
+This lifecycle function disables interactive edge-swipe to go back (i.e., following the gesture). It is generally **not recommended** to use this lifecycle function, nor should you define a regular method named `onBackPress`. If you wish to prevent the default back interaction, please refer to [Default Event Handling for Pages](/framework/generic/properties.md#页面的默认事件处理) to preserve interaction transition effects.
 :::
-
-
 
 #### `onRefresh` <decl type="(): Promise<any> | void" version="0.8" method />
 
+Called when a page is opened in `singleTask` mode and returns to an existing page. For details, see [`launchMode`](../application/manifest.md#launchmode). You can refresh page data in this function.
 
-This life cycle function is called when the page is opened in `singleTask` mode and returned to an existing page. See [`launchMode`](../application/manifest.md#launchmode) for details. Page data can be refreshed in this function.
+## Application Lifecycle
 
-
-## Application life cycle
-
-
-### Application life cycle functions
-
+### Application Lifecycle Functions
 
 #### `onCreate` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app loads.
-
+Called when the application is loaded.
 
 #### `onDestroy` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app is about to be destroyed.
-
+Called when the application is about to be destroyed.
 
 #### `onShow` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app switches from the background to the foreground. The application's `onShow()` lifecycle function is always called after the page's `onShow()`. When the device screen is reopened, the `onShow()` of the foreground application will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+Called when the application switches from the background to the foreground. The application's `onShow()` lifecycle function is always called after the page's `onShow()`. When the device screen is turned back on, the foreground application's `onShow()` is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onHide` <decl type="(): Promise<any> | void" method />
 
+Called before the application is hidden from the foreground to the background.
 
-This lifecycle function is called before the app is hidden from the foreground to the background.
-
-
-If you don't want your app to remain active in the background, you can call [`launch.exit()`](/api/system-launch.md#exit) in `onHide()` to exit the app itself. For example:
+If you do not want the application to remain active in the background, you can call [`launch.exit()`](/api/system-launch.md#exit) in `onHide()` to exit the application itself. For example:
 ```js
 // in src/app.js
 import launch from '@system.launch'
@@ -253,125 +182,92 @@ export default {
 }
 ```
 
-
-The application's `onHide()` lifecycle function is always called after the page's `onHide()`. When the device screen is turned off, `onHide()` of the foreground application will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+The application's `onHide()` lifecycle function is always called after the page's `onHide()`. When the device screen turns off, the foreground application's `onHide()` is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onRoute` <decl type="(page: string, query: {[key: string]: string}): Promise<any> | void" method />
 
-
-The `onRoute` lifecycle function is called when the application is launched via a deeplink URI. Parameters `page` and `query` are decoded URI fields. For example:
+The `onRoute` lifecycle function is called when the application is launched via a deeplink URI. The parameters `page` and `query` are the decoded URI fields. For example:
 ``` js
 // file: app.ux
 export default {
-  // Assume that through app:// example.app /page/to/deeplink?key=value&query=result
+  // Assuming launch via app://example.app/page/to/deeplink?key=value&query=result
   onRoute(page, query) {
-    console.log(page)  // Print the string '/page/to/deeplink'
-    console.log(query) // Print object {deeplink: 'key', query: 'result'}
+    console.log(page)  // Prints the string '/page/to/deeplink'
+    console.log(query) // Prints the object {deeplink: 'key', query: 'result'}
   }
 }
 ```
 
-
-`onRoute()` will be called after `onCreate()` and before `onShow()`. Developers can initialize in `onRoute()` based on the parameters specified by deeplink (such as jumping to a specific page).
-
+`onRoute()` is called after `onCreate()` and before `onShow()`. Developers can perform initialization in `onRoute()` based on parameters specified by the deeplink (such as navigating to a specific page).
 
 #### `onLocaleChanged` <decl type="(locale: {language: string}): void" method />
 
+Called when the application's locale changes. The `locale` parameter is an object containing the `language` field, which indicates the current locale (Language Tag), such as `'en-US'`, `zh-CN`, etc.
 
-This lifecycle function is called when the app's locale changes. Parameter `locale` is an object containing the `language` field, which represents the current language environment (Language Tag), such as `'en-US'`, `zh-CN`, etc.
+## Asynchronous Lifecycle Functions <experimental/>
 
-
-## Asynchronous life cycle function <experimental/>
-
-
-Component, page or application lifecycle functions can be asynchronous, i.e. `async` functions or return `Promise` objects. For example
+Lifecycle functions of components, pages, or applications can be asynchronous—that is, `async` functions or functions returning a `Promise` object. For example:
 ``` js
 import fs from "@system.file"
 
 export default {
   async onInit() {
-    // Wait for the asynchronous file reading to complete before continuing execution.
+    // Wait for asynchronous file reading to complete before proceeding.
     let text = await fs.readText({ uri: "internal://files/test.txt" })
     console.log(text)
   }
 }
 ```
-Assuming this is the `onInit()` life cycle function of a component, it will continue to perform component rendering only after the asynchronous file reading is completed. The following limitations exist during asynchronous lifecycle function execution:
-- Component rendering will not be performed repeatedly, and any operation on responsive properties during this period will not cause the interface to be updated;
-- Temporarily blocking user input, touch and key presses will not respond (otherwise if the user clicks repeatedly, it will cause repeated responses).
+Assuming this is the `onInit()` lifecycle function of a component, component rendering will only proceed after the asynchronous file reading completes. The following restrictions apply during the execution of asynchronous lifecycle functions:
+- Component rendering will not be repeated; any operations on reactive properties during this period will not trigger UI updates;
+- User input is temporarily blocked, and touches and key presses will not be responded to (otherwise, repeated user taps would cause repeated responses).
 
-
-The main function of the asynchronous life cycle function is to wait for asynchronous IO and resource operations to avoid prematurely displaying an unloaded interface. Especially when opening a new page, it will wait until the page's `onInit()`, `onReady()` and `onShow()` life cycle functions are all executed before starting to display the page or play the transition animation.
-
+The main purpose of asynchronous lifecycle functions is to wait for asynchronous I/O and resource operations, avoiding the premature display of interfaces that have not finished loading. In particular, when opening a new page, the system will wait for all of the page's `onInit()`, `onReady()`, and `onShow()` lifecycle functions to finish executing before starting to display the page or play transition animations.
 
 ::: warning
+Asynchronous lifecycle functions are currently experimental and may cause various issues, including crashes. Closing a page that is currently rendering during the execution of an asynchronous lifecycle function will cause a crash.
 
-Asynchronous lifecycle functions are currently experimental and they can cause various issues including crashes. Closing the rendering page during an asynchronous lifecycle function call will cause a crash.
-
-
-The firmware of most devices does not enable support for asynchronous lifecycle functions, and their behavior may not be as expected. Use asynchronous lifecycle functions with caution.
+Firmware on most devices does not enable support for asynchronous lifecycle functions, and their behavior may not meet expectations. Please use asynchronous lifecycle functions with caution.
 :::
 
+## Screen State Changes
 
-
-## Screen status changes
-
-
-Changes in the device's screen status will affect the life cycle function calls of applications and pages. When the device screen is turned off, the `onHide()` life cycle function of the foreground application and page will be called; when the screen is reopened, the `onShow()` life cycle function of the foreground application and page will be called. Developers can use these lifecycle functions to pause or resume network requests to reduce power consumption.
-
+Changes in the device screen state affect the invocation of application and page lifecycle functions. When the device screen turns off, the `onHide()` lifecycle functions of the foreground application and page are called; when the screen is turned back on, the `onShow()` lifecycle functions of the foreground application and page are called. Developers can use these lifecycle functions to pause or resume network requests to reduce power consumption.
 
 ::: tip
-
-Some devices will switch apps to the background after turning off the screen and kill the app after a while. For applications that need to continue running in the background, you need to pay attention to the [Backstage](../application/README.md#后台管理) method of keeping alive.
+Some devices switch applications to the background after the screen is turned off and kill the applications after a certain period of time. For applications that need to run continuously in the background, please pay attention to the background survival methods described in [Background Management](../application/README.md#后台管理).
 :::
-
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/component-apis.md
 
-# Component built-in interface
+# Built-in Component Interfaces
 
-
-The Glyphix framework has some built-in properties for components, which are accessed using the `this.$xxx` format. These built-in properties provide components with some functionality outside of the reactive framework.
-
+The Glyphix framework provides built-in properties for components, all of which are accessed using the `this.$xxx` format. These built-in properties offer features beyond the reactive framework for components.
 
 All built-in properties are read-only.
 
-
-## property
-
+## Properties
 
 ### `$app` <decl type="Applet" get />
 
-
-Application objects exported in `app.js` can be accessed through the `$app` attribute.
-
+The application object exported in `app.js` can be accessed via the `$app` property.
 
 ### `$page` <decl type="Component" get />
 
-
-The component object of the page to which the component belongs can be accessed through the `$page` attribute. For page components, the value of `this.$page` is `this`.
-
+The component object of the page to which the component belongs can be accessed via the `$page` property. For page components, the value of `this.$page` is `this`.
 
 ### `$valid` <decl type="boolean" get />
 
-
-Determine whether the component object is valid. A value of `false` indicates that the component has been destroyed.
-
+Determines whether the component object is valid. A value of `false` indicates that the component has been destroyed.
 
 ::: tip
-
-For a component that has been destroyed, all operations other than accessing the `$valid` attribute are illegal.
+For destroyed components, any operations other than accessing the `$valid` property are illegal.
 :::
 
+#### Destroyed Components
 
-
-#### Component destroyed
-
-
-The life cycle of components is controlled by the rendering framework. Reasonably written code usually does not access destroyed components, but if you forget to cancel the timer or listener when destroying the component, for example:
-
+The component lifecycle is controlled by the rendering framework, and properly written code typically does not access destroyed components. However, if you forget to cancel timers or listeners when destroying a component, for example:
 
 ``` js
 setInterval(() => {
@@ -379,9 +275,7 @@ setInterval(() => {
 }, 1000)
 ```
 
-
-If the component object is destroyed, you may encounter this error:
-
+If the component object is destroyed, you may encounter an error like this:
 
 ```
 the component object has been destroyed
@@ -392,45 +286,35 @@ TypeError: proxy: cannot set property
     at <anonymous> (pkg://com.example.app/main/index.js:52)
 ```
 
-
-If it is really difficult to delete the timer or cancel the listener when the component is destroyed, you can safely determine whether the component is destroyed through the `$valid` attribute. The following example can suppress the above runtime error:
-
+If it is indeed difficult to delete timers or cancel listeners when the component is destroyed, you can use the `$valid` property to safely check whether the component has been destroyed. The following example suppresses the above runtime error:
 
 ``` js
 let timer = setInterval(() => {
   if (this.$valid) {
     this.secondCounter += 1
   } else {
-    clearTimeout(timer) // Delete timer after component is destroyed
+    clearTimeout(timer) // Delete the timer after the component is destroyed
   }
 })
 ```
-Such scenarios (such as multiple timers and event listening functions) generally have a fixed code structure:
-1. Use `this.$valid` before accessing component properties to determine whether the component is valid;
-2. Perform normal component property access operations in the effective branch;
-3. Clean the timer or cancel the listener in the invalid branch, and return immediately to ensure that the component properties are no longer accessed.
-
+Such scenarios (such as recurring timers, event listener functions) generally follow a fixed code structure:
+1. Use `this.$valid` to check whether the component is valid before accessing component properties;
+2. Execute normal component property access operations in the valid branch;
+3. Clear the timer or cancel the listener in the invalid branch, and **return immediately** to ensure that component properties are no longer accessed.
 
 ::: warning
-
-When using the `$valid` attribute to determine whether a component has been destroyed, special attention needs to be paid to the fact that the closure of the listening function may cause memory leaks. Failure to properly cancel the event listener or timer may cause the closure to still be referenced by the system after the component is destroyed, and thus cannot be garbage collected.
+When using the `$valid` property to determine whether a component has been destroyed, special attention should be paid to closures in listener functions, which may lead to memory leaks. Failing to correctly cancel event listeners or timers may result in the closure still being referenced by the system after the component is destroyed, preventing it from being garbage collected.
 :::
 
+#### Memory Leak Risk
 
+In JavaScript, a closure refers to the association between a function and variables in its outer scope. When a function is created, it captures variables in the outer scope and maintains references to them, even if the outer scope has finished executing. This means that variables referenced inside the closure remain in memory until the closure itself is garbage collected.
 
-#### Memory leak risk
+In the component framework, when you register an event listener or start a timer, you typically pass a callback function, which may capture certain component properties or context (such as `this`).
 
+Although the component object itself is correctly destroyed and memory is freed by the framework, these closure functions are not cleared. If event listener or timer callbacks are not actively removed, these closures may persist and accumulate over time, leading to memory leaks, especially in long-running applications. Such leaks can be difficult to detect.
 
-In JavaScript, a closure refers to the association between a function and variables in its outer scope. When a function is created, it captures the variables in the outer scope and keeps references to those variables even if the outer scope is no longer executing. This means that variables referenced inside the closure still exist in memory until the closure itself is garbage collected.
-
-
-In the component framework, when you register an event listener or start a timer, you usually pass in a callback function and may capture some properties or context of the component (such as `this` ).
-
-
-Although the component object itself is properly destroyed by the framework and the memory is released, these closure functions are not cleared. If the event listener or timer callback is not actively removed, these closures may still exist and accumulate over time, causing memory leaks, especially in long-running applications. This leakage may be difficult to detect.
-
-
-The following example demonstrates a possible memory leak:
+The following example demonstrates a potential memory leak:
 ``` js
 let timer = setInterval(() => {
   if (this.$valid) {
@@ -438,113 +322,87 @@ let timer = setInterval(() => {
   }
 }, 1000)
 ```
-Although `if (this.$valid)` is used in the callback function to determine whether the component is still valid, thus avoiding errors being thrown after the component is destroyed, this approach does not avoid the problem of memory leaks. The reason is that `$valid` only determines the validity, and judging this attribute can avoid accessing the destroyed component object. But the problem is that because the timer is not closed, the closure of the callback function itself is still referenced, and the closure cannot be garbage collected.
-
+Although `if (this.$valid)` is used inside the callback function to check whether the component is still valid, thereby avoiding throwing errors after the component is destroyed, this approach does not prevent memory leaks. The reason is that `$valid` only checks validity; checking this property prevents accessing an already destroyed component object. However, the problem is that because the timer is not turned off, the closure of the callback function itself is still referenced, and the closure cannot be garbage collected.
 
 ::: tip
+To avoid such subtle memory leaks, you should actively cancel timers or remove event listeners when the component is [destroyed](./life-cycle.md#ondestroy), rather than relying solely on `$valid`. Even though `$valid` prevents improper operations after a component is destroyed, it cannot clean up the closure of the callback function itself.
 
-In order to avoid this hidden memory leak, you should actively cancel the timer or remove the event listener when the component [destroy](./life-cycle.md#ondestroy), instead of simply relying on `$valid 判断`. Even though `$valid` can prevent inappropriate actions after the component is destroyed, it cannot clean up the closure of the callback function itself.
-
-
-All JavaScript memory is released when the app exits, so this memory leak does not accumulate over time.
+All JavaScript memory is released after the application exits, so such memory leaks will not accumulate indefinitely.
 :::
 
-
-
-## method
-
+## Methods
 
 ### `$component` <decl type="(name: string, url: string): void" method />
 
-
-Import a component dynamically (the `<import>` tag can only import components statically), for example:
+Dynamically imports a component (the `<import>` tag can only import components statically), for example:
 ``` js
 this.$component("Name", "url")
 ```
-The string `"Name"` is the name of the imported component, which must be named in camel case; the string `"url"` is the URI of the imported component.
-
+The string `"Name"` is the name of the imported component and must use PascalCase; the string `"url"` is the URI of the imported component.
 
 ### `$element` <decl type="(id: string): Element | undefined" method />
 
+Returns the [native subcomponent](native-component.md#原生组件对象) object with the specified ID in the component, or `undefined` if no such subcomponent exists. The `$element()` method traverses all child nodes of the component, so component instances in other UX files can also be found.
 
-Returns the [Native child component](native-component.md#原生组件对象) object with the specified ID in the component, or `undefined` if no such subcomponent exists. The `$element()` method will traverse all child nodes of the component, so component instances from other UX files can also be found.
-
-
-The `$element()` method will match IDs on the entire child component tree after rendering, and is not limited to the child components in the current [component template](template.md). Sometimes you need to be especially careful with this feature, for example with the following template:
+The `$element()` method matches IDs across the entire rendered subcomponent tree and is not limited to subcomponents in the current [component template](template.md). Sometimes you need to be especially careful with this feature. For example, given the following template:
 ``` html
 <scroll>
   <MyComponent />
   <div id="panel">...</div>
 </scroll>
 ```
-When elements of `id="panel"` also exist in the custom component `MyComponent`, using `this.$element('panel')` will find the child elements in `MyComponent` instead of the `div` elements in the example.
-
+When an element with `id="panel"` also exists inside the custom component `MyComponent`, using `this.$element('panel')` will find the child element inside `MyComponent` instead of the `div` element in the example.
 
 ::: tip
-
-The `$element()` method does not work with custom components, even if the `id` attribute is set for the custom component. Since `$element()` accesses the rendered component tree, it must be used in the [`onReady()`](life-cycle.md#onready) life cycle function and after, but cannot be used in [`onInit()`](life-cycle.md#oninit).
+The `$element()` method cannot be used for custom components, even if the `id` property is set for the custom component. Because `$element()` accesses the rendered component tree, it must be used in or after the [`onReady()`](life-cycle.md#onready) lifecycle method, and cannot be used in [`onInit()`](life-cycle.md#oninit).
 :::
 
-
-
-Please refer to [this document](README.md#组件对象和方法) to learn how to access the component object returned by the `$element()` method.
-
+Please refer to [this documentation](README.md#组件对象和方法) to learn how to access the component object returned by the `$element()` method.
 
 ### `$emit` <decl type="(event: string, value: any): void" method />
 
+See [Inter-component Communication](communicate) for details.
 
-See [Communication between components](communicate) for details.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/javascript.md
 
-# JavaScript script
+# JavaScript Script
 
+JavaScript is the scripting language used for Glyphix application development. Developers can place JavaScript code inside the `<script>` tag of a UX file, or reference `*.js` script files directly.
 
-JavaScript is the scripting language used for Glyphix application development. Developers can place JavaScript code in the `<script>` tag of the UX file, or directly reference the `*.js` script file.
+## Syntax Support
 
+ES6 syntax is supported.
 
-## Grammar support
+## Importing Modules
 
-
-Supports ES6 syntax.
-
-
-## Import module
-
-
-Reference other js files in your code by importing modules. Usually, there are two ways to import developer-defined modules through paths:
+Reference other JS files in your code by importing modules. Typically, developer-defined modules are imported via paths using one of two methods:
 ``` js
-import utils from '../Common/utils.js' // Use the import keyword
-const utils = require('../Common/utils.js') // Use require function
+import utils from '../Common/utils.js' // Using the import keyword
+const utils = require('../Common/utils.js' ) // Using the require function
 ```
-Please refer to [Paths and URIs](../application/resource) for module path rules. In addition, the `.js` appearing as the file suffix name can be omitted in the module path, so the above import statement can be written as
+For rules regarding module paths, please refer to [Paths and URIs](../application/resource). Additionally, the `.js` file extension can be omitted in module paths, so the import statements above can also be written as:
 ``` js
-import utils from '../Common/utils' // Use the import keyword
-const utils = require('../Common/utils') // Use require function
+import utils from '../Common/utils' // Using the import keyword
+const utils = require('../Common/utils') // Using the require function
 ```
 
-
-Use the module name to import the system's built-in modules. All system modules begin with the `@` character:
+To import built-in system modules, use the module name prefixed with the `@` character. All system modules start with the `@` character:
 ``` js
-import router from '@system.router' // Use the import keyword
-const router = require('@system.router') // Use require function
+import router from '@system.router' // Using the import keyword
+const router = require('@system.router') // Using the require function
 ```
-
 
 ::: warning
-
-Developers should not start module names with the `@` character; these names are reserved for system modules.
+Developers must not start module names with the `@` character, as these names are reserved for system modules.
 :::
 
+# Exporting Modules
 
-
-# export module
-
-
-Use the ES6 `export` syntax to export modules, for example:
+Use ES6 `export` syntax to export modules, for example:
 ``` js
-// Export default value
+// Export the default value
 export default {
   method() {
     // ...
@@ -563,45 +421,33 @@ export function process(args) {
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/prop-modifier.md
 
-# attribute modifier
+# Property Modifiers
 
+Standard property operations allow for setting and observing properties. However, certain scenarios have common requirements for property operations—for example, requiring that setting a component's property value does not immediately change to the new value, but instead transitions using an animation. The direct solution is to write logic code to implement the transition effect, but in reality, such logic is common to any property.
 
-Ordinary attribute operations can realize attribute setting and monitoring functions. However, in some situations, there are some common requirements for attribute operations. For example, it is required that a certain attribute value setting operation of a component is not changed to a new value immediately, but uses animation to transition. The immediate solution is to code logic to implement the transition effect, but in reality this logic is universal for any property.
-
-
-In order to simplify or reuse the code of some common attribute operations, Glyphix has several built-in attribute modifiers. Modifiers are attribute suffixes represented using `.`, e.g.
-
+To simplify or reuse code for certain common property operations, Glyphix includes several built-in property modifiers. Modifiers are property suffixes denoted by `.`, for example:
 
 ``` html
 <progress :value="progress" value.transition="{curve: 'ease'}"/>
 ```
 
+The property modifier key-value pair `value.transition="{curve: 'ease'}"` and the property key-value pair `value="{{progress}}"` filled in the component's XML attributes are independent of each other, and they may require completely different parameters.
 
-The attribute modifier key-value pair `value.transition="{curve: 'ease'}"` and the attribute key-value pair `value="{{progress}}"` filled in the component's XML attributes are independent of each other, and they may require completely different parameters.
+This document will introduce the functions of each property modifier.
 
+## The `transition` Modifier
 
-This document will introduce the functions of each attribute modifier.
-
-
-## `transition` modifier
-
-
-This modifier will proxy the assignment operation of the attribute, transforming the process of assigning the attribute directly into a gradual assignment according to the animation transition method specified by the `transition` modifier. For example
-
+This modifier proxies the property assignment operation, transforming the process of directly assigning a value to the property into a gradient assignment according to the animation transition method specified by the `transition` modifier. For example:
 
 ``` html
-<!-- The transition modifier defines the transition effect of the value attribute -->
+<!-- The transition modifier defines the transition effect for the value property -->
 <progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
 <!-- No transition effect -->
 <progress :max="1000" :value="progress" />
 ```
 
 
-
-
 <glyphix id="prop-modifier-transition" height="68" width="480" inline>
-
-
 
 ``` html
 <div>
@@ -610,14 +456,12 @@ This modifier will proxy the assignment operation of the attribute, transforming
 </div>
 ```
 
-
 ``` css
 div > * {
   margin: 8px;
   height: 0.75rem;
 }
 ```
-
 
 ``` js
 export default {
@@ -630,46 +474,31 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
-Since the `value.transition` modifier of the [`progress`](/components/progress.md) component is defined, each time `this.progress` is modified, the displayed value of the `progress` component will not directly jump to the new value, but will gradually change through an animation. This effect can be achieved without writing any animation logic.
-
+Because the `value.transition` modifier of the [`progress`](/components/progress.md) component is defined, every time `this.progress` is modified, the displayed value of the `progress` component does not jump directly to the new value, but instead transitions smoothly via an animation. This effect can be achieved without writing any animation logic.
 
 ::: tip
-
-The `value` attribute of the `progress` component in the example is an integer. Since the default $[0, 100]$ range tends to create a sense of segmentation in transition animations, the example uses `:max="1000"` to increase the value range of `value` to make the animation smoother.
+The `value` property of the `progress` component in the example is an integer. Since the default range of $[0, 100]$ is prone to segmentation artifacts during transition animations, the example uses `:max="1000"` to increase the value range of `value`, thereby making the animation smoother.
 :::
 
+### Interpolation Calculation
 
+Currently, only some properties of native components support the `transition` modifier. Supported properties must have an "interpolatable" value type. Specifically: for all property value types $a$ and $b$ and progress $p \in [0,1]$, the operation $(1-p)*a+p*b$ must be valid.
 
-### Interpolation calculation
+The JavaScript `number` type is interpolatable. In addition, transformations and color values can also be interpolated.
 
+#### Transformations
 
-Currently, only some properties of native components support the `transition` modifier. Supported properties must have "interpolable" value types, specifically: for all property value types $a$ and $b$ and progress $p \in [0,1]$, the operation $(1-p)*a+p*b$ is valid.
+Transformations are usually defined using strings, such as `scale(2) rotate(30deg)`. The string itself is not interpolatable, but when used for transformation properties, it is interpolatable (because these strings are parsed into sequences of transformation operations, which are interpolatable). Generally speaking, interpolation is performed step by step for each transformation operation. For example, in the interpolation between `scale(2) rotate(30deg)` and `scale(1) rotate(90deg)`, the transformation in each frame includes two steps: scaling and rotation. The scale factor transitions from $2$ to $1$, while the rotation angle transitions from $30\deg$ to $90\deg$.
 
+#### Colors
 
-JavaScript's `number` type is interpolable, in addition to transform and color values.
+Colors are usually represented using string codes, such as `#ff0000`. Color interpolation is calculated individually for the red, green, blue, and alpha channels.
 
+### The `Transition` Object
 
-#### transform
-
-
-Transformations are usually defined using strings, such as `scale(2) rotate(30deg)`. Strings themselves are not interpolable, but they are when used with transform properties (because these strings are parsed as sequences of transform operations, which are interpolable). Normally interpolation is done one transform at a time. For example, the transformation of each frame of `scale(2) rotate(30deg)` and `scale(1) rotate(90deg)` during the interpolation process includes two steps of scaling and rotation, where the scaling factor transitions from $2$ to $1$, and the rotation angle transitions from $30\deg$ to $90\deg$.
-
-
-#### color
-
-
-Colors are usually represented using string codes, such as `#ff0000`. Color interpolation is calculated individually for the red, green, blue, and transparency channels.
-
-
-### `Transition` object
-
-
-The value type of the `transition` modifier is a `Transition` object:
+The value type of the `transition` modifier is the `Transition` object:
 ``` ts
 interface Transition {
   curve?: string,
@@ -677,31 +506,24 @@ interface Transition {
 }
 ```
 
-
 #### `curve` <decl type="?: string"/>
 
-
-Specify the [Easing function](../render/animation.md#缓动曲线) of the transition animation, the default is `'ease'`.
-
+Specifies the [easing function](../render/animation.md#easing-curves) for the transition animation. The default is `'ease'`.
 
 #### `duration` <decl type="?: number"/>
 
-
-The duration of the animation, in seconds, defaults to `1`.
+The duration of the animation in seconds. The default is `1`.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/reuse.md
 
-# Component reuse
+# Component Reuse
 
+Application-level component reuse is primarily achieved through custom components.
 
-Component reuse at the application level is mainly implemented by custom components.
+## Child Components
 
-
-## subcomponent
-
-
-Suppose the structure in the `<template>` tag of a certain [UX files](/framework/component/README.md#ux-文件) describes the organization of the interface, e.g.
+Suppose the structure inside the `<template>` tag of a [UX file](/framework/component/README.md#ux-file) describes the organization of the user interface, for example:
 ``` html
 <template>
   <div>
@@ -711,14 +533,14 @@ Suppose the structure in the `<template>` tag of a certain [UX files](/framework
   </div>
 </template>
 ```
-Corresponds to the following component tree structure at runtime:
+At runtime, this corresponds to the following component tree structure:
 ``` mermaid
 flowchart TB
   div --- p
   div --- image
   div --- qrcode
 ```
-This component tree has a parent node `div` and $3$ child nodes `p`, `image` and `qrcode`. The `div` component is the outermost component in the `<template>` tag. We call this component the **root component**. Sometimes components are not unique, for example:
+This component tree has a parent node `div` and $3$ child nodes: `p`, `image`, and `qrcode`. The `div` component is the outermost component within the `<template>` tag. We refer to this type of component as the **root component**. Root components are sometimes not unique; for example:
 ``` html
 <template>
   <p>text</p>
@@ -726,7 +548,7 @@ This component tree has a parent node `div` and $3$ child nodes `p`, `image` and
   <qrcode value="hello world!" />
 </template>
 ```
-There are 3 root components in. In addition, using [`for` directive](/framework/commands/for.md) may also cause multiple root component instances, such as
+contains $3$ root components. Additionally, using the [`for` directive](/framework/commands/for.md) may also result in multiple root component instances, for example:
 ``` html
 <template>
   <p for="x in ['one', 'two', 'three']">
@@ -734,70 +556,54 @@ There are 3 root components in. In addition, using [`for` directive](/framework/
   </p>
 </template>
 ```
-Will be rendered as $3$ `p` component instances.
+will be rendered as $3$ `p` component instances.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/native-component.md
 
-# Native components
+# Native Components
 
+Native components refer to components implemented in C++. The main design goal of these components is to implement specific UI elements, such as buttons or list effects, without carrying business logic. Unlike Web technologies, native components themselves do not provide DOM interfaces, but only reactive component interfaces.
 
-Native components are components implemented in C++. The main design goal of these components is to implement certain interface elements, such as buttons or list effects, but do not carry business logic. Different from web technology, native components themselves do not provide DOM interfaces, only responsive component interfaces.
+Native components in Glyphix provide a large number of configuration interfaces to achieve rich display effects. In addition, built-in components feature optimizations designed for embedded platforms.
 
-
-The native components in Glyphix provide a large number of configuration interfaces to achieve rich display effects. In addition, the built-in components are optimized for embedded platform designs.
-
-
-In this document, **native components** are used to refer to components implemented in C++; the term **built-in components** refers to the component packages provided by WearOS, but these components are not necessarily implemented in C++.
-
+In this document, **native components** refers to components implemented in C++; the term **built-in components** refers to component packages provided by WearOS, though these components are not necessarily implemented in C++.
 
 ::: tip
-
-This document will distinguish between native components and built-in components in the description, but readers generally do not need to ignore the difference between the two.
+This document distinguishes between native components and built-in components in its descriptions, but readers generally do not need to worry about the difference between the two.
 :::
 
+## UI Functional Mechanisms
 
-
-## Interface function mechanism
-
-
-Most of the interface-related mechanisms are only available in native components. These mechanisms include:
-- CSS style sheets, layout and other mechanisms
+Most UI-related mechanisms are only available in native components. These mechanisms include:
+- CSS style sheets, layouts, and other mechanisms
 - Gestures and touch events
 - Rendering and drawing mechanisms
 
+Interfaces for certain native component mechanisms can be simulated in custom components through parameter/event passing between components, but these capabilities are essentially implemented by native components.
 
-The interfaces of some native component mechanisms can be simulated in custom components through parameter/event passing between components, but these capabilities are essentially implemented by native components.
+## UI Rendering
 
+## Component Snapshots
 
-## Interface rendering
+Snapshots are a frame rate optimization technique. Enabling snapshots for complex components can speed up drawing and thus improve the frame rate. Essentially, snapshots take a "screenshot" of the component and accelerate rendering by directly drawing these screenshots. Therefore, for components with complex content but infrequent updates, snapshots are an effective technique. For other scenarios where updates are frequent but the loss of refresh updates can be tolerated, there are corresponding APIs to disable snapshot updates.
 
+## Native Component Objects
 
-## Component Snapshot
-
-
-Snapshot is a frame rate optimization technology. Turning on snapshots for complex components can speed up drawing and thus increase frame rate. Snapshots essentially take "screenshots" of components and speed things up by drawing those screenshots directly. Therefore, snapshots are an effective technique for components that are complex in content but updated infrequently. For other scenarios where updates are frequent but can tolerate no refresh, there are corresponding APIs to disable snapshot updates.
-
-
-## native component object
-
-
-The native component object can be obtained through the component's [`$element()`](component-apis#element) method, which can access the properties of the native component or call its methods, for example:
-
+You can obtain the native component object through the component's [`$element()`](component-apis#element) method, which allows you to access the properties of the native component or call its methods, for example:
 
 ``` js
 let el = this.$element('scroll-id')
 console.log(`width: ${el.width}`) // Get the width of the component through the native component object
-el.scrollTo({ top: 100 }) // Scroll list via API
+el.scrollTo({ top: 100 }) // Scroll the list through the API
 ```
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/component-object.md
 
-# component object
+# Component Object
 
-
-The `<script>` tag located within the UX file defines and exports a component object. A typical component object is defined as follows:
+The `<script>` tag inside a UX file defines and exports a component object. A typical component object is defined as follows:
 ``` js
 export default {
   data: {
@@ -811,36 +617,27 @@ export default {
   }
 }
 ```
-The component framework allows developers to fill in some properties for component objects to implement functions. This document will introduce these properties.
+The component framework allows developers to populate component objects with certain properties to implement functionality. This document will introduce these properties.
 
+## Reactive Programming
 
-## Reactive programming
+**Reactive programming** is a programming paradigm used to dynamically update the UI and data states. Through **reactive properties**, developers can automatically track data changes and update the UI without manual triggering and management. This keeps data and the UI synchronized at all times, delivering a concise and efficient UI programming experience.
 
+### Reactive Properties
 
-**Reactive Programming** is a programming paradigm for dynamically updating interface and data state. Through **responsive properties**, developers can automatically track data changes and update the interface without having to manually trigger and manage these updates. This keeps the data and interface always synchronized, enabling a simple and efficient UI programming experience.
+Properties defined within the [`data` property](#data-property) and [`computed` property](#computed-property) objects of a component are **reactive properties** of the component, also known as view-model properties:
+- **`data` property**: Directly reflects the state of the component. For example, temperature values, display text, or button states can be defined in `data`. When these property values change, the framework automatically synchronizes them to the view.
+- **`computed` property**: Used to define derived properties calculated based on `data` or other `computed` properties. Computed properties are automatically updated when their dependent data changes, making complex logical expressions more intuitive and concise.
 
+In summary, when a component's reactive property value changes, content depending on these properties will automatically update and re-render, thereby ensuring that the displayed content remains consistent with the data.
 
-### Responsive properties
+### Automatic Data Binding
 
+**Automatic data binding** is a core concept of reactive programming, enabling data changes to be directly reflected on the UI without requiring manual handling by the developer.
 
-The properties defined in the [`data` attribute](#data-属性) and [`computed` attribute](#computed-属性) objects of the component object are all **responsive properties** of the component, also called view-model properties:
-- ** `data` attribute**: directly reflects the status of the component. For example, temperature value, display text or button status can be defined in `data`. When the values ​​of these properties change, the frame automatically synchronizes them to the view.
-- ** `computed` attribute **: used to define derived attributes calculated based on `data` or other `computed` attributes. Computed properties are automatically updated as dependent data changes, making complex logical expressions more intuitive and concise.
+Since each reactive property is automatically bound to the relevant parts of the UI, the UI updates automatically when the property value changes, eliminating the need to call property update functions on specific elements.
 
-
-All in all, when the responsive property values ​​of a component change, the content that relies on these properties will be automatically updated and rendered, ensuring that the displayed content is consistent with the data.
-
-
-### Automatic data binding
-
-
-**Automatic data binding** is the core concept of reactive programming, which allows data changes to be directly reflected on the interface without the need for developers to manually handle it.
-
-
-Because each responsive attribute is automatically bound to the relevant part of the interface, when the attribute value changes, the interface is automatically updated without the need to call the attribute update function of a specific element.
-
-
-For example, define a reactive attribute named `counter`:
+For example, defining a reactive property named `counter`:
 ``` js
 export default {
   data: { // Define the counter reactive property in the data object
@@ -849,26 +646,21 @@ export default {
 }
 ```
 
-
-Whenever the value of `counter` changes, the interface that references this attribute will be automatically updated. The following [template](template) code demonstrates this mechanism:
+Whenever the value of `counter` changes, the UI referencing this property will also update automatically. The following [template](template) code demonstrates this mechanism:
 ``` html
 <p on:click="counter += 1">
   counter: {{ counter }}
 </p>
 ```
-This example demonstrates a counter that increases the value displayed by `counter` by one when clicking the `<p>` label. You can click on the online demo below to test it:
-
+This example demonstrates a counter where clicking the `<p>` tag increments the displayed value of `counter` by 1. You can click the online demo below to test it:
 
 <glyphix id="component-object-reactive" height="50" width="200" inline>
 
-
-
 ``` html
 <p on:click="counter += 1">
   counter: {{ counter }}
 </p>
 ```
-
 
 ``` js
 export default {
@@ -877,7 +669,6 @@ export default {
   }
 }
 ```
-
 
 ``` css
 p {
@@ -889,18 +680,13 @@ p {
 }
 ```
 
-
 </glyphix>
 
+`{{ counter }}` inside the `<p>` tag is a template [interpolation expression](template.md#interpolation-expression), and its dependency on `counter` is automatically bound. Meanwhile, the [`on:click` listener](/framework/commands/on.md) on the `<p>` tag modifies the `counter` property value upon clicking. As you can see, automatic data binding eliminates the manual **data**-to-**UI** update operations typical of traditional GUI development, making UI logic cleaner and more straightforward.
 
+## `data` Property
 
-`{{ counter }}` in the `<p>` tag is a template [interpolation expression](template.md#插值表达式), and its dependency on `counter` is automatically bound. And [`on:click` listening](/framework/commands/on.md) in the `<p>` tag modifies the `counter` attribute value when clicked. It can be seen that through automatic data binding, the manual **data**-**interface** update operation in traditional GUI development is eliminated, making the interface logic more concise and clear.
-
-
-## `data` attribute
-
-
-The `data` attribute is used to declare the reactive data attributes of the component. The property is an object, for example:
+The `data` property is used to declare reactive data properties of a component. This property is an object, for example:
 ``` js
 export default {
   data: {
@@ -908,22 +694,17 @@ export default {
   }
 }
 ```
-The value of the `data` attribute must be serializable through `JSON.stringify()`. To be precise, the following conditions must be met:
-- Simple type values: `number`, `string`, `boolean`, `null` or `undefined`
-- In `Object` and `Array` with recursive structures, the value of the deepest element must be one of the above
+The value of the `data` property must be serializable via `JSON.stringify()`. Specifically, it must meet the following conditions:
+- Primitive types: `number`, `string`, `boolean`, `null`, or `undefined`
+- For recursively structured `Object`s and `Array`s, the values of the deepest elements must belong to one of the types above.
 
-
-This means that attributes of `data` objects in source code cannot have functions or other special types of values, and this also includes objects like `Date`.
-
+This means that the properties of the `data` object in the source code cannot contain functions or other special types of values, which also includes objects like `Date`.
 
 ::: note
-
-It is a known limitation that `data` objects do not support non-JSON compatible data types, such as `Date`, `Proxy` objects, and so on. If you need to use these types of data, you can define them as [Custom properties](#自定义属性), otherwise unpredictable behavior will result.
+The `data` object does not support non-JSON-compatible data types, such as `Date`, `Proxy` objects, etc.; this is a known limitation. If you need to use these types of data, you can define them as [custom properties](#custom-properties); otherwise, it will lead to unexpected behavior.
 :::
 
-
-
-The `data` attributes are all view-model attributes of the component, so the data therein can be used for reactive programming. Using `this.prop` in the component object can directly access the properties in the `data` object. So, in the following component object
+All properties in the `data` property are view-model properties of the component, so the data within can be used for reactive programming. You can directly access properties in the `data` object inside the component object using `this.prop`. Therefore, in the following component object:
 ``` js
 export default {
   data: {
@@ -932,24 +713,18 @@ export default {
   onInit() {}
 }
 ```
-Code `this.onInit` will access the `onInit` attribute in the `data` object, not the lifecycle function `onInit`.
-
+The code `this.onInit` will access the `onInit` property inside the `data` object, rather than the `onInit` lifecycle function.
 
 ::: tip
-
-To optimize performance, only data used for UI rendering and state management is defined in the `data` object. For data that does not require reactivity, they can be defined as [Custom properties](#自定义属性). For example: timer ID (return value of `setTimeout()`), [audio player](/api/system-media.md#createaudioplayer) handle, WebSocket connection object, etc. Such objects are generally unnecessary as reactive properties and will not work properly.
+To optimize performance, only define data used for UI rendering and state management in the `data` object. For non-reactive data, you can define them as [custom properties](#custom-properties). For example: timer IDs (return value of `setTimeout()`), [audio player](/api/system-media.md#createaudioplayer) handles, WebSocket connection objects, etc. Such objects generally do not need to be reactive properties and will not function correctly if they are.
 :::
 
+## `computed` Property
 
-
-## `computed` attribute
-
-
-The `computed` property of the component object declares the computed properties in the component. Compared to the reactive properties in `data`, computed properties can implement properties that require some calculations to get the result. For example
+The `computed` property object of a component object declares computed properties within the component. Compared to reactive properties in `data`, computed properties can implement properties that require some calculation to obtain their results. For example:
 ``` html
 <text> reversed message: {{ reversedMessage }}
 ```
-
 
 ``` js
 export default {
@@ -957,22 +732,19 @@ export default {
     message: "hello"
   },
   computed: {
-    reversedMessage() { // This is the getter method of the reversedMessage computed property
+    reversedMessage() { // This is the getter method for the reversedMessage computed property
       return this.message.split('').reverse().join('')
     }
   }
 }
 ```
-A `reversedMessage` computed attribute is declared here, which implements a getter function to obtain the attribute value. Use `this.reversedMessage` directly (`this.` can be omitted in the template) to get the value of the calculated attribute.
+Here, a `reversedMessage` computed property is declared, implementing a getter function to retrieve the property value. You can directly use `this.reversedMessage` (the `this.` can be omitted in templates) to get the value of this computed property.
 
+Computed properties are also view-model properties of the component. The values of computed properties are cached, so retrieving a computed property's value multiple times will not trigger recalculations. On the other hand, computed properties are automatically updated when their dependent view-model properties change. In this example, the value of the computed property is calculated from the `message` property, so when the `message` property changes, the value of `reversedMessage` will automatically update.
 
-Computed properties are also view-model properties of components. The value of the calculated property is cached, so the value of the calculated property is not recalculated multiple times. Computed properties, on the other hand, are automatically updated when the view-model properties they depend on change. In this example, the value of the computed attribute is calculated from the `message` attribute, so when the `message` attribute changes, the value of the `reversedMessage` attribute is automatically updated.
+### Computed Property Setter Method
 
-
-### Setter methods for computed properties
-
-
-The default computed properties only have getter methods, but you can also provide setter methods for computed properties:
+By default, computed properties only have a getter method, but you can also provide a setter method for a computed property:
 ``` js
 export default {
   data: {
@@ -980,7 +752,7 @@ export default {
   },
   computed: {
     reversedMessage: {
-      get() { // This is the getter method of the reversedMessage computed property
+      get() { // This is the getter method for the reversedMessage computed property
         return this.message.split('').reverse().join('')
       },
       set(value) {
@@ -990,13 +762,11 @@ export default {
   }
 }
 ```
-At this time, the value of the calculated attribute `reversedMessage` is no longer a function, but an object, which has two methods: getter method `get` and setter method `set`. The parameter of the `set` method is the new value that the calculated property needs to be set to.
+In this case, the value of the `reversedMessage` computed property is no longer a function, but an object containing two methods: a getter method `get` and a setter method `set`. The parameter of the `set` method is the new value to be set for the computed property.
 
+## `watch` Property
 
-## `watch` attribute
-
-
-The `watch` object method is used to monitor changes in view-model properties, for example:
+The `watch` object method is used to watch for changes in view-model properties, for example:
 ``` js
 export default {
   data: {
@@ -1009,46 +779,40 @@ export default {
   }
 }
 ```
-The method of the `watch` object will listen for changes in the view-model attribute with the same name, so `watch.value()` listens for changes in the `value` attribute. Changes to computed properties can also be monitored by `watch`.
+Methods in the `watch` object monitor changes to view-model properties with the same name, so `watch.value()` watches for changes to the `value` property. Changes to computed properties can also be watched by `watch`.
 
+## Lifecycle Functions
 
-## life cycle function
+See the [Lifecycle](life-cycle.md) documentation for details.
 
+## Custom Properties
 
-See the [life cycle](life-cycle.md) documentation for details.
-
-
-## Custom properties
-
-
-Users can also define custom properties in component objects that are not in the view-model (i.e. not in the `data` or `computed` objects) and therefore are not reactive. Developers can define methods as custom attributes, and can also use custom attributes to store some data that does not require responsiveness. For example:
+Users can also define custom properties in the component object. These properties are not in the view-model (i.e., not in the `data` or `computed` objects) and are therefore not reactive. Developers can define methods as custom properties and use custom properties to store data that does not require reactivity. For example:
 ``` html
 <p on:click="onClick()">{{ text }}</p>
 ```
-
 
 ``` js
 export default {
   data: {
     text: "some text"
   },
-  // Custom properties are not in the data or computed objects, but are defined directly in the component object.
-  timer: null, // Stores the timer handle and does not need to be defined in advance. This attribute will be automatically created when this.timer is assigned a value.
+  // Custom properties are not in data or computed objects, defined directly within the component object
+  timer: null, // Stores the timer handle; does not need to be predefined, assigning to this.timer creates this property automatically
   onInit() {
-    // The new property assigned to this is a custom property
+    // New properties assigned to this are custom properties
     this.timer = setInterval(() => this.text += "?", 1000)
   },
   onDestroy() {
     clearInterval(this.timer)
   },
   onClick() {
-    this.text += "." // Manipulate view-model properties in custom methods
+    this.text += "." // Operate on view-model properties within custom methods
   }
 }
 ```
 
-
-The `text` attribute in the example is reactive, while `timer` is a non-responsive custom attribute. The `timer` attribute is used to store the timer handle. This value has nothing to do with the interface view, so it does not need to be used as a view-model attribute. Considering the standardization of the code, custom properties can also be defined in advance in the component object:
+In the example, the `text` property is reactive, while `timer` is a non-reactive custom property. The `timer` property is used to store the timer handle. This value has nothing to do with the UI view, so it does not need to be a view-model property. For code standardization, custom properties can also be predefined in the component object:
 ``` js
 export default {
   data: {
@@ -1058,23 +822,17 @@ export default {
   // ...
 }
 ```
-As shown in the example, custom properties can be defined directly in the component object. Custom properties for each component are distinct instances and are not shared.
-
+As shown in the example, custom properties can be defined directly inside the component object. The custom properties of each component are separate instances and are not shared.
 
 ::: warning
-
-Custom attributes, `data` objects, `computed` objects, life cycle functions and other attributes cannot have duplicate names, otherwise some attributes will be overwritten and become inaccessible.
+Custom properties, the `data` object, the `computed` object, lifecycle functions, and other properties must not share duplicate names; otherwise, some properties will be overwritten and become inaccessible.
 :::
 
+### Methods
 
+Custom properties and methods are both direct properties of the component object, and the two are essentially equivalent. When you assign a function to a property of a component object, that property becomes a method. This section demonstrates this equivalence through two examples.
 
-### method
-
-
-Custom properties and methods are both direct properties of the component object, and they are essentially equivalent. When you assign a function to a property of a component object, the property becomes a method. This section demonstrates this equivalence through two examples.
-
-
-Method 1: Directly define the method. This is the most common and recommended way of writing.
+Approach 1: Define methods directly, which is the most common and recommended writing style.
 ``` js
 export default {
   data: {
@@ -1086,8 +844,7 @@ export default {
 }
 ```
 
-
-Method 2: Define attributes and assign values ​​to functions.
+Approach 2: Define a property and assign a function to it.
 ``` js
 export default {
   data: {
@@ -1098,26 +855,20 @@ export default {
   }
 }
 ```
-The two writing methods are completely identical in function and can be called through `this.increment()`. It's the same when used in a template:
+Both writing styles are functionally identical and can be called via `this.increment()`. They are also used identically within templates:
 ``` html
 <button on:click="increment()">Count: {{ count }}</button>
 ```
 
-
 ::: tip
-
-It is recommended to use method 1, which is the object method syntax supported by the ES6+ standard and is more concise and clear.
+It is recommended to use Approach 1. This is the object method syntax supported by the ES6+ standard, making it more concise and straightforward.
 :::
 
+### Dynamically Assigning Methods
 
+In addition to directly defining methods in the component object, you can also dynamically assign methods after the component is instantiated (e.g., in the `onInit` lifecycle). The key feature of this approach is that the dynamic methods of each component instance are independent and can capture and maintain different states via closures.
 
-### Dynamic assignment method
-
-
-In addition to defining methods directly in the component object, you can also dynamically assign methods after the component is instantiated (such as in the `onInit` life cycle). The key feature of this approach is that the dynamic methods of each component instance are independent and can capture and maintain different states through closures.
-
-
-Consider a timer component where each instance has its own counter and can be stopped independently. This is a typical application scenario of the dynamic assignment method:
+Consider a timer component where each instance has its own counter and can be stopped independently. This is a typical use case for dynamically assigned methods:
 ``` html
 <div>
   <text>timeout: {{ counter }}</text>
@@ -1125,43 +876,36 @@ Consider a timer component where each instance has its own counter and can be st
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
     counter: 0,
   },
-  stopTimer: null, // Optional: Predefined stopTimer method
+  stopTimer: null, // Optional: Predefine the stopTimer method
   onInit() {
     const timer = setInterval(() => {
       this.counter++
     }, 1000)
-    // Dynamically create a stopTimer method and capture the timer variable through a closure
+    // Dynamically create the stopTimer method, capturing the timer variable through a closure
     this.stopTimer = () => {
       clearInterval(timer)
-      this.stopTimer = null // Leave the method empty after stopping
+      this.stopTimer = null // Set the method to null after stopping
     }
   },
 }
 ```
 
-
-The following example instantiates 4 timer components at the same time. You can try to stop any of them independently:
-
+The following example instantiates 4 timer components simultaneously, and you can try stopping any of them independently:
 
 <glyphix id="component-object-dynamic-method" height="200" width="300" inline>
-
 </glyphix>
 
-
-
 The implementation of this dynamic assignment method relies on the following key points:
-- **Closure Capture**: The `timer` constant created in `onInit` is a local variable, and the `stopTimer` method captures this variable through closure
-- **Instance Independence**: Each component instance creates its own `timer` and `stopTimer` when calling `onInit`, and they do not interfere with each other.
-- **State Isolation**: Clicking the "Stop" button of an instance will only stop the timer of that instance and will not affect other instances.
+- **Closure capture**: The `timer` constant created in `onInit` is a local variable, and the `stopTimer` method captures this variable via a closure.
+- **Instance independence**: Each component instance creates its own `timer` and `stopTimer` when `onInit` is called, and they do not interfere with each other.
+- **State isolation**: Clicking the "Stop" button of a specific instance only stops that instance's timer without affecting other instances.
 
-
-Of course, for this example, it is more common to define the `stopTimer` method directly in the component object:
+Of course, for this example, a more common approach is to define the `stopTimer` method directly in the component object:
 ``` js
 export default {
   data: {
@@ -1169,7 +913,7 @@ export default {
   },
   timer: null,
   onInit() {
-    // In this case, timer needs to be stored as a custom attribute
+    // In this case, timer needs to be stored as a custom property
     this.timer = setInterval(() => {
       this.counter++
     }, 1000)
@@ -1177,29 +921,25 @@ export default {
   stopTimer() {
     // The stopTimer method accesses this.timer to stop the timer
     clearInterval(this.timer)
-    this.timer = null // Clear timer reference
+    this.timer = null // Clear the timer reference
   }
 }
 ```
-This is usually more intuitive for timers, but when some have complex contexts and require dynamic distribution strategies, dynamic assignment methods can be used to implement more flexible logic. The following table shows the difference between dynamic methods vs directly defined methods:
+This is generally more intuitive for timers, but in some scenarios with complex contexts that require dynamic dispatch strategies, dynamic method assignment can be used to implement more flexible logic. The table below shows the differences between dynamic methods vs. directly defined methods:
 
-
-| Features | Direct definition method | Dynamic assignment method |
-|------|------------|------------|
-
-| Sharability | All instances share the same function object | Each instance has an independent copy of the function |
-| Closure capture | Does not capture local variables in the scope | Can capture local variables in the scope |
-| Memory usage | Less (shared) | Slightly more (one copy per instance) |
-| Applicable scenarios | General, stateless operations | Operations that need to capture local states |
-
+| Feature | Directly Defined Methods | Dynamically Assigned Methods |
+|---------|-------------------------|-----------------------------|
+| Shareability | All instances share the same function object | Each instance has an independent function copy |
+| Closure Capture | Does not capture local variables in the scope | Can capture local variables in the scope |
+| Memory Footprint | Less (shared) | Slightly more (one per instance) |
+| Applicable Scenarios | General, stateless operations | Operations requiring local state capture |
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/template-macro.md
 
-# template macro
+# Template Macros
 
-
-Template macros are a way to simplify repetitive code and are top-level elements in UX files with a `macro:` attribute:
+Template macros are a way to simplify repetitive code. They are top-level `<template>` elements in UX files with the `macro:` attribute:
 ``` html
 <template macro:scroll>
   <scroll #props media-query="(shape: rect)">
@@ -1211,12 +951,11 @@ Template macros are a way to simplify repetitive code and are top-level elements
   </scroll>
 </template>
 ```
-For example, a macro named `scroll` is defined here. The macro will replace the component of the same name in the `<template>` template of the current UX file, and
-- All attributes of components with the same name will replace the `#props` placeholder in the template macro;
-- Child elements of components with the same name replace the `<slot />` node in the template macro.
+For example, a macro named `scroll` is defined here. The macro will replace components with the same name inside the `<template>` of the current UX file, and:
+- All attributes of the component with the same name will replace the `#props` placeholder in the template macro;
+- The child elements of the component with the same name will replace the `<slot />` node in the template macro.
 
-
-For example
+For example:
 ``` html
 <template>
   <scroll :index="3" on:index="onIndexChange">
@@ -1224,7 +963,7 @@ For example
   </scroll>
 </template>
 ```
-will be replaced by the `scroll` template macro
+will be replaced by the `scroll` template macro with:
 ``` html
 <template>
   <scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
@@ -1237,18 +976,13 @@ will be replaced by the `scroll` template macro
 </template>
 ```
 
-
 ::: tip
-
-The macro name in this example is `scroll`, and the content of the macro also contains the `scroll` tag, but the macro replacement will only be performed once and will not be repeated.
+In this example, the macro name is `scroll`, and the macro content also contains the `scroll` tag, but macro replacement is only performed once and will not be repeated recursively.
 :::
 
+## Purpose
 
-
-## use
-
-
-As can be seen from the above example, template macros can statically replace ordinary components into another form. The replaced code is usually inconvenient to handwrite and understand. like:
+As can be seen from the above example, template macros can statically replace ordinary components into another form. The replaced code is usually inconvenient to write and understand manually. For example:
 ``` html
 <scroll :index="3" on:index="onIndexChange">
   <p for="i in 10">item {{i + 1}}</p>
@@ -1264,42 +998,34 @@ is replaced with:
   <p for="i in 10">item {{i + 1}}</p>
 </scroll>
 ```
-The replaced code actually statically selects different `scroll` component properties based on the [media inquiries](/framework/render/media-query.md) of the screen shape. Specifically, it adds two properties to the [`scroll`](/components/scroll.md) component on circular screens:
-- [`deformation="fisheye"`](/components/scroll.md#deformation): Enable fisheye effect for circular screens;
-- [`scroll-snap="center"`](/components/scroll.md#scrollsnap): Center-align the `scroll` child elements on a circular screen.
+The replaced code actually statically selects different `scroll` component attributes based on screen shape [media queries](/framework/render/media-query.md). Specifically, it adds two attributes to the [`scroll`](/components/scroll.md) component on circular screens:
+- [`deformation="fisheye"`](/components/scroll.md#deformation): Enables the fisheye effect for circular screens;
+- [`scroll-snap="center"`](/components/scroll.md#scrollsnap): Aligns `scroll` child elements to the center on circular screens.
 
+This template macro adds adaptation for non-standard screen shapes to the original hand-written code. This modification does not require changing the template source code, making it non-intrusive.
 
-This template macro adds special-shaped screen shape adaptation to the original handwritten code. This modification does not require modification of the template source code and is therefore non-intrusive.
+## Usage
 
-
-## How to use
-
-
-There is currently no way to export template macros for use in other UX files. Therefore, the template macro needs to be written repeatedly in each required UX file, that is, something like
+Currently, there is no way to export template macros for use in other UX files. Therefore, template macros must be repeatedly written in each UX file where they are needed, meaning top-level elements like:
 ``` html
 <template macro:scroll>
   ...
 </template>
 ```
-top level element. Template macro nodes and `<template>` nodes can be in any order, but do not define template macros with the same name in a UX file.
+can be used. Template macro nodes and `<template>` nodes can appear in any order, but do not define template macros with the same name within a single UX file.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/README.md
 
-# component framework
+# Component Framework
 
+Components are a technology in Glyphix used to achieve code reuse in App interface development. By nesting HTML-like elements, multiple components can be combined to form the overall appearance and function of an interface. On the other hand, each component encapsulates specific content and logic, and their rational use can reduce code complexity and maintenance costs.
 
-Components are a technology in Glyphix that enables reuse of App interface development functions. Multiple components can be combined and form the overall appearance and functionality of the interface in a manner similar to nested HTML elements. On the other hand, each component encapsulates certain content and logic, which can reduce code complexity and maintenance costs through reasonable use.
+Components are divided into built-in [**native components**](../render/native-component.md) and **custom components** implemented by developers. Native components are generally encapsulations of UI elements, used to display specific UI content or for layout and interaction, such as `text`, `image`, `div`, `list`, etc. Custom components, however, focus on logic implementation and functional encapsulation, because the interfaces implemented within custom components are ultimately hosted by native components.
 
-
-Components are divided into built-in [**Native components**](../render/native-component.md) and **custom components** implemented by developers. Native components are generally encapsulations of UI elements and can be used to display specific UI content or for layout and interaction, such as text, image, div, list, etc. Custom components focus on logic implementation and functional encapsulation, because the interface implemented in custom components is actually hosted by native components.
-
-
-## Define components
-
+## Defining Components
 
 Each custom component is defined in a separate `.ux` file:
-
 
 ``` html
 <template>
@@ -1322,245 +1048,181 @@ Each custom component is defined in a separate `.ux` file:
 </script>
 ```
 
+As can be seen, a component consists of styles, JavaScript scripts, and a "template" that describes the interface.
 
-It can be seen that a component consists of styles, JavaScript scripts and "templates" that describe the interface.
+## UX Files
 
+A UX (UI XML) file is a component description using XML format. Each UX file defines a component, and a page is also a type of component.
 
-## UX files
+The following root nodes can exist in a UX file:
 
+- **`<import>`** tag: Used to import other components. This tag can be defined multiple times;
+- **`<template>`** tag: Defines the content and structure of the component interface. There is one and only one such node;
+- **`<template>`** macro tag: Defines reusable template structures. There can be multiple such nodes; see [Template Macros](./template-macro.md);
+- **`<style>`** tag: Defines the CSS stylesheet. There is one and only one such node;
+- **`<script>`** tag: A JavaScript script that implements the logical functions of the component. There is one and only one such node.
 
-A UX (UI XML) file is a component description using XML format. Each UX file defines a component, and pages are also a component.
+The order of the above nodes is arbitrary. Among them, the `<import>` node never contains child nodes. Note that the contents of the `<style>` and `<script>` nodes do not follow XML syntax; symbols like `>` and `&` do not require XML escaping rules, but instead follow CSS and JavaScript syntax (similar to HTML).
 
+UX files require all tags to be closed. For example, `<div>...</div>` or `<div/>` are both valid, but a standalone `<div>` or `</div>` will result in an error.
 
-The following root nodes can exist in the UX file:
-
-
-- ** `<import>` ** Label: used to introduce other components, this label can be defined repeatedly;
-- ** `<template>` ** Label: Defines the content and structure of the component interface. There is only one node for this node;
-- ** `<template>` ** Macro tag: defines a template structure that can be reused. There can be multiple nodes, see [template macro](./template-macro.md);
-- ** `<style>` ** Tag: Define CSS style sheet, this node has only one;
-- ** `<script>` ** Tag: JavaScript script that implements the component's logical function. There is only one node for this node.
-
-
-The order of the above nodes is arbitrary. Among them, the `<import>` node always does not contain child nodes. Note that the `<style>` node and `<script>` node do not follow XML syntax internally. All symbols such as `>` and `&` do not need to use XML escaping rules, but follow the syntax of CSS and JavaScript (similar to HTML).
-
-
-The UX file requires that all tags must be closed. For example, `<div>...</div>` or `<div/>` are legal, but a separate `<div>` or `</div>` will cause an error.
-
-
-## Page components
-
+## Page Components
 
 Components declared in the `router.pages` field of `manifest.json` can be used directly as pages.
 
+Compared to regular components, page components have more [lifecycle functions](life-cycle#组件和页面的生命周期), while other functions are basically the same. Component code already used for page components can also be used directly as regular components.
 
-Compared with general components, page components have more [life cycle function](life-cycle#组件和页面的生命周期) and other functions are basically the same. Component code that has been used for page components can also be used directly as ordinary components.
+## Importing Components
 
-
-## Introduce components
-
-
-### Custom component
-
+### Custom Components
 
 Defined components can be referenced in other components. Fill in the `<import>` tag in the UX file to reference the specified component:
 ``` xml
 <import name="Panel" src="path/to/Panel">
 ```
 
+The `src` attribute is the path URL of the component, where `Panel` is the component's filename (excluding the `.ux` extension); the `name` attribute is an optional component name. If this attribute is not defined, the component's filename will be used as its name.
 
-The `src` attribute is the path URL of the component, where `Panel` is the file name of the component (excluding the `.ux` suffix); the `name` attribute is an optional component name. If this attribute is not defined, the file name of the component will be used as the component name.
+`src` supports relative paths, absolute paths, and external paths:
 
+- Relative paths are relative to the current UX file.
+- Absolute paths are relative to the app's `src` path.
+- External paths can import resource components outside the app. The specific path is the `package` value in the `appdb.json` of the resource component's app plus the absolute path.
 
-`src` supports relative paths, absolute paths, and external paths
+### Global Components
 
-
-- The relative path is relative to the path of this UX file
-- The absolute path is relative to the src path of the APP
-- The external path can import resource components outside the APP. The specific path is the package value in appdb.json of the resource component APP plus the absolute path.
-
-
-### global components
-
-
-Global components are non-native components defined in the framework. You can use the `<import>` tag and specify only the `name` attribute and omit the `src` attribute to introduce global components in the application:
+Global components are non-native components defined in the framework. In an application, you can import a global component by using the `<import>` tag, specifying only the `name` attribute and omitting the `src` attribute:
 ``` html
 <import name="TopBar" />
 ```
 
+Applications can only import global components and cannot register new ones. System developers can use the [`globalComponent()`](/api/system-internal.md#globalcomponent) API to register global components.
 
-In applications that can only introduce global components but cannot register new global components, system developers can use the [`globalComponent()`](/api/system-internal.md#globalcomponent) API to register global components.
+## Attribute Documentation Specification
 
-
-## Property document specification
-
-
-The component property document title format is as follows:
-
+Component attribute documentation titles take the following form:
 
 <div class="example-block">
-
   <h3 style="margin-bottom: 0.5rem">
-
     <span>
-
       <code>value</code>
-
       <decl type="number" get set listen />
-
     </span>
-
   </h3>
-
 </div>
 
-
-
-in
+Where:
 - `value` is the name of the attribute;
 - `number` is the attribute value type;
-- The <span style="color:#666"> on the right reads • sets • listens </span> indicates the access modes supported by the property.
+- On the right, <span style="color:#666">Get • Set • Listen</span> indicates the supported access modes for the attribute.
 
+### Access Modes
 
-### access mode
+An attribute can support the following access modes:
+- **Get**: The value of the attribute is readable;
+- **Set**: The value of the attribute is writable;
+- **Listen**: The attribute is [listenable](../commands/on.md), and listenable attributes typically trigger listening events when their values change.
 
-
-A property can support the following access modes:
-- **Read**: The value of the attribute is readable;
-- **Settings**: The value of the attribute is writable;
-- **Listening**: Attributes are [monitor](../commands/on.md) able. Listenable attributes usually trigger listening events when their values ​​change.
-
-
-Take the [`index`](/components/scroll.md#index) attribute of the [scroll](/components/scroll.md) component as an example. This attribute supports reading, setting, and monitoring at the same time. The `index` attribute can be manipulated in template syntax:
+Taking the [`index`](/components/scroll.md#index) attribute of the [scroll](/components/scroll.md) component as an example, this attribute supports reading, setting, and listening simultaneously. You can manipulate the `index` attribute in template syntax:
 ``` html
 <scroll id="scroll1" :index="5" on:index="console.log($event)">
   ...
 </scroll>
 ```
-Among them, `:index="5"` assigns `5` to the `index` attribute, and `on:index="console.log($event)"` listens for changes in the `index` attribute. Please refer to [Communication between components](/framework/component/communicate.md) and [`on` directive](../commands/on.md) for more descriptions.
+Here, `:index="5"` assigns `5` to the `index` attribute, while `on:index="console.log($event)"` listens for changes to the `index` attribute. For more details, please refer to [Inter-component Communication](/framework/component/communicate.md) and the [`on` Directive](../commands/on.md).
 
+### Component Objects and Methods
 
-### Component objects and methods
-
-
-Properties can also be accessed by getting the component object through the [`$element()`](component-apis.md#element) method:
+You can also obtain the component object via the [`$element()`](component-apis.md#element) method to access its attributes:
 ``` js
-const el = this.$element('scroll1') // Get component object
-console.log(el.index) // Read the index property of the scroll component
-el.index = 4 // Set the index property of the scroll component
+const el = this.$element('scroll1') // Get the component object
+console.log(el.index) // Read the index attribute of the scroll component
+el.index = 4 // Set the index attribute of the scroll component
 ```
-If supported, the object returned by the `$element()` method can be read or set. The `$element()` method does not support binding event listeners to properties.
+If supported, you can **get** or **set** the object returned by the `$element()` method. The `$element()` method does not support binding event listener functions to attributes.
 
-
-The attribute of the component can also be a **function** or **method**. In this case, the document title is in the following format:
-
+A component's attribute can also be a **function** or a **method**. In this case, the documentation title format is as follows:
 
 <div class="example-block">
-
   <h3 style="margin-bottom: 0.5rem">
-
     <span>
-
       <code>method</code>
-
       <decl type="(x: number, y: number): void" method />
-
     </span>
-
   </h3>
-
 </div>
 
+Where:
+- `(x: number, y: number): void` is the signature of the function or method.
+- On the right, <span style="color:#666">Method</span> indicates that the attribute is a method.
 
-
-in
-- `(x: number, y: number): void` is the signature of the function or method
-- The <span style="color:#666"> method </span> on the right side indicates that the attribute is a method.
-
-
-Component methods can only be accessed through the component object. For example, the [`setIndex`](/components/scroll.md#setindex) attribute of the scroll component is as follows:
+Component methods can only be accessed through the component object. For example, taking the [`setIndex`](/components/scroll.md#setindex) attribute of the scroll component:
 ``` js
-const el = this.$element('scroll1') // Get component object
+const el = this.$element('scroll1') // Get the component object
 el.setIndex(4) // Call the setIndex() method
 ```
-Methods do not support read, set, and listen access modes, so such properties only have the <span style="color:#666"> method </span> tag.
+Methods do not support get, set, and listen access modes, so such attributes only have the <span style="color:#666">Method</span> tag.
 
+### Two-Way Binding
 
-### Two-way binding
-
-
-A property is [Two-way binding](../commands/model.md) enabled when it also supports the <span style="color:#666"> setting • Listening for the </span> access mode.
+When an attribute simultaneously supports the <span style="color:#666">Set • Listen</span> access modes, it supports [two-way binding](../commands/model.md).
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/template.md
 
-# Template syntax
+# Template Syntax
 
+Templates are the contents inside the `<template>` tag of a UX file. Overall, templates use standard HTML syntax, but the template syntax also introduces syntax limitations and new features that differ from HTML. This document will cover these topics.
 
-The template is the content within the `<template>` tag of the UX file. Generally speaking, templates are standard HTML syntax, but template syntax also introduces syntax restrictions and new syntax that are different from HTML. This document will introduce these contents.
+## Tags
 
-
-## Label
-
-
-Templates support tag nesting, but all tags must be closed. Therefore the following writing is legal:
+Tag nesting is supported in templates, but all tags must be closed. Therefore, the following code is valid:
 ``` html
 <div> <p>message</p> </div>
 ```
-But the following way of writing is illegal:
+However, the following code is invalid:
 ``` html
 <div> <p>message</p> <!-- <div> tag is not closed -->
 ```
 
+## Text Values
 
-## text value
-
-
-Text elements and attribute values ​​in templates are text values, for example
+Text elements and attribute values in templates are text values. For example, in:
 ``` html
 <com name="value">A message</com>
 ```
-`A message` and `value` in are both text. The `A message` text value is passed to the `text` attribute of the `com` component, so the text node (the `A message` part) is actually syntactic sugar for the `text` attribute:
+both `A message` and `value` are text. The `A message` text value is passed to the `text` attribute of the `com` component, so the text node (the `A message` part) is actually syntactic sugar for the `text` attribute:
 ``` html
 <p>text</p>
 ```
-Equivalent to
+is equivalent to:
 ``` html
 <p text="text"></p>
 ```
-Text values ​​are represented internally using JavaScript strings.
+Text values are represented internally as JavaScript strings.
 
+### Text Child Nodes
 
-### text child node
-
-
-Text subnodes can be used not only for native components, but also for custom components with `text` attributes, such as:
+Text child nodes can be used not only in native components but also in custom components with a `text` attribute, such as:
 ```html
 <p>The text element of P.</p>
 <MyCom>The text element of MyCom.</MyCom>
 ```
-Simply provide the `MyCom` component with a `text` [Responsive properties](component-object.md#响应式属性) to receive the contents of the text node without going through a `<slot>` slot or other mechanism.
-
+You only need to provide a `text` [reactive property](component-object.md#reactive-properties) for the `MyCom` component to receive the content of the text node, without needing to use `<slot>` or other mechanisms.
 
 ::: warning
-
-Some components don't have a `text` attribute (like `div` ), and having text nodes as their children won't show anything! Make sure to make the text node a child of a native component such as `p`, `text`, or `span`.
+Some components do not have a `text` attribute (such as `div`), and placing text nodes as their child nodes will not display any content! Please make sure to place text nodes as child nodes of native components like `p`, `text`, or `span`.
 :::
 
-
-
-You can also use multiple text child nodes in the component, such as:
+You can also use multiple text child nodes in a component, such as:
 ```html
 <div>
   The switch <switch /> and <checkbox /> checkbox.
 </div>
 ```
-A mix of text and [`switch`](/components/switch.md) components will be displayed in `div`:
-
+This will mix text and the [`switch`](/components/switch.md) component within the `div`:
 
 <glyphix id="component-template-text-1" height="32" inline>
-
-
 
 ``` html
 <div>
@@ -1568,12 +1230,9 @@ A mix of text and [`switch`](/components/switch.md) components will be displayed
 </div>
 ```
 
-
 </glyphix>
 
-
-
-When text nodes are mixed with other nodes, the text node is translated into a [`span`](/components/span.md) node instead of being passed to a component's `text` attribute. So the above example is equivalent to this code:
+When text nodes are mixed with other nodes, the text nodes are translated into [`span`](/components/span.md) nodes rather than being passed to a component's `text` attribute. Therefore, the above example is equivalent to this code:
 ```html
 <div>
   <span>The switch&nbsp;</span>
@@ -1583,270 +1242,211 @@ When text nodes are mixed with other nodes, the text node is translated into a [
   <span>&nbsp;checkbox.</span>
 </div>
 ```
-Such implicit `span` elements can also specify CSS styles, but cannot use class selectors (because there is no `class` attribute).
+Such implicit `span` elements can also be assigned CSS styles, but class selectors cannot be used (because there is no `class` attribute).
 
+### Whitespace
 
-### White space characters
-
-
-All whitespace characters such as newlines and tabs in the source code of text subnodes are treated as spaces, and the processing rules for spaces are:
-- The leading spaces of the first text child node will be removed.
-- Trailing spaces in the last text child node will be removed.
-- Multiple consecutive spaces in other positions are treated as one space.
-
+All whitespace characters, such as line breaks and tabs in the source code of text child nodes, are treated as spaces. The rules for processing spaces are as follows:
+- Spaces at the beginning of the first text child node are removed.
+- Spaces at the end of the last text child node are removed.
+- Multiple consecutive spaces in other positions are treated as a single space.
 
 ::: tip
-
-When there is only one text node, it is both the first text child node and the last child node, so the spaces before and after it will be deleted. If the text node has no content (including the case where there is no content after removing the spaces), it will be deleted.
+When there is only a single text node, it is both the first and the last text child node, so spaces at both its beginning and end will be removed. If a text node has no content (including when it has no content after removing spaces), it will be deleted.
 :::
 
-
-
-Therefore, writing `<p> spances </p>` will not display any spaces, but
+Therefore, writing `<p>  spances </p>` will not display any spaces, while:
 ```html
 <div>
   The switch <switch /> and <checkbox /> checkbox.
 </div>
 ```
-Spaces (and newlines) between `<div>` and `The siwtch`, and between `checkbox.` and `</div>` are removed. But a space between `The switch` and `<switch />` etc. will be retained.
+will remove the spaces (and line breaks) between `<div>` and `The switch`, as well as between `checkbox.` and `</div>`. However, a single space between `The switch` and `<switch />`, etc., will be preserved.
 
-
-When you find that you cannot use the above rules to control whitespace characters, you need to consider using [HTML character reference](https://developer.mozilla.org/en-US/docs/Glossary/Character_reference).
-
+When you find that you cannot control whitespace using the above rules, you should consider using [HTML character references](https://developer.mozilla.org/en-US/docs/Glossary/Character_reference).
 
 ::: tip
-
-When mixing [interpolation expression](#插值表达式) in text nodes, be aware that the latter is a JavaScript expression, and the strings within it use JavaScript [escape character](https://developer.mozilla.org/en-US/docs/Glossary/Escape_character) rules.
+When mixing [interpolation expressions](#interpolation-expressions) within text nodes, keep in mind that the latter are JavaScript expressions, and strings within them must follow JavaScript [escape character](https://developer.mozilla.org/en-US/docs/Glossary/Escape_character) rules.
 :::
 
+## Attributes and Interpolation
 
+### Interpolation Expressions
 
-## Properties and interpolation
-
-
-### interpolation expression
-
-
-You can enclose an expression, an **interpolation** expression, in text using double brackets:
+You can enclose an expression in double curly braces within text, which is an **interpolation** expression:
 ``` html
 <p>Message: {{ msg }}!</p>
 ```
-When rendering, the expression within the double curly braces will be evaluated and spliced ​​with the preceding and following text. If there is no text before and after the expression, it constitutes an **unspliced** interpolation expression, and the value of the expression is used directly without converting it to text.
-
+During rendering, the expression inside the double curly braces is evaluated and concatenated with the text before and after it. If there is no text before or after the expression, it forms an **unconcatenated** interpolation expression. In this case, the value of the expression is used directly without being converted to text.
 
 Interpolation expressions can also be used in attribute values, for example:
 ``` html
 <div visible="{{true}}"></div>
 ```
-Among them, `{{true}}` will be directly calculated as a boolean value of `true` instead of a string.
-
+Here, `{{true}}` evaluates directly to a boolean `true` value rather than a string.
 
 ::: tip
-
-Attributes like `visible` require the incoming value type to be boolean, so you need to use unspliced ​​writing like `visibe="{{ expr }}"` to avoid the text before and after the curly braces causing the interpolation expression to become text. Due to JavaScript's value conversion rules, `visible="false"` causes the property to evaluate to `true` (non-empty strings are converted to boolean `true`). Of course, [implicit attribute value](#隐式属性值) can also be used in this scenario.
+Attributes like `visible` require a boolean value type, so you need to use unconcatenated syntax like `visible="{{ expr }}"` to prevent text around the curly braces from turning the interpolation expression into text. Due to JavaScript's value conversion rules, `visible="false"` would cause the attribute to evaluate to `true` (non-empty strings convert to boolean `true`). Of course, [implicit attribute values](#implicit-attribute-values) can also be used for this scenario.
 :::
 
-
-
-If you need to pass a numeric constant, the following two writing methods will take effect:
+If you need to pass a numeric constant, both of the following approaches will work:
 ``` html
 <scroll damping="{{1.5}}"></scroll>
 <scroll damping="1.5"></scroll>
 ```
-Because the string `"1.5"` can be automatically converted to the numeric value `1.5`. We recommend using the first way of writing, because it does not require redundant type conversion and has clearer semantics.
+Because the string `"1.5"` can be automatically converted to the number `1.5`. We recommend using the first approach because it avoids unnecessary type conversion and is more semantically explicit.
 
+The type of an unconcatenated interpolation expression attribute value is simply the type of the expression's value, for example, `{{1 + 2}}` has the type `number`. Other interpolation expressions result in text values.
 
-The type of the unspliced ​​interpolation expression attribute value is the value of the interpolation expression. For example, the type of `{{1 + 2}}` is number. While other interpolation expressions are text values.
+### Attribute Binding Expressions
 
-
-### property binding expression
-
-
-If the component's properties are not of text type, you can use unspliced ​​interpolation expressions:
+If a component's attribute is not of a text type, you can use an unconcatenated interpolation expression:
 ``` html
 <com items="{{ [1, 2, 3] }}" />
 ```
-You can also use property binding expression syntax:
+You can also use the attribute binding expression syntax:
 ``` html
 <com :items="[1, 2, 3]" />
 ```
-Compared with ordinary attributes, attribute binding expressions need to add a `:` character in front of the attribute. At this time, the attribute value will be compiled as an expression instead of a string. This method eliminates the need to write `{{ }}` and is more readable.
+Compared to regular attributes, attribute binding expressions require adding a `:` character before the attribute name. In this case, the attribute value is compiled as an expression rather than a string. This method avoids writing `{{ }}` and offers better readability.
 
+### Implicit Attribute Values
 
-### implicit attribute value
-
-
-If the element's attribute only writes the attribute name, but not the attribute value, then it is equivalent to boolean's `true`:
+If an element's attribute is written with only its name and no value, it is equivalent to a boolean `true`:
 ``` html
 <com focus></com>
 ```
-Equivalent to
+is equivalent to:
 ``` html
 <com :focus="true"></com>
 ```
-Implicit attribute values ​​are applicable to various option attributes: filling in the attribute name means turning on the option, and not filling in the attribute name means turning off the option. If you need to pass an empty string through an attribute, you should write out the empty attribute value explicitly:
+Implicit attribute values are suitable for various option attributes: providing the attribute name means enabling the option, while omitting it means disabling the option. If you need to pass an empty string via an attribute, you should explicitly write out an empty attribute value:
 ``` html
 <com empty-property=""></com>
 ```
-The rules for implicit attribute values ​​apply to ordinary attributes, not to [Command attributes](#指令属性值), directive attributes should always write out the attribute value.
+The rule for implicit attribute values applies to ordinary attributes and does not apply to [directive attributes](#directive-attribute-values). Directive attributes should always have their values written out.
 
+### Directive Attribute Values
 
-### directive attribute value
-
-
-For `if`, `for` and `on` like [instruction](/framework/commands/README.md), the value of the attribute will not be a text, so interpolation expressions concatenated with text cannot be used, e.g.
+For [directives](/framework/commands/README.md) like `if`, `for`, and `on`, the attribute value is not text, so you cannot use interpolation expressions with concatenated text. For example:
 ``` html
 <div on:click="console.dir({{$event}})"></div>
 ```
-is illegal. In this case, unspliced ​​interpolation expressions can be used:
+is invalid. Instead, you can use an unconcatenated interpolation expression:
 ``` html
 <div on:click="{{console.dir($event)}}"></div>
 ```
-All directive attributes support omitting double curly braces, so the above code can be shortened to:
+All directive attributes support omitting the double curly braces, so the code above can be shortened to:
 ``` html
 <div on:click="console.dir($event)"></div>
 ```
-But be aware that ordinary properties must pass non-text values ​​through unspliced ​​interpolation expressions or property binding expressions.
+However, note that ordinary attributes must pass non-text values via unconcatenated interpolation expressions or attribute binding expressions.
 
+### `this` Binding
 
-### `this` binding
-
-
-In interpolation expressions (including property binding expressions), the name (identifier) ​​is generally automatically bound to the property of the component object, that is
+In interpolation expressions (including attribute binding expressions), identifiers generally bind automatically to the component object's properties. That is, in:
 ``` html
 <div on:visible="callback"></div>
 ```
-The equivalent JavaScript code for the expression in `callback` is `this.callback`.
+the expression `callback` is equivalent to the JavaScript code `this.callback`.
 
-
-Names appearing in template syntax scope are not bound to `this`, which is mainly reflected in the `for` directive. For example
+Identifiers appearing within the scope of the template syntax do not bind to `this`. This is mainly reflected in `for` directives. For example:
 ``` html
 <p for="v in ['one', 'two']">{{ v }}</p>
 ```
-The name `v` in the interpolation expression `{{ v }}` is bound to the iteration variable `v` defined in the `for` directive, rather than to the `this` property of the component object.
+The identifier `v` in the interpolation expression `{{ v }}` binds to the iteration variable `v` defined in the `for` directive, rather than to the component object's `this` property.
 
+Certain names used by global objects and reserved names also do not bind to the component object's `this` property. These names are:
 
-Some names used by global objects and reserved names are also not bound to the `this` attribute of the component object. These names are:
-
-
-- `this`、`true`、`false`、`undefined`、`null`
+- `this`, `true`, `false`, `undefined`, `null`
 - `console`
-- `Math`、`Date`、`Number`、`Array`、`Object`、`Boolean`、`String`、`RegExp`、`JSON`
-- `NaN`、`Infinity`
-- `isNaN`、`isFinite`
-- `parseFloat`、`parseInt`
+- `Math`, `Date`, `Number`, `Array`, `Object`, `Boolean`, `String`, `RegExp`, `JSON`
+- `NaN`, `Infinity`
+- `isNaN`, `isFinite`
+- `parseFloat`, `parseInt`
 
+## Interpolation Expression Syntax
 
-## Interpolation expression syntax
+Interpolation expressions support most JavaScript expression syntax, but do not support statements or other syntaxes. This section lists all supported expressions.
 
+Interpolation expressions cannot contain `}}` inside them, so constructs like `{key: {a: 1.0}}` cannot be compiled. This can be resolved by adding spaces: `{ key: { a: 1.0 } }`.
 
-Interpolation expressions support most JavaScript expression syntax, but do not support syntax such as statements. This section lists all supported expressions.
+### Basic Expressions
 
+- Numbers: Numeric literals such as `1`, `1.0`, `1e10`
+- Identifiers: Variable names, as well as primitive enum values like `true`, `null`
+- Strings: String literals enclosed in single or double quotes (double quotes are less convenient in XML/HTML environments)
+- Parentheses: `( expr )`, using parentheses to elevate the evaluation priority of inner expressions
 
-`}}` cannot appear inside the interpolation expression, so writing like `{key: {a: 1.0}}` cannot be compiled. In this case, it can be solved by adding spaces: `{ key: { a: 1.0 } }`.
+### Unary Expressions
 
+- Negative: `- expr`
+- Positive: `+ expr`
+- Logical NOT: `! expr`
 
-### basic expression
+### Binary Expressions
 
+Binary expressions formed by operands and operators `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `>`, `>=`, `<`, `<=`, `&&`, `||`. The precedence and associativity of these operators are the same as in JavaScript.
 
-- Numerical values: `1`, `1.0`, `1e10` and other numerical literals
-- Identifier: variable name, and enumeration values ​​of basic types such as `true` and `null`
-- String: Use a string literal enclosed in single or double quotes (double quotes are not easy to use in an XML/HTML environment)
-- Parentheses: `( expr )`, use parentheses to increase the evaluation priority of inner expressions
+Assignment operators `=`, `+=`, `-=`, `*=`, `/=`, `%=` are supported.
 
+### Ternary Expressions
 
-### unary expression
+Ternary conditional expressions: `cond ? expr : expr`.
 
+### Other Expressions
 
-- Negative number: `- expr`
-- Positive number: `+ expr`
-- Logical negation: `! expr`
+- Function calls: Same as JavaScript syntax
+- Member expressions: `object.prop`
+- Subscript expressions: `array[index]`
+- Array literals: `[1, expr, ...]`, same as JavaScript syntax
+- Object literals: `{ a: 1, b: expr }`, same as JavaScript syntax
 
+### Template Literals
 
-### binary expression
-
-
-A binary expression composed of `+`, `-`, `*`, `/`, `%`, `==`, `!=`, `>`, `>=`, `<`, `<=`, `&&`, `||` operators and operands. The precedence and associativity of these operators are the same as in JavaScript/
-
-
-Supports `=`, `+=`, `-=`, `*=`, `/=`, `%=` assignment operators.
-
-
-### ternary expression
-
-
-Trinocular selection expression: `cond ? expr : expr`.
-
-
-### Other expressions
-
-
-- Function call: same syntax as JavaScript
-- Member expression: `objct.prop`
-- Subscript expression: `array[index]`
-- Array literal: `[1, expr,...]`, the same syntax as JavaScript
-- Object literal: `{ a: 1, b: expr }`, the same syntax as JavaScript
-
-
-### template string
-
-
-Interpolation expressions partially support the [template string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Template_literals) syntax. For example in the following template string
+Interpolation expressions partially support [template literal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Template_literals) syntax. For example, in the following template literal:
 ``` js
 `head ${ expr } tail`
 ```
-The `}` character cannot appear in the expression `expr`, which means you cannot use JavaScript object literals and template strings containing expressions. The other expressions mentioned in this section can be used in template strings.
+The expression `expr` cannot contain the `}` character, which means you cannot use JavaScript object literals or nested template literals containing expressions. Other expressions mentioned in this section can be used within template literals.
 
-
-Template strings in interpolation expressions do not support newlines.
-
+Template literals in interpolation expressions do not support line breaks.
 
 ::: tip
-
-Syntax errors in expressions can be viewed and located using the glyphix.js tool.
+Syntax errors in expressions can be inspected and located using the glyphix.js tool.
 :::
 
-
-
-## Other tips
+## Other Tips
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/component/communicate.md
 
-# Communication between components
+# Inter-component Communication
 
-
-Communication between components is achieved by component parameters and event bindings. For example:
+Communication between components is achieved through component parameters and event binding. For example:
 ``` html
 <scroll scroll-snap="center" on:scroll="scrolled($event)" />
 ```
-The `scroll-snap` attribute parameter is passed to the `scroll` component instance to center-align the element, and changes to the `scroll` attribute will be monitored.
+This passes the `scroll-snap` attribute parameter to the `scroll` component instance to center-align the element, and listens for changes to the `scroll` property.
 
+## Attribute Parameters
 
-## Property parameters
-
-
-Parameters can be passed to subcomponents through the attribute field of the component node, for example:
+You can pass parameters to child components through the **attribute** fields of component nodes. For example:
 ``` html
 <p text="A message"></p>
 ```
-A `p` component instance is passed a property named `text` with a value of `"A message"`. Multiple attributes can be passed following XML/HTML syntax. You can pass a calculated value to a component's properties via [interpolation expression](template#插值表达式).
+This passes an attribute named `text` with the value `"A message"` to a `p` component instance. Multiple attributes can be passed according to XML/HTML syntax. Evaluated values can be passed to component attributes using [Interpolation Expressions](template#插值表达式).
 
+## Event Response
 
-## incident response
+[Native components](native-component) encapsulate many UI input events, such as responses to touch gestures and UI change events. All these events can be listened to via the [`on` command](../commands/on.md).
 
+## Triggering Events
 
-[Native components](native-component) encapsulates many UI input events, such as touch gesture responses and UI change events. These events can be monitored through [`on` directive](../commands/on.md).
-
-
-## trigger event
-
-
-For custom components, you can use the [`$emit(name, value)`](/framework/component/component-apis.md#emit) method of the component object to trigger an event:
+For custom components, you can use the component object's [`$emit(name, value)`](/framework/component/component-apis.md#emit) method to trigger an event:
 ``` html
 <panel on:some-event="console.log(`the event ${$event} was emited!`)">
 ```
-
 
 ``` js
 // in panel.ux
@@ -1857,88 +1457,61 @@ export default {
 }
 ```
 
+The `$emit` method takes two parameters:
+- `name`: The name of the attribute to send the event, which must use lower camelCase (the corresponding template attribute can be in kebab-case or lower camelCase).
+- `value`: Optional parameter, the value of the event attribute, which will be used as the value of the `$event` variable in the `on` command.
 
-The `$emit` method has two parameters:
-- `name`: The attribute name that needs to send the event must use camel case naming (the corresponding template attribute is snake naming or camel case naming)
-- `value`: Optional parameter, the value of the event attribute, will be used as the value of the `$event` variable of the `on` instruction
-
-
-If there is a property named `name` in the component object's view-model, the `$emit` method will not modify the property value to `value`.
+If the view-model of the component object has a property named `name`, the `$emit` method will not modify the property value to `value`.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/generic/properties.md
 
 ---
-
 icon: xml
-
 ---
-
-# Properties and events
-
+# Properties and Events
 
 This section introduces the common property interfaces and events provided by all native components.
 
+## Property List
 
-## Property list
-
-
-### Common properties
-
+### Common Properties
 
 #### `top` <decl type="number" get set listen />
 
+The position of the top of the component relative to the parent native component, in pixels. This property is actually a shorthand for the `top` property in inline styles. For more usage methods, see [Component Position Operations](#component-position-operations).
 
-The position of the top of the component relative to the parent native component, in pixels. This attribute is actually the abbreviation of the `top` attribute in inline styles. For more details on how to use it, see [Component location operations](#组件位置操作).
-
-
-When reading or listening to the `top` attribute, the calculated position of the component will be obtained, as well as the actual measured value after layout.
-
+Reading or listening to the `top` property returns the calculated position of the component, which is the actual measured value after layout.
 
 #### `left` <decl type="number" get set listen />
 
+The position of the left side of the component relative to the parent native component, in pixels. This property is actually a shorthand for the `left` property in inline styles. For more usage methods, see [Component Position Operations](#component-position-operations).
 
-The position of the left side of the component relative to the parent native component, in pixels. This attribute is actually the abbreviation of the `left` attribute in inline styles. For more details on how to use it, see [Component location operations](#组件位置操作).
-
-
-When reading or listening to the `left` attribute, the calculated position of the component will be obtained, as well as the actual measured value after layout.
-
+Reading or listening to the `left` property returns the calculated position of the component, which is the actual measured value after layout.
 
 #### `width` <decl type="number" get set listen />
 
+The width of the component. Setting the `width` property updates the [`width`](styles.md#width) property in the inline styles. Since CSS width uses the border-box model, the actually stored style value automatically adds the element's current `padding` and `border` dimensions to ensure that the content width after layout matches the set value.
 
-The width of the component. When the `width` attribute is set, the [`width`](styles.md#width) attribute in the inline style is updated. Since the width of CSS adopts border-box mode, the actual stored style value will be automatically appended to the current `padding` and `border` dimensions of the element, thereby ensuring that the content width after layout is consistent with the set value.
-
-
-When reading or listening to the `width` attribute, you will get the content width after layout calculation, excluding `padding` and `border`.
-
+Reading or listening to the `width` property returns the layout-calculated content width, excluding `padding` and `border`.
 
 #### `height` <decl type="number" get set listen />
 
+The height of the component. Setting the `height` property updates the [`height`](styles.md#height) property in the inline styles. Since CSS height uses the border-box model, the actually stored style value automatically adds the element's current `padding` and `border` dimensions to ensure that the content height after layout matches the set value.
 
-The height of the component. When the `height` attribute is set, the [`height`](styles.md#height) attribute in the inline style is updated. Since the height of CSS adopts the border-box mode, the actual stored style value will be automatically appended to the current `padding` and `border` dimensions of the element, thereby ensuring that the content height after layout is consistent with the set value.
-
-
-When reading or listening to the `height` attribute, you will get the content height after layout calculation, excluding `padding` and `border`.
-
+Reading or listening to the `height` property returns the layout-calculated content height, excluding `padding` and `border`.
 
 #### `show` <decl type="boolean" get set/>
 
-
-Set whether the component is visible. Hidden components are not displayed and do not occupy layout space.
-
+Sets whether the component is visible. Hidden components are not displayed and do not occupy layout space.
 
 #### `quiescent` <decl type="boolean" get set/>
 
+Sets whether component snapshots update automatically (quiescent snapshot). If a component is displayed via a snapshot, when this property is `false` (default), snapshot views are refreshed immediately when the component content updates; otherwise, they are not updated immediately. Setting this property to `true` can improve UI performance, but will cause the displayed content to lag.
 
-Set whether component snapshots are automatically updated (quiescent snapshots). If the component is displayed through a snapshot, when the value of this property is `false` (the default value) the snapshot is refreshed immediately to update the view when the component content is updated, otherwise the snapshot is not updated immediately. Setting this property to `true` can improve UI performance, but will cause display content to lag.
+The following example demonstrates the role of the `quiescent` property. Two `p` elements are placed inside a `scroll` container, and the `scroll` container has [snapshot mode](../../components/scroll.md#snapshot) enabled. When the user scrolls the `scroll` component, snapshots of the elements within it are taken. Since the first `p` element uses normal snapshot mode while the second `p` element uses quiescent snapshot mode, only the content update of the first `p` element can be observed during scrolling.
 
-
-The following example shows the role of the `quiescent` attribute. There are two `p` elements in the interface that are placed in the `scroll` container, and the `scroll` container has [snapshot mode](../../components/scroll.md#snapshot) turned on. When the user scrolls the `scroll` component, a snapshot of the elements in it will be taken. Since the first `p` element is in normal snapshot mode and the second `p` element is in static snapshot mode, only the contents of the first `p` element are updated when scrolling.
-
-
-<glyphix id="generic-properties-quiescent" height="200" title="懒快照">
-
+<glyphix id="generic-properties-quiescent" height="200" title="Lazy Snapshot">
 
 ``` html
 <scroll snapshot scroll-snap="center">
@@ -1946,7 +1519,6 @@ The following example shows the role of the `quiescent` attribute. There are two
   <p quiescent>quiescent snapshot {{ count }}</p>
 </scroll>
 ```
-
 
 ``` css
 scroll {
@@ -1963,7 +1535,6 @@ p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -1975,62 +1546,42 @@ export default {
 }
 ```
 
-
 </glyphix>
-
-
 
 #### `style` <decl type="string" set />
 
-
-Set the component's inline style. Currently only [CSS properties](./styles.md) with the <badge type="info" text="内联" /> tag is supported.
-
+Sets the inline style of the component. Currently, only [CSS properties](./styles.md) with the <badge type="info" text="inline" /> tag are supported.
 
 #### `z-index` <decl type="number" get set />
 
-
-The `z-index` attribute sets the Z-order of the elements, `z-index` larger overlapping elements overwrite smaller elements. This attribute value will be overridden by the [`z-index`](styles.md/#z-index) attribute in CSS.
-
-
+The `z-index` property sets the Z-axis order of an element. Overlapping elements with a larger `z-index` will cover elements with a smaller one. This property value will be overridden by the [`z-index`](styles.md/#z-index) property in CSS.
 
 
 #### `opacity` <decl type="number" get set />
 
-
-Specifies the transparency of the component. The value range is $[0, 1]$, where $0$ means complete transparency. and the CSS property [`opacity`](styles.md#opacity). The effect is the same.
-
+Specifies the opacity of the component. The value range is $[0, 1]$, where $0$ means completely transparent. It has the same effect as the CSS property [`opacity`](styles.md#opacity).
 
 ::: warning
-
-The `opacity` value will affect the drawing performance of the element. For details, please refer to the description of the [`opacity`](styles.md#opacity) CSS attribute.
+The `opacity` value affects the rendering performance of elements. For details, please refer to the description of the [`opacity`](styles.md#opacity) CSS property.
 :::
-
-
 
 #### `transform` <decl type="string" set />
 
-
-Set the component's transformation, equivalent to the CSS [`transform`](styles.md#transform) property.
-
+Sets the transformation of the component, equivalent to the CSS [`transform`](styles.md#transform) property.
 
 #### `disabled` <decl type="boolean" get set />
 
+Used to set or get the disabled state of the component. When the property value is `true`, the element is disabled, the user cannot interact with it, and the element will not respond to any gestures (such as clicks, drags, etc.). When the property value is the **default** `false`, the component is available, and the user can interact with it normally.
 
-Used to set or get the disabled state of a component. When the attribute value is `true`, the element is disabled, the user cannot interact with it, and the element will not respond to any gestures (such as clicks, drags, etc.). When the attribute value is the **default** `false`, the component is available and users can interact with it normally.
+The following example demonstrates the usage of the `disabled` property, while also using the [`:disabled`](styles.md#disabled) CSS pseudo-class to control styles. This example shows that a `div` element can respond to click gestures in its normal state, but does not respond to any gestures in the `disabled` state.
 
-
-The following example demonstrates the use of the `disabled` attribute while also controlling styling with the [`:disabled`](styles.md#disabled) CSS pseudo-class. This example shows that the `div` element can respond to click gestures in the normal state, but does not respond to any gestures in the `disabled` state.
-
-
-<glyphix id="generic-properties-disabled" height="200" title="disabled 属性">
-
+<glyphix id="generic-properties-disabled" height="200" title="disabled Property">
 
 ``` html
 <div :disabled="disabled" on:click="onClick">
   {{disabled ? 'disabled' : 'normal'}} <switch />
 </div>
 ```
-
 
 ``` css
 div {
@@ -2040,12 +1591,11 @@ div {
   justify-content: center;
 }
 
-/* :disabled pseudo-class can control the style of elements in disabled state */
+/* The :disabled pseudo-class can control the style of an element in the disabled state */
 div:disabled {
   opacity: 0.5;
 }
 ```
-
 
 ``` js
 import prompt from '@system.prompt'
@@ -2065,34 +1615,23 @@ export default {
 }
 ```
 
-
 </glyphix>
 
+### Common Events
 
-
-### Generic events
-
-
-Most native components support common events, which can be listened to using [`on` directive](../commands/on.md). The value types for these events are described in Section [event type](#事件类型).
-
+Most native components support common events, which can be listened to using the [`on` directive](../commands/on.md). The value types of these events are introduced in the [Event Types](#event-types) section.
 
 #### `touchstart` <decl type="TouchEvent" listen />
 
-
-The `touchstart` event is fired when the user starts touching the component. Event values ​​are of type [`TouchEvent`](#touchevent).
-
+Triggered when the user starts touching the component. The event value is of type [`TouchEvent`](#touchevent).
 
 #### `touchmove` <decl type="TouchEvent" listen />
 
+Triggered when the user's touch point moves on the component. During movement, this event will continue to trigger even if the touch point leaves the current native component's area. The event value is of type [`TouchEvent`](#touchevent).
 
-The `touchmove` event is triggered when the user touch point moves on the component. During the movement, this event will always be triggered even if the touch point leaves the scope of the current native component. Event values ​​are of type [`TouchEvent`](#touchevent).
+There is a certain "dead zone" for movement when transitioning the touch state from `touchstart` to `touchmove`. If the sliding distance of the user's touch is less than the dead zone range, `touchmove` will not be triggered. The movement dead zone range varies by device. The following example demonstrates the movement dead zone.
 
-
-There is a certain "moving dead zone" when the touch state transitions from `touchstart` to `touchmove`. If the sliding distance of the user's touch is less than the dead zone range, `touchmove` will not be triggered. The range of the motion dead zone varies from device to device, the following example shows the motion dead zone.
-
-
-<glyphix id="generic-properties-touchmove" height="200" title="移动死区">
-
+<glyphix id="generic-properties-touchmove" height="200" title="Movement Dead Zone">
 
 ``` html
 <p on:touchstart="state = 'start'"
@@ -2102,14 +1641,12 @@ There is a certain "moving dead zone" when the touch state transitions from `tou
 </p>
 ```
 
-
 ``` css
 p {
   background-color: lightgreen;
   text-align: center;
 }
 ```
-
 
 ``` js
 export default {
@@ -2132,32 +1669,21 @@ export default {
 }
 ```
 
-
 </glyphix>
-
-
 
 #### `touchend` <decl type="TouchEvent" listen />
 
-
-When the user leaves the screen, the `touchend` event will be sent to the previously touched native component. Event values ​​are of type [`TouchEvent`](#touchevent).
-
+When the user's touch point leaves the screen, a `touchend` event is sent to the previously touched native component. The event value is of type [`TouchEvent`](#touchevent).
 
 #### `touchcancel` <decl type="TouchEvent" listen />
 
-
-`touchcancel` is fired when a native component's touch is interrupted. Event values ​​are of type [`TouchEvent`](#touchevent). There are many reasons why a touch may be interrupted, such as the component being hidden or the touch event being forced to respond by other elements.
-
+Triggered when the touch on the native component is interrupted. The event value is of type [`TouchEvent`](#touchevent). There are various reasons that can cause a touch interruption, such as the component being hidden or the touch event being forcibly intercepted by other elements.
 
 #### `click` <decl type="ClickEvent" listen />
 
-
-The `click` event is triggered when the native component is clicked and released. Event values ​​are of type [`ClickEvent`](#clickevent).
-
+Triggered when the native component is clicked and released. The event value is of type [`ClickEvent`](#clickevent).
 
 <glyphix id="generic-properties-click" height="100">
-
-
 
 ``` html
 <p on:click="click = JSON.stringify($event)">
@@ -2165,14 +1691,12 @@ The `click` event is triggered when the native component is clicked and released
 </p>
 ```
 
-
 ``` css
 p {
   background-color: lightgreen;
   text-align: center;
 }
 ```
-
 
 ``` js
 export default {
@@ -2182,20 +1706,13 @@ export default {
 }
 ```
 
-
 </glyphix>
-
-
 
 #### `longpress` <decl type="LongPressEvent" listen />
 
-
-The `longpress` event is triggered when the native component is pressed for a long time. Event values ​​are of type [`LongPressEvent`](#longpressevent). The following interactive example shows when `longpress` and other events are triggered:
-
+Triggered when the native component is pressed for a long time. The event value is of type [`LongPressEvent`](#longpressevent). The interactive example below demonstrates the triggering timing of `longpress` and other events:
 
 <glyphix id="generic-properties-longpress" height="100">
-
-
 
 ``` html
 <p on:touchstart="state = 'touching...'"
@@ -2205,14 +1722,12 @@ The `longpress` event is triggered when the native component is pressed for a lo
 </p>
 ```
 
-
 ``` css
 p {
   background-color: lightgreen;
   text-align: center;
 }
 ```
-
 
 ``` js
 export default {
@@ -2222,26 +1737,18 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
-The triggering timing and duration of the `longpress` event varies by device, but is typically triggered after pressing $500 \rm ms$. Unlike the [`click`](#click) event, `longpress` fires during the press, not when the hand is released. For the example above, you'll find:
-- When the pressing time is less than the long pressing trigger time, the `click` event will be triggered after letting go;
-- When pressed long enough, the `longpress` event will be triggered, and when released, the `click` event will be triggered (displayed as "clicked." state);
-- Movement during pressing will not trigger the `longpress` or `click` events.
-
+The triggering timing and duration of the `longpress` event vary by device, typically triggered after pressing for $500 \rm ms$. Unlike the [`click`](#click) event, `longpress` is triggered during the press rather than upon release. For the above example, you will find that:
+- When the press time is less than the long press trigger time, the `click` event is triggered upon release;
+- When pressed long enough, the `longpress` event is triggered, and upon release, the `click` event is triggered (displayed as the "clicked." state);
+- Moving during the press will not trigger the `longpress` or `click` events.
 
 #### `swipe` <decl type="SwipeEvent" listen />
 
-
-The `swipe` event is triggered when the component is swiped quickly. Event values ​​are of type [`SwipeEvent`](#swipeevent).
-
+Triggered when the component is swiped quickly. The event value is of type [`SwipeEvent`](#swipeevent).
 
 <glyphix id="generic-properties-swipe" height="250" >
-
-
 
 ``` html
 <p on:swipe="onSwipe($event)">
@@ -2249,14 +1756,12 @@ The `swipe` event is triggered when the component is swiped quickly. Event value
 </p>
 ```
 
-
 ``` css
 p {
   background-color: lightgreen;
   text-align: center;
 }
 ```
-
 
 ``` js
 export default {
@@ -2270,15 +1775,11 @@ export default {
 }
 ```
 
-
 </glyphix>
-
-
 
 #### `keydown` <decl type="KeyEvent" listen />
 
-
-This event is fired when a key is pressed. The `keydown` and `keyup` events are used to capture entity key press operations. To capture events, the native component must be in focus. The root element of the page always gets focus automatically, so the following code can capture `keydown` and `keyup` events:
+Triggered when a key is pressed down. The `keydown` and `keyup` events are used to capture physical key operations. To capture events, the native component must be in focus. The root element of the page always automatically gets focus, so the following code can capture `keydown` and `keyup` events:
 ``` html
 <!-- Assuming this is the root element of the page -->
 <div on:keydown="console.log($event)" on:keyup="console.log($event)">
@@ -2287,20 +1788,15 @@ This event is fired when a key is pressed. The `keydown` and `keyup` events are 
 ```
 Please refer to [`KeyEvent`](#keyevent) for the event value type.
 
-
-Watch devices typically register [Default key handler](/api/system-internal.md#setdefaultkeyhandler) so that application code can interact without responding to such events (for example, some watches return to the previous page when the Power key is pressed). To prevent the default key response, use the `stopPropagation()` method of the `KeyEvent` object to prevent bubbling.
-
+Watch devices usually register a [default key handler](/api/system-internal.md#setdefaultkeyhandler), so application code can interact even without responding to these types of events (for example, some watches return to the previous page when the Power button is pressed). To prevent the default key response, you can use the `stopPropagation()` method of the `KeyEvent` object to stop bubbling.
 
 #### `keyup` <decl type="KeyEvent" listen />
 
-
-This event is fired when the button is lifted. Please refer to the [`keydown`](#keydown) event for more information.
-
+Triggered when a key is released. For more details, please refer to the [`keydown`](#keydown) event.
 
 #### `wheel` <decl type="WheelEvent" listen />
 
-
-The `wheel` event is triggered when the user rotates the wheel. Scroll wheel devices include the rotating crown of a watch or the mouse wheel. To capture this time, the native component must be in focus. The root element of the page always gets focus automatically, so the following code can capture the `wheel` event:
+Triggered when the user operates the rotating wheel. Wheel devices include the rotating crown of a watch or a mouse wheel. To capture this event, the native component must be in focus. The root element of the page always automatically gets focus, so the following code can capture the `wheel` event:
 ``` html
 <!-- Assuming this is the root element of the page -->
 <div on:wheel="console.log($event)">
@@ -2309,123 +1805,101 @@ The `wheel` event is triggered when the user rotates the wheel. Scroll wheel dev
 ```
 Please refer to [`WheelEvent`](#wheelevent) for the event value type.
 
-
-## event type
-
+## Event Types
 
 ### `BaseEvent`
 
-
-The `BaseEvent` event object provides some methods to control event delivery, and its prototype is:
+The `BaseEvent` event object provides some methods to control event propagation. Its prototype is:
 ``` ts
 interface BaseEvent {
-  strongResponse(): void, // Force response to events
+  strongResponse(): void, // Force response to the event
   stopPropagation(): void // Stop event bubbling
 }
 ```
 
-
 ### `TouchEvent`
 
-
-The prototype of `TouchEvent` event object is:
+The prototype of the `TouchEvent` event object is:
 ``` ts
 interface TouchEvent extends BaseEvent {
   isTarget: boolean, // Whether the event target is the current component
-  touches: { // All touch point data of this event
-    clientX: number, // The x-coordinate of the touch point relative to the target component's content area
-    clientY: number, // The y-coordinate of the touch point relative to the target component's content area
-    offsetX: number, // The displacement of the touch point in the x direction during the touch process
-    offsetY: number  // The displacement of the touch point in the y direction during the touch process
+  touches: { // All touch point data for this event
+    clientX: number, // x coordinate of the touch point relative to the target component's content area
+    clientY: number, // y coordinate of the touch point relative to the target component's content area
+    offsetX: number, // Displacement of the touch point in the x direction during the touch process
+    offsetY: number  // Displacement of the touch point in the y direction during the touch process
   }[];
 }
 ```
 
-
 ### `ClickEvent`
-
 
 The prototype of the `SwipeEvent` event object is:
 ``` ts
 interface SwiperEvent extends BaseEvent  {
   isTarget: boolean, // Whether the event target is the current component
-  clientX: number, // The x-coordinate of the click touch point relative to the content area of ​​the target component
-  clientY: number // The y-coordinate of the click touch point relative to the content area of ​​the target component
+  clientX: number, // x coordinate of the click touch point relative to the target component's content area
+  clientY: number // y coordinate of the click touch point relative to the target component's content area
 }
 ```
 
-
 ### `LongPressEvent`
-
 
 The prototype of the `LongPressEvent` event object is:
 ``` ts
 interface SwiperEvent extends BaseEvent  {
   isTarget: boolean, // Whether the event target is the current component
-  clientX: number, // The x-coordinate of the long-press touch point relative to the content area of ​​the target component
-  clientY: number // The y-coordinate of the long-press touch point relative to the content area of ​​the target component
+  clientX: number, // x coordinate of the long-press touch point relative to the target component's content area
+  clientY: number // y coordinate of the long-press touch point relative to the target component's content area
 }
 ```
 
-
 ### `SwipeEvent`
-
 
 The prototype of the `SwipeEvent` event object is:
 ``` ts
 interface SwiperEvent extends BaseEvent  {
   isTarget: boolean, // Whether the event target is the current component
-  direction: 'left' | 'right' | 'up' | 'down' // Sweep direction
+  direction: 'left' | 'right' | 'up' | 'down' // Swipe direction
 }
 ```
-
 
 ### `KeyEvent`
 
-
-The `KeyEvent` object describes the user's interaction event with the entity key. This type is used for the event attributes of elements [`keydown`](#keydown) and [`keyup`](#keyup). The prototype of the `KeyEvent` event object is:
+The `KeyEvent` object describes the user's interaction event with physical keys. This type is used for the event properties of elements [`keydown`](#keydown) and [`keyup`](#keyup). The prototype of the `KeyEvent` event object is:
 ``` ts
 interface KeyEvent  {
   type: 'keydown' | 'keyup', // Type of key event
-  key: string, // Button name
-  timestamp: number, // Timestamp of key event reporting, unit is milliseconds
-  stopPropagation(): void // Call this method to prevent the event from bubbling
+  key: string, // Key name
+  timestamp: number, // Timestamp when the key event was reported, in milliseconds
+  stopPropagation(): void // Call this method to prevent event bubbling
 }
 ```
 
-
-Currently the following key names are supported:
+Currently, the following key names are supported:
 - `'Power'`: The power button of the watch;
-- `'Fn'`: function keys of the watch;
-- Other printable character keys use a single character to form the key name, such as the letter `'A'`, the minus sign `'-'`, etc.
-
+- `'Fn'`: The function button of the watch;
+- Other printable character keys form key names as single characters, such as the letter `'A'`, minus sign `'-'`, etc.
 
 ### `WheelEvent`
 
-
-The `WheelEvent` object describes the user interaction event for rotating the scroll wheel. This type is used for the event attribute of the element [`wheel`](#wheel). The signature of the `WheelEvent` event object is:
+The `WheelEvent` object describes the user's interaction event with the rotating wheel. This type is used for the event property of the element [`wheel`](#wheel). The signature of the `WheelEvent` event object is:
 ``` ts
 interface WheelEvent {
-  deltaY: number, // The scroll increment of the wheel in the y direction
-  stopPropagation(): void // Call this method to prevent the event from bubbling
+  deltaY: number, // Scroll increment in the y direction
+  stopPropagation(): void // Call this method to prevent event bubbling
 }
 ```
 
+Unlike the web [wheel event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event), the `WheelEvent` in Glyphix currently only contains the `deltaY` property.
 
-Unlike the Web's [wheel event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event), `WheelEvent` in Glyphix currently only contains the `deltaY` attribute.
+## Event Response Mechanism
 
+### Event Bubbling
 
-## incident response mechanism
+Touch and gesture events support bubbling. Bubbling means that when an event occurs on an element, it first executes the handlers on that element, then executes the handlers on its parent element, and so on up to other ancestor handlers. In the following example, both the green `p` component and the gray `div` component listen for touch events. When clicking the `p` component, you can observe that both the `p` component and the `div` component receive the event.
 
-
-### Event bubbling
-
-
-Touch and gesture events support bubbling. Bubbling means that when an event occurs on an element, it first executes the handler on that element, then the handler on its parent element, and then all the way up to the handlers on other ancestors. In the example below, the green `p` component and the gray `div` component both listen to touch events. When the `p` component is clicked, it will be observed that both the `p` component and the `div` component can receive the event.
-
-
-<glyphix id="generic-event-bubbling" height="250" title="触摸事件冒泡">
-
+<glyphix id="generic-event-bubbling" height="250" title="Touch Event Bubbling">
 
 ``` html
 <div on:touchstart="onTouch('div', $event)"
@@ -2438,7 +1912,6 @@ Touch and gesture events support bubbling. Bubbling means that when an event occ
   </p>
 </div>
 ```
-
 
 ``` css
 div {
@@ -2455,7 +1928,6 @@ p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -2464,7 +1936,7 @@ export default {
   },
   onTouch(name, event) {
     this.touchs[name] = true
-    // The isTarget attribute can distinguish whether the target of the event is the component currently listening to the event.
+    // The isTarget property can distinguish whether the target of the event is the current component listening to the event
     if (event.isTarget)
       this.target = name
   },
@@ -2476,34 +1948,24 @@ export default {
 }
 ```
 
-
 </glyphix>
 
+In Glyphix, only the touch and gesture events in this document bubble. Event capture cannot be performed in JavaScript code currently.
 
+### Stopping Event Bubbling
 
-In Glyphix, only touch and gesture events in this document bubble up. Event capturing is currently not possible in JavaScript code.
+Use the `stopPropagation()` method of `BaseEvent` to prevent the event from bubbling up to the parent.
 
+### Strong Response Events
 
-### Prevent events from bubbling up
+Touch or gesture events in Glyphix have two response priorities: strong response and weak response. When an event has multiple targets waiting to respond at the same time, strong response has a higher priority than weak response. Assuming there are 3 levels of parent-child elements on the interface: `A -> B -> C`, where `C` has a weak response to the event and `B` has a strong response, the event will be dispatched to `B` and will no longer be dispatched to `C`. An element that originally had a strong response event will re-dispatch events after being changed to weak response.
 
+The touch and gesture events in [Common Events](#common-events) default to weak response. In the following example, a green `p` component is placed inside a gray `scroll`, and all touch events of the `p` component are listened to. Since `scroll` defaults to strongly responding to up-and-down swipe gestures, weakly responding to left-and-right swipe gestures, and not responding to other gestures, you can observe during operation that:
+- Clicking the `p` component triggers the `touchstart` event, and releasing triggers the `touchend` event;
+- Dragging the `p` component horizontally triggers the `touchmove` event;
+- Dragging the `p` component vertically—because the parent `scroll` component strongly responds to vertical scrolling, while the `p` component in the template code only has a weak response to `touchmove`—results in the vertical scroll being handled by the `scroll` component, and the `p` component receives a `touchcancel` event.
 
-Use the `BaseEvent` method of `stopPropagation()` to prevent events from bubbling up to the parent.
-
-
-### strong response event
-
-
-There are two response priorities for touch or gesture events in Glyphix: strong response and weak response. When an event has multiple targets to respond to at the same time, strong responses have higher priority than weak responses. Assume that there are 3 levels of parent-child elements on the interface: `A -> B -> C`, where `C` is weakly responsive to events, and `B` is strongly responsive, then the event will be dispatched to `B` and will not be dispatched to `C` again. An element that originally responded strongly to an event will re-dispatch the event after changing to a weak response.
-
-
-Touch and gesture events in [Generic events](#通用事件) are weakly responsive by default. In the example below, a green `p` component is placed inside a gray `scroll` and listens for all touch events from the `p` component. Since `scroll` by default responds strongly to up and down sliding gestures, weakly responds to left and right sliding gestures, and does not respond to other gestures, you can observe during operation:
-- When you click on the `p` component, the `touchstart` event will be triggered, and when you let go, the `touchend` event will be triggered;
-- When dragging the `p` component horizontally, the `touchmove` event will be triggered;
-- When dragging the `p` component up and down, since the parent `scroll` component has a strong response to up and down sliding, while the `p` component in the template code only responds weakly to `touchmove`, the up and down sliding will be responded to by the `scroll` component, and the `p` component will receive the `touchcancel` event.
-
-
-<glyphix id="generic-event-strong-response-1" height="250" title="强响应事件">
-
+<glyphix id="generic-event-strong-response-1" height="250" title="Strong Response Events">
 
 ``` html
 <scroll>
@@ -2515,7 +1977,6 @@ Touch and gesture events in [Generic events](#通用事件) are weakly responsiv
   </p>
 </scroll>
 ```
-
 
 ``` css
 scroll {
@@ -2530,7 +1991,6 @@ p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -2539,16 +1999,11 @@ export default {
 }
 ```
 
-
 </glyphix>
 
+The default gesture event handling mechanism of many native components is strong response. Using the `strongResponse()` method of the `BaseEvent` object allows you to specify an event as strong response mode in JavaScript code. In the following example, the outer gray `div` component strongly responds to gestures, so even if you touch the internal `p` element, the event will only be dispatched to the `div` element after the gesture starts.
 
-
-The default gesture event handling mechanism of many native components is highly responsive. Use the `BaseEvent` object's `strongResponse()` method to specify that an event is in strong response mode in JavaScript code. In the example below, the outer gray `div` component will strongly respond to gestures, so even if the inner `p` element is touched, the event will only be dispatched to the `div` element after the gesture starts.
-
-
-<glyphix id="generic-event-strong-response-2" height="250" title="强响应事件">
-
+<glyphix id="generic-event-strong-response-2" height="250" title="Strong Response Events">
 
 ``` html
 <div on:touchstart="onTouch('div', 'start', $event)"
@@ -2564,7 +2019,6 @@ The default gesture event handling mechanism of many native components is highly
 </div>
 ```
 
-
 ``` css
 div {
   display: flex;
@@ -2580,7 +2034,6 @@ p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -2590,8 +2043,8 @@ export default {
   onTouch(name, state, event) {
     console.log(name, state, event.isTarget)
     this.touchs[name] = state
-    // The isTarget attribute can distinguish whether the target of the event is the component currently listening to the event.
-    // If it is a cancel event, the target will not be recorded.
+    // The isTarget property can distinguish whether the target of the event is the current component listening to the event.
+    // If it's a cancel event, do not record the target.
     if (event.isTarget && state != 'cancel')
       this.target = name
     if (name == 'div')
@@ -2600,25 +2053,20 @@ export default {
 }
 ```
 
-
 </glyphix>
 
+### Default Event Handling of Pages
 
+Pages default to weakly responding to gesture events and blocking event bubbling, so gesture events cannot be dispatched and transmitted through the page. In addition, the page will exit when receiving a rightward `touchmove` gesture. Developers can also intercept gestures to disable this feature.
 
-### The default event handling of the page
-
-
-By default, the page will respond weakly to gesture events and prevent events from bubbling up, so gesture events cannot be dispatched and delivered through the page. In addition, the page will exit when receiving a right touchmove gesture. Developers can also intercept the gesture to disable this feature.
-
-
-The specific method is to listen to the `touchmove` gesture of the page component and prevent bubbling:
+The specific method is to listen to the `touchmove` gesture of the page component and stop bubbling:
 ``` html
 <!-- This div is the root component of the page -->
 <div on:touchmove="$event.stopPropagation()">
   ...
 </div>
 ```
-In this way, this page cannot be returned by swiping right, but can be returned by pressing the physical Power key. To prevent the user from keying back first, you can use the following:
+In this way, the page cannot be returned from via a right swipe operation, but can be returned from by pressing the physical Power button. To also prevent users from returning via keypress, you can use the following approach:
 ``` html
 <!-- This div is the root component of the page -->
 <div on:keydown="onKeyup">
@@ -2626,55 +2074,42 @@ In this way, this page cannot be returned by swiping right, but can be returned 
 </div>
 ```
 
-
 ``` js
 export default {
   onKeyup(event) {
-    // Disable event bubbling when the key value is 'Power' to prevent the page from exiting
+    // Prevent event bubbling when key value is 'Power' to block page exit
     if (event.key == 'Power')
       event.stopPropagation()
   }
 }
 ```
 
-
 ::: warning
-
-Carefully replace the default event handling mechanism of the page to avoid the situation where the user cannot return to the page.
+Be cautious when replacing the page's default event handling mechanism to avoid situations where users cannot return from the page.
 :::
-
-
 
 ::: tip
-
-In previous versions, the `swipe` gesture event was used to prevent the default return behavior of the page, but this method has been abandoned in the 0.6.4 version. Please use the `touchmove` event handler above instead. This adjustment is caused by the fact that the interactive return animation of the page (ie, follow-up exit) is completely incompatible with the semantics of `swipe` that prevents the page from returning.
+In previous versions, the `swipe` gesture event was used to prevent the page's default return behavior, but this method was deprecated in version 0.6.4. Please use the `touchmove` event handling described above instead. This adjustment is due to the fact that the page's interactive return animation (i.e., follow-finger exit) is completely incompatible with the semantics of `swipe` preventing page return.
 :::
 
+## Usage Tips
 
+### Component Position Operations
 
-## Tips
-
-
-### Component location operations
-
-
-Component position can be easily modified using the native component's `top` and `left` properties:
+You can easily modify the component position using the `top` and `left` properties of native components:
 ``` html
 <div :top="40" :left="20"> ... </div>
 ```
-`top` and `left` are actually shorthand for CSS properties of the same name, so they will only take effect in absolute layouts, which can be achieved with the following CSS:
+`top` and `left` are actually shorthands for CSS properties of the same name, so they will only take effect in absolute layout, which can be achieved via the following CSS:
 ``` css
 div {
   position: absolute;
 }
 ```
 
+Then you can use reactive properties to modify the component's position. The following example demonstrates animated random component position movement implemented in combination with the [`transition` modifier](/framework/component/prop-modifier.md#transition-modifier).
 
-You can then use responsive properties to modify the component's position. The following example shows an animated random component position movement implemented in combination with [`transition` modifier](/framework/component/prop-modifier.md#transition-修饰符).
-
-
-<glyphix id="generic-widget-position" height="250" title="随机组件位置">
-
+<glyphix id="generic-widget-position" height="250" title="Random Component Position">
 
 ``` html
 <div id="pane">
@@ -2685,14 +2120,13 @@ You can then use responsive properties to modify the component's position. The f
 </div>
 ```
 
-
 ``` css
 div {
   background-color: lightgray;
 }
 
 p {
-  /* To use the top / left properties of a component, it must be absolutely positioned */
+  /* Must use absolute positioning to use the component's top / left properties */
   position: absolute;
   background-color: lightgreen;
   text-align: center;
@@ -2703,7 +2137,6 @@ p {
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -2712,7 +2145,7 @@ export default {
   },
   timer: null,
   onReady() {
-    // Get the component object, the position range should not exceed the #pane container
+    // Get component objects; position range should not exceed the #pane container
     const pane = this.$element("pane")
     const tile = this.$element("tile")
     const width = pane.width - tile.width
@@ -2728,432 +2161,302 @@ export default {
 }
 ```
 
-
 </glyphix>
 
-
-
-This example randomly sets the position of the `#tile` component every two seconds, within the bounds of the container `#pane`. The default `transition` modifier plays the transition animation for $1$ seconds.
+This example randomly sets the position of the `#tile` component every two seconds, ensuring it does not exceed the boundaries of the container `#pane`. The default `transition` modifier plays a $1$-second transition animation.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/generic/styles.md
 
 ---
-
 icon: layers-outline
-
 ---
+# CSS Properties
 
-# CSS properties
+This section introduces all CSS properties supported by the Glyphix framework. For an introduction to the styling and layout mechanism, please refer to [this document](/framework/render/style-and-layout.md).
 
+## Layout Control
 
-This section introduces all CSS properties supported by the Glyphix framework. For an introduction to the style and layout mechanism, please refer to [This document](/framework/render/style-and-layout.md).
-
-
-## layout control
-
-
-### Basic properties
-
+### Basic Properties
 
 #### `display`
 
+The `display` property sets an element's layout scheme. Currently, it can be set to the following values:
 
-The `display` attribute sets the layout scheme of the element. Currently can be set to the following values:
-
-
-- `inline`: Default value. This element generates one or more inline element boxes without newlines before or after them. In a normal flow, if there is space, the next element will be on the same line.
-- `block`: This element generates a block-level element box. In normal flow, line breaks are generated before and after this element.
-- `flex`: This element behaves like a block-level element and lays out its content according to `Flex`.
-- `inline-flex` and `inline flex`: The element behaves like an inline element and its content is laid out according to `Flex`.
-- `none`: Elements will not be displayed in this mode (not recommended).
-
+- `inline`: Default value. The element generates one or more inline element boxes that do not generate line breaks before or after them. In normal flow, if there is space, the next element will be on the same line.
+- `block`: The element generates a block-level element box, generating line breaks before and after the element in normal flow.
+- `flex`: The element behaves like a block-level element and lays out its contents according to `Flex` layout.
+- `inline-flex` and `inline flex`: The element behaves like an inline element and its contents are laid out according to `Flex` layout.
+- `none`: In this mode, the element is not displayed (not recommended).
 
 #### `width`
 
-
-The `width` attribute specifies the width of the element, including `padding` and `border` (border-box). If the element is in a layout container or otherwise restricted, the final element size may not be consistent with the value of the `width` attribute.
-
+The `width` property specifies the width of an element, including `padding` and `border` (border-box). If the element is located within a layout container or other constraints exist, the final element dimensions may differ from the value of the `width` property.
 
 ::: tip
-
-Glyphix now only supports [border-box](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/box-sizing) mode, the value of `width` always contains `padding` and `border`.
+Glyphix currently only supports the [border-box](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/box-sizing) mode, and the value of `width` always includes `padding` and `border`.
 :::
 
+The value of the `width` property is a CSS [length](/framework/render/style-and-layout.md#长度). The specific values are as follows:
 
+- `auto`: Default value. This mode automatically calculates the element's width based on content dimensions and layout constraints. For example, a text element determines its width based on the size of the text content, while a container element determines its width based on the layout dimensions of its internal elements.
+- `value [unit]`: Specifies the element width using a length unit. Layout or other constraints may adjust the actual dimensions of the element.
 
-The value of the `width` attribute is a CSS [length](/framework/render/style-and-layout.md#长度). The specific values ​​are as follows:
-
-
-- `auto`: Default value, this mode automatically calculates the width of the element based on content size and layout constraints. For example, a text element will determine its width based on the size of the text content, while a container element will determine its width based on the layout size of the inner element.
-- `value [unit]`: Use some length unit to specify the element width. Layout or other constraints may adjust the actual size of the element.
-
-
-Using the `width` attribute of an element in flex layout will be used as the initial width of the element, which will be further adjusted to the best actual width during the layout process.
-
+The `width` property of an element in a flex layout serves as its initial width, which will be further adjusted to the optimal actual width during the layout process.
 
 #### `height`
 
+The `height` property specifies the height of an element, including `padding` and `border` (border-box). The behavior of this property is similar to [`width`](#width).
 
-The `height` attribute specifies the height of the element, including `padding` and `border` (border-box). This attribute behaves like [`width`](#width).
-
-
-### Flex layout
-
+### Flex Layout
 
 #### `flex-direction`
 
+Sets the main axis direction (horizontal or vertical) when using a flex layout container. Values are as follows:
 
-Set the main axis direction (horizontal or vertical) of the flex layout container. The values ​​are as follows:
+- `row`: Default value, the main axis runs horizontally.
+- `column`: The main axis runs vertically.
 
-
-- `row`: Default value, the main axis is in the horizontal direction.
-- `column`: The main axis is in the vertical direction.
-
-
-The `flex-direcion` attribute is only valid when the element is laid out using flex, for example:
-
+The `flex-direction` property is only valid when the element uses a flex layout, for example:
 
 ```css
 display: flex;
 flex-direction: column;
 ```
 
-
 #### `flex-flow`
 
-
-`flex-flow` is short for `flex-direction` and `flex-wrap`. The syntax is
-
+`flex-flow` is a shorthand property for `flex-direction` and `flex-wrap`. The syntax is:
 
 ```css
 flex-flow: <flex-direcion> <flex-wrap>;
 ```
 
-
-Currently the `flex-wrap` attribute is not implemented yet, so this part will not work.
-
+Currently, the `flex-wrap` property is not yet implemented, so this part will not have any effect.
 
 #### `justify-content`
 
+Specifies the alignment of child elements along the container's main axis when using flex layout.
 
-Specifies the alignment of child elements along the main axis of the container when using flex layout.
+Property values:
 
+- `flex-start`: Default value. The first element is flush against the start of the container's main axis, and subsequent elements are arranged sequentially. No extra space is filled between elements.
+- `flex-end`: The last element is flush against the end of the container's main axis, and preceding elements are arranged sequentially. No extra space is filled between elements.
+- `center`: All elements are arranged sequentially in the middle of the container's main axis, with remaining space left at both ends of the main axis. No extra space is filled between elements.
+- `space-between`: Elements are evenly distributed; the first element is placed at the start, the last element is placed at the end, and the remaining space is evenly distributed between the elements.
+- `space-around`: Elements are evenly distributed, with equal space allocated around each element. Remaining space is also left before the first element and after the last element.
 
-Property value:
+#### `align-items` <badge type="info" text="Inline" />
 
+Specifies the alignment of child elements along the container's cross axis when using flex layout. Supports the following values:
 
-- `flex-start`: Default value, the first element is close to the starting position of the main axis of the container, and subsequent elements are arranged in order. There is no additional padding between elements.
-- `flex-end`: The last element is located close to the tail of the main axis of the container, and the previous elements are arranged in order. There is no additional padding between elements.
-- `center`: All elements are arranged in the middle of the main axis of the container, and the remaining space at both ends of the main axis will be vacated. There is no additional padding between elements.
-- `space-between`: Arrange each element evenly, with the first element placed at the starting point, the last element placed at the end point, and the remaining space is evenly filled between elements.
-- `space-around`: Arrange each element evenly, allocate the same space around each element, and leave remaining space before and after the first and last elements.
-
-
-#### `align-items` <badge type="info" text="内联" />
-
-
-Specifies the alignment of child elements along the cross axis of the container when using flex layout. The following values ​​are supported:
-
-
-- `stretch`: Default value, the element stretches to fill all the space of the cross axis of the container.
-- `flex-start`: The element is close to the starting point of the cross axis of the container and does not stretch.
-- `flex-end`: The element is close to the end position of the cross axis of the container and does not stretch.
-- `center`: The element is centered on the cross axis of the container and does not stretch.
-- `baseline` : The cross axis of the element is aligned to the font baseline.
+- `stretch`: Default value. Elements stretch to fill all space in the container's cross axis.
+- `flex-start`: Elements are flush against the start of the container's cross axis and do not stretch.
+- `flex-end`: Elements are flush against the end of the container's cross axis and do not stretch.
+- `center`: Elements are centered along the container's cross axis and do not stretch.
+- `baseline`: Elements' cross axes are aligned according to their font baselines.
 
 
+**Baseline alignment** allows text, images, or elements such as [`switch`](/components/switch.md) and [`checkbox`](/components/checkbox.md) to align according to the text baseline position, thereby ensuring a neat visual effect. Note that `align-items: baseline` is only valid when the main axis direction is [`row`](#flex-direction).
 
+#### `align-self` <badge type="info" text="Inline" />
 
-**Baseline Alignment** allows text, pictures, or elements such as [`switch`](/components/switch.md) and [`checkbox`](/components/checkbox.md) to be aligned according to the baseline position of the text, thereby ensuring a neater visual effect. Note that `align-items: baseline` is only valid when the spindle direction is [`row`](#flex-direction).
+Specifies the alignment of a flex item itself along the cross axis. This property has a higher priority than `align-items`. Supports the following values:
 
-
-#### `align-self` <badge type="info" text="内联" />
-
-
-Specifies the alignment of the flex element itself on the cross axis. This attribute has a higher priority than `align-items`. The following values ​​are supported:
-
-
-- `auto`: Default value, uses the cross-axis alignment of the flex container.
-- `stretch`: The element stretches to fill all the space across the container's cross axis.
-- `flex-start`: The element is close to the starting point of the cross axis of the container and does not stretch.
-- `flex-end`: The element is close to the end position of the cross axis of the container and does not stretch.
-- `center`: The element is centered on the cross axis of the container and does not stretch.
+- `auto`: Default value. Uses the flex container's cross-axis alignment.
+- `stretch`: The element stretches to fill all space in the container's cross axis.
+- `flex-start`: The element is flush against the start of the container's cross axis and does not stretch.
+- `flex-end`: The element is flush against the end of the container's cross axis and does not stretch.
+- `center`: The element is centered along the container's cross axis and does not stretch.
 - `baseline`: `align-self` does not support the `baseline` value and has the same effect as `flex-start`.
 
-
 ::: tip
-
-Unlike `align-items`, you cannot use `baseline` values ​​in `align-self`. Therefore, currently the baseline alignment of the cross axis can only be set through the `align-items` attribute of the flex container.
+Unlike `align-items`, you cannot use the `baseline` value in `align-self`. Therefore, cross-axis baseline alignment can currently only be set via the flex container's `align-items` property.
 :::
-
-
 
 #### `flex-grow`
 
-
-Specifies the flex growth factor of the flex element in the main axis direction. Is an integer between $[0, 100]$, the default value is $0$. If there is remaining space in the main axis direction, each element will grow by the remaining space allocated in proportion to the growth coefficient. Therefore, if the elements' `flex-grow` are both $1$ then they will equally divide the remaining space of the main axis, and the element with a growth factor of $0$ will not grow.
-
+Specifies the flex growth factor of a flex item along the main axis. It is an integer between $[0, 100]$, with a default value of $0$. If there is remaining space along the main axis, each element will grow in proportion to its growth factor. Therefore, if all elements have a `flex-grow` of $1$, they will evenly divide the remaining space on the main axis, whereas elements with a growth factor of $0$ will not grow.
 
 #### `flex-shrink`
 
-
-Specifies the shrinkage rate of the flex element in the main axis direction. Is an integer between $[0, 100]$, the default value is $1$. If there is insufficient remaining space on the main axis, the element will be shrunk. The actual reduced size is determined by the initial size of the element, the ratio of the element's own shrinkage to the sum of the search rates of all elements, and the remaining space. The greater the element's shrinkage or initial size, the more shrinkage the element will produce. Elements with `flex-shrink` of $0$ will not shrink.
-
+Specifies the flex shrink factor of a flex item along the main axis. It is an integer between $[0, 100]$, with a default value of $1$. If the remaining space on the main axis is insufficient, the elements will shrink. The actual reduced size is jointly determined by the initial size of the element, the ratio of its shrink factor to the sum of all elements' shrink factors, and the remaining space. The larger an element's shrink factor or initial size, the more its size will be reduced. Elements with a `flex-shrink` of $0$ will not shrink.
 
 #### `flex`
 
-
-`flex` is short for `flex-grow` and `flex-shrink`. The syntax is
-
+`flex` is a shorthand property for `flex-grow` and `flex-shrink`. The syntax is:
 
 ```css
 flex: <flex-grow> <flex-shrink>;
 ```
 
+Currently, Glyphix does not introduce the `flex-basis` property, so no extra value needs to be filled.
 
-Currently Glyphix does not introduce the `flex-basis` attribute, so there is no need to fill in additional values.
+#### `max-height` (Not yet supported)
 
+Sets the maximum height of an element (the max-height property does not include padding, borders, or margins). The `max-height` property is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
 
-#### `max-height` (not supported yet)
+**Default value**: Maximum height of the parent widget
 
+#### `max-width` (Not yet supported)
 
-Sets the maximum height of the element (the max-height property does not include padding, borders, or margins). The `max-height` attribute is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
+Sets the maximum width of an element (the max-width property does not include padding, borders, or margins). The `max-width` property is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
 
+**Default value**: Maximum width of the parent widget
 
-**Default**: The maximum height of the parent control
+#### `min-height` (Not yet supported)
 
+Sets the minimum height of an element (the min-height property does not include padding, borders, or margins). The `min-height` property is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
 
-#### `max-width` (not supported yet)
+**Default value**: `0`
 
+#### `min-width` (Not yet supported)
 
-Sets the maximum width of the element (the max-width attribute does not include padding, borders, or margins). The `max-width` attribute is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
+Sets the minimum width of an element (the min-width property does not include padding, borders, or margins). The `min-width` property is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
 
+**Default value**: `0`
 
-**Default**: The maximum width of the parent control
-
-
-#### `min-height` (not supported yet)
-
-
-Sets the minimum height of the element (the min-height property does not include padding, borders, or margins). The `min-height` attribute is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
-
-
-**Default**: `0`
-
-
-#### `min-width` (not supported yet)
-
-
-Sets the minimum width of an element (the min-width property does not include padding, borders, or margins). The `min-width` attribute is specified as a single [length](/framework/render/style-and-layout.md#长度) value.
-
-
-**Default**: `0`
-
-
-### Positioning method
-
+### Positioning
 
 #### `position`
 
+Specifies the positioning method of an element in the document. Can be set to the following values:
 
-Specifies how an element is positioned in the document. Can be set to the following values:
-
-
-- `static`: Default value, specifies that the element uses normal layout behavior, that is, the element's current layout position in the general flow of the document. At this time, the `top`, `right`, `bottom`, `left` attributes are invalid.
-- `absolute`: The element will be moved out of the normal document flow and no space will be reserved for the element. Determine the position of an element by specifying its offset relative to its parent element. Absolutely positioned elements can have margins set.
-
+- `static`: Default value. Specifies that the element uses normal layout behavior, meaning the element is in its current layout position in the document's normal flow. In this state, the `top`, `right`, `bottom`, and `left` properties have no effect.
+- `absolute`: The element is removed from the normal document flow and no space is reserved for it. The element's position is determined by specifying offsets relative to its containing element. Absolutely positioned elements can have margins.
 
 #### `left`
 
+Specifies the offset of an element from the left edge of its containing element.
 
-Specifies the offset of the element relative to the left edge of its containing element.
-
-
-The value of the `left` attribute is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
-
+The value of the `left` property is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
 
 #### `right`
 
+Specifies the offset of an element from the right edge of its containing element.
 
-Specifies the offset of the element relative to the right edge of its containing element.
-
-
-The value of the `right` attribute is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
-
+The value of the `right` property is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
 
 #### `top`
 
+Specifies the offset of an element from the top edge of its containing element.
 
-Specifies the offset of the element relative to the top edge of its containing element.
-
-
-The value of the `top` attribute is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
-
+The value of the `top` property is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
 
 #### `bottom`
 
+Specifies the offset of an element from the bottom edge of its containing element.
 
-Specifies the offset of the element relative to the bottom edge of its containing element.
+The value of the `bottom` property is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
 
+## Text and Fonts
 
-The value of the `bottom` attribute is a CSS [length](/framework/render/style-and-layout.md#长度), and the default value is `auto`.
+### Basic Properties
 
+#### `font-family` <badge type="info" text="Inherited" />
 
-## Text and fonts
-
-
-### Basic properties
-
-
-#### `font-family` <badge type="info" text="继承" />
-
-
-Specify an ordered, named font family list for the element. Use commas to separate multiple fonts. If there are spaces in the font name, you need to include the font name in quotes:
-
+Specifies a prioritized list of font family names for an element. Multiple fonts are separated by commas. If a font name contains spaces, it must be enclosed in quotes:
 
 ```css
 font-family: serif;
-font-family: "Times New Roma", serif;
+font-family: "Times New Roman", serif;
 ```
 
+Font names are defined by the [`@font-face`](#font-face-rule) rule. If `font-family` is not defined, the element will inherit the font family of its parent element. If none of the parent elements define a font family, the [system default font](/framework/application/font-config.md#默认字体) will be used.
 
-Font names are defined by the [`@font-face`](#font-face-规则) rule. If `font-family` is not defined, the element will inherit the font family of the parent element. If neither parent defines a font family, [System default font](/framework/application/font-config.md#默认字体) will be used.
+#### `font-size` <badge type="info" text="Inherited" />
 
+Specifies the font size of an element, which is a [length](/framework/render/style-and-layout.md#长度) value. Similar to `font-family`, `font-size` is also inherited from parent elements. If no parent element defines a font size, the font size of the [system default font](/framework/application/font-config.md#默认字体) will be used.
 
-#### `font-size` <badge type="info" text="继承" />
+#### `font-weight` <badge type="info" text="Inherited" />
 
-
-Specifies the font size of the element, which is a [length](/framework/render/style-and-layout.md#长度) value. Similar to `font-family`, `font-size` will also inherit from parent elements, and will use the font size of [System default font](/framework/application/font-config.md#默认字体) when no font size is defined in any parent element.
-
-
-#### `font-weight` <badge type="info" text="继承" />
-
-
-Specifies the font weight of the element, that is, the thickness of the font. The value range is an integer in the range $[100, 900]$ and the default value is `400`. If the parent element does not define a weight, the default `400` weight is used. If the specified weight is not found, the closest available weight is used.
-
+Specifies the font weight, i.e., the boldness of the font. The value is an integer in the range $[100, 900]$, with a default value of `400`. If the parent element does not define a font weight, the default weight `400` is used. If the specified weight is not found, the system will use the closest available weight.
 
 ::: tip
-
-The `font-weight` attribute only supports integer multiples of `100`, such as `100`, `200`, `300`, etc. Values ​​with remainders (such as `450` ) are rounded to the nearest integral multiple. Currently shipping devices only support `400` font weight.
+The `font-weight` property only supports values that are integer multiples of `100`, such as `100`, `200`, `300`, etc. Values with remainders (like `450`) are rounded to the nearest multiple. Devices currently on the market only support the `400` weight.
 :::
 
+#### `line-height` <badge type="info" text="Inherited" />
 
+This property is used to set the amount of space used for lines, such as the spacing between lines of multi-line text. The `line-height` property is specified as a single [length](/framework/render/style-and-layout.md#长度) value or a **number** value. The **default** is `auto`.
 
-#### `line-height` <badge type="info" text="继承" />
+In addition to length values, `line-height` can also use number values, representing a multiple of the font size. For example, `line-height: 1.5` means the line height is 1.5 times the font size. Older versions used `line-height: 150%` to achieve the same effect. <version-badge since="0.9" />
 
-
-This property is used to set the amount of space for multiline elements, such as the spacing between multiple lines of text. The `line-height` attribute is specified as a single [length](/framework/render/style-and-layout.md#长度) value or as a **numeric** value. **Default** is `auto`.
-
-
-In addition to length values, `line-height` can also use numeric values, representing multiples relative to the font size. For example, `line-height: 1.5` means that the line height is 1.5 times the font size. Older versions used `line-height: 150%` for the same effect. <version-badge since="0.9" />
-
-
-::: important value range
-The calculated valid value range of `line-height` is $[0, 1000\rm px]$. Where $0$ row height falls back to the default row height (rather than no row height at all). Regardless of whether length or numeric value (scale) is used, the calculated row height cannot exceed $1000\rm px$. For example, `line-height: 2.0; font-size: 32px` evaluates to $64\rm px$ and is therefore a valid row height value.
+::: important Value Range
+The valid range for calculated `line-height` is $[0, 1000\rm px]$. A line height of $0$ will fall back to the default line height (rather than having no line height at all). Regardless of whether a length or a number (ratio) is used, the calculated line height cannot exceed $1000\rm px$. For example, `line-height: 2.0; font-size: 32px` calculates to $64\rm px$, which is a valid line height value.
 :::
 
+##### Automatic Line Height <experimental /> <version-badge since="0.9" />
 
+The `auto` value for `line-height` indicates that the line height will be automatically calculated based on the font size, with the following behavior:
+- Normally, the default line height is close to 1.2 times the font size.
+- For special fonts such as Arabic and Tibetan, the default line height is automatically increased to prevent overlapping between lines; this means different lines within a piece of text may have different line heights.
+- Using any non-`auto` `line-height` value overrides the default line height behavior, causing all lines to have the same line height.
+- `auto` is semantically similar to CSS's `normal` line height; direct use of the `normal` keyword is not currently supported.
 
-##### Automatic row height <experimental /> <version-badge since="0.9" />
-
-
-The `line-height` value of `auto` means that the line height will be automatically calculated based on the font size, and the behavior is as follows:
-- Typically, the default line height is approximately 1.2 times the font size.
-- For special fonts such as Arabic and Tibetan, the default line height will be automatically increased to avoid overlap between lines; this makes different lines in a text may have different line heights.
-- Using any `line-height` value other than `auto` overrides the behavior of the default row height, causing all rows to have the same row height.
-- `auto` has similar semantics to CSS's `normal` line height. Direct use of the `normal` keyword is not supported yet.
-
-
-Please refer to [i18n documentation](/framework/application/i18n.md#自动行高) for row height behavior in international scenarios.
-
+For line height behavior in internationalization scenarios, please refer to the [i18n documentation](/framework/application/i18n.md#自动行高).
 
 ::: note Rendering Consistency <version-badge since="0.9" />
-The text rendering behavior used by different devices is not completely consistent, and the default line height value of `line-height: auto` may be different. Some devices do not automatically adjust the line height for special fonts, but simply use a fixed line height, so there may be overlap between lines when using automatic line height.
+Text rendering behavior varies across devices, and the default line height value for `line-height: auto` may differ. Some devices do not automatically adjust line heights for special fonts, instead simply using a fixed line height, which may result in line overlapping when using automatic line height.
 :::
 
+##### Line Height Inheritance
 
+When an element does not set `line-height`, it inherits the line height value of its parent element. The inherited line height is the raw value, not the calculated line height value. For example, if the parent element's `line-height` is `1.5`, the child element inherits `1.5` as well, rather than the parent's calculated line height (i.e., $1.5$ times the parent font size). If the parent element's `line-height` is `auto`, the child element also inherits `auto`, rather than the parent's calculated default line height value.
 
-##### row height inheritance
-
-
-When the element is not set to `line-height`, it will inherit the row height value of the parent element. The inherited row height is the original value, not the calculated row height value. For example, if the parent element's `line-height` is `1.5`, the child element inherits `1.5` instead of the calculated line height value of the parent element (i.e. $ 1.5 $ times the parent element's font size). If the `line-height` of the parent element is `auto`, the child element inherits `auto` instead of the calculated default row height value of the parent element.
-
-
-::: tip `auto` Row height and inheritance
-`line-height: auto` does not inherit the row height of the parent element, but the default row height. To use inherited row height, the `line-height` attribute must not be set. The `inherit` keyword is not currently supported for explicit inheritance.
+::: tip `auto` Line Height and Inheritance
+`line-height: auto` does not inherit the parent element's line height; it defaults to the automatic line height. To use inherited line height, you must omit the `line-height` property. The `inherit` keyword for explicit inheritance is currently not supported.
 :::
 
+#### `text-align` <badge type="info" text="Inherited" />
 
+Defines how text is aligned relative to its block parent element. `text-align` does not control the alignment of the block element itself, but only the alignment of its inline text.
 
-#### `text-align` <badge type="info" text="继承" />
+Supports the following values:
 
-
-Defines how text is aligned relative to its block parent element. `text-align` does not control the alignment of the block element itself, only the alignment of its inline text.
-
-
-The following values ​​are supported:
-
-
-- `left` : left aligned
-- `right` : right aligned
-- `hcenter` : Horizontally centered alignment
-- `justify` : Custom adjustment
-- `top` : top aligned
-- `bottom` : Bottom aligned
-- `vcenter` : vertical center alignment
-- `baseline` : baseline alignment
-- `center` : horizontal and vertical alignment
-
+- `left`: Left-aligned
+- `right`: Right-aligned
+- `hcenter`: Horizontally centered
+- `justify`: Justified
+- `top`: Top-aligned
+- `bottom`: Bottom-aligned
+- `vcenter`: Vertically centered
+- `baseline`: Baseline-aligned
+- `center`: Centered horizontally and vertically
 
 ::: tip
-
-`text-align: center` is centered in the horizontal and vertical directions at the same time, which is different from `text-align: center` in CSS, which is only centered in the horizontal direction. You should pay attention to the distinction. If you only need horizontal center alignment, use `text-align: hcenter`.
+`text-align: center` centers alignment in both horizontal and vertical directions simultaneously, which is different from CSS `text-align: center` where it only centers horizontally. Please note this distinction. If you only need horizontal centering, please use `text-align: hcenter`.
 :::
 
-
-
-**Default**: `left`
-
+**Default value**: `left`
 
 #### `max-lines`
 
-
-Specify the maximum number of lines of text to be displayed, and overflow content will be handled in the manner specified by [`text-overflow`](#text-overflow). The value type is number, and the default value is `0`, which means there is no limit to the maximum number of rows.
-
+Specifies the maximum number of lines text can display, with overflowing content handled as specified by [`text-overflow`](#text-overflow). The value type is number, with a default value of `0`, which means no limit on the maximum number of lines.
 
 Syntax and examples:
 
-
 ```css
-max-lines: 0; /* No limit on the maximum number of rows */
-max-lines: 1; /* Fixed to single line display */
+max-lines: 0; /* No limit on maximum lines */
+max-lines: 1; /* Fixed to single-line display */
 max-lines: 2; /* Display up to 2 lines of text */
-max-lines: <number>; /* Specifies the maximum number of lines of text that can be displayed */
+max-lines: <number>; /* Specify the maximum number of text lines that can be displayed */
 ```
 
-
-This attribute is compatible with the standard `lines` attribute of Quick Apps.
-
+This property is compatible with the Quick App standard `lines` property.
 
 #### `text-overflow`
 
+Specifies how to signal to users that hidden overflow text content exists. It can be directly clipped or display an ellipsis (`...`). This property is used in conjunction with [`max-lines`](#max-lines)—meaning the overflow behavior is only triggered when the text reaches the `max-lines` limit; other clipping caused by layout height constraints is not considered.
 
-Specifies how to prompt the user for hidden overflow text content. You can crop directly or display an ellipsis (`...`). This attribute is used in conjunction with [`max-lines`](#max-lines), that is, the overflow behavior is only triggered when the number of text lines reaches the `max-lines` limit, and other clipping caused by layout height restrictions will not be considered.
+Property values:
 
+- `clip`: Overflowing text is simply hidden;
+- `ellipsis`: When text overflows, an ellipsis is appended to the displayed text.
 
-Property value:
+**Default value**: `clip`
 
-
-- `clip`: Overflowed text is directly hidden;
-- `ellipsis`: An ellipsis will be added after the displayed text when the text overflows.
-
-
-**Default**: `clip`
-
-
-<glyphix id="css-prop-text-overflow" height="100" width="600" title="clip 和 ellipses 对比">
-
+<glyphix id="css-prop-text-overflow" height="100" width="600" title="Comparison of clip and ellipsis">
 
 ```html
 <div>
@@ -3163,7 +2466,6 @@ Property value:
   </p>
 </div>
 ```
-
 
 ```css
 div {
@@ -3182,16 +2484,11 @@ p {
 }
 ```
 
-
 </glyphix>
 
+### `@font-face` Rule
 
-
-### `@font-face` Rules
-
-
-`@font-face` CSS at-rule specifies a custom font for displaying text. The font is available as the font name in the [`font-family`](#font-family) attribute.
-
+The `@font-face` CSS at-rule specifies a custom font for displaying text. This font can be used as a font name in the [`font-family`](#font-family) property.
 
 ```css
 @font-face {
@@ -3202,250 +2499,178 @@ p {
 }
 ```
 
-
-It is recommended to define `@font-face` rules in [Application level font mapping file](/framework/application/font-config.md#应用级字体). This section describes the attribute definitions in the `@font-face` rule block.
-
+It is recommended to define `@font-face` rules in the [app-level font mapping file](/framework/application/font-config.md#应用级字体). This section introduces the property definitions within the `@font-face` rule block.
 
 #### `font-family`
 
-
-The specified font name will be used in the [`font-family`](#基本属性-1) attribute. Note that there can only be one font name here, not a list of font names. For example: `font-family: <family-name>`.
-
+The specified font name will be used for the [`font-family`](#基本属性-1) property. Note that this can only be a single font name, not a list of font names. For example: `font-family: <family-name>`.
 
 #### `src`
 
-
-Specifies the URI of the font file. The value of this attribute is a list, allowing developers to specify multiple font files for the font. For example
-
+Specifies the URI of the font file. The value of this property is a list, allowing developers to specify multiple font files for a font. For example:
 
 ```css
 src: url("fonts/Roboto-Regular.ttf"), url("font/Other-Font.ttf");
 ```
 
+Currently, the `src` property only supports the `url()` function or a list of strings; functions like `local()` and `format()` available in Web are not supported.
 
-Currently, the `src` attribute only supports the `url()` function or string list, and the `local()`, `format()` and other functions available in the Web are not supported.
+## Animation
 
+For more knowledge about animations, please refer to the [Animation](../render/animation.md) chapter.
 
-## animation
-
-
-For more information about animation, please refer to chapter [animation](../render/animation.md).
-
-
-### Basic attributes
-
+### Basic Properties
 
 #### `animation`
 
-
-Define elements to perform animation effects. Currently supported formats are as follows:
-
+Defines the animation effect to be executed by the element. Currently supported formats are:
 
 ```css
 animation: <name>;
 animation: <duration> <timing> <name>;
 ```
 
+Descriptions of placeholders are as follows:
 
-Each placeholder is described as follows:
+- `<name>`: A sequence name of keyframes defined by the [`@keyframes` rule](#keyframes-规则);
+- `<duration>`: Animation duration in seconds or milliseconds, e.g., `1000ms`, `0.2s`, defaults to `1s`;
+- `<timing>`: [Easing function](../render/animation.md#缓动函数), defaults to `ease`.
 
-
-- `<name>`: a keyframe sequence name defined by [`@keyframes` rules](#keyframes-规则);
-- `<duration>`: animation duration, unit is seconds or milliseconds, such as `1000ms`, `0.2s`, default is `1s`;
-- `<timing>` : [Easing function](../render/animation.md#缓动函数), default is `ease`.
-
-
-### `@keyframes` Rules
-
+### `@keyframes` Rule
 
 Please refer to MDN's [`@keyframes`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/@keyframes) documentation.
 
-
-## Transform and display effects
-
+## Transform and Display Effects
 
 #### `transform`
 
+The `transform` property allows developers to rotate, scale, skew, or translate elements. This property applies a visual transformation effect to the element without altering its layout properties. The value of the `transform` property can be a cascade of various transformation functions from the table below:
 
-The `transform` attribute allows developers to rotate, scale, tilt, or translate the element. This attribute applies a visual transformation effect to the element and does not change the layout properties of the element. The value of the `transform` attribute can be a concatenation of the various transformation functions in the following table:
+|          Value         | Description                                                                 |
+| :--------------------: | --------------------------------------------------------------------------- |
+|     `scale(x, y)`      | Scaling transform, where $x$ and $y$ specify the horizontal and vertical scaling ratios of the element respectively. |
+|    `rotate(angle)`     | Rotation transform, where $\it angle$ specifies the angle of rotation, in units of `deg` or `rad`. |
+|     `shear(h, v)`      | Shearing transform, where $h$ is the horizontal shear distance and $v$ is the vertical shear distance. |
+| `skew(angleX, angleY)` | Skews the element along the $x$ and $y$ axes.                               |
+|   `translate(x, y)`    | Translation transform, moving the element along the $x$ and $y$ axes.       |
 
-
-| value | description |
-| :--------------------: | ------------------------------------------------------------------- |
-
-| `scale(x, y)` | Scaling transformation, $x$ and $y$ specify the horizontal and vertical scaling ratio of the element respectively. |
-| `rotate(angle)` | Rotation transformation, $\it angle$ specifies the angle of rotation, the unit can be `deg` or `rad`. |
-| `shear(h, v)` | Miscut transformation, $h$ is the miscut distance in the horizontal direction, $v$ is the miscut distance in the vertical direction. |
-| `skew(angleX, angleY)` | Inclined elements along the $x$ and $y$ axes. |
-| `translate(x, y)` | Translation shift, moves elements along the $x$ and $y$ axes. |
-
-
-For example, the following code will first scale the element $(2, 0.5 )$ times, and then rotate $100^{\circ}$:
-
+For example, the following code first scales the element by $(2, 0.5)$ and then rotates it by $100^{\circ}$:
 
 ```css
 transform: scale(2, 0.5) rotate(100deg);
 ```
 
+**Default value**: `none`
 
-**Default**: `none`
-
-
-The transformed element may be clipped by the parent element or obscured by elements behind it. You can use the [`z-index`](#z-index) attribute to promote the Z-axis order of elements to avoid being obscured by elements of the same level. Currently, the `transform` attribute may need to be combined with the [`transparent`](#transparent) attribute to work properly, otherwise an incorrect black background may be produced.
-
+Transformed elements may be clipped by parent elements or obscured by elements behind them. You can use the [`z-index`](#z-index) property to elevate the element's Z-axis order to prevent it from being obscured by sibling elements. Currently, the `transform` property may need to be used in conjunction with the [`transparent`](#transparent) property to work properly; otherwise, an incorrect black background may be generated.
 
 #### `z-index`
 
-
-The `z-index` attribute sets the Z-order of the elements, `z-index` larger overlapping elements overwrite smaller elements.
-
+The `z-index` property sets the Z-axis order of an element. Overlapping elements with a larger `z-index` will cover those with a smaller one.
 
 #### `opacity`
 
+This property specifies the opacity of an element. It is a numeric value in the range $[0, 1.0]$.
 
-This property specifies the opacity of an element. is a numerical value in the range $[0, 1.0 ]$.
-
-
-**Default**: $1.0$ (fully opaque)
-
+**Default value**: $1.0$ (completely opaque)
 
 ::: warning
-
-`opacity` values ​​other than `0` or `1` can affect the drawing performance of the element, and it is recommended to use this attribute only when necessary. If you just need to make the text or background translucent, you should do so using the RGBA format of color values, such as `rgba(255, 0, 0, 0.5)` or `#ff000080` for translucent red.
+`opacity` values other than `0` or `1` affect the rendering performance of elements. It is recommended to use this property only when necessary. If you only need to make text or background semi-transparent, you should use the RGBA format of color values, such as `rgba(255, 0, 0, 0.5)` or `#ff000080` for semi-transparent red.
 :::
-
-
 
 #### `object-fit`
 
+Used to specify the strategy for how an image should be resized to fit its box determined by its height and width.
 
-A strategy used to specify how an image should fit into its box determined using height and width.
+Property values:
 
-
-Property value:
-
-
-- `none`: Default value, the image will maintain its original dimensions.
-- `contain` : The image will be scaled to maintain its aspect ratio when filling the element's content box. The entire object fills the box while retaining its aspect ratio.
-- `cover` : The image fills the element's entire content box while maintaining its aspect ratio. If the object's aspect ratio does not match the content box, the object will be clipped to fit the content box.
-- `fill` : The image exactly fills the element's content box. The entire object will completely fill this box. If the object's aspect ratio does not match the content box, the object will be stretched to fit the content box.
-- `scale-down`: The image can be scaled down to fit the size of the content box while maintaining aspect ratio, but will not scale when the image is smaller than the size of the content box. The actual scaling factor of `scale-down` is equivalent to the smaller of `none` and `contain`.
-
+- `none`: Default value. The image retains its original size.
+- `contain`: The image is scaled to maintain its aspect ratio while filling the element's content box. The entire object retains its aspect ratio while filling the box.
+- `cover`: The image fills the element's entire content box while maintaining its aspect ratio. If the aspect ratio of the object does not match the content box, the object will be clipped to fit.
+- `fill`: The image exactly fills the element's content box. The entire object will completely fill this box. If the aspect ratio of the object does not match the content box, the object will be stretched to fit.
+- `scale-down`: The image is scaled down to fit the content box while maintaining its aspect ratio, but is not scaled up when smaller than the content box. The actual scale factor for `scale-down` is equivalent to the smaller of `none` and `contain`.
 
 ::: note
-
-Unlike [web standards](https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/object-fit), the default value of the `object-fit` attribute is `none` instead of `fill`. Please refer to the description of the [`image`](/components/image.md#object-fit) component for details.
+Unlike the [Web standard](https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/object-fit), the default value of the `object-fit` property is `none` rather than `fill`. For details, please refer to the description of the [`image`](/components/image.md#object-fit) component.
 :::
-
-
 
 #### `transparent`
 
+Sets whether an element is transparent. This property usually does not affect the display effect of an element, but elements with snapshots may need to configure this property according to their actual transparency situation.
 
-Sets whether the element is transparent. This property usually does not affect the display effect of the element, but for elements with snapshots, this property may need to be configured according to the actual transparency situation.
+Property values:
 
+- `false`: Marks this element as opaque;
+- `true`: Marks this element as transparent.
 
-Property value:
-
-
-- `false`: Mark this element as opaque;
-- `true`: The marked element is transparent.
-
-
-**Default**: `false`
-
+**Default value**: `false`
 
 #### `stroke-width`
 
+Specifies the brush width when certain components are rendered, such as [`progress-arc`](/components/progress-arc.md). The value type is a [length](/framework/render/style-and-layout.md#长度).
 
-Specify the brush width when drawing certain components, such as [`progress-arc`](/components/progress-arc.md). The type of the value is a [length](/framework/render/style-and-layout.md#长度).
+#### `visibility` <badge type="info" text="Inherited" />
 
+Sets whether an element is displayed. This property does not affect layout.
 
-#### `visibility` <badge type="info" text="继承" />
+Property values:
 
+- `hidden`: Hides the element;
+- `visible`: Displays the element.
 
-Sets whether the element is displayed. This property does not affect layout.
-
-
-Property value:
-
-
-- `hidden`: hidden element;
-- `visible`: Display element.
-
-
-**Default**: `visible`
-
+**Default value**: `visible`
 
 #### `filter` <experimental />
 
+Applies effects like blur to an element. Currently supported values are:
 
-Apply effects like blur to elements. Currently these values ​​are supported:
+- `blur(<length>)`: Applies a blur effect to the element, e.g., `blur(5px)`.
 
+::: warning Experimental Feature
+On existing devices, using filter effects like `blur()` may cause severe performance issues. Note that the `blur()` function is not strictly a Gaussian blur, and its supported blur radius range is $r \in [8, 300]\,\rm px$. Specifically:
+- When $r \lt 8\rm px$, no blur effect is produced;
+- The degree of blur does not vary continuously with changes in $r$.
 
-- `blur(<length>)` : Applies a blur effect to an element, such as `blur(5px)`.
-
-
-::: warning experimental feature
-On existing devices, using filter effects such as `blur()` may cause serious performance issues. It should be noted that the `blur()` function is not a strict Gaussian blur, and its blur radius $r$ supports a range of $r \in [8, 300]\,\rm px$. Specifically:
-- When $r \lt 8\rm px$, there will be no blurring effect;
-- The degree of blurriness does not vary continuously with $r$.
-
-
-In order to improve performance, if the visual effect allows, you should try to choose a larger blur radius ($r \ge 50\rm px$ is recommended), because Glyphix optimizes this situation.
+To improve performance, choose a larger blur radius whenever visual effects permit (recommended $r \ge 50\rm px$), because Glyphix optimizes for this scenario.
 :::
 
-
-
-Since the blur effect is expensive, it is recommended to use the [`quiescent`](/framework/generic/properties.md#quiescent) attribute of the native component to avoid frequent drawing updates.
-
+Due to the high cost of blur effects, it is recommended to use them in conjunction with the [`quiescent`](/framework/generic/properties.md#quiescent) property of native components to avoid frequent rendering updates.
 
 #### `overflow` <experimental /> <version-badge since="0.9" />
 
-
-The `overflow` attribute is used to specify what to do when the content of an element exceeds the size of the element. The value of this attribute can be one of the following:
+The `overflow` property is used to specify how to handle content that exceeds an element's dimensions. The value of this property can be one of the following:
 ```css
 overflow: auto | clip | visible;
 ```
-- `auto`: Default value, the content will be cropped when it overflows, equivalent to `clip`.
-- `clip`: The content will be cropped when it overflows, and the part beyond the element's content-box size will not be visible.
-- `visible`: When the content overflows, it will not be clipped by the element's own content-box, but will continue to be displayed.
+- `auto`: Default value. Overflowing content will be clipped, equivalent to `clip`.
+- `clip`: Overflowing content will be clipped, and portions exceeding the element's content-box dimensions will not be visible.
+- `visible`: Overflowing content will not be clipped by the element's own content-box, but will continue to be displayed.
 
+When `overflow` is set to `visible`, content can be rendered within the content-box range of the nearest `clip` ancestor, unaffected by clipping from itself or intermediate visible containers.
 
-When `overflow` is set to `visible`, content can be drawn within the content-box range of the nearest `clip` ancestor, and will not be affected by clipping of itself and the intermediate visible container.
-
-
-:::tip Differences from Web CSS standards
-The default value of the `overflow` attribute is not `visible` but default clipping. And Glyphix does not support values ​​such as `scroll` and `hidden`; nor does it support sub-attributes such as `overflow-x` and `overflow-y`.
+::: tip Differences from Web CSS Standard
+The default value of the `overflow` property is not `visible`, but clipping by default. Furthermore, Glyphix does not support values such as `scroll` and `hidden`, nor does it support sub-properties like `overflow-x` and `overflow-y`.
 :::
 
+##### `overflow` Behavior in Multi-Level Containers
 
-
-##### `overflow` behavior for multi-level containers
-
-
-`overflow: visible` is not an inherited property. If you want the overflow content of the innermost element not to be clipped, you need to set `overflow: visible` for each level of container on the path from the root to the target element. For example:
+`overflow: visible` is not an inherited property. If you want the overflowing content of the innermost element not to be clipped, you must set `overflow: visible` on every level of container along the path from the root to the target element. For example:
 ```html
-<!-- The overflow content of the inner item can be fully displayed -->
-<div style="width:100px; height:100px; overflow:visible">     <!-- intermediate container -->
-  <p style="width:200px; line-height:100%; overflow:visible"> <!-- overflow element itself -->
-    藏文、泰文等长文本不出界
+<!-- The overflowing content of the inner item can be fully displayed -->
+<div style="width:100px; height:100px; overflow:visible">     <!-- Intermediate container -->
+  <p style="width:200px; line-height:100%; overflow:visible"> <!-- Overflowing element itself -->
+    Long text in Tibetan, Thai, etc. will not go out of bounds
   </p>
 </div>
 ```
 
+##### Overflow Issues with i18n Text
 
-##### i18n text overflow problem
+In internationalization scenarios, text in many languages has a large height and tends to exceed the reserved line-height range, resulting in vertical clipping. For such cases, it is recommended to set the text element's `overflow` to `visible` and pair it with an appropriate `line-height` to ensure that the text content can be displayed in full.
 
+The following example shows the effect when line height is too small under both `overflow: visible` and `overflow: clip`:
 
-In international scenarios, the text height in many languages ​​is large and easily exceeds the reserved line height range, resulting in vertical cropping. In this case, it is recommended to set the `overflow` of the text element to `visible` and use appropriate `line-height` to ensure that the text content can be displayed completely.
-
-
-The following example shows the effect of a row height that is too small in both cases `overflow: visible` and `overflow: clip`:
-
-
-<glyphix id="css-overflow-visible" height="80" width="640" title="文本 overflow">
-
+<glyphix id="css-overflow-visible" height="80" width="640" title="Text overflow">
 
 ```html
 <div>
@@ -3453,7 +2678,6 @@ The following example shows the effect of a row height that is too small in both
   <p style="overflow: visible">Some i18n text with large line height.</p>
 </div>
 ```
-
 
 ```css
 div {
@@ -3469,76 +2693,52 @@ p {
 }
 ```
 
-
 </glyphix>
 
+The text above is clipped at `line-height: 22px` (e.g., the lower half of the letter 'g' is cut off), whereas setting `overflow: visible` allows the text to be displayed completely.
 
+For more details, please refer to the [i18n documentation](/framework/application/i18n.md#文本溢出).
 
-The above text is cropped in the case of `line-height: 22px` (for example, the lower part of the letter 'g' is cut off), but the text can be displayed completely after setting `overflow: visible`.
+##### Component-Specific Behavior
 
+Details of how various components handle `overflow` may vary. Please refer to component documentation such as [`scroll`](/components/scroll.md#padding-和-overflow), [`p`](/components/p.md), and [`marquee`](/components/marquee.md).
 
-Please refer to [i18n documentation](/framework/application/i18n.md#文本溢出) for more instructions.
+## Color and Background
 
+#### `color` <badge type="info" text="Inherited" /> <badge type="info" text="Inline" />
 
-##### Component specific behavior
+Sets the text color (foreground color) of an element. For the syntax of color values, please refer to [Color Values](/framework/render/style-and-layout.md#颜色值).
 
+**Default value**: `#ff0000`
 
-Each component also has different processing details for `overflow`. Please refer to the documentation of [`scroll`](/components/scroll.md#padding-和-overflow), [`p`](/components/p.md), [`marquee`](/components/marquee.md) and other components.
+#### `background-color` <badge type="info" text="Inline" />
 
+Specifies the background color, which is mutually exclusive with the [`background-image`](#background-image) property. For the syntax of color values, please refer to [Color Values](/framework/render/style-and-layout.md#颜色值).
 
-## color and background
-
-
-#### `color` <badge type="info" text="继承" /> <badge type="info" text="内联" />
-
-
-Set the text color (foreground color) of the element. Please refer to [color value](/framework/render/style-and-layout.md#颜色值) for the syntax of color values.
-
-
-**Default**: `#ff0000`
-
-
-#### `background-color` <badge type="info" text="内联" />
-
-
-Specifies the background color, and is mutually exclusive with the [`background-image`](#background-image) attribute. Please refer to [color value](/framework/render/style-and-layout.md#颜色值) for the syntax of color values.
-
-
-**Default**: `#ff0000` (black background)
-
+**Default value**: `#ff0000` (black background)
 
 #### `background-image`
 
+Sets the background image, which is mutually exclusive with [`background-color`](#background-color). Supports the following writing style:
 
-Set the background image, mutually exclusive with [`background-color`](#background-color). The following writing methods are supported:
+- `background-image: url("path/to/image")`: The `url()` function provides the [URI](../application/resource.md#uri-和路径) of the background image.
 
+Background images are fixed and aligned to the upper-right corner of the element for display, and stretching or scaling background images using properties similar to [`object-fit`](#object-fit) is not supported. For such complex scenarios, it is recommended to use a combination of [`stack`](/components/stack.md) and [`image`](/components/image.md) elements.
 
-- `background-image: url("path/to/image")` : `url()` function gives [URI](../application/resource.md#uri-和路径) of the background image.
-
-
-The background image is fixedly aligned to the upper right corner of the element and does not support using attributes like [`object-fit`](#object-fit) to stretch or scale the background image. For such complex scenarios, it is recommended to use a combination of [`stack`](/components/stack.md) and [`image`](/components/image.md) elements.
-
-
-## Margins and borders
-
+## Margins and Borders
 
 #### `margin`
 
+Sets the outer margins of an element in all four directions. The `margin` property accepts $1\sim4$ values, following this syntax:
 
-Sets the element's margins in four directions. The `margin` attribute accepts $1\sim4$ values, which is written as follows
+- `margin: x`: Sets top, bottom, left, and right margins all to `x`
+- `margin: v h`: Sets top and bottom margins to `v`, and left and right margins to `h`
+- `margin: t h b`: Sets top margin to `t`, bottom margin to `b`, and left and right margins to `h`
+- `margin: t r b l`: Sets top, right, bottom, and left margin widths to `t`, `r`, `b`, and `l` respectively.
 
+Each value type is a [length](/framework/render/style-and-layout.md#长度).
 
-- `margin: x`: Set the top, bottom, left and right margins to `x`
-- `margin: v h`: Set the top and bottom margins to `v`, and set the left and right margins to `h`
-- `margin: t h b`: Set the top margin to `t`, the bottom margin to `b`, and the left and right margins to `h`
-- `margin: t r b l`: Set the top, right, bottom, and left margin widths to `t`, `r`, `b`, `l`
-
-
-Each value is of type [length](/framework/render/style-and-layout.md#长度).
-
-
-**Default**: `0`. In a fluid layout, setting the left and right margins of block-level elements to `auto` can make the margins fill the width of the container, for example:
-
+**Default value**: `0`. In fluid layout, setting the left and right margins of a block-level element to `auto` can make the margins fill the width of the container, for example:
 
 ```css
 .center-box {
@@ -3546,12 +2746,9 @@ Each value is of type [length](/framework/render/style-and-layout.md#长度).
 }
 ```
 
+This centers the block-level element with the class `center-box` in the container. Similarly, if only the left or right margin is set to `auto`, that margin of the element will expand to fill the space, resulting in a right-aligned or left-aligned effect.
 
-Will center block-level elements of class `center-box` in the container. Similarly, if only the left or right margin is set to `auto`, then the margin of the element will be filled, resulting in a right or left-centered effect.
-
-
-<glyphix id="css-margin-auto" height="120" width="360" title="auto 边距">
-
+<glyphix id="css-margin-auto" height="120" width="360" title="auto margins">
 
 ```html
 <div>
@@ -3560,7 +2757,6 @@ Will center block-level elements of class `center-box` in the container. Similar
   <p class="right-auto">margin: 0 auto 0 0</p>
 </div>
 ```
-
 
 ```css
 div {
@@ -3586,141 +2782,96 @@ div > p {
 }
 ```
 
-
 </glyphix>
-
-
 
 #### `margin-left`
 
-
-Sets the left margin of the element.
-
+Sets the left outer margin of an element.
 
 #### `margin-top`
 
-
-Sets the top margin of the element.
-
+Sets the top outer margin of an element.
 
 #### `margin-right`
 
-
-Sets the right margin of the element.
-
+Sets the right outer margin of an element.
 
 #### `margin-bottom`
 
-
-Sets the bottom margin of the element.
-
+Sets the bottom outer margin of an element.
 
 #### `padding`
 
+Sets the inner padding of an element in all four directions. The `padding` property accepts $1\sim4$ values, following this syntax:
 
-Sets the element's padding in all four directions. The `padding` attribute accepts $1\sim4$ values, which is written as follows
+- `padding: x`: Sets top, bottom, left, and right padding all to `x`
+- `padding: v h`: Sets top and bottom padding to `v`, and left and right padding to `h`
+- `padding: t h b`: Sets top padding to `t`, bottom padding to `b`, and left and right padding to `h`
+- `padding: t r b l`: Sets top, right, bottom, and left padding widths to `t`, `r`, `b`, and `l` respectively.
 
+Each value type is a [length](/framework/render/style-and-layout.md#长度).
 
-- `padding: x`: Set the top, bottom, left and right margins to `x`
-- `padding: v h`: Set the top and bottom margins to `v`, and set the left and right margins to `h`
-- `padding: t h b`: Set the top margin to `t`, the bottom margin to `b`, and the left and right margins to `h`
-- `padding: t r b l`: Set the top, right, bottom, and left margin widths to `t`, `r`, `b`, `l`
-
-
-Each value is of type [length](/framework/render/style-and-layout.md#长度).
-
-
-**Default**: `auto`. By default, the element's `padding` is $0$.
-
+**Default value**: `auto`. Under the default value, the element's `padding` is $0$.
 
 #### `padding-left`
 
-
-Sets the left padding of the element.
-
+Sets the left inner padding of an element.
 
 #### `padding-top`
 
-
-Sets the top padding of an element.
-
+Sets the top inner padding of an element.
 
 #### `padding-right`
 
-
-Sets the right padding of the element.
-
+Sets the right inner padding of an element.
 
 #### `padding-bottom`
 
-
-Sets the bottom padding of the element.
-
+Sets the bottom inner padding of an element.
 
 #### `border`
 
+Sets the border style of an element. Supports the following writing styles:
 
-Sets the element's border style. The following writing methods are supported:
+- `border: <length>`: Represents a border with an outline width of `<length>` and a black color;
+- `border: solid`: Represents a border with an outline width of `1 px` and a black color;
+- `border: <length> solid <color>`: Represents a border with an outline width of `<length>` and a color of `<color>`.
 
+Where `<length>` is a [length](/framework/render/style-and-layout.md#长度), and `<color>` is a [color value](/framework/render/style-and-layout.md#颜色值).
 
-- `border: <length>`: Indicates a border with an outline width of `<length>` and a black color;
-- `border: solid`: Indicates a border with an outline width of `1 px` and a black color;
-- `border: <length> solid <color>`: Indicates a border with an outline width of `<length>` and a color of `<color>`.
-
-
-where `<length>` is a [length](/framework/render/style-and-layout.md#长度) and `<color>` is a [color value](/framework/render/style-and-layout.md#颜色值).
-
-
-Glyphix only supports elements with all borders or one of top, bottom, left or right borders. For example, `border: solid` will give the element a full border, while `border-top: solid` will give the element a top border. When both of these border properties exist in CSS, only the last property will take effect.
-
+Glyphix only supports elements having all borders or one of the top, bottom, left, or right borders. For example, `border: solid` gives the element all borders, while `border-top: solid` gives the element only a top border. When multiple conflicting border properties coexist in CSS, only the last one will take effect.
 
 #### `border-top`
 
-
-Specifies the top border style of the element. The format of the value is consistent with the [`border`](#border) attribute.
-
+Specifies the top border style of an element. The value format is consistent with the [`border`](#border) property.
 
 #### `border-right`
 
-
-Specifies the right border style of the element. The format of the value is consistent with the [`border`](#border) attribute.
-
+Specifies the right border style of an element. The value format is consistent with the [`border`](#border) property.
 
 #### `border-bottom`
 
-
-Specifies the bottom border style of the element. The format of the value is consistent with the [`border`](#border) attribute.
-
+Specifies the bottom border style of an element. The value format is consistent with the [`border`](#border) property.
 
 #### `border-left`
 
-
-Specifies the left border style of the element. The format of the value is consistent with the [`border`](#border) attribute.
-
+Specifies the left border style of an element. The value format is consistent with the [`border`](#border) property.
 
 #### `border-radius`
 
+**Default value**: `0 px`
 
-**Default**: `0 px`
+Sets the corner radius of the border. Currently supports a single [length](/framework/render/style-and-layout.md#长度) value. The `border-radius` property only takes effect when the element has all borders (see the [`border`](#border) property).
 
-
-Sets the border's corner radius. Currently a [length](/framework/render/style-and-layout.md#长度) value is supported. The `border-radius` attribute only takes effect if the element has all borders (see the [`border`](#border) attribute).
-
-
-## Pseudo class
-
+## Pseudo-classes
 
 ### `active`
 
-
-Elements such as buttons will have this pseudo-class when pressed.
-
+Elements such as buttons will have this pseudo-class when in the pressed state.
 
 ### `disabled`
 
-
-The element has this pseudo-class when it is in the [`disabled`](properties.md#disabled) state, where it does not respond to gesture events. This state can often be communicated to the user by making the element less transparent, for example:
-
+An element has this pseudo-class when it is in the [`disabled`](properties.md#disabled) state, during which the element does not respond to gesture events. You can typically lower the element's opacity to communicate this state to the user, for example:
 
 ```css
 <some-selector>:disabled {
@@ -3728,53 +2879,39 @@ The element has this pseudo-class when it is in the [`disabled`](properties.md#d
 }
 ```
 
-
-For a more complete example, see the [`disabled`](properties.md#disabled) attribute.
+For a more complete example, please refer to the [`disabled`](properties.md#disabled) property.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/commands/for.md
 
 ---
-
 icon: format-list-bulleted
-
 ---
-
-# for directive
-
+# for Directive
 
 The `for` directive is used for list rendering.
 
-
-## grammar
-
+## Syntax
 
 ``` html
-<div for="expr"></div> <!-- Subscript and iteration variables are not defined -->
-<div for="value in expr"></div> <!-- Do not define subscript variables -->
+<div for="expr"></div> <!-- Without index and iteration variables defined -->
+<div for="value in expr"></div> <!-- Without index variable defined -->
 <div for="index, value in expr"></div>
 <div for="(index, value) in expr"></div>
 ```
-The value expressed by `expr` is a [`Array` object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) or numerical value. The `for` instruction will traverse the entire list and pass the subscript value and the value of the iterated item during the iteration process. If you do not define a subscript variable or an iteration variable, the default name is `$idx` for the subscript variable and `$item` for the iteration variable.
+The value expressed by `expr` is an [`Array` object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) or a number. The `for` directive traverses the entire list and passes the index value and the iteration item value during the iteration process. If neither the index variable nor the iteration variable is defined, the default name for the index variable is `$idx`, and the default name for the iteration variable is `$item`.
 
+When both the `for` directive and the `if` directive are present on the same element, the `if` directive has higher priority. This means that if the `if` directive evaluates to falsy, the entire list will not be rendered.
 
-When the `for` instruction and the `if` instruction exist at the same time, the `if` instruction has a higher priority. This means that if the `if` directive evaluates to false, the entire list will not be rendered.
-
-
-Attribute values ​​of the `for` directive support the [directive attribute value](/framework/component/template.md#指令属性值) syntax, so double curly braces can also be used to surround expressions.
-
+The attribute value of the `for` directive supports the [directive attribute value](/framework/component/template.md#directive-attribute-values) syntax, so expressions enclosed in double curly braces can also be used.
 
 ::: warning
-
-It is not recommended to use the `if` and `for` instructions together to improve code readability.
+It is not recommended to use the `if` and `for` directives simultaneously in order to improve code readability.
 :::
 
+## List Rendering
 
-
-## List rendering
-
-
-Render a [JavaScript array](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps/Arrays) as a list via the `for` directive. It is usually used on subcomponents of [`scroll`](/components/scroll.md), for example:
+Render a [JavaScript array](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps/Arrays) into a list using the `for` directive. It is typically used on child components of [`scroll`](/components/scroll.md), for example:
 ``` html
 <scroll :damping="damping">
   <p for="item in items" class="item">
@@ -3782,10 +2919,9 @@ Render a [JavaScript array](https://developer.mozilla.org/en-US/docs/Learn/JavaS
   </p>
 </scroll>
 ```
-The `for` directive on the `p` component iterates through the `items` array and generates a `p` component node for each iterated item. `item` is the variable name of the iteration item, and its `message` attribute is accessed in `{{ item.message }}` [interpolation expression](/framework/component/template.md#插值表达式).
+The `for` directive on the `p` component iterates over the `items` array and generates a `p` component node for each iteration item. `item` is the variable name for the iteration item, and its `message` property is accessed in the `{{ item.message }}` [interpolation expression](/framework/component/template.md#interpolation-expressions).
 
-
-`items` is an array of type [Component object properties](/framework/component/component-object.md), for example:
+`items` is a [component object property](/framework/component/component-object.md) of array type, for example:
 ``` js
 export default {
   data: {
@@ -3797,14 +2933,10 @@ export default {
   }
 }
 ```
-
 
 This code will render the following interface:
 
-
 <glyphix id="commands-for-1" height="200" width="360" inline>
-
-
 
 ``` html
 <scroll :damping="damping">
@@ -3813,7 +2945,6 @@ This code will render the following interface:
   </p>
 </scroll>
 ```
-
 
 ``` js
 export default {
@@ -3826,7 +2957,6 @@ export default {
   }
 }
 ```
-
 
 ``` css
 scroll {
@@ -3845,13 +2975,9 @@ scroll {
 }
 ```
 
-
 </glyphix>
 
-
-
-The rendered result is a scrollable list containing three entries, the contents of which are "Foo", "Bar" and "Baz". You can use the `for` directive on native [components](/framework/component/README.md) or custom components to implement list rendering.
-
+The rendering result is a scrollable list containing three items with the contents "Foo", "Bar", and "Baz". You can use the `for` directive on native [components](/framework/component/README.md) or custom components to achieve list rendering.
 
 You can also use the default `$item` iteration variable name:
 ``` html
@@ -3861,152 +2987,118 @@ You can also use the default `$item` iteration variable name:
   </p>
 </scroll>
 ```
-The rendering result is the same as above.
+The rendering result of this is the same as above.
 
+## Nesting and Scoping
 
-## Nesting and scoping
-
-
-In the same label, subscripts and iteration variables must be accessed after the `for` directive, so you need to pay attention to the order of related attributes:
+Within the same tag, the index and iteration variables can only be accessed after the `for` directive, so you need to pay attention to the order of related attributes:
 ``` html
-<panel for="value in expr" title="value.title"></panel> <!-- correct -->
-<panel title="value.title" for="value in expr"></panel> <!-- mistake -->
+<panel for="value in expr" title="value.title"></panel> <!-- Correct -->
+<panel title="value.title" for="value in expr"></panel> <!-- Incorrect -->
 ```
-The wrong order will not cause a compile error, but instead try to find the `value` attribute in the `this` scope. In other words, variables defined in the `for` directive will hide the names of the outer scope, including:
-- The component’s view-model (i.e. accessed via the `this` attribute)
-- global object
+The incorrect order will not cause a compilation error, but will instead attempt to look up the `value` property in the `this` scope. In other words, variables defined in the `for` directive will shadow names in the outer scope, which include:
+- The component's view-model (i.e., accessed via properties of `this`)
+- Global objects
 
+Considering variable scoping and directive priority issues, the `if` directive should be placed before the `for` directive, otherwise it may lead to confusing behavior.
 
-Taking into account issues with variable scope and directive precedence, the `if` directive should precede the `for` directive, otherwise confusing behavior may occur.
-
-
-For the current component node, variables defined in the `for` directive are only visible in the attributes after it. Also visible in static subcomponents, e.g.
+For the current component node, variables defined in the `for` directive are only visible in attributes that appear after it. They are also visible in static child components, for example:
 ``` html
 <panel for="value in expr" title="value.title">
   <p>message: {{value.message}}</p>
 </panel>
-<p>{{value.message}}</p> <!-- At this time access this.value.message -->
+<p>{{value.message}}</p> <!-- Accessing this.value.message here -->
 ```
-Except for the last `{{value.message}}` expression, several other `value` are within the scope of the `for` directive.
+Except for the last `{{value.message}}` expression, the `value` in all other places is within the scope of the `for` directive.
 
+The `for` directive can be nested, and the scoping rules in this case are the same as above. Note that index and iteration variables with the same name will be shadowed by the inner `for` directive, so these variables need to be explicitly defined.
 
-The `for` directive can be nested and the scope rules are the same as above. Note that the scope of subscripts and iteration variables with the same name will be hidden by the inner `for` directive, so these variables need to be defined explicitly.
+## Array Change Detection
 
+The `for` directive can detect changes in [reactive](/framework/component/component-object.md#reactive-programming) arrays and update the interface. The following operations will trigger `for` rendering updates:
+- Replacing with a new array;
+- Calling array mutation methods, such as [`push()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/push), [`pop()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/pop), [`shift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/shift), [`unshift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift), [`splice()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/splice), [`sort()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), and [`reverse()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse).
 
-## Array change detection
+### Replacing an Array
 
-
-The `for` instruction can detect changes in the [Responsive](/framework/component/component-object.md#响应式编程) array and update the interface. The following operations will trigger `for` rendering updates:
-- Replace with a new array;
-- Call array update methods such as [`push()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/push), [`pop()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/pop), [`shift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/shift), [`unshift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift), [`splice()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/splice), [`sort()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) and [`reverse()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse).
-
-
-### replace an array
-
-
-The reactive property used for list rendering can be replaced with a new array to trigger UI updates. For example:
+You can trigger an interface update by replacing the reactive property used for list rendering with a new array. For example:
 ``` js
 this.items = this.items.filter((item) => item.message.match(/Foo/))
 ```
 In this way, `this.items` is assigned a new array, and the `for` directive will re-render the new list after this operation.
 
-
 ::: tip
-
-Arrays have some immutable methods, such as `filter()`, `concat()` and `slice()`, which do not change the original array but always return a new array. When encountering immutable methods, you need to use the above method to replace the old array with the new one.
+Arrays have some immutable methods, such as `filter()`, `concat()`, and `slice()`, which do not mutate the original array but always **return a new array**. When encountering immutable methods, you need to use the method above to replace the old array with the new one.
 :::
 
+### Array Mutation Methods
 
-
-### Array update method
-
-
-View updates can also be triggered using the update method of an array, for example:
+Using array mutation methods can also trigger view updates, for example:
 ``` js
-// Insert a new element with the content Grault at the bottom of the original list
+// Insert a new element with content 'Grault' at the bottom of the original list
 this.items.push({ message: 'Grault' })
 ```
 
-
-You can also directly modify the array length to truncate the array, such as:
+You can also truncate the array by directly modifying its length, such as:
 ``` js
 // Remove elements after the third item in the list
 this.items.length = 2
 ```
 
-
 You can also change elements of the list:
 ``` js
-// Change the second element content to Gault
+// Change the content of the second element to 'Grault'
 this.items[1] = { message: 'Grault' }
 ```
 
-
 ::: warning
-
-The `for` directive currently cannot track attribute changes of list elements, see [List element update](#列表元素更新) for details.
+The `for` directive currently cannot track property mutations of list elements. See [List Element Updates](#list-element-updates) for details.
 :::
 
+## Caveats and Limitations
 
+### List Element Updates
 
-## Defects and Limitations
-
-
-### List element update
-
-
-The `for` directive cannot listen for deep property updates of array items, which means
+The `for` directive cannot listen for deep property updates of array items, meaning that
 ``` js
 this.items[1].message = 'Grault'
 ```
-Interface updates will not be triggered correctly. To solve this problem, the array item must be replaced with a new object:
+will not correctly trigger an interface update. To solve this problem, you must replace the array item with a new object:
 ``` js
 this.items[1] = { message: 'Grault' }
 ```
 
-
-When the project object has many attributes, but only wants to update a few of them, it is recommended to use [Expand syntax (`...`)](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax) to copy the object first, and then update the attributes:
+When an item object has many properties, but you only want to update a few of them, it is recommended to first copy the object using the [Spread syntax (`...`)](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax), and then update the properties:
 ``` js
 this.items[1] = {
-  ...this.items[1], // Copy all attributes of the second element
-  message: 'Grault' // Update message attribute
+  ...this.items[1], // Copy all properties of the second element
+  message: 'Grault' // Update the message property
 }
 ```
 
-
 ::: warning
+The number of properties on array item objects will impact performance. When you notice lag in list updates, please refer to [Unnecessary Updates](#unnecessary-updates).
 
-The number of attributes of the array item object will have an impact on performance. When you find that the list update is stuck, please see [unnecessary updates](#不必要的更新).
-
-
-Due to reasons such as other elements in the interface being updated together, the interface may be updated after directly changing the deep properties of the project, but this is not stable, please do not use it like this.
+Due to reasons such as other elements in the interface updating simultaneously, directly mutating deep properties of an item might sometimes update the interface, but this is unstable; please do not use it this way.
 :::
 
+### List Index Issues
 
-
-### List subscript problem
-
-
-Although the `for` instruction supports obtaining the project subscript during rendering, such as:
+Although the `for` directive supports getting the item index during rendering, such as:
 ``` html
 <p for="index, value in items">
   {{ index }} - {{ value }}
 </p>
 ```
-However, responsive updating of subscripts is currently not supported, and modifications to the `items` array may cause display confusion. Updating the entire array avoids this problem.
+It currently does not support reactive index updates. Modifications to the `items` array may lead to display disorders. Updating the entire array can avoid this problem.
 
+However, due to certain optimization mechanisms, it is difficult for developers to guarantee that the entire `items` array is **truly** updated, which can lead to strange and unexpected index disorder issues.
 
-However, due to some optimization mechanisms, it is difficult for developers to ensure that the entire `items` array is actually updated, which can lead to strange unexpected subscript confusion problems.
+### Unnecessary Updates
 
+List rendering can be a bottleneck for fluency and performance, especially as rendering long lists can be slow. Reducing unnecessary list updates can be an effective optimization technique.
 
-### unnecessary updates
-
-
-List rendering can be one of the bottlenecks for fluency and performance, especially long lists that can be slower to render. Reducing unnecessary list updates may be an effective optimization method.
-
-
-#### Update list directly
-
+#### Direct List Updates
 
 Consider a list like this:
 ``` html
@@ -4015,31 +3107,29 @@ Consider a list like this:
   <p>{{ task.progress }}%</p>
 </div>
 ```
-This is a task processing interface that displays a list of tasks and processes a task when the user clicks on it. For simplicity, we initialize the task list like this:
+This is a task processing interface that displays a task list and processes a specific task when the user clicks it. For simplicity, we initialize this task list like this:
 ``` js
 this.tasks = Array.from({ length: 10 },
   (_, i) => ({ name: `Task #${i + 1}`, progress: 0 }))
 ```
-At this point you will see a to-do list with 10 items. The following `process()` method simply updates the task progress:
+At this point, you will see a task list containing 10 items. The following `process()` method simply implements task progress updating:
 ``` js
 process(idx) { // idx is the index of the clicked task item
   this.tasks[idx].progress = 0
   // Create a timer to simulate processing progress
   let timer = setInterval(() => {
-    // Since the for instruction does not support deep attribute updates, copy an object first
+    // Since the for directive does not support deep property updates, copy an object first
     let task = {...this.tasks[idx]}
     task.progress += 10
     this.tasks[idx] = task
     if (task.progress >= 100)
-      clearInterval(timer) // Delete timer when processing is complete
+      clearInterval(timer) // Delete the timer when processing is complete
   }, 100)
 }
 ```
-As shown below, this implementation can interact normally.
+As shown below, this implementation can be interacted with normally.
 
-
-<glyphix id="commands-for-tasklist-1" height="360" width="360" title="任务清单列表">
-
+<glyphix id="commands-for-tasklist-1" height="360" width="360" title="Task List">
 
 ``` html
 <scroll>
@@ -4049,7 +3139,6 @@ As shown below, this implementation can interact normally.
   </div>
 </scroll>
 ```
-
 
 ``` js
 export default {
@@ -4073,7 +3162,6 @@ export default {
 }
 ```
 
-
 ``` css
 scroll {
   display: flex;
@@ -4092,35 +3180,30 @@ div {
 }
 ```
 
-
 </glyphix>
 
+This simple approach can become very laggy in complex and long list interfaces, at which point you might observe:
+- Frame drops in animations such as progress bars in the interface;
+- Noticeable stuttering when scrolling up and down the list.
 
+#### Optimization via Child Components
 
-This simple method may become laggy in complex and long list interfaces. At this time, you may observe:
-- Frames dropped in animations such as progress in the interface;
-- Scrolling up and down the list becomes noticeably laggy.
-
-
-#### Optimize through subcomponents
-
-
-One optimization method is to split the project into an independent component, in this example you can add a `Task` component:
+An optimization method is to split the items into independent components. In this example, a `Task` component can be added:
 ``` html
 <div on:click="process">
   <p>{{ name }}</p>
   <p>{{ progress }}%</p>
 </div>
 ```
-The `Task` component's JavaScript script can handle its own `process()` operations:
+The JavaScript script of the `Task` component can handle its own `process()` operation:
 ``` js
 export default {
   data: {
-    name: null, // The task name must be passed in from the outer layer
+    name: null, // Task name needs to be passed in from the outside
     progress: 0
   },
   // Each Task component object will handle its own process operation,
-  // And access your own reactive properties through this.
+  // and access its own reactive properties via this.
   process() {
     this.progress = 0
     let timer = setInterval(() => {
@@ -4132,12 +3215,11 @@ export default {
 }
 ```
 
-
-Compared with the previous method, the new scheme can be used directly after [Introduce `Task` component](/framework/component/README.md#引入组件):
+Compared to the previous method, the new solution can be used directly after [importing the `Task` component](/framework/component/README.md#importing-components):
 ``` html
 <task for="task in tasks" :name="task.name" />
 ```
-The JavaScript code of the parent component can also be simpler:
+And the parent component's JavaScript code can be simpler:
 ``` js
 export default {
   data: {
@@ -4149,70 +3231,53 @@ export default {
   }
 }
 ```
-This has the following changes compared to updating the list directly:
-- The inserted array item does not have a `progress` attribute because it only needs to be processed in the `Task` subcomponent;
-- The `process()` method was removed and moved to the `Task` component;
-- There is no need to use the `idx` subscript variable to distinguish different items.
+Compared to updating the list directly, this brings the following changes:
+- The inserted array items do not have a `progress` property, because it only needs to be handled within the `Task` subcomponent;
+- The `process()` method has been removed and moved inside the `Task` component;
+- There is no need to use the `idx` index variable to distinguish different items.
 
-
-This method can implement the same task list interface, except that the processing of `progress` is moved to the `Task` subcomponent, thereby avoiding updating the task array when the progress is modified. Using this method can optimize the internal interface update problem of list elements and reduce code complexity.
+This approach achieves the same task list interface, but moves the handling of `progress` into the `Task` subcomponent, thereby avoiding updating the task array when modifying progress. Using this method can optimize the issue of internal interface updates for list elements while reducing code complexity.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/commands/on.md
 
 ---
-
 icon: alternate-email
-
 ---
+# on Directive
 
-# on command
+The `on` directive is used to listen for changes in property values that support listening.
 
-
-The `on` directive is used to monitor changes in attribute values ​​that support monitoring.
-
-
-## grammar
-
+## Syntax
 
 ``` html
 <div on:attribute="expr"></div>
-<div onattribute="expr"></div> <!-- Syntax compatible with quick apps -->
-<div @attribute="expr"></div>  <!-- Vue style syntax -->
+<div onattribute="expr"></div> <!-- Syntax compatible with Quick App -->
+<div @attribute="expr"></div>  <!-- Vue-style syntax -->
 ```
 
+`attribute` is the name of the property to listen for changes on, and `expr` is the expression to execute when the property changes. The standard `on` directive uses the `on:` prefix, and `on` and `@` character prefixes are also supported.
 
-`attribute` is the name of the attribute that needs to be monitored for changes, and `expr` is the expression that needs to be executed when the attribute changes. The standard `on` directive uses the `on:` prefix, and the `on` and `@` character prefixes are also supported.
-
-
-The attribute value of the `on` directive supports the [directive attribute value](/framework/component/template.md#指令属性值) syntax.
-
+The property value of the `on` directive supports the [directive property value](/framework/component/template.md#指令属性值) syntax.
 
 ::: tip
-
-It is recommended to use the `on:attribute` format, as `onattribute` can easily cause developers to unknowingly confuse `on` directives with ordinary attributes. In addition, attribute names such as `oneself` will be parsed into instructions of `on:eself`, so special attention should be paid.
+It is recommended to use the `on:attribute` format. `onattribute` can easily lead developers to unconsciously confuse the `on` directive with regular properties. In addition, property names like `oneself` will be parsed as the `on:eself` directive, which requires special attention.
 :::
 
+## Listening Expressions
 
+### Basic Usage
 
-## Listen expression
-
-
-### Basic usage
-
-
-The following code listens for touch events on a `div` component:
+The following code listens to a touch event on a `div` component:
 ``` html
 <div on:touchmove="console.log($event)"></div>
 ```
-In the example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to and [touch event object](../generic/properties.md#touchevent) is printed directly here. The `$event` variable is used to obtain the event value, which is a variable defined by the `on` directive (scoped only within the `on` directive expression).
-
+In this example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to, and the [touch event object](../generic/properties.md#touchevent) is printed directly. The `$event` variable is used to get the event value, which is defined by the `on` directive (its scope is limited to the `on` directive expression).
 
 You can also call methods defined in the component object:
 ``` html
 <div on:touchmove="onTouch('move', $event)"></div>
 ```
-
 
 ``` js
 export default {
@@ -4222,18 +3287,14 @@ export default {
 }
 ```
 
+For methods on custom events, please refer to [Inter-component Communication](../component/communicate.md).
 
-For methods of customizing events, please refer to [Communication between components](../component/communicate.md).
+### Function Expressions
 
-
-### function expression
-
-
-If the value of the listener expression is a function, the function will be called automatically:
+If the value of the listening expression is a function, that function will be called automatically:
 ``` html
 <div on:click="onClick" />
 ```
-
 
 ``` js
 export default {
@@ -4242,21 +3303,15 @@ export default {
   }
 }
 ```
-As shown in the example, the event value is passed to the function as the only parameter.
-
+As shown in the example, the event value will be passed as the sole argument to the function.
 
 ::: tip
-
-The listener expression does not have to be a function variable, but can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function then it will be called by the `on` directive.
+The listening expression does not necessarily have to be a function variable; it can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function, it will be invoked by the `on` directive.
 :::
 
+## Listening to Component Property Value Changes
 
-
-## Monitor changes in component property values
-
-
-Some components will generate events when their attribute values ​​change, which can be monitored through the `on` directive:
-
+Some component property values generate events when they change, which can be listened to using the `on` directive:
 
 ``` html
 <list on:index="indexChanged($event)">
@@ -4264,44 +3319,34 @@ Some components will generate events when their attribute values ​​change, w
 </list>
 ```
 
-
-As described in [Property document specification](../component/README.md#属性文档规范), properties that support **listening** can use the `on` directive to listen for value changes.
+As described in the [Property Documentation Specification](../component/README.md#属性文档规范), properties that support **listening** can have their value changes listened to using the `on` directive.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/commands/model.md
 
 ---
-
 icon: swap-horizontal
-
 ---
+# model Directive
 
-# model directive
+The `model` directive enables two-way data binding for component properties.
 
-
-Two-way binding of component properties can be achieved using the `model` directive.
-
-
-## grammar
-
+## Syntax
 
 ``` html
 <com model:prop="value"></com>
 <com ::prop="value"></com>
 ```
-Use the `model:` prefix or the abbreviated `::` in the attribute to modify the attribute, and you can use the `model` directive for two-way binding. Among them, `prop` is the attribute name of the target component, and `value` is the view-model attribute name in the current component that requires two-way binding.
+You can use the `model:` prefix or the shorthand `::` modifier on an attribute to enable two-way data binding with the `model` directive. Here, `prop` is the target component's property name, and `value` is the view-model property name in the current component that needs to be two-way bound.
 
+## Two-Way Binding
 
-## Two-way binding
-
-
-Two-way binding between component properties and view model properties can be achieved using [`on` directive](on.md) and [property binding expression](/framework/component/template.md#属性绑定表达式):
+By using the [`on` directive](on.md) and [property binding expressions](/framework/component/template.md#属性绑定表达式), you can achieve two-way binding between component properties and view-model properties:
 ``` html
 <div>
   <switch :value="state" on:value="state = $event"/> value: {{state}}
 </div>
 ```
-
 
 ``` js
 export default {
@@ -4313,19 +3358,15 @@ export default {
   }
 }
 ```
-
 
 <Glyphix id="commands-model-1" height="32" inline>
 
-
-
 ``` html
 <div>
   <switch :value="state" on:value="state = $event"/> value: {{state}}
 </div>
 ```
 
-
 ``` js
 export default {
   data: {
@@ -4337,35 +3378,26 @@ export default {
 }
 ```
 
-
 </Glyphix>
 
+When the value of `this.state` is modified in the JavaScript code, the `:value="state"` expression in the `switch` tag updates the display state of the `switch` element, while the `on` directive expression updates the value of `state` after the user clicks the `switch` element.
 
+In this process, the UI display state (the `switch` component and the text `value: {{state}}`) remains consistent with the `state` property in the view-model. We call this mechanism **two-way binding**.
 
-When the value of `this.state` is modified in JavaScript code, the `:value="state"` expression in the `switch` tag will cause the display state of the `switch` element to be updated, and the `on` directive expression will cause the value of `state` to be updated after the user clicks on the `switch` element.
-
-
-During this process, the display state of the interface (`switch` component and text `value: {{state}}`) is consistent with the `state` attribute in the view-model. We call this mechanism **two-way binding**.
-
-
-The `model` directive is essentially syntactic sugar for the above approach, which can easily implement two-way binding:
+The `model` directive is essentially syntactic sugar for the syntax shown above, providing a simplified way to implement two-way binding:
 ``` html
 <div>
   <switch ::value="state"/> value: {{state}}
 </div>
 ```
-
 
 <Glyphix id="commands-model-2" height="32" inline>
 
-
-
 ``` html
 <div>
   <switch ::value="state"/> value: {{state}}
 </div>
 ```
-
 
 ``` js
 export default {
@@ -4378,31 +3410,26 @@ export default {
 }
 ```
 
-
 </Glyphix>
 
+## Two-Way Binding for Custom Components
 
-
-## Two-way binding of custom components
-
-
-Two-way binding is often used for form components, but the `model` directive also supports custom components. Just provide an event with the same name for the property of the custom component and trigger it when the property changes. For example:
-
+Two-way binding is commonly used for form components, but the `model` directive also supports custom components. As long as you provide an event with the same name as the custom component's property and trigger it when the property changes. For example:
 
 ``` js
 // file: com.ux
 export default {
   data: {
-    prop: 0 // Suppose you want to perform two-way binding on the prop attribute
+    prop: 0 // Assuming we want two-way binding for the prop property
   },
   watch: {
-    prop(x) { // Trigger an event with the same name when the prop attribute value changes
+    prop(x) { // Trigger an event with the same name when the prop property value changes
       this.$emit('prop', x)
     }
   }
 }
 ```
-Assume this is a partial component object of a custom component, where the `prop` attribute is used for two-way binding. In this example, the `watch` object is used to listen for changes in the `prop` attribute and trigger an event named `'prop'` when it changes. Just do two-way binding like this in the caller component:
+Suppose this is part of a custom component's definition object, where the `prop` property is used for two-way binding. In this example, the `watch` object is used to monitor changes to the `prop` property and trigger an event named `'prop'` when it changes. In the parent/calling component, you can simply perform two-way binding like this:
 ``` html
 <com ::prop="valueName"></com>
 ```
@@ -4411,110 +3438,81 @@ Assume this is a partial component object of a custom component, where the `prop
 FILE_PATH: src/transl/EN/framework/commands/if.md
 
 ---
-
 icon: file-tree
-
 ---
+# if / elif / else Directives
 
-# if / elif / else instructions
+The `if` / `elif` / `else` directives are used for conditional rendering. These directives control whether a component is rendered. For example, the `if` directive renders the component only when the condition is true; otherwise, it removes the component. This is different from the component's `show` property, which controls whether the component is displayed but does not remove it.
 
+## Syntax
 
-`if` / `elif` / `else` directives are used for conditional rendering. These directives control whether the component will be rendered. For example, the `if` directive will only render the component if the condition is true, otherwise it will remove the component. This is different from the component's `show` attribute, which controls whether the component is displayed but does not remove the component.
-
-
-## grammar
-
-
-### if directive
-
+### if Directive
 
 ``` html
 <p if="cond">if: true</p>
 ```
-If the `cond` expression is true, the component will be rendered, otherwise it will not be rendered.
+If the `cond` expression is true, the component is rendered; otherwise, it is not rendered.
 
+## elif and else Directives
 
-## elif and else directives
-
-
-Components containing `elif` and `else` directives must follow components containing `if` or `elif` directives, and use the negation of the previous condition to control whether the component is rendered:
+Components with `elif` and `else` directives must follow a component with an `if` or `elif` directive, and use the negation of the previous condition to control whether the component is rendered:
 ``` html
-<p if="cond1">if cond1: true</p>
+<p if="cond1">if cond1: true</p> 
 <p elif="cond2">elif cond2: true</p>
 <p elif="cond3">elif cond3: true</p>
-<p else>else</p> <!-- else directive does not support attribute values -->
+<p else>else</p> <!-- The else directive does not support property values -->
 ```
-The code behaves as follows:
-- If the `cond1` condition is true, then only the `if cond1: true` text will be rendered;
-- Otherwise, if `cond2` is true, only `elif cond2: true` will be rendered;
-- Otherwise, if `cond3` is true, only `elif cond3: true` will be rendered;
-- All conditions are false, rendering the `else` text.
+The behavior of this code is as follows:
+- If the `cond1` condition is true, only the `if cond1: true` text is rendered;
+- Otherwise, if `cond2` is true, only `elif cond2: true` is rendered;
+- Otherwise, if `cond3` is true, only `elif cond3: true` is rendered;
+- If all conditions are false, the `else` text is rendered.
 
-
-The attribute values ​​of the `if` / `elif` / `else` directives support the [directive attribute value](/framework/component/template.md#指令属性值) syntax.
+The property values of `if` / `elif` / `else` directives support the [Directive Property Values](/framework/component/template.md#指令属性值) syntax.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/font-config.md
 
-# Font specifications
+# Font Specifications
 
+The Glyphix framework comes with built-in system fonts, and applications can also define their own custom fonts.
 
-There are some system fonts built into the Glyphix framework, and applications can also define their own fonts.
+## System-Level Fonts
 
+These system fonts are guaranteed to be provided in all environments where Glyphix runs:
+- `sans-serif`: The default sans-serif font.
 
-## System level fonts
+Different devices may provide different actual font files, but these font names are always available.
 
+### Default Font
 
-These system fonts are guaranteed to be available in all environments running Glyphix:
-- `sans-serif`: Default sans serif font.
-
-
-The actual font files provided by different devices may differ, but these font names are always available.
-
-
-### Default font
-
-
-If an interface element does not specify all font properties (font family, font size, etc.), the remaining properties will use system default values. Therefore, when an interface element does not have any font attribute, the system default font will be used. Default font properties are device-specified and have the following properties:
+If a UI element does not specify all font properties (font family, font size, etc.), the remaining properties will use system defaults. Therefore, when a UI element has no font properties specified, the default system font is used. The default font properties are specified by the device and have the following values:
 - [`font-family`](/framework/generic/styles.md#font-family) is `sans-serif`;
 - [`font-size`](/framework/generic/styles.md#font-size) is `1rem`.
 
+### Glyph Fallback Issue
 
-### Glyph fallback issue
+Due to device performance limitations, it is not possible to pre-install complete fonts for all languages and character sets. We only provide "primary fonts" for specific languages, which typically include common letters, numbers, and symbols. However, if you attempt to use uncommon characters, special symbols, or characters not included in these primary fonts, a "glyph fallback" phenomenon will occur.
 
-
-Due to device performance limitations, complete fonts for all languages ​​and character sets cannot be preinstalled. We will only provide "primary fonts" for a specific language, which typically include common letters, numbers, and symbols. However, if you try to use uncommon characters, special symbols, or characters that are not included in these major fonts, a "glyph fallback" phenomenon will occur.
-
-
-When a character cannot be rendered by a currently supported font, it will fall back to being displayed as a "box". For example, this is the effect of displaying the text "Hello, World." in the Roboto font that does not support Chinese:
-
+When a character cannot be rendered by the currently supported font, it falls back to display as a "box". For example, here is the effect of displaying the text "Hello, 世界。" using the Roboto font, which does not support Chinese:
 
 <glyphix id="font-config-fallback" height="30" width="300" inline>
-
-
 
 ```html
 <p>Hello, 世界。</p>
 ```
 
-
 </glyphix>
 
+Here, the three characters "世界。" are not supported and are therefore rendered as three boxes.
 
+## Application-Level Fonts
 
-The three characters "world." are not supported, so they are rendered as three boxes.
+### Font Mapping File
 
+The [`manifest.config.fontFaces`](manifest.md#fontfaces) field can be used to configure application-level font mapping files. This is a CSS file containing only [`@font-face` rules](/framework/generic/styles.md#font-face-rules). Fonts defined in this file can be used directly within the application without needing to reference the CSS file.
 
-## application-grade fonts
-
-
-### font mapping file
-
-
-The [`manifest.config.fontFaces`](manifest.md#fontfaces) field configures the application-level font mapping file. This is a CSS file containing only [`@font-face` rules](/framework/generic/styles.md#font-face-规则), and the fonts defined in it can be used directly in this application without referencing the CSS file.
-
-
-Assume that the path of the font mapping file in the project is `src/assets/font-faces.css`, then the `manifest.config.fontFaces` field needs to be filled in as
+Assuming the font mapping file is located at `src/assets/font-faces.css` in the project, the `manifest.config.fontFaces` field should be configured as follows:
 ``` json
 {
   "config": {
@@ -4522,7 +3520,7 @@ Assume that the path of the font mapping file in the project is `src/assets/font
   }
 }
 ```
-The following is an example of the contents of a `src/assets/font-faces.css` file
+Below is an example of the contents of the `src/assets/font-faces.css` file:
 ``` css
 @font-face {
   font-family: Montserrat;
@@ -4531,77 +3529,57 @@ The following is an example of the contents of a `src/assets/font-faces.css` fil
   font-style: normal;
 }
 ```
-Other CSS files can also be imported through the `@import` rule, but only the `@font-face` rule information will be retained in the font mapping file.
-
+Other CSS files can also be imported via `@import` rules, but only `@font-face` rule information will be retained in the font mapping file.
 
 ### `@font-face` Rules
 
-
-You can also use [`@font-face` rules](/framework/generic/styles.md#font-face-规则) directly in CSS to define and use fonts. This approach is similar to the general web development process.
-
+You can also define and use fonts directly in CSS using [`@font-face` rules](/framework/generic/styles.md#font-face-rules). This approach is similar to standard web development workflows.
 
 ::: tip
-
-Compared to defining fonts in individual CSS, application-level fonts defined in font mapping files run more efficiently and should be used in preference.
+Compared to defining fonts in individual CSS files, application-level fonts defined in the font mapping file run more efficiently and should be preferred.
 :::
 
+### When to Use Application-Level Fonts
 
-
-### When to use application-level fonts
-
-
-For devices with limited performance and resources, the default font provided by the system has lower resource usage and better performance, and developers should give priority to using it. Application-level fonts are only recommended for specific needs. Here are the specific guidelines:
-- **Prefer system-level fonts**: System-level fonts are optimized to reduce storage usage and processing overhead. In most cases, they can meet the needs of ordinary text display, such as menus, home pages, descriptive text, etc.
-- **Use custom fonts for specific design needs**: If the application needs to meet specific visual design style or brand requirements, you can use custom fonts. For example, the application may want to display a digital clock with a unique style, or emphasize text in certain titles and buttons. Using custom fonts can achieve an effect that is more in line with the design language.
-- **Custom fonts should have a compact character set**: To avoid unnecessary storage and processing overhead, custom fonts should have a compact character set as much as possible. Typically, only Latin letters, numbers, and necessary punctuation are required. For example, when designing a digital clock, the custom font should contain only the numeric characters $0 \sim 9$.
-
+For performance- and resource-constrained devices, the default fonts provided by the system have a lower resource footprint and better performance, and developers should prioritize using them. Application-level fonts are recommended only for specific requirements. Here are the specific guidelines:
+- **Prioritize system-level fonts**: System-level fonts are optimized to reduce storage footprint and processing overhead. They can meet the needs of ordinary text display in most cases, such as menus, main pages, and descriptive text.
+- **Use custom fonts for specific design requirements**: If an application needs to comply with a specific visual design style or brand requirement, custom fonts can be used. For example, an application may need to display a digital clock with a unique style, or emphasize text in certain titles and buttons; using custom fonts can achieve results that better match the design language.
+- **Custom fonts should have a streamlined character set**: To avoid unnecessary storage and processing overhead, the character set of a custom font should be kept as lean as possible. Generally, it only needs to include Latin letters, numbers, and necessary punctuation marks. For example, when designing a digital clock, the custom font should only contain the numeric characters $0 \sim 9$.
 
 ::: warning
-
-Do not use large font files (such as Chinese fonts) in your application. Large font file sizes can pose serious performance and resource risks. Typically, system-level fonts already include the character support required for the current language, and there is no need to supplement the character set with custom fonts.
+Do not use large font files (such as Chinese fonts) in your application. Large font files can introduce severe performance and resource risks. Typically, system-level fonts already include the character support required for the current language, eliminating the need to supplement the character set with custom fonts.
 :::
 
+## `rem` Font Size Unit
 
+To achieve a font style consistent with the system across different devices, we introduce the `rem` unit, which is slightly different from web development. `1rem` is the system body font size defined by the device vendor. When the [`font-size`](/framework/generic/styles.md#font-size) property is not defined in CSS, the default font size of an element is `1rem`. There is no fixed conversion relationship between `rem` and [length](/framework/render/style-and-layout.md#长度) units such as `px` or `pt`. A font size of `1rem` typically corresponds to around `24px` to `32px`.
 
-## `rem` font size unit
+Using `rem` as the font size unit ensures consistent rendering of all applications in the system. **Do not** use units like `px` to set font sizes, otherwise, they may fail to work properly across devices. Specifically, the following configurations are recommended:
+- **Headings** should use a `1.25rem` font size, and multi-level headings can choose other appropriate font sizes;
+- **Body text** should use the default font size, which is `1rem`, and generally should not have this font size explicitly specified;
+- **Footnotes** should use a `0.85rem` font size.
 
-
-In order to achieve a consistent font style with the system on different devices, we introduced the `rem` unit, which is slightly different from web development. `1rem` is the system text size defined by the device manufacturer. When the [`font-size`](/framework/generic/styles.md#font-size) attribute is not defined in CSS, the default font size of the element is `1rem`. There is no fixed conversion relationship between `rem` and `px` or `pt` and other [length](/framework/render/style-and-layout.md#长度) units. Font sizes of `1rem` usually correspond to around `24px` to `32px`.
-
-
-Using `rem` as the font size unit ensures consistent display across all applications in the system. **Don't** use units such as `px` to set the font size, otherwise it may not work across devices. Specifically, the following configuration is recommended:
-- **Title** uses `1.25rem` font size. For multi-level titles, you can choose other font sizes appropriately;
-- **Text** uses the default font size, which is `1rem`, and generally do not specify this font size explicitly;
-- **Footnotes** use `0.85rem` font size.
-
-
-It is recommended that developers select a small and fixed font size range and use our recommended font sizes in the above $3$ scenarios.
+Developers are advised to choose a small, fixed set of font size tiers and use our recommended font sizes in the $3$ scenarios mentioned above.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/cross-device.md
 
-# Cross-device adaptation
+# Cross-Device Adaptation
 
+When your application needs to run on multiple types of devices, you may encounter various interaction compatibility issues. For example:
+- Different devices have different screen resolutions and sizes, so applications should layout and scale appropriately across different devices;
+- Different devices have different system fonts and font sizes, so applications should adhere to the system style;
+- Interface layouts must account for different screen shapes, such as circular screens which often use fisheye-distorted lists;
+- Safe margins of pages may vary under different screen shapes and resolutions.
 
-When your application needs to run on multiple device vendors, you may encounter a variety of cross-compatibility issues, such as:
-- Different devices have different screen resolutions and sizes, and applications should be appropriately laid out and scaled on different devices;
-- The system fonts and font sizes of different devices are different, and the application should follow the system style;
-- Interface layout should consider different screen shapes. For example, circular screens often use a list of fisheye deformations;
-- The safe margins of the page may be different under different screen shapes and screen resolutions.
+This document describes how to use the Glyphix application framework to develop watch applications compatible with a wide range of devices while writing minimal adaptation code.
 
+## Simulator Parameters
 
-This document describes how to use the Glyphix application framework to develop watch applications compatible with a wide range of devices while writing less adaptation code.
-
-
-## Simulator parameters
-
-
-When using the `gx emu` command to start the emulator, the `-d` or `--device` parameter can specify the device to be simulated. For example, `gx emu -d default-watch-466x466` will emulate a round screen device with a resolution of $466\times 466$ pixels. `gx emu` will remember the last device specified by `-d` instead of automatically falling back to the default device.
-
+When starting the simulator using the `gx emu` command, the `-d` or `--device` parameter can specify the target simulated device. For example, `gx emu -d default-watch-466x466` will simulate a circular screen device with a resolution of $466\times 466$ pixels. `gx emu` will remember the device specified by the last `-d` instead of automatically falling back to the default device.
 
 ::: tip
-
-If you have installed the PowerShell or Zsh completion script for the gx command, you can complete available device names through the `Tab` key after typing `gx emu -d`. Otherwise please use `gx list device` to view the device list first, for example:
+If you have installed the PowerShell or Zsh completion script for the `gx` command, you can press the `Tab` key to autocomplete available device names after typing `gx emu -d`. Otherwise, please use `gx list device` first to view the device list, for example:
 ``` bash
 $ gx list device
 default-watch-466x466
@@ -4609,58 +3587,42 @@ default
 ```
 :::
 
+By default, the simulator's screen resolution matches that of the actual device. You can use the `-r` or `--real-scale` parameter (`gx emu -r`) to simulate the actual physical screen size of the device rather than its resolution. It is not recommended to use the `-r` parameter on non-high-resolution displays, as it may cause the display to appear overly blurry.
 
+Using the `-d` and `-r` parameters allows you to test the display effects of various devices through the simulator without needing physical hardware.
 
-By default, the emulator's screen resolution is the same as the actual device's, you can pass the `-r` or `--real-scale` parameter ( `gx emu -r` ) to simulate the device's actual screen size instead of the resolution. It is not recommended to use the `-r` parameter on non-high-resolution displays, as it will cause the display to be too blurry.
+## Multi-Resolution Adaptation
 
+In Web development, developers typically rely on media queries and units like `px` for precise layout and style adjustments. However, on wearable devices, the optimal font sizes vary too greatly between different devices, making precise planning during development difficult. More importantly, ensuring consistent readability and operational experience for all applications on a given device through a unified visual specification is one of the core issues in wearable UI design.
 
-Through the `-d` and `-r` parameters, you can use the simulator to test the display effects of multiple devices without having to prepare physical devices.
+Taking smartwatches as an example, the screen width of different devices may range between $360\rm px$ and $466\rm px$, while the height ranges from around $450\rm px$ to $500\rm px$. Therefore, despite the [`designWidth`](manifest.md#designwidth) configuration, it is usually impossible to specify the sizes of most interface elements using `px` units. No matter how it is scaled, the `px` unit always presents these issues:
+- Devices have different DPIs or sizes, making it impossible to achieve ideal font sizes through fixed pixel dimensions;
+- Circular and rectangular screens have large aspect ratio differences, making it difficult to specify large padding gaps using pixel values.
 
+This section will introduce layout techniques to address these issues.
 
-## Multi-resolution adaptation
+### Font Size Specifications
 
+Please refer to the [`rem` font size units](font-config.md#rem-字号单位) guide in the font specifications to standardize font sizes in your application. **Do not** use `px` as a font size unit.
 
-In web development, developers often rely on media queries and units like `px` for fine-grained layout and style adjustments. However, on wearable devices, the optimal font sizes for different devices vary greatly, making it difficult to plan accurately during development. More importantly, how to ensure consistent readability and operating experience for all applications on a device through unified visual specifications is one of the core issues in wearable device UI design.
+### Margin Configuration
 
-
-Taking a smart watch as an example, the screen width of different devices may range from $360\rm px$ to $466\rm px$, while the height ranges from about $450\rm px$ to $500\rm px$. Therefore, despite the existence of [`designWidth`](manifest.md#designwidth) configuration, the dimensions of most interface elements cannot generally be specified in `px` units. No matter how you scale, `px` units always have these problems:
-- The DPI or size of the device is different, and the ideal font size cannot be obtained through a fixed pixel size;
-- The large difference in aspect ratio between circular and rectangular screens makes it difficult to specify large filling gaps through pixel values.
-
-
-This section introduces layout techniques to address these issues.
-
-
-### Font size specifications
-
-
-Please refer to the [`rem` font size unit](font-config.md#rem-字号单位) guidelines of the font specification to standardize font sizes in your application, **Do not** use `px` as the font size unit.
-
-
-### Margin configuration
-
-
-You can use any [length](/framework/render/style-and-layout.md#长度) unit such as `px` to specify smaller margin values, for example:
-
+You can use `px` or any other [length](/framework/render/style-and-layout.md#长度) unit to specify smaller margin values, for example:
 
 ``` css
 p {
   border: 2px solid gray;
   font-size: 1.25rem;
-  padding: 8px; /* Use px as margin unit */
+  padding: 8px; /* Use px as the margin unit */
   margin: 8px;
 }
 ```
 
-
 <glyphix id="font-config-margins-pixel" height="80" width="300" inline>
-
-
 
 ```html
 <p>The message text.</p>
 ```
-
 
 ```css
 p {
@@ -4671,35 +3633,26 @@ p {
 }
 ```
 
-
 </glyphix>
 
+Except for `font-size` which uses `rem`, the other properties use `px` units. This is because Glyphix automatically scales the proportion of `px` units for the target device, and smaller `px` values usually carry no risk of overflow or clipping.
 
-
-Except for `font-size` which uses `rem`, several other attributes use `px` units. This is because Glyphix automatically scales `px` units for the target device, and smaller `px` values ​​usually have no risk of overflow or clipping.
-
-
-But when the size value is large, it is more recommended to use a percentage value, for example:
-
+However, when size values are large, it is recommended to use percentage values instead, for example:
 
 ``` css
 p {
   border: 2px solid gray;
   font-size: 1.25rem;
-  /* Use percentage units for left padding, please note the margin to the left of the example text */
+  /* Left padding uses percentage unit, please note the margin on the left side of the sample text */
   padding: 8px 8px 8px 40%;
 }
 ```
 
-
 <glyphix id="font-config-margins-percent" height="80" width="300" inline>
-
-
 
 ```html
 <p>Message</p>
 ```
-
 
 ```css
 p {
@@ -4709,28 +3662,19 @@ p {
 }
 ```
 
-
 </glyphix>
 
-
-
-This allows for better adaptation to devices with widely different resolutions.
-
+This allows better adaptation to devices with vastly different resolutions.
 
 ::: warning
-
-The screen heights of watch devices vary greatly, and large margins in the vertical direction require more attention to compatibility issues.
+Watch device screen heights vary significantly, and large vertical margins require extra attention regarding compatibility issues.
 :::
 
+### Flex Layout
 
+In addition to percentage length units, flex layout provides more flexible interface adaptability. Flex layout should be prioritized over percentage length units. Manual layouts—i.e., directly specifying the `width` and `height` CSS properties of elements—should be avoided.
 
-### flex layout
-
-
-In addition to percentage length units, flex layout can provide more flexible interface adaptability. Flex layout should be used first, then percentage length units. And manual layout, i.e. directly specifying the `width` and `height` CSS properties of the element, should be avoided.
-
-
-One exception where manual layout should be done is for interfaces that display network icons, for example:
+An exception where manual layout should be used is an interface displaying network icons, for example:
 ``` html
 <scroll>
   <div class="item" for="item in items">
@@ -4739,7 +3683,7 @@ One exception where manual layout should be done is for interfaces that display 
   </div>
 </scroll>
 ```
-If the size of the image pointed to by `item.icon` is not fixed, then it would be more beautiful to specify the appropriate width and height for the `image` element, for example:
+If the image size pointed to by `item.icon` is not fixed, specifying appropriate width and height for the `image` element makes it more aesthetically pleasing, for example:
 ``` css
 scroll {
   display: flex;
@@ -4755,39 +3699,30 @@ scroll {
   width: 92px;
   height: 92px;
   border-radius: 10px;
-  object-fit: fill; /* Stretch or scale the image if necessary */
+  object-fit: fill; /* Stretch or scale the image when necessary */
 }
 
-/* The text in item occupies the remaining space on the line */
+/* The text in the item occupies the remaining space on the line */
 .item > p {
   flex: 1;
 }
 ```
 
+Since the [`image`](/components/image.md) component automatically centers images, you do not need to worry about differences in image aspect ratios.
 
-Since the [`image`](/components/image.md) component automatically displays the image in the center, you don't have to worry about the difference in aspect ratio of the image.
+### Media Queries
 
+When no layout strategy can accommodate resolution differences, you can also use [media queries](/framework/render/media-query.md) to make targeted adjustments.
 
-### media inquiries
+## Screen Shape Adaptation
 
+Smartwatches typically come in two screen shapes: circular and rectangular. Circular screens require larger safe margins in the four corners and may use fisheye-effect lists.
 
-When any layout strategy cannot adapt to the difference in resolution, you can also use [media inquiries](/framework/render/media-query.md) to make targeted adjustments.
+### Media Queries
 
+Taking the top bar as an example, circular screens may require top bar text to be center-aligned, while rectangular screens have left-aligned top bar text. The following example demonstrates the layout differences corresponding to the two screen shapes.
 
-## Screen shape adaptation
-
-
-Smartwatches usually come in two screen shapes, round and rectangular. Among them, large safety margins need to be left at the four corners of the circular screen, and a fisheye effect may be used.
-
-
-### media inquiries
-
-
-Taking the top bar as an example, a circular screen may require the top bar text to be center-aligned, while a rectangular screen may require the top bar text to be left-aligned. The following example shows the layout differences for the two screen shapes.
-
-
-<glyphix id="circle-square-screens" height="400" width="800" title="异形屏幕布局">
-
+<glyphix id="circle-square-screens" height="400" width="800" title="Irregular Screen Layout">
 
 ```html
 <div class="screens">
@@ -4799,7 +3734,6 @@ Taking the top bar as an example, a circular screen may require the top bar text
   </div>
 </div>
 ```
-
 
 ```css
 p {
@@ -4826,7 +3760,7 @@ p {
 
 .circle-screen {
   border-radius: 50%;
-  /* The left and right sides of a circular screen are usually left blank to improve the display */
+  /* The left and right sides of circular screens are usually left blank to improve display effects */
   padding: 0 48px;
 }
 
@@ -4838,76 +3772,59 @@ p {
 }
 ```
 
-
 </glyphix>
 
-
-
-The two screen shapes can be processed separately through the [`shape`](/framework/render/media-query.md#shape) attribute of media queries, for example:
+You can use the [`shape`](/framework/render/media-query.md#shape) feature of media queries to handle the two screen shapes separately, for example:
 ``` css
 .title {
   font-size: 1.25rem;
   color: #353535;
-  /* By default, the title is simply surrounded by a safe margin of 32px. */
+  /* By default, the title simply leaves a 32px safe margin around all sides. */
   margin: 32px;
 }
 
-/* These style rules only take effect for round screens. */
+/* These style rules only apply to circular screens. */
 @media (shape: circle) {
   .title {
-    /* On round screens, title text should be centered. Other properties are inherited from the .title rule above. */
+    /* On circular screens, the title text should be centered. Other properties are inherited from the .title rule above. */
     text-align: center;
   }
 }
 ```
-This CSS code first defines the style rules for square screens and then overrides them in a media query block to apply to round screens.
+This CSS code first defines style rules for square screens, and then overrides them in a media query block for rules applicable to circular screens.
 
+### Template Macros
 
-### template macro
+While media queries can define CSS rules for different types of devices, combining [template macros](/framework/component/template-macro.md) with the [`media-query` attribute](/framework/render/media-query.md#组件的-media-query-属性) allows applying different UX template structures for different devices. This technique can automatically add fisheye distortion effects to list interfaces on circular devices.
 
+For specific usage methods, please refer to the [Template Macros](/framework/component/template-macro.md) section.
 
-Use media queries to define CSS rules for different types of devices, and combine [template macro](/framework/component/template-macro.md) and [`media-query` attribute](/framework/render/media-query.md#组件的-media-query-属性) to apply different UX template structures for different devices. This technology can automatically add a fisheye distortion effect to list interfaces on round devices.
+## JavaScript Adaptation
 
-
-Please refer to chapter [template macro](/framework/component/template-macro.md) for specific usage methods.
-
-
-## JavaScript adaptation
-
-
-If you need to write different logic for different devices, you can also get [Device information](/api/system-device.md). For example, you can get the device's screen shape enumeration value at runtime through [`device.screenShape`](/api/system-device.md#screenshape).
+If you need to write different logic for different devices, you can also retrieve [device information](/api/system-device.md). For example, you can obtain the screen shape enum value of the device at runtime via [`device.screenShape`](/api/system-device.md#screenshape).
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/resource.md
 
-# resource access
+# Resource Access
 
+## URIs and Paths
 
-## URIs and paths
+Resources within an application can be accessed via URIs or paths. These resources include files within the application installation package, the application's runtime data files, and shared data files. Unlike Web environments, URIs and paths in Glyphix applications are primarily used to access local files rather than resources on the network.
 
-
-You can access resources in the application through URI or path. These resources include files in the application installation package, application runtime data files and shared data files, etc. Unlike the web environment, URIs and paths in Glyphix applications are mainly used to access local files and cannot access resources on the network.
-
-
-Many [API](/api/README.md) and [Native components](/components/README.md) use URIs or paths to access resources, and URIs or paths can generally be mixed in these interfaces.
-
+Many [APIs](/api/README.md) and [native components](/components/README.md) use URIs or paths to access resources, and these two can generally be used interchangeably in these interfaces.
 
 ### URI
 
-
-The format of URI is similar to [URL](https://developer.mozilla.org/docs/Glossary/URL), and the syntax definition is as shown in the figure below:
-
+The format of a URI is similar to a [URL](https://developer.mozilla.org/docs/Glossary/URL), and its syntax is defined as shown in the figure below:
 
 ![](./figures/uri-syntax.svg)
 
-
-
-The description of each field is:
+Descriptions of each field:
 - **scheme**: Specifies the protocol for resource access, such as `app`, `internal`, etc.;
-- **authority**: usually represents the package name or domain name, and its meaning is determined by the specific resource agreement;
-- **path**: The path of the resource inside the resource package, which must be a string starting with the `/` character (just like the path in Unix);
-- **query**: Specify query data, generally only used to pass parameters when application jumps.
-
+- **authority**: Usually represents the package name or domain name, and its meaning is determined by the specific resource protocol;
+- **path**: The path of the resource inside the resource package, which must be a string starting with the `/` character (just like paths in Unix);
+- **query**: Specifies query data, generally used only to pass parameters during application navigation.
 
 Here are some examples of URIs:
 ```
@@ -4928,159 +3845,119 @@ app://com.example.app/icon.png?key=value
 scheme               path
 ```
 
+URIs can be used to locate resources in other applications as well as system resources, and can also access application caches or temporary files. Pay attention to whether the application has the corresponding permissions when accessing external resources. Unlike the Web platform, Glyphix URIs are usually used to access local resources and cannot access network resources. Please use the [`system.fetch`](/api/system-fetch.md) or [`system.request`](/api/system-request.md) module instead.
 
-URIs can be used to locate resources in other applications and system resources, and can also access the application's cache or temporary files. When accessing external resources, pay attention to whether the application has the corresponding permissions. Unlike the web platform, Glyphix URIs are typically used to access local resources and cannot access network resources. Please use the [`system.fetch`](/api/system-fetch.md) or [`system.request`](/api/system-request.md) module.
+### Paths
 
-
-### path
-
-
-Path is another way to locate resources, it can only define resources inside the application package. There are two ways to write paths, one is an absolute path starting with `/`, such as `/assets/images/icon.png`; the other is a relative path, such as `images/icon.png`. Absolute paths are relative to the root directory of the application resource bundle (that is, the project's `src` directory), while relative paths are relative to the current resource file. therefore
+A path is another way to locate resources, and it can only define resources inside the application package. There are two ways to write a path: one is an absolute path starting with `/`, such as `/assets/images/icon.png`; the other is a relative path, such as `images/icon.png`. Absolute paths are relative to the root directory of the application resource package (which is the project's `src` directory), while relative paths are relative to the current resource file. Therefore, in
 ``` js
 // in file: /Common/module-a.js
 import x from '/Common/module-b.js'
 import y from 'module-b.js'
 ```
-, `x` and `y` actually import the same module.
+`x` and `y` actually import the same module.
 
+`..` can be used to locate the parent directory, such as `../fonts/Times.ttf` or `/images/../fonts/Times.ttf`. However, `..` cannot go beyond the root directory of the project, so `/a/../..` will be restricted to `/`.
 
-Use `..` to locate the upper directory, such as `../fonts/Times.ttf` or `/images/../fonts/Times.ttf`. However, `..` cannot transcend the level of the project root directory, so `/a/../..` will be limited to `/`.
+Absolute paths can be used for the path field of a URI.
 
-
-Absolute paths can be used in the path field of a URI.
-
-
-## URI protocol
-
+## URI Protocols
 
 ### `app`
 
+Under this protocol, the authority field is the application's package name, which is the `manifest.package` field. The `path` field is the path of the resource within the application resource package.
 
-Under this protocol, the authority field is the application package name, which is the `mainfest.package` field. The `path` field is the path to the resources in the application resource package.
-
-
-Use the `app` protocol to access resources from other applications.
-
+Resources of other applications can be accessed using the `app` protocol.
 
 ### `file`
 
-
 To be added
-
 
 ### `pkg`
 
-
 To be added
-
 
 ### `internal`
 
+The `internal` URI protocol is used to access resource files inside the application, especially those that cannot be accessed through regular static [paths](#paths). For example, an application might generate temporary files, cache files, or private files that cannot be accessed via paths (paths can only access static resources within the resource package) and should instead be accessed and managed through the internal protocol.
 
-The `internal` URI protocol is used to access resource files within an application, especially those that are not accessible through regular static [path](#路径). For example, an application may generate temporary files, cache files, or private files that cannot be accessed through paths (paths can only access static resources within resource bundles), but should be accessed and managed through the internal protocol.
-
-
-The basic format of the common `internal` URI protocol is as follows:
+The basic format of common `internal` URI protocols is as follows:
 ``` ebnf
 internal://<authority>/<path>
 ```
-- **authority**: Determines the storage location of resource files. See below for specific functions.
-- **path**: The path relative to the specified storage location, pointing to a specific file.
+- **authority**: Determines the storage location of the resource file, see below for specific functions.
+- **path**: The path relative to the specified storage location, pointing to the specific file.
 
+#### authority Field
 
-#### authority field
+The **authority** field determines the category and storage location of the internal resource. Depending on its value, the meaning of the `authority` field is as follows:
+- `cache`: Indicates that the URI points to the application's cache directory, usually used to store cache files. Files in this directory are temporary files generated during application runtime and can be deleted or rebuilt at any time.
+- `files`: Indicates that the URI points to the application's private file directory. This is a storage location dedicated to the application for saving file data that needs to be persisted.
+- `mass`: Indicates that the URI points to a file directory shared by all applications. This is usually a public directory where multiple applications can store and read files.
+- `tmp`: Indicates that the URI points to the system's temporary file directory, usually used to store short-term temporary files. Files stored here have a short lifespan and may be cleared when the system or application restarts.
 
-
-The **authority** field determines the category and storage location of internal resources. Depending on the value, the meaning of the `authority` field is as follows:
-- `cache`: Indicates that this URI locates the cache directory of the application, usually used to store cache files. The files in this directory are temporary files generated when the application is running and can be deleted or rebuilt at any time.
-- `files`: Indicates that the URI locates the private file directory of the application. This is an application-specific storage location for file data that needs to be persisted.
-- `mass`: Indicates that the URI locates the file directory shared by all applications. This is usually a common directory where multiple applications can store and read files.
-- `tmp`: Indicates that this URI locates the temporary file directory of the system, which is usually used to store temporary files for short-term use. Files are stored here for a short period of time and may be cleared when the system or application is restarted.
-
-
-For example, `internal://cache/images/avatar.png` means accessing the image file `avatar.png` in the cache directory. This URI can be used in multiple scenarios such as [image](/components/image.md) components:
+For example, `internal://cache/images/avatar.png` represents accessing the image file `avatar.png` in the cache directory. This URI can be used in multiple scenarios such as the [image](/components/image.md) component:
 ``` html
 <image src="internal://cache/images/avatar.png" />
 ```
 
-
 ::: warning
+The **authority** field does not support URI encoding and must directly use literal values such as `cache` and `files`, rather than encodings in the form of `%63%61%63%68%65`. The **path** field supports URI encoding (though not recommended), but in addition to regular file path rules, it must comply with the following restrictions: the `%` character must not appear in the path, and it cannot traverse up to the root directory using `..`.
 
-The **authority** field does not support URI encoding. Literal values ​​such as `cache` and `files` must be used directly, and encoding in the form of `%63%61%63%68%65` cannot be used. The **path** field supports URI encoding (but is not recommended), but is subject to the following restrictions in addition to the normal file path rules: `%` characters cannot appear in the path, and the root directory cannot be traced back as `..`.
-
-
-These restrictions are intended to prevent potential security risks by preventing bypassing of internal resource access rules through encoding or path uptracing.
+These restrictions are designed to prevent bypassing internal resource access rules through encoding or path traversal, thereby avoiding potential security risks.
 :::
 
+#### Application File Isolation
 
+When using the `internal` URI protocol, the `cache`, `files`, and `tmp` categories are all private storage areas of the application, and only the current application can access the files in these directories. Therefore, the same `internal` URI may point to different files in different applications. Each application has an independent private storage space for caches, files, and temporary files, ensuring file isolation and data security between applications.
 
-#### Apply file isolation
-
-
-When using the `internal` URI protocol, the `cache`, `files` and `tmp` categories are private storage areas for applications, and only the current application can access files in these directories. Therefore, the same `internal` URI may point to different files in different applications. Each application has independent private cache, file and temporary file storage space, ensuring file isolation and data security between applications.
-
-
-Suppose there are two different applications A and B, each using the same URI to access private files:
+Suppose there are two different applications A and B, both using the same URI to access a private file:
 ```
 internal://files/config/settings.json
 ```
-So
-- The URI in **Application A** points to the `settings.json` file in its private file directory.
-- This URI in **Application B** points to the `settings.json` file in its private file directory.
+Then
+- In **Application A**, this URI points to the `settings.json` file in its private file directory.
+- In **Application B**, this URI points to the `settings.json` file in its private file directory.
 
+This mechanism ensures that applications manage their own files independently without interfering with each other, and also avoids potential data leaks.
 
-This mechanism ensures that applications manage their own files without interfering with each other, and avoids potential data leaks.
-
-
-Different from this, `internal://mass/` is a common file storage area shared by all applications. The same `internal` URI points to the same file in different applications. Therefore, files in the `mass` directory can be accessed and shared by multiple applications. For example, both application A and application B use:
+In contrast, `internal://mass/` is a public file storage area shared by all applications. The same `internal` URI points to the same file in different applications. Therefore, files under the `mass` directory can be jointly accessed and shared by multiple applications. For example, if both Application A and Application B use:
 ```
 internal://mass/public/shared_image.png
 ```
-Then the URI points to the same common file `shared_image.png` in both applications, allowing them to share the file resource.
-
+Then the URI points to the same public file `shared_image.png` in both applications, allowing them to share this file resource.
 
 ::: warning
-
-If one application stores sensitive data in `mass` space, other applications may be able to read that data. Therefore, developers should avoid storing any sensitive or private information in the `mass` directory and ensure that files stored there are publicly accessible and shareable resources.
+If an application stores sensitive data in the `mass` space, other applications may read that data. Therefore, developers should avoid storing any sensitive or private information in the `mass` directory, and ensure that the files stored therein are publicly accessible and shareable resources.
 :::
 
+## Resource APIs
 
-
-## Resource API
-
-
-[`URI`](/api/global.md#uri) global function, [`@system.path`](/api/system-path.md), [`@system.file`](/api/system-file.md) and other interfaces provide the ability to operate resources in JavaScript. Please refer to the relevant documentation for details.
+The [`URI`](/api/global.md#uri) global function, [`@system.path`](/api/system-path.md), [`@system.file`](/api/system-file.md), and other interfaces provide the capability to manipulate resources in JavaScript. Please refer to the relevant documentation for details.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/applet-object.md
 
-# Application objects
+# Application Object
 
-
-There is a `app.ux` or `app.js` file in every application.
+Each application has an `app.ux` or `app.js` file.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/manifest.md
 
-# manifest file
+# The manifest File
 
+The `manifest.json` file contains information such as application descriptions, interface declarations, and page routing.
 
-The `manifest.json` file contains application description, interface declaration, page routing and other information.
+`manifest.json` is a JSON file, and its content must be a JSON Object. This document introduces the functions of each field in `manifest.json`.
 
+## Field Descriptions
 
-`manifest.json` is a JSON file, and the file content must be a JSON Object. This document will introduce the functions of each field of `manifest.json`.
+### Root Properties
 
+These fields are properties of the root JSON object in the `manifest.json` file.
 
-## Field description
-
-
-### root attribute
-
-
-These fields are properties of the `manifest.json` file root JSON object.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface Manifest {
   package: string,
@@ -5098,62 +3975,43 @@ interface Manifest {
 ```
 :::
 
-
-
 #### `package` <decl type="string" />
 
-
-The `package` field is the application package name and is a required field. It is recommended to use the `com.company.module` format, such as: `com.example.demo`. Application package names in the system must be unique.
-
+The `package` field is the application's package name and is a mandatory field. It is recommended to use the format `com.company.module`, such as `com.example.demo`. Application package names must be unique within the system.
 
 ::: important
-
-Many device manufacturers' app stores do not support the dash `-` as part of the package name, so please avoid this. We also do not recommend using underscores `_` or `.` instead, in which case please connect the words directly, such as `com.wateralert.demo`.
+App stores of many device manufacturers do not support hyphens `-` as part of the package name, so please avoid them. We also do not recommend using underscores `_` or `.` as substitutes; in such cases, simply connect the words directly, e.g., `com.wateralert.demo`.
 :::
-
-
 
 #### `name` <decl type="string" />
 
-
-Display name of the application, required field. Within 6 Chinese characters, consistent with the name saved in the app store, used to display the app name on desktop icons, pop-up windows, etc. The field can be referenced using the `${}` expression [Internationalized string](i18n.md), for example:
+The display name of the application, a mandatory field. It should be within 6 Chinese characters and match the name saved in the app store. It is used to display the app name on desktop icons, pop-up windows, etc. This field can use `${}` expressions to reference [internationalized strings](i18n.md), for example:
 ``` json
 {
   "name": "${appName}"
 }
 ```
-where `appName` is the key of an internationalized string. Internationalized application names allow the device's application list to display application names in the current language instead of a fixed language.
-
+Here, `appName` is a key for an internationalized string. Internationalized application names allow the device's application list to display the application name in the current language rather than a fixed language.
 
 #### `icon` <decl type="string" />
 
-
-The path to the application icon, such as `/assets/icon.png`.
-
+The path to the application icon, for example, `/assets/icon.png`.
 
 #### `versionName` <decl type="string" />
 
-
-Application version string.
-
+The application version string.
 
 #### `versionCode` <decl type="number" />
 
-
-The application version code is an integer. It is recommended to increase the version code by one every time you publish your app.
-
+The application version code, which is an integer. It is recommended to increment the version code by one every time an application is released.
 
 #### `config` <decl type="?: Config" />
 
-
-Optional field describing system configuration information, see [`Config` object](#config-对象).
-
+An optional field describing system configuration information, see [`Config` Object](#config-object).
 
 #### `permissions` <decl type="?: PermissionInfo[]" />
 
-
-An array of `PermissionInfo` objects representing the list of permissions used by the application. When an application needs to access location information, sensors, device information, recording, Bluetooth, health data, etc., it needs to declare the corresponding permissions in this field, for example:
-
+An array consisting of `PermissionInfo` objects, representing the list of permissions used by the application. When the application needs to access location information, sensors, device information, audio recording, Bluetooth, health data, and other capabilities, the corresponding permissions must be declared in this field, for example:
 
 ``` json
 {
@@ -5163,57 +4021,45 @@ An array of `PermissionInfo` objects representing the list of permissions used b
   ]
 }
 ```
-The `PermissionInfo` object describes the permission information required by the application. It currently has only one `name` field. Its signature is as follows:
+The `PermissionInfo` object describes the permission information required by the application. It currently only has a `name` field. Its signature is as follows:
 ``` ts
 type PermissionInfo = {
   name: string; // Permission name, uniquely identifies a permission item
 }
 ```
-The `name` field identifies the specific permission name. The system module interface list corresponding to the permission name is as follows:
+The `name` field identifies the specific permission name. The permission names correspond to the system module interface list as follows:
 
-
-| Permission name | Corresponding system module | Permission description |
-| ------------------------------------- | --------------------------------------------------- | -------------------------------- |
-
-| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md) | Keep the application running in the foreground |
-| `watch.permission.LOCATION` | [`@system.geolocation`](/api/system-geolocation.md) | Location information |
-| `watch.permission.ACCESS_SENSORS` | [`@system.compass`](/api/system-sensor.md) | Built-in sensors (such as compass, accelerometer, etc.) |
-| `watch.permission.DEVICE_INFO` | [`@system.device`](/api/system-device.md) | Device information |
-| `watch.permission.RECORD` | [`@system.media`](/api/system-media.md) | Only recording related APIs require permissions |
-| `watch.permission.BLUETOOTH` | [`@system.bluetooth.ble`](/api/system-ble.md) | Allow device Bluetooth |
-| `watch.permission.READ_HEALTH_DATA` | Not supported yet | Read health data (such as steps, heart rate, etc.) |
-| `watch.permission.SCHEDULE` | [`@system.schedule`](/api/system-schedule.md) | Set up scheduled tasks |
-| `watch.permission.NOTIFICATION` | [`@system.notification`](/api/system-notified.md) | Allow app notification reminders |
-
+| Permission Name                       | Corresponding System Module                         | Permission Description                           |
+| ------------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md)                 | Keep the application running in the foreground   |
+| `watch.permission.LOCATION`           | [`@system.geolocation`](/api/system-geolocation.md) | Location information                             |
+| `watch.permission.ACCESS_SENSORS`     | [`@system.compass`](/api/system-sensor.md)         | Built-in sensors (e.g., compass, accelerometer)  |
+| `watch.permission.DEVICE_INFO`        | [`@system.device`](/api/system-device.md)           | Device information                               |
+| `watch.permission.RECORD`             | [`@system.media`](/api/system-media.md)             | Audio recording related APIs only require permissions |
+| `watch.permission.BLUETOOTH`          | [`@system.bluetooth.ble`](/api/system-ble.md)       | Allow using device Bluetooth                     |
+| `watch.permission.READ_HEALTH_DATA`   | Not supported yet                                   | Read health data (e.g., step count, heart rate)  |
+| `watch.permission.SCHEDULE`           | [`@system.schedule`](/api/system-schedule.md)       | Set scheduled tasks                              |
+| `watch.permission.NOTIFICATION`       | [`@system.notification`](/api/system-notified.md)   | Allow application notification reminders         |
 
 #### `router` <decl type="Router" />
 
-
-A required field describing page routing information within the application. See [`Router` object](#router-对象) for details.
-
+A mandatory field describing page routing information within the application, see [`Router` Object](#router-object) for details.
 
 #### `display` <decl type="?: Display" />
 
-
-For display effect configuration within the application, see [`Display` object](#display-对象) for details.
-
+Configuration for display effects within the application, see [`Display` Object](#display-object) for details.
 
 #### `dial` <decl type="?: Dial" />
 
-
-If the `dial` field is present, it indicates that this project is a watch face package rather than an application. The watch face's unique metadata is described by [`Dial` object](#dial-对象). The dial package [`icon`](#icon) does not use fields.
-
+If the `dial` field is present, it indicates that this project is a watch face package rather than an application. Exclusive watch face metadata is described by the [`Dial` Object](#dial-object). Watch face packages do not use the [`icon`](#icon) field.
 
 #### `widgets` <decl type="?: Widget[]" />
 
+Represents the configuration information for the list of widgets and small components. For configuration fields, see [`Widget` Object](#widget-object).
 
-Represents the configuration information of the widget and widget list. For details on the configuration fields, see [`Widget` object](#widget-对象).
+### `Config` Object
 
-
-### `Config` object
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface Config {
   designWidth?: number,
@@ -5224,63 +4070,41 @@ interface Config {
 ```
 :::
 
-
-
 #### `designWidth` <decl type="?: number" />
 
+The baseline width for page design (in pixels), with a default value of `750`. The `px` length unit in CSS will be scaled based on the ratio of the actual device width to `designWidth`. For example, when `designWidth` is `466`, pixel lengths on a device with an actual width of `410` pixels will be scaled by a factor of $410/466$.
 
-The base width of the page design (unit is pixels), the default value is `750`. The `px` length unit in CSS scales based on the ratio of the actual device width to `designWidth`. For example, when the value of `designWidth` is `466`, the pixel length will be scaled $410/466$ times on a device with an actual width of `410` pixels.
-
-
-It is recommended to use the currently designed device size instead of the default `750` to avoid doing a lot of conversions during development.
-
+It is recommended to use the screen size of the device currently being designed for, rather than the default `750`, to avoid a large amount of conversion during development.
 
 #### `designImageScale` <decl type="?: number" />
 
+The scaling factor for sliced image resources, with a default value of $1.0$. To meet multi-device resolution adaptation, designers need to scale images up according to the design draft before slicing to ensure quality after packaging.
 
-The image scaling factor of image resources. The default value is $1.0$. In order to meet the resolution adaptation of multiple devices, the designer needs to enlarge the picture according to the design draft and then cut the picture to ensure the quality after packaging.
-
-
-`designImageScale` is the ratio of the size of the original resource image in the project to the logical resolution of the scaled image. Specifically, the scaling factor $\it{scale}$ of the resource image on the actual device is:
+`designImageScale` is the ratio between the size of the original resource image in the project and the logical resolution of the scaled image. Specifically, the scaling factor $\it{scale}$ of the resource image on the actual device is:
 $$
-
 \it{scale} = \tt{designImageScale}\frac{\tt{deviceWidth}}{\tt{designWidth}}
-
 $$
-
 Where $\tt{deviceWidth}$ is the actual width of the device screen. Therefore, the actual display size $(w', h')$ of the image is:
 $$
-
 (w', h') = \it{scale} \cdot (w, h)
-
 $$
-
 Where $(w, h)$ is the size of the original resource image.
 
-
 ::: tip
+Do not use a `designImageScale` configuration smaller than $1$, as this means resource images will be enlarged during packaging, resulting in noticeable blurring and distortion. If you want your application to display images exquisitely across multiple devices, you should prepare resource images at a larger size than actually required and set the correct `designImageScale` parameter.
 
-Do not use a `designImageScale` configuration smaller than $1$, which means that the resource image will be enlarged during packaging, resulting in obvious blurring and distortion. If you want your application to display images elegantly across multiple devices, you should prepare resource images at a larger size than required and set the correct `designImageScale` parameter.
-
-
-For example, if the image size displayed on the actual device (assuming $\tt{designWidth} == \tt{deviceWidth}$) is $96\rm px \times 96\rm px$, then you can prepare a $192\rm px \times 192\rm px$ material with twice the resolution and set `designImageScale` to $2$.
+For example, if the image size displayed on the actual device (assuming $\tt{designWidth} == \tt{deviceWidth}$) is $96\rm px \times 96\rm px$, you can prepare $192\rm px \times 192\rm px$ assets with twice the resolution and set `designImageScale` to $2$.
 :::
-
-
 
 #### `fontFaces` <decl type="?: string" />
 
+Specifies the file path of the application-level font mapping table, where fonts defined within it can be used directly in the application. This path can be a relative path to `manifest.json` or an absolute path relative to the root directory of the application resource package.
 
-Specify the application-level font mapping table file path, and the fonts defined in it can be used directly in the application. This path can be relative to `manifest.json` or absolute relative to the root directory of the app's resource bundle.
-
-
-Reference [Font configuration](font-config.md).
-
+Refer to [Font Configuration](font-config.md).
 
 #### `assets` <decl type="?: string | string[]" />
 
-
-Specifies the path to a custom resource using glob patterns (file wildcards). For example:
+Specifies the path glob patterns (file wildcards) for custom resources. For example:
 ``` json
 {
   "config": {
@@ -5288,27 +4112,22 @@ Specifies the path to a custom resource using glob patterns (file wildcards). Fo
   }
 }
 ```
-All files in the `assets` directory of the project and all `data.bin` files in the project will be packaged. These files will only be packaged in the form of static resource files (that is, the files will be copied directly).
-
+This will package all files under the `assets` directory in the project and all `data.bin` files in the project. These files will only be packaged in the form of static resource files (i.e., copied directly).
 
 File wildcards can be the same as paths, but have the following special forms:
-- `*` matches a path component without a path separator ( `/` ).
-- `**` matches any number of path components and may include path separators.
-
+- `*` matches a single path component, excluding path separators (`/`).
+- `**` matches any number of path components and can include path separators.
 
 For example:
-- `test.js` can match `test.js` files in projects and directories.
-- `**/*-data.bin` can match files with the `-data.bin` suffix in any path.
-- `*/*.bin` matches files with the `.bin` suffix in any one-level directory in the project root.
+- `test.js` can match the `test.js` file in the root directory of the project.
+- `**/*-data.bin` can match files with the `-data.bin` suffix under any path.
+- `*/*.bin` matches files with the `.bin` suffix under any level of directory in the project root.
 
+### `Router` Object
 
-### `Router` object
+Defines the composition of pages and related configuration information.
 
-
-Define the composition of the page and related configuration information.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface Router {
   entry?: string,
@@ -5317,18 +4136,13 @@ interface Router {
 ```
 :::
 
-
-
 #### `entry` <decl type="?: string" />
 
-
-The name of the application homepage. This page will be jumped to after starting the application. Default is `"main"`.
-
+The name of the application home page. When the application starts, it will first navigate to this page. Defaults to `"main"`.
 
 #### `pages` <decl type="{ [name: string]: PageInfo }" />
 
-
-Declare information for each page. The key of the `pages` attribute `name` is the page name, and the attribute value [`PageInfo` object](#pageinfo-对象) is the detailed configuration information of the page. For example:
+Declares the information for each page. The key `name` of the `pages` property is the page name, and the property value, the [`PageInfo` Object](#pageinfo-object), is the detailed configuration information of the page. For example:
 ``` json
 {
   "router": {
@@ -5344,26 +4158,19 @@ Declare information for each page. The key of the `pages` attribute `name` is th
 }
 ```
 
+All pages in the application must be entered into the routing table before they can be used, and each page must also have a unique name.
 
-All pages in the application must be filled in the routing table before they can be used, and each page must also have a unique name.
-
-
-### `Display` object
-
+### `Display` Object
 
 #### `pageAnimation` <decl type="?: PageAnimation" />
 
+The default transition animation configuration for pages within the application. The value is a [`PageAnimation` Object](#pageanimation-object).
 
-The default transition animation configuration of the in-app page, the value is [`PageAnimation` object](#pageanimation-对象).
+## `PageInfo` Object
 
+The page configuration object is the property value of the `router.pages` object. The type of the page configuration object is Object. This section introduces the property field definitions of the page configuration object.
 
-## `PageInfo` object
-
-
-The page configuration object is the attribute value of the `router.pages` object. The type of page configuration object is Object. This section introduces the attribute field definitions of the page configuration object.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface PageInfo {
   path?: string,
@@ -5374,42 +4181,29 @@ interface PageInfo {
 ```
 :::
 
-
-
 #### `path` <decl type="?: string" />
 
-
-The path to the page directory (the path to the folder where the page components are stored). Defaults to the same as the page name, which is the key of the `Router` object.
-
+The path of the page directory (the path of the folder storing page components). Defaults to the same as the page name, which is the key of the `Router` object.
 
 #### `component` <decl type="?: string" />
 
-
-The name of the page component is consistent with the UX file name and does not require a *.ux* suffix. For example, the component name `"index"` corresponds to the `index.ux` file.
-
+The name of the page component, which matches the UX file name without the *.ux* extension. For example, the component name `"index"` corresponds to the `index.ux` file.
 
 #### `pageAnimation` <decl type="?: PageAnimation" />
 
-
-The transition animation configuration of the page, the value is [`PageAnimation` object](#pageanimation-对象). This configuration takes precedence over the `display.pageAnimation` configuration in `mainfest.json`.
-
+The transition animation configuration of the page, whose value is a [`PageAnimation` Object](#pageanimation-object). This configuration has a higher priority than the `display.pageAnimation` configuration in `manifest.json`.
 
 #### `launchMode` <decl type="?: 'standard' | 'singleTask'" version="0.8" />
 
+The launch mode of the page, defaulting to `standard`. When a page's `launchMode` is configured as `singleTask`, if you attempt to open a page instance that is already in the back stack, all page instances above that instance will be popped out of the stack, returning to the page where that instance resides (similar to [`router.back('<page-name>')`](/api/system-router.md#back)), rather than creating a new page instance.
 
-The startup mode of the page, the default is `standard`. When the page's `launchMode` is configured as `singleTask`, if you want to open a page instance that is already on the return stack, all the pages above the instance will be popped from the stack and returned to the page where the instance is located (similar to [`router.back('<page-name>')`](/api/system-router.md#back)), instead of creating a new page instance.
+When "opening" and returning to an existing page in `singleTask` mode, the [`onRefresh`](../component/life-cycle.md#onrefresh) lifecycle function is triggered.
 
+### `PageAnimation` Object
 
-The [`onRefresh`](../component/life-cycle.md#onrefresh) lifecycle function is triggered when "opening" in `singleTask` mode and returning to an already existing page.
+The properties of this object configure the behavior of page transition animations. Transition animations are only valid for the top-most page; non-top pages will not play transition animations.
 
-
-### `PageAnimation` object
-
-
-The properties of this object configure the behavior of page transition animations. The transition animation is only effective for the top page, and the transition animation will not be played on non-top pages.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface PageAnimation {
   openEnter?: string,
@@ -5420,63 +4214,46 @@ interface PageAnimation {
 ```
 :::
 
+Each property can take the following values:
+- `"none"`: No transition animation, which is the default value for all properties.
+- `"slide"`: The page transitions with a sliding animation. This transition effect varies under different transition configuration properties:
+  - For `openEnter` transitions, the slide effect is that the page enters from the left side of the screen towards the right until it completely covers the screen.
+  - For `closeExit` transitions, the slide effect is that the page starts sliding to the right from a position completely covering the screen until it completely leaves the screen.
+  - For `closeEnter` and `openExit` transitions, the slide effect has no animation.
 
-
-Each attribute can take on the following values:
-- `"none"`: No transition animation, this is the default value for all properties
-- `"slide"`: The page transitions with a sliding animation. This transition effect varies under different transition configuration properties, including:
-  - For `openEnter` transition, the slide effect is that the page starts from the left to the right of the screen until it completely covers the screen.
-  - For `closeExit` transition, the slide effect is that the page slides to the right starting from a position that completely covers the screen until it completely leaves the screen.
-  - For `closeEnter` and `openExit` transitions, the slide effect is not animated.
-
-
-Default transition animations for pages and apps are defined by the device. If no `pageAnimation` related fields are specified in `manifest.json`, some devices may not play transition animations, while other devices may use manufacturer-customized animation effects.
-
+Default transition animations for pages and applications are defined by the device. If `manifest.json` does not specify fields related to `pageAnimation`, some devices may not play transition animations, while other devices may use manufacturer-customized animation effects.
 
 ::: warning
-
-The emulator will always play the slide page transition animation, regardless of which device it is emulating. If you want to ensure that page transition animations are turned off, use
+The simulator always plays slide page transition animations, regardless of which device it is simulating. If you want to ensure that page transition animations are disabled, use syntax like:
 ``` json
 {
   "pageAnimation": { "openEnter": "none" }
 }
 ```
-This way of writing is not `"pageAnimation": {}`, which does not take effect for unknown reasons.
+Rather than `"pageAnimation": {}`, as the latter does not take effect for unknown reasons.
 :::
-
-
 
 #### `openEnter` <decl type="?: string" />
 
-
 This property configures the transition animation of the new page when opening a new page.
-
 
 #### `closeEnter` <decl type="?: string" />
 
-
-This property configures the transition animation of the old page that will be overwritten when a new page is opened.
-
+This property configures the transition animation of the old page underneath that will be covered when opening a new page.
 
 #### `openExit` <decl type="?: string" />
 
-
-This property configures the exit transition animation of the closed page when the page is closed.
-
+This property configures the exit transition animation of the closed page when closing a page.
 
 #### `closeExit` <decl type="?: string" />
 
+This property configures the transition animation of the page that is about to be re-displayed underneath the closed page when closing a page.
 
-This property configures the transition animation of the page to be re-displayed under the closed page when the page is closed.
+### `Dial` Object
 
+The `Dial` object describes configuration information related to watch faces.
 
-### `Dial` object
-
-
-The `Dial` object describes configuration information related to the dial.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface Dial {
   component: string,
@@ -5485,29 +4262,19 @@ interface Dial {
 ```
 :::
 
-
-
-
-
 #### `component` <decl type="string" />
 
-
-Path to the watch face entry component. Can be an absolute path within the package or relative to the `manifest.json` file.
-
+The path of the watch face entry component. It can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 #### `preview` <decl type="string" />
 
+The path of the watch face preview image. It can be an absolute path within the package or a relative path to the `manifest.json` file.
 
-The path to the watch face preview image. Can be an absolute path within the package or relative to the `manifest.json` file.
+### `Widget` Object
 
+The `Widget` object describes configuration information for widgets or small components.
 
-### `Widget` object
-
-
-The `Widget` object describes the configuration information of the widget or widget.
-
-
-::: details type signature
+::: details Type Signature
 ``` ts
 interface Widget {
   name: string,
@@ -5517,50 +4284,39 @@ interface Widget {
 ```
 :::
 
-
-
 #### `name` <decl type="string" />
 
-
-The name of the widget/widget. Widgets in the same application package cannot have the same name.
-
+The name of the widget/small component. Widgets within the same application package cannot have duplicate names.
 
 #### `component` <decl type="string" />
 
-
-The path to the widget/widget entry component. Can be an absolute path within the package or relative to the `manifest.json` file.
-
+The path of the widget/small component entry component. It can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 #### `preview` <decl type="string" />
 
-
-The path of the widget/widget preview image. Can be an absolute path within the package or relative to the `manifest.json` file.
+The path of the widget/small component preview image. It can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/i18n.md
 
-# internationalization
+# Internationalization
 
+Internationalization is used to translate the interface into different languages so that users of different languages can use it.
 
-Internationalization is used to translate the interface into different languages ​​so that it can be used by users of different languages.
+## Internationalization Resources
 
-
-## International resources
-
-
-The internationalization mechanism requires developers to first write the internationalized resource files of the application and then use them in the component code. Internationalized resources are some JSON files stored in the application's `src/i18n` directory (developers need to create this folder first). Each file is named with a language code, for example:
+The internationalization mechanism requires developers to first create the application's internationalization resource files and then use them in component code. Internationalization resources are JSON files stored in the application's `src/i18n` directory (developers need to create this folder first). Each file is named with a language code, for example:
 ``` bash
-src                # 项目源代码路径
-└─ i18n            # 国际化资源文件夹
-   ├─ default.json # 默认回退语言
-   ├─ ja.json      # 日文翻译文件
-   ├─ it.json      # 意大利语翻译文件
-   └─ zh-CN.json   # 简体中文翻译文件
+src                # Project source code path
+└─ i18n            # Internationalization resources folder
+   ├─ default.json # Default fallback language
+   ├─ ja.json      # Japanese translation file
+   ├─ it.json      # Italian translation file
+   └─ zh-CN.json   # Simplified Chinese translation file
 ```
-As shown in the example, `default.json` is the default fallback language translation file whose rules are used when the text to be translated is not in the selected language.
+As shown in the example, `default.json` is the translation file for the default fallback language. Its rules are used when the text to be translated is not present in the selected language.
 
-
-The content of the internationalized resource file is a JSON object with the following form:
+The content of an internationalization resource file is a JSON object in the following format:
 ``` json
 // default.json
 {
@@ -5571,54 +4327,43 @@ The content of the internationalized resource file is a JSON object with the fol
   "helloWorld": "你好，世界！"
 }
 ```
-The value of this JSON object is the translated text in the target language, and the keys are used to index the translated text in the code. Each key corresponds to a translated text with the same meaning in internationalized resource files in multiple languages. For example, the translated text corresponding to the `helloWorld` key in English is `Hello, world!`, while the corresponding text in Chinese is `你好，世界！`.
-
+The values of this JSON object are the translated texts in the target language, and the keys are used to index the translated texts in the code. Each key corresponds to translated texts with the same meaning in multiple language resource files. For example, the `helloWorld` key corresponds to the translated text `Hello, world!` in English and `你好，世界！` in Chinese.
 
 ### `default.json`
 
-
-Unlike general language internationalization files, `default.json` is also used for translation text fallback that is not defined in the current language. That is, the key of an internationalized string is not defined in the JSON file of that language, but if it exists in `default.json`, the latter translation will be used.
-
+Unlike general language internationalization files, `default.json` is also used as a fallback for translation texts that are not defined in the current language. That is, if a key for an internationalization string is not defined in the JSON file of the target language, but exists in `default.json`, the translation from the latter will be used.
 
 When a key does not exist in any of the above internationalization files, the internationalization framework will directly return the key itself.
 
+## Using Internationalized Text
 
-## Use internationalized text
+### `$t()` Function
 
-
-### `$t()` function
-
-
-`$t()` are global functions for getting internationalized text, their signature is:
+`$t()` is a global function used to retrieve internationalized text. Its signature is:
 ``` ts
 function $t(key: string): string
 ```
-`key` is the key to be translated, and the return value is the corresponding internationalized text in the current language. If there is no such key-value pair in the internationalized resource, `key` itself will be returned.
-
+`key` is the key to be translated, and the return value is the corresponding internationalized text in the current language. If this key-value pair is not found in the internationalization resources, the `key` itself will be returned.
 
 This function is typically used in component code, for example:
 ``` html
 <p>{{ $t('helloWorld') }}</p>
 ```
 
-
-Can also be used in JavaScript code:
+It can also be used in JavaScript code:
 ``` js
 console.log($t('helloWorld'))
 ```
 
-
-### `t` command
-
+### `t` Command
 
 Native components support the `t` command for automatically translating internationalized text:
 ``` html
 <p t>helloWorld</p>
 ```
-The `<p>` component in the example contains an attribute named `t` (which is actually a command), which is equivalent to having the text child node `helloWorld` as an argument and automatically calling the `$t()` function and using the returned internationalized text to set the text content of the `<p>` component. In template code, the `t` command is simpler to use than the `$t()` function.
+The `<p>` component in the example contains an attribute named `t` (which is actually a command). This command is equivalent to taking the text child node `helloWorld` as a parameter to automatically call the `$t()` function and using the returned internationalized text to set the text content of the `<p>` component. In template code, the `t` command is simpler to use than the `$t()` function.
 
-
-The `t` command also supports use as a property prefix for native components, for example:
+The `t` command also supports being used as an attribute prefix for native components, for example:
 ``` html
 <p t:text="helloWorld" />
 ```
@@ -5627,172 +4372,118 @@ Similar to the standalone `t` command, the attribute value string `helloWorld` w
 <p :text="$t('helloWorld')" />
 ```
 
-
 ::: tip
+The `t` command currently only supports native components and has no effect in custom components.
 
-The `t` command now only supports native components and has no effect in custom components.
-
-
-In situations where the `t` command is available, use the `t` command in preference to the `$t()` function because the `t` instruction will perform better due to the way it is implemented.
+Where the `t` command can be used, please prioritize using the `t` command over the `$t()` function, because the implementation of the `t` directive results in better performance.
 :::
 
+### Switching Languages
 
+When the application switches languages, all reactive properties of all components are recalculated, at which point the internationalized text is re-queried, so there is no need to manually update the interface. However, `$t()` functions called outside of the reactivity framework do not have these effects.
 
-### switch language
+Cached computed property values are not recalculated when switching languages, so translated text calling `$t()` within a computed property's `get()` method will not be re-fetched.
 
+### Getting Internationalization Configuration
 
-When the application switches languages, the responsive properties of all components will be recalculated, and the internationalized text will be re-queried, so there is no need to manually update the interface. But `$t()` functions not called in a reactive framework have no these effects.
+You can access the application's internationalization configuration via the [`@system.i18n`](/api/i18n.md) module. You can also listen for locale changes through the application's [`onLocaleChanged()`](/framework/component/life-cycle.md#onlocalechanged) lifecycle function.
 
+## Layout and Rendering
 
-Cached computed property values ​​are not recomputed when switching languages, so the translated text of a call to `$t()` in the computed property's `get()` method is not refetched.
-
-
-### Get internationalization configuration
-
-
-The application's internationalization configuration can be accessed through the [`@system.i18n`](/api/i18n.md) module. You can also monitor locale changes through the application's [`onLocaleChanged()`](/framework/component/life-cycle.md#onlocalechanged) lifecycle function.
-
-
-## Layout and rendering
-
-
-### automatic line height
-
+### Automatic Line Height
 
 [[To be completed]]
 
+### Text Overflow <version-badge since="0.9"/>
 
-### Text overflow <version-badge since="0.9"/>
+In some scenarios where the UI design layout height is limited, some internationalized text may not be fully displayed because the required line height is too large. This may occur when a UI designed for languages like Chinese or English is translated into other languages. For example, in Tibetan, the same text content requires a larger line height to display completely.
 
-
-In some scenarios where the layout height of the UI design draft is limited, some internationalized text may not be fully displayed because the required line height is too large. This may occur when a UI designed for languages ​​such as Chinese or English is translated to other languages. For example, the same text content in Tibetan requires a larger line height to display fully.
-
-
-The following example shows that the same Tibetan text will be cropped due to the default drawing behavior when `line-height: 1` is used (red box on the left):
-
+The following example shows that the same piece of Tibetan text will be clipped under `line-height: 1` due to default rendering behavior (left red box):
 
 <div style="display:flex; gap:20px; font-family:monospace; font-size:22px">
-
 <span style="border:1px solid red; width:220px; line-height:1; overflow:clip; background:#fff8f8;white-space:nowrap">
-
   &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
-
 </span>
-
 <div style="border:1px solid green; width:220px; line-height:1; overflow:visible; background:#f8fff8;white-space:nowrap">
-
   &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
-
+</div>
 </div>
 
-</div>
+The reserved line height for UIs designed for Chinese or English may not be sufficient, meaning that generally, you cannot solve this problem simply by setting a larger `line-height` or using `line-height: auto`. The only solution is to let the text overflow using `overflow: visible` (right green box).
 
+In internationalization scenarios, it is recommended to use [`overflow: visible`](/framework/generic/styles.md#overflow) to prevent text from being clipped.
 
-
-The reserved row height of UIs designed for Chinese or English may not be enough, which means that it is usually not possible to set `line-height` larger or use `line-height: auto` to solve this problem. Then you can only use `overflow: visible` to overflow the text (green box on the right).
-
-
-In international scenarios, it is recommended to use [`overflow: visible`](/framework/generic/styles.md#overflow) to avoid text clipping.
-
-
-The [`scroll` component](/components/scroll.md#i18n-场景的推荐设置) document also has i18n configuration instructions for the `overflow` attribute. Please refer to the relevant documents for more details.
+The [`scroll` component](/components/scroll.md#i18n-场景的推荐设置) documentation also contains i18n configuration instructions regarding the `overflow` property. Please refer to the relevant documentation for more details.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/application/README.md
 
-# application framework
+# Application Framework
 
+A Glyphix application is an interactive program that can run independently, designed specifically for MCU (Microcontroller Unit) devices. It consists of a series of pages, components, and related logic, and is supported and managed by a runtime environment. Through the Glyphix application framework, developers can build and organize applications using HTML templates, CSS, and JavaScript in a way that is close to Web development.
 
-The Glyphix application is a standalone, interactive application designed for MCU (Microcontroller) devices. It consists of a series of pages, components and related logic, and is supported and managed by the runtime environment. With the Glyphix application framework, developers can build and organize applications using HTML templates, CSS, and JavaScript in a way close to web development.
+You can think of an application as a standalone program like a mobile app: they can be installed, launched, switched, and uninstalled. Each application has its own resources and data storage space, and runs in a controlled environment.
 
+## Runtime
 
-You can think of apps as standalone programs like mobile apps: they can be installed, launched, switched, and uninstalled. Each application has its own resources and data storage space, and runs in a controlled environment.
+The runtime is a native system integrated into the device firmware. It provides a standard application execution environment and manages all system resources required by the application. This section introduces the various responsibilities of the runtime and its behavioral standards.
 
+### Launching Applications
 
-## runtime
+The runtime can launch an application via native or JavaScript interfaces. Each application has an independent execution environment, which means that:
+- Applications run in independent JavaScript execution environments without interfering with each other.
+- Each application has independent resource access, including page structures, file resources, data storage, and various other resources.
+- No low-level privileges: An application's execution environment is decoupled from the underlying system, and therefore it cannot bypass the runtime to access low-level resources.
 
+However, certain resources are globally unique, such as the visible area of the screen and public file directories. As user operations occur, some applications will enter the **foreground** interactive state, while others will switch to the background.
 
-The runtime is a native system integrated into the device firmware. It provides a standard application running environment and manages all system resources required by the application. This section introduces the various responsibilities of the runtime and their standards of behavior.
+### Page Management
 
+The interface of a Glyphix application is primarily provided by **pages**. Therefore, the runtime maintains the page objects for each application and manages global popup pages. These management mechanisms include page switching, rendering, and lifecycle control.
 
-### Start application
+### Memory Resource Management
 
+The runtime system centrally manages memory and various system resources—both within individual applications and across multiple applications—to optimize overhead and prevent leaks:
+- Postpone loading operations for images, text, and other resources to reduce interface loading latency.
+- Cache and optimize page and component files to accelerate hot-loading performance.
+- Maintain resource and underlying file mappings to achieve device-agnostic I/O and resource access.
+- Optimize memory footprint to avoid exhausting MCU memory.
 
-The runtime can launch an application through native or JavaScript interfaces. Each application has an independent running environment, which means:
-- Applications run in independent JavaScript execution environments and do not interfere with each other.
-- Each application's resource access is independent, including page structure, file resources, data storage and other resources.
-- No underlying permissions: The application's running environment has nothing to do with the underlying system, so it cannot access underlying resources beyond the runtime.
+### Resource Recycling
 
+When an application exits, the runtime reclaims all resources, releasing system usage back to the level before the application was launched. This is a system-level mechanism that cannot be controlled at the application level, which also means that:
+- Pending Promise objects will not be settled when an application exits, so asynchronous operations may never return a result. Please make sure to handle necessary cleanup in the application's [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) lifecycle function.
+- The underlying system may kill the application at any time and has full operational permissions. It is impossible to absolutely keep an application alive at the application level, nor can you assume the device's application scheduling policy.
 
-However, some resources are globally unique, such as the visible area of ​​the screen, public file directories, etc. As the user operates, some applications will become interactive in the foreground, while other applications will switch to the background.
+### Standard APIs
 
+The runtime provides a set of standard [APIs](/api/README.md) that abstract differences in Bluetooth, networking, sensors, and system functions across specific devices. Most APIs are supported by all devices, but some are only supported on specific devices.
 
-### Page management
+### Background Management
 
-
-The interface of the Glyphix application is mainly provided by the page, so the page object of each application will be maintained during runtime and the global pop-up page will be managed. These management mechanisms include page switching, rendering and life cycle control.
-
-
-### Memory resource management
-
-
-The runtime system uniformly manages memory and various system resources between the application itself and multiple applications to optimize overhead and avoid leaks:
-- Delay the loading of images, text and other resources to reduce the delay in interface loading.
-- Cache and optimize page and component files to accelerate hot loading performance.
-- Maintain resource and underlying file mapping to implement device-independent IO and resource access.
-- Optimize memory usage to avoid exhausting MCU memory.
-
-
-### Resource recovery
-
-
-When the app exits, the runtime reclaims all resources, releasing system usage to the level it was before the app was launched. This is a system mechanism that cannot be controlled at the application level, which also means:
-- Pending Promise objects are not honored when the app exits, so asynchronous operations may never get results. Please pay attention to do the necessary processing in the application's [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) life cycle function.
-- The underlying system may kill the application at any time and has full and complete operating rights. Absolute keepaliveness cannot be achieved at the application level, and the application scheduling policy of the device cannot be assumed.
-
-
-### Standard interface
-
-
-The runtime provides a standard set of [API](/api/README.md) s that abstract differences in Bluetooth, network, sensor, and system functionality on specific devices. Most APIs are supported by all devices, but some are only supported by specific devices.
-
-
-### Backend management
-
-
-The application framework supports background running of applications, which allows users to return to the current application after returning to interfaces such as the application list without restarting the application. Applications running in the background will be subject to some restrictions, such as:
-- Background applications cannot jump to pages, and APIs such as [`router.push()`](/api/system-router.md#push) will hang directly.
-- The background application may automatically return to the main page (that is, the bottom page), just like the user returns manually.
-- Most apps can only stay in the background briefly and are killed by the system in about half a minute to free up resources.
-- Apps that are performing specific tasks such as audio playback can continue to run in the background.
-
+The application framework supports running applications in the background. This allows users to return to interfaces like the application list and then return to the current application without restarting it. Applications running in the background are subject to certain restrictions, such as:
+- Background applications cannot navigate between pages; APIs like [`router.push()`](/api/system-router.md#push) will directly hang/suspend.
+- Background applications may automatically return to the main page (i.e., the bottommost page), just as if the user manually returned.
+- Most applications can only stay in the background briefly and will be killed by the system in about half a minute to free up resources.
+- Applications performing specific tasks such as audio playback can continue running in the background.
 
 ::: tip
-
-If your application needs to play audio in the background (such as a podcast application), please make sure to start the audio playback task in the main page or interface-independent script, rather than playing it in a deep page. Otherwise, audio playback may be interrupted and background persistence lost when the background app returns to the home page.
+If your application needs to play audio in the background (such as a podcast app), make sure to start the audio playback task in the main page or an interface-agnostic script, rather than playing it deep within sub-pages. Otherwise, when the background application returns to the main page, audio playback may be interrupted and lose background residency.
 :::
 
+The application background mechanism involves a series of lifecycle management details; see [Application Lifecycle](../component/life-cycle.md) for details.
 
+## Pages
 
-The background mechanism of the application involves a series of life cycle management, see [Application life cycle](../component/life-cycle.md) for details.
+An application is divided into multiple pages, similar to HTML pages: each page implements a specific type of interaction logic, and multiple pages can navigate to each other.
 
+A page is an interface element that fills the entire screen, so only one page can be displayed on the device at a time. To support this, the application framework provides a page stack mechanism: each application can open several pages at runtime, and these pages are maintained in a stack manner, displaying only the topmost page at any time. Since the page stack is a stack, it supports `push` and `pop` operations. Through these two operations, new pages can be pushed onto the application's page stack, or the top page can be closed. In addition, the application framework also extends several practical page operations.
 
-## page
+Most pages reside in the application's page stack. When the application is in the foreground (i.e., it is the currently displayed application), the page at the top of the page stack is displayed, while all pages of background applications are hidden. The page stacks of different applications are completely independent.
 
+A page consists of a **page component** and several child components. All pages must be declared in [`manifest.json`](manifest.md#router) before they can be used. Intra-application pages use the [`system.router`](/api/system-router.md) API for navigation and switching, which includes a routing mechanism and a data transfer method between pages.
 
-The application will be divided into multiple pages, which is similar to an HTML page: each page implements a type of interactive logic, and multiple pages can jump to each other.
-
-
-A page is an interface element that fills the entire screen, so only one page can be displayed on the device at the same time. To this end, the application framework provides a page stack mechanism: each application can open some pages during runtime. These pages are maintained in a stack manner, and only the top page is displayed. Because the page stack is a stack, it supports push and pop operations, which allow you to add new pages to the application's page stack or close the top page. In addition, the application framework has also expanded some practical page operations.
-
-
-Most pages exist in the application's page stack. When the application is in the foreground (that is, it is the displayed application), the page at the top of the page stack is displayed, while all pages in the background application are not displayed. The page stacks between each application are completely independent.
-
-
-A page consists of a **page component** and several sub-components. All pages must be declared in [`manifest.json`](manifest.md#router) before they can be used. Pages within the application are navigated and switched through the [`system.router`](/api/system-router.md) API, which includes a set of routing mechanisms and data transfer methods between pages.
-
-
-The page uses a stacked layout by default, just like the [`stack`](/components/stack.md) component, so use a template like this in the page component:
+Pages use a stacked layout by default, just like the [`stack`](/components/stack.md) component. Therefore, using a template like this within a page component:
 ``` html
 <scroll>
   <p>background</p>
@@ -5800,8 +4491,7 @@ The page uses a stacked layout by default, just like the [`stack`](/components/s
 <p>overlay</p>
 ```
 
-
-Has the same effect as placing it inside a `stack` component:
+has the same effect as placing it inside a `stack` component:
 ``` html
 <stack>
   <scroll>
@@ -5811,12 +4501,9 @@ Has the same effect as placing it inside a `stack` component:
 </stack>
 ```
 
+You can observe this stacking effect using the interactive demo below. You can use your mouse or trackpad to scroll the "Background" text and observe the stacking layer effect.
 
-This stacking effect can be observed using the interactive demo below, where you can use your mouse or touchpad to scroll through the "Background" text and observe the stacked levels.
-
-
-<glyphix id="application-page-component" height="200" width="300" title="页面组件堆叠效果">
-
+<glyphix id="application-page-component" height="200" width="300" title="Page Component Stacking Effect">
 
 ``` html
 <scroll>
@@ -5824,7 +4511,6 @@ This stacking effect can be observed using the interactive demo below, where you
 </scroll>
 <p>Overlay</p>
 ```
-
 
 ``` css
 p {
@@ -5840,121 +4526,90 @@ scroll>p {
 }
 ```
 
-
 </glyphix>
 
+## Components
 
-
-## components
-
-
-See [component framework](/framework/component/README.md) for details.
+See [Component Framework](/framework/component/README.md) for details.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/testing/api.md
 
 # API
 
-
-## Content positioning
+## 内容定位
 
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/testing/README.md
 
-# testing framework
+# Testing Framework
 
+Glyphix provides an automated testing framework for applications, designed to simulate user operations and check interface behavior. This testing framework does not simulate operations randomly; instead, it requires developers to write test cases.
 
-Glyphix provides an automated testing framework for applications that simulates user operations and checks interface behavior. This testing framework does not simulate random operations, but requires developers to write test cases.
+## Basic Concepts
 
+The Glyphix testing framework is essentially a set of JavaScript APIs that generally implement the following features:
 
-## Basic concepts
-
-
-Glyphix's testing framework is actually a set of JavaScript APIs that generally implement the following functions:
-
-
-- Register test case
-- Find interface elements
-- Simulate user operations or actions
+- Registering test cases
+- Finding interface elements
+- Simulating user operations or actions
 - Assertions and verification logic
 
+### Test Steps
 
-### Test steps
+The basic principle of a test step is to **find a specific element**, **execute a simulated action**, and (optionally) **verify the content**. For example:
 
+1. Find an element with the CSS class `play-button`;
+2. Click this element;
+3. Do not verify the content.
 
-The basic principles of a test step are to **find a specific element**, **perform a simulated action** and (optionally) **validate the content**. For example:
-
-
-1. Find an element with CSS class `play-button`;
-2. Click on this element;
-3. Content is not verified.
-
-
-In the actual interface, `.play-button` may be a play button. Clicking this button will start playing music. The JavaScript code corresponding to this test is as follows:
-
+In an actual interface, `.play-button` might be a play button that starts playing music when clicked. The JavaScript code corresponding to this test is as follows:
 
 ```js
 await tc.getByClass("play-button").click();
 ```
 
+This test code will automatically wait for the `.play-button` element to appear and move it into the interface viewport before clicking the element. These testing APIs automatically wait for animations or gestures in the interface and will fulfill the `await` only after the click gesture is fully completed. Therefore, it is usually unnecessary to manually move elements or explicitly wait for operations to complete.
 
-The test code automatically waits for the `.play-button` element to appear and moves it into the interface viewport before clicking the element. These test APIs will automatically wait for animations or gestures in the interface, and will honor `await` when the click gesture is fully completed. Therefore, there is usually no need to manually move elements or explicitly wait for the operation to complete.
-
-
-### Find elements
-
+### Finding Elements
 
 The testing framework provides a series of interfaces to find elements in the interface, such as:
 
+- `tc.getByClass()`: Finds elements by class name;
+- `tc.getByTag()`: Finds elements by tag name.
 
-- `tc.getByClass()`: Find elements based on class names;
-- `tc.getByTag()`: Find elements based on tag names.
+All these interfaces wait for the element to appear and attempt to move the element into the visible area before the next operation.
 
+### Simulating User Operations
 
-These interfaces will wait for the element to appear and try to move the element into the visible area before taking the next step.
+## Getting Started with Writing Tests
 
+### Test Case Files
 
-### Simulate user operations
-
-
-## Start writing tests
-
-
-### test case file
-
-
-Glyphix's test cases are JavaScript code and are stored in the application's resource bundle. It is recommended to store test cases separately in the `src/tests` directory of the project, for example:
-
+Glyphix test cases are written in JavaScript and stored within the application's resource package. It is recommended to store test cases separately in the project's `src/tests` directory, for example:
 
 ```shell
 <app-name>
-├─ README.md         # 项目自述文件
-└─ src               # 项目的源代码目录
-    ├─ app.js        # app 入口脚本文件
-    ├─ manifest.json # 配置应用基本信息
-    ├─ tests         # 存放所有的测试用例
-    │  └─ spec.js    # 测试用例代码
-    └─ Main          # 存放主页面的目录
-        └─ index.ux  # 主页面的界面描述文件
+├─ README.md         # Project README file
+└─ src               # Project source code directory
+    ├─ app.js        # App entry script file
+    ├─ manifest.json # Configures basic application information
+    ├─ tests         # Stores all test cases
+    │  └─ spec.js    # Test case code
+    └─ Main          # Directory for the home page
+        └─ index.ux  # Interface description file for the home page
 ```
 
-
-The test code in this example is the `src/tests/spec.js` file. You can also create multiple test files as needed.
-
+The test code in this example is the `src/tests/spec.js` file, and multiple test files can be created as needed.
 
 ::: tip
-
-The file name of the test case is usually spec, which is the abbreviation of specification. A spec file is used to define and describe the expected behavior of the software and its functionality. It usually contains a set of test cases to verify that the software works as expected.
+The filename for test cases is usually `spec`, which is short for specification. A spec file is used to define and describe the expected behavior and functionality of software, typically containing a set of test cases to verify whether the software works as expected.
 :::
 
+### Writing Test Cases
 
-
-### Write test cases
-
-
-Assume that our application has a main page and there is a `span` element with a class name of `clickable`:
-
+Suppose our application has a home page with a `span` element whose class name is `clickable`:
 
 ```html
 <div>
@@ -5962,38 +4617,32 @@ Assume that our application has a main page and there is a `span` element with a
 </div>
 ```
 
-
-Now, we are going to write an automated test script that will click the `span` component every second and end the test after 3 clicks. To do this, we add the following code in `src/tests/spec.js`:
-
+Now, we want to write an automated test script that clicks the `span` component once every second and ends the test after 3 clicks. To do this, add the following code to `src/tests/spec.js`:
 
 ```js
-// Import the @system.test module to provide the API of the testing framework
+// Import the @system.test module which provides the testing framework API
 import tc from "@system.test";
 
 // Register an automated test case named click-test
 tc.testcase("click-test", async () => {
   for (let i = 0; i < 3; ++i) {
-    // Find an element with class="clickable" and click on it
+    // Find the element with class="clickable" and click it
     await tc.getByClass("clickable").click();
-    // wait one second
+    // Wait for one second
     await tc.wait(1);
   }
 });
 ```
 
+Next, we need to register this test script and start the test.
 
-Next, you need to register this test script and start the test.
+### Registering Test Scripts
 
-
-### Register test script
-
-
-In general code, statements like `import 'tests/spec.js'` are usually used to introduce scripts, but this will cause the JavaScript module to always be loaded. In order to optimize the application's loading speed and memory usage, we do not need to introduce these scripts in non-test environments. To do this, you can register the test script in the App object in the `src/app.js` file:
-
+In general code, statements like `import 'tests/spec.js'` are typically used to import scripts, but this would cause the JavaScript module to always be loaded. To optimize application loading speed and memory usage, we do not need to import these scripts in non-test environments. To achieve this, you can register the test script in the App object within the `src/app.js` file:
 
 ```js
 export default {
-  // Use the testsuite attribute to register a list of test scripts
+  // Use the testsuite property to register a list of test scripts
   testsuite: ["tests/spec.js"],
   onCreate() {
     /* ... */
@@ -6002,38 +4651,28 @@ export default {
 };
 ```
 
-
-This method does not import these test scripts immediately, but delays the import until the test is executed. Therefore, when tests are not executed, using the `testsuite` attribute does not increase overhead, and developers do not need to consider the performance burden caused by optimizing the loading of test scripts.
-
+This method does not immediately import these test scripts; instead, it delays their import until the tests are executed. Therefore, when tests are not being run, using the `testsuite` property incurs no extra overhead, and developers do not need to worry about the performance burden of loading test scripts.
 
 ::: warning
-
-Even if there is only one test script, the `testsuite` attribute must be a `Array` object with the path to the test script included in it, as in the examples in this section. The path to the test script is always relative to the directory where the `app.js` file is located, you can also use an absolute path, such as `/tests/spec.js`.
+Even if there is only a single test script, the `testsuite` property must be an `Array` object, with the path of the test script included within it, just like the example in this section. The path of the test script is always relative to the directory where the `app.js` file is located, or you can use an absolute path, such as `/tests/spec.js`.
 :::
 
+## Running Test Cases
 
+### Emulator
 
-## Run test case
-
-
-### emulator
-
-
-To run test cases, the simulator should be started using the `gx emu -i` command. You will see something like this in the terminal:
-
+To run test cases, you should use the `gx emu -i` command to start the emulator. You will see information like this in the terminal:
 
 ```shell
 ❯ gx emu -i
 [emu] Open inspector http://localhost:14200 in browser.
 ```
 
-
-Next open the `http://localhost:14200` link in your browser and enter the "Console" tab, then enter the following text in the "RPC" bar at the bottom:
+Next, open the link `http://localhost:14200` in your browser, go to the "Console" tab, and enter the following text in the "RPC" bar at the bottom:
 ```json
 {"fn": "test.start", "name": "click-test"}
 ```
-You can start the `click-test` test case written earlier. At this time, you should see the following log in the log browser:
-
+This will start the `click-test` test case written earlier. At this point, you should see the following logs in the log viewer:
 
 ```log
 19:14:33.320 [inspector] test com.example.app . click-test started
@@ -6043,23 +4682,19 @@ You can start the `click-test` test case written earlier. At this time, you shou
 19:14:37.600 [tester] com.example.app testcase click-test finished
 ```
 
+This indicates that the test executed successfully and that the `span` element was indeed clicked $3$ times.
 
-This indicates that the test executed successfully and the `span` element was indeed clicked $3$ times.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/render/style-and-layout.md
 
-# Style and layout
+# Styles and Layout
 
-
-Glyphix's style system is similar to CSS in web technology. CSS is usually defined directly within the `<style>` tag of the UX file.
-
+The styling system of Glyphix is similar to CSS in Web technologies. Typically, CSS is defined directly within the `<style>` tag of a UX file.
 
 ## Writing CSS
 
-
 You can write CSS inside the `<style>` tag:
-
 
 ``` html
 <style>
@@ -6067,9 +4702,7 @@ You can write CSS inside the `<style>` tag:
 </style>
 ```
 
-
-CSS files can be imported using the `@import` command:
-
+You can use the `@import` command to import CSS files:
 
 ``` html
 <style>
@@ -6078,44 +4711,35 @@ CSS files can be imported using the `@import` command:
 </style>
 ```
 
-
-Glyphix also provides limited support for inline styles, which are written directly in the component's style attribute:
+Glyphix also provides limited support for inline styles, which are written directly in the `style` attribute of a component:
 ``` html
 <div style="background: #f00; color: #fff"> ... </div>
 ```
-The value of an inline style is a string, and you can update the style by changing this string. Support for [CSS properties](/framework/generic/styles.md) used in inline styles adds the <badge type="info" text="内联" /> tag.
-
+The value of an inline style is a string, and you can update the styles by changing this string. [CSS properties](/framework/generic/styles.md) that support being used in inline styles are tagged with <badge type="info" text="Inline" />.
 
 ::: warning
-
-The current version of inline styles is inefficient and should only be used as a solution for js logic to update component styles. Extensive use may cause performance issues. Generally you should use the scheme of defining CSS rules in the `<style>` tag.
+Inline styles in the current version are relatively inefficient and should only be used as a solution for updating component styles via JS logic. Heavy usage may cause performance issues. In general, you should define CSS rules within the `<style>` tag.
 :::
 
+## Style Selectors
 
+Currently, the style framework supports the following selectors:
 
-## style selector
+- Class selector
+- Type selector
+- ID selector
+- Pseudo-classes (rarely used)
+- Pseudo-elements (rarely used)
+- Descendant and direct child selectors, such as `div > .title` or `div .title`
+- Compound selectors, such as `#id.class` or `div.class`
 
+### Class Selector
 
-Currently, the styling framework supports the following selectors:
-
-
-- class selector
-- type selector
-- id selector
-- Pseudo class (rarely used)
-- Pseudo elements (rarely used)
-- Descendant selectors and direct descendant selectors, such as `div >.title` or `div.title`
-- Compound selector, such as `#id.class` or `div.class`
-
-
-### class selector
-
-
-The class selector selects components with corresponding class attributes. Components can have multiple class values, such as
+A class selector selects components with the corresponding `class` attribute. A component can have multiple class values, for example:
 ``` html
 <p class="ceil content">...</p>
 ```
-Will match the following two style definitions:
+This will match the following two style definitions:
 ``` css
 .ceil {
   background-color: #222;
@@ -6128,11 +4752,9 @@ Will match the following two style definitions:
 }
 ```
 
+### Combined Selectors
 
-### Combination selector
-
-
-Supports specifying multiple selectors for rule-set using `,`:
+You can use `,` to specify multiple selectors for a rule-set:
 ``` css
 #id, .class, div {
   display: flex;
@@ -6141,24 +4763,21 @@ Supports specifying multiple selectors for rule-set using `,`:
 }
 ```
 
+### Inherited Properties
 
-### Inherited properties
-
-
-Some CSS properties can be inherited from parent elements to child elements, taking `font-size` as an example:
+Certain CSS properties can be inherited by child elements from their parent element. Taking `font-size` as an example:
 ``` html
 <div>
   <p>Text</p>
 </div>
 ```
 
-
 ``` css
 div {
   font-size: 1.25rem;
 }
 ```
-Even though the `font-size` attribute is not set on the `<p>` element, it still displays the font size of `1.25rem` because the `<p>` element inherits the font size setting from its parent `<div>`. In other words, after setting an inheritable style attribute in a container, all child elements will also get the attribute setting. But please note that the priority of the CSS property inheritance mechanism is very low. The inherited value will only be used when the element does not specify an inherited style attribute. Assume the following CSS is used for the example above:
+Even though no `font-size` attribute is set on the `<p>` element, it will still display at a font size of `1.25rem`. This is because the `<p>` element inherits the font size setting from its parent `<div>`. In other words, once an inheritable style property is set on a container, all child elements will also inherit that property setting. However, note that the priority of the CSS property inheritance mechanism is very low, and inherited values are only used when the element has no explicitly specified style property. Suppose the following CSS is applied to the example above:
 ``` css
 * {
   font-size: 1rem;
@@ -6167,359 +4786,268 @@ div {
   font-size: 1.25rem;
 }
 ```
-Due to the `*` regular style block, the font size of the `<p>` element will now be `1rem` instead of taking the inherited value.
+Due to the presence of the `*` rule style block, the font size of the `<p>` element will now be `1rem` instead of using the inherited value.
 
+In the [CSS Properties](/framework/generic/styles.md) documentation, properties that support inheritance are tagged with <badge type="info" text="Inherited" />.
 
-In [CSS properties](/framework/generic/styles.md) documents, properties that support inheritance have the <badge type="info" text="继承" /> tag added.
+### Reactivity Support
 
-
-### Responsive support
-
-
-Currently, neither the `class` attribute nor the `id` attribute supports reactivity, so
+Currently, neither the `class` attribute nor the `id` attribute supports reactivity. Therefore:
 ``` html
 <div class="{{expr}}" id="{{expr}}"> ... </div>
 ```
-Neither is supported, only static `class` and `id` attribute values ​​can be written directly.
-
+Neither of these is supported; you can only write static `class` and `id` attribute values directly.
 
 ::: warning
-
-Developers should pay attention to the limitation that `class` and `id` do not support responsive attributes!
+Developers must be aware of the limitation that `class` and `id` do not support reactive properties!
 :::
 
+## Color Values
 
+### Color Codes
 
-## color value
+Color values support RGB or RGBA color codes starting with the `#` character. Valid color codes include:
 
+- `#RRGGBB[AA]`, for example, `#102000`, `#00ff0080`
+- `#RGB[A]`, for example, `#0f0`, `#ff08`
 
-### color code
+If a color code does not contain an alpha channel, the value of that channel defaults to `ff` (for `#RRGGBB` format) or `f` (for `#RGB` format). Each digit in a color code is a hexadecimal number, using characters `0-9`, `A-F`, and `a-f`. `#RGB[A]` is a shorthand method for `#RRGGBB[AA]` codes; for example, the color `#0f38` is identical to `#00ff3388`.
 
+### Color Functions
 
-Color values ​​support RGB or RGBA color codes starting with `#` characters. Legal color codes are:
+Currently, defining color values using `rgb()` and `rgba()` functions is supported within CSS blocks. HSL color formats are not supported.
 
+### Standard Color Names
 
-- `#RRGGBB[AA]`, such as `#102000`, `#00ff0080`
-- `#RGB[A]`, such as `#0f0`, `#ff08`
-
-
-If the color code does not contain an alpha channel, the value of that channel is `ff` (`#RRGGBB` format) or `f` (`#RGB` format). Each bit in the color code is a hexadecimal number, and the available characters are `0-9`, `A-F`, and `a-f`. `#RGB[A]` is a shorthand method for `#RRGGBB[AA]` code, for example, `#0f38` has the same color as `#00ff3388`.
-
-
-### color function
-
-
-Currently, the `rgb()` and `rgba()` functions are supported for defining color values ​​in CSS blocks. HSL color format is not supported.
-
-
-### Standard color name
-
-
-You can use web-standard color names in CSS blocks, for example:
+Web standard color names can be used within CSS blocks, for example:
 ``` css
 color: brown;
 color: lightgray;
 ```
 
+### Colors in Inline Styles
 
-### Color in inline styles
-
-
-Only color codes starting with `#` are supported in inline styles, for example:
+Inline styles only support color codes starting with `#`, for example:
 ``` html
-<p style="color: #ff00ff">...</p> <!-- support -->
+<p style="color: #ff00ff">...</p> <!-- Supported -->
 <p style="color: gray">...</p> <!-- Not supported, cannot be parsed -->
 ```
 
+## Lengths
 
-## length
+The general format for length values is `<value><unit>`, where `value` is the numeric length and `unit` is the length unit, such as `15px`. There should be no space between `value` and `unit`.
 
-
-The general format of the length value is `<value><unit>`, `value` is the numerical value of the length, and `unit` is the length unit, such as `15px`. No space should be added between `value` and `unit`.
-
-
-A special length value `auto` is also supported. This length value has no specific value or unit. The length in actual rendering is determined by specific scenes and rules.
-
+A special length value `auto` is also supported. This length value has no specific numerical value or unit, and its actual rendered length is determined by the specific scenario and rules.
 
 The following length units are available:
 
+- `px`: Pixels as the unit of length
+- `pt`: Points as the unit of length, where one point is $1/72$ of an inch
+- `%`: Percentage length unit; the specific value varies in conversion relation depending on the property and layout
+- [`rem`](/framework/application/font-config.md#rem-字号单位): A length unit relative to the system default font size; for example, `1rem` equals the size of the system default font, and $1.5\rm rem$ is $1.5$ times that size.
 
-- `px`: Use pixels as the length unit
-- `pt`: Use pounds as the unit of length, one pound is $1/72$ inch
-- `%`: Percent length unit. The specific value will have different conversion relationships depending on the attributes and layout.
-- [`rem`](/framework/application/font-config.md#rem-字号单位): The length unit relative to the system default font size, for example, `1rem` is equal to the size of the system default font size, $ 1.5 \rm rem$ is $ 1.5 $ times of the former
+Here, `pt` is an absolute length unit (e.g., `72pt` corresponds to $1''$ or $25.4\rm mm$), which is device-independent. On the other hand, `px` is device-dependent, though it does not directly correspond to physical pixels. For conversion relations, please refer to the description of the [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) field. Percentage length units are typically calculated relative to the dimensions of the parent element or the element itself; for example, percentage values for CSS properties like `width` and `margin` are calculated based on the parent element's dimensions, whereas `border-radius` is calculated based on the element's own dimensions.
 
+The `rem` unit is specifically used for font sizes (i.e., the `font-size` property) as a simple cross-device font consistency solution. For more details, please refer to the [`rem` Font Size Unit](/framework/application/font-config.md#rem-字号单位).
 
-where `pt` is an absolute unit of length, for example `72pt` corresponds to $1''$ (inches) or $ 25.4 \rm mm$, regardless of the device. `px` is related to the device, but does not directly correspond to physical pixels. Please refer to the [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) field description for its conversion relationship. The percentage length unit is usually calculated relative to the size of the parent element and the element itself. For example, the percentage value of CSS attributes such as `width` and `margin` is calculated based on the size of the parent element, while `border-radius` is calculated based on the size of the element itself.
+## Layout
 
+The layout framework can automatically arrange elements based on interface content and screen geometric information, eliminating the need for developers to manually specify element positions and sizes. The layout framework is a powerful mechanism that allows interfaces to adapt to devices of varying resolutions or sizes, and handles dynamic content as well. Most native Glyphix components support two automatic layout modes: flow layout and flexbox layout, while also supporting manual layout. Certain native components have mandatory special layouts; for example, the child elements of the [`swiper`](/components/swiper.md) component are always as large as the viewport, while the [`stack`](/components/stack.md) component is designed entirely to provide a stacking layout.
 
-The `rem` unit is used exclusively for font sizes (that is, the `font-size` attribute), which is a simple scheme for cross-device font consistency. Please refer to [`rem` font size unit](/framework/application/font-config.md#rem-字号单位) for more instructions.
+The concepts of flow layout and flexbox layout originate from Web standards, but have been adapted for low-performance devices.
 
+## Media Queries
 
-## layout
+In CSS, [media queries](media-query.md) are primarily used to control CSS styles based on specific device or media types via [`@media` rules](media-query.md#css-media-规则). For specific details regarding media queries, please refer to the related [documentation](media-query.md).
 
+## Less Extensions
 
-The layout framework can automatically arrange elements based on the interface content and the geometric information of the screen. Developers do not need to manually specify the position and size of elements. Layout frameworks are a powerful mechanism for adapting interfaces to devices of different resolutions or sizes, as well as handling changing content. Most of Glyphix's native components support two automatic layout modes: flow layout and flexbox layout, and also support manual layout. Some native components have special layouts that are enforced. For example, the [`swiper`](/components/swiper.md) component's child elements are always as large as the viewport, while the [`stack`](/components/stack.md) component is designed entirely to provide a stacked layout.
-
-
-The concepts of fluid layout and flexbox layout come from web standards, but are adapted for low-performance devices.
-
-
-## media inquiries
-
-
-In CSS, [media inquiries](media-query.md) is mainly used to control CSS styles according to specific devices or media types through [`@media` rules](media-query.md#css-media-规则). Please refer to relevant [document](media-query.md) for specific details regarding media inquiries.
-
-
-## Less extension
-
-
-If you want to use [less](https://lesscss.org/) as a CSS preprocessor, first install the `less` package via a [Package manager](/tutorials/nodejs.md) one:
-
+If you want to use [less](https://lesscss.org/) as your CSS preprocessor, you must first install the `less` package using a [package manager](/tutorials/nodejs.md):
 
 ::: code-tabs
-
 @tab npm
-
 ```bash
 npm install -D less
 ```
 
-
 @tab pnpm
-
 ```bash
 pnpm i -D less
 
 @tab yarn
 ```bash
 yarn add -D less
-
 ```
 :::
 
 ::: tip
-全局安装的 `less`（如 `npm install -g less`）不会被 Glyphix 打包工具识别，因此必须使用上面的方法在项目中安装 `less` 包。
+A globally installed `less` (such as `npm install -g less`) will not be recognized by the Glyphix build tool, so you must install the `less` package within your project using the method above.
 :::
 
-然后，你将可以在 UX 文件的 `<style>` 标签中使用 `lang="less"` 属性来指定样式类型：
+You can then use the `lang="less"` attribute in the `<style>` tag of a UX file to specify the style type:
 
 ``` html
 <style lang="less">
-
 @color: #4D926F;
 
-
-
 .header {
-
   color: @color;
-
   .nested {
-
     font-size: 0.75rem;
-
   }
-
 }
-
 </style>
-
 ```
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/render/media-query.md
 
-# media inquiries
+# Media Queries
 
+Media queries allow developers to use different styles for different device types. Currently, media queries support CSS `@media` rules, but do not yet support the `media` attribute of components.
 
-Media queries allow developers to use different styles based on different device types. Currently, media queries support the `@media` rule of CSS, but the `media` attribute of components is not yet supported.
+## CSS `@media` Rules
 
-
-## CSS `@media` rules
-
-
-The grammatical form of the `@media` rule is
+The syntax for the `@media` rule is:
 ``` css
-@media <查询条件> {
+@media <query> {
   <css-rules>
 }
 ```
-[`<query condition>`](#查询条件) is used to query media types and media characteristics, and can be combined using a variety of logical operators. The CSS rules in `<css-rules>` will take effect when the media query conditions are met. For example
+[`<query>`](#query-conditions) is used to query media types and media features, and can be combined using various logical operators. When the media query condition is met, the CSS rules within `<css-rules>` will take effect. For example:
 ``` css
 @media screen and (shape: circle) {
   @import "circle.css";
 }
 ```
-Use the `@import "circle.css"` rule only on devices with round screens. `<css-rules>` can be any CSS rule, including any number of `@import`, `@font-face`, selectors, `@media` rules, etc.
+The `@import "circle.css"` rule is only used on devices with circular screens. `<css-rules>` can be any CSS rules, including any number of `@import`, `@font-face`, selectors, and `@media` rules.
 
+## The `media-query` Attribute of Components
 
-## Component's `media-query` attribute
-
-
-You can use the `media-query` attribute on any component to use media [Query conditions](#查询条件) to determine whether the component is rendered. For example
+The `media-query` attribute can be used on any component to determine whether the component should be rendered using media [query conditions](#query-conditions). For example:
 ``` html
 <div media-query="(shape: circle)">
   ...
 </div>
 ```
-The `<div>` in is a component that will only be rendered on devices with round screens.
+The `<div>` in the example above is a component that is only rendered on devices with circular screens.
 
+The `media-query` attribute is processed only during the build stage, and components that do not meet the media query conditions are directly removed. When elements selected by the `media-query` attribute are relatively complex, consider using [Template Macros](../component/template-macro.md).
 
-The `media-query` attribute will only be processed during the packaging phase, and components that do not meet the media query conditions will be deleted directly. When the elements that need to be selected using the `media-query` attribute are more complex, you can consider using [template macro](../component/template-macro.md)
+## Query Conditions
 
-
-## Query conditions
-
-
-The query condition is an expression with the following structure:
+A query condition is an expression with the following structure:
 ``` ebnf
-(* 媒体查询表达式 *)
-<query> := <query> and | or | , <query>  (* 可以使用 and or , 来组合逻辑 *)
-         | (not <query>) (* not 表达式 *)
-         | <media-type>  (* 媒体类型 *)
+(* Media query expression *)
+<query> := <query> and | or | , <query>  (* Logical combination using and, or, , *)
+         | (not <query>) (* not expression *)
+         | <media-type>  (* Media type *)
          | (<feature>: <value>)
          | (<feature> <relop> <value>)
          | (<value> <relop> <feature> <relop> <value>)
-(* 关系运算符 *)
+(* Relational operators *)
 <relop> := < | <= | > | >=
 ```
-Among them, `<media-type>` is a kind of [media type](#媒体类型), `<feature>` is any kind of [media properties](#媒体特性), and `<value>` is a value supported by this media feature. The following are legal query condition expressions:
+Where `<media-type>` is a [media type](#media-types), `<feature>` is any [media feature](#media-features), and `<value>` is the value supported by that media feature. All of the following are valid query condition expressions:
 ``` css
 @media screen { ... }
 @media screen and (shape: rect) and (width < 500px) { ... }
-@media not (shape: rect) { ... } /* This is equivalent to selecting a circular screen */
+@media not (shape: rect) { ... } /* This is equivalent to selecting circular screens */
 ```
 
+### Logical Operators
 
-### Logical operators
-
-
-Use `and`, `or` and `,` to combine multiple query condition expressions, and use the `not` operator to negate the query condition. You can also use parentheses to increase operator precedence:
+Multiple query condition expressions can be combined using `and`, `or`, and `,`. The `not` operator can be used to negate a query condition. Parentheses can also be used to increase operator precedence:
 ``` css
 @media (not (width < 500px)) or (orientation: portrait) { ... }
 ```
 The meanings of the various operators are as follows:
-- `A and B` is satisfied when `A` and `B` are satisfied at the same time;
-- Satisfies `A and B` and `A, B` when one of `A` or `B` is satisfied;
-- `not A` is not satisfied when `A` is satisfied, and vice versa.
+- `A and B` is satisfied when both `A` and `B` are met;
+- `A and B` (referring to `or` logic context) and `A, B` are satisfied when either `A` or `B` is met;
+- `not A` is not satisfied when `A` is met, and vice versa.
 
+### Relational Operators
 
-### Relational operators
-
-
-Some media properties support relational operators, such as `width`:
+Certain media features support relational operators, such as `width`:
 ``` css
-@media (width > 500px) { ... } /* Select devices wider than 500px */
-@media (400px < width <= 600px) { ... } /* Support range comparison */
+@media (width > 500px) { ... } /* Selects devices with a width greater than 500px */
+@media (400px < width <= 600px) { ... } /* Range comparison is supported */
 ```
-There are 4 types of relational operators: `<`, `<=`, `>`, `>=`.
+There are 4 relational operators: `<`, `<=`, `>`, `>=`.
 
+## Query Properties
 
-## Query properties
+### Media Types
 
+A media type is a name. Currently, only the `screen` media type is supported. `screen` is also the default media type, so it can be omitted.
 
-### media type
-
-
-The media type is a name. Currently, only the `screen` media type is supported. `screen` is also the default media type, so it does not need to be written.
-
-
-### media properties
-
+### Media Features
 
 #### `width`
 
-
-Query the width of the device screen, supporting relational operators. Values ​​must be in units of `px`, for example `500px`.
-
+Queries the width of the device screen, supporting relational operators. The unit of the value must be `px`, for example, `500px`.
 
 #### `max-width`
 
-
-Specifies the maximum width of the screen. The value must be in `px` units. `(max-width: 500px)` is equivalent to `(width <= 500px)`.
-
+Specifies the maximum width of the screen. The unit of the value must be `px`. `(max-width: 500px)` is equivalent to `(width <= 500px)`.
 
 #### `min-width`
 
-
-Specifies the minimum width of the screen. The value must be in `px` units. `(min-width: 500px)` is equivalent to `(width >= 500px)`.
-
+Specifies the minimum width of the screen. The unit of the value must be `px`. `(min-width: 500px)` is equivalent to `(width >= 500px)`.
 
 #### `height`
 
-
-Query the height of the device screen, supporting relational operators. Values ​​must be in units of `px`, for example `500px`.
-
+Queries the height of the device screen, supporting relational operators. The unit of the value must be `px`, for example, `500px`.
 
 #### `max-height`
 
-
 Specifies the maximum height of the screen. The unit of the value must be `px`. `(max-height: 500px)` is equivalent to `(height <= 500px)`.
-
 
 #### `min-height`
 
-
-Specifies the minimum height of the screen. The value must be in `px` units. `(min-height: 500px)` is equivalent to `(height >= 500px)`.
-
+Specifies the minimum height of the screen. The unit of the value must be `px`. `(min-height: 500px)` is equivalent to `(height >= 500px)`.
 
 #### `shape`
 
-
-Specifies the shape of the screen. Supported values ​​are:
-- `rect`: represents a rectangular screen;
-- `circle`: indicates a circular screen;
-
+Specifies the shape of the screen. Supported values are:
+- `rect`: Represents a rectangular screen;
+- `circle`: Represents a circular screen;
 
 #### `aspect-ratio`
 
-
-Query the aspect ratio of the screen, supporting relational operators. The value can be a number or a fraction, for example `1.5` and `3/2` both represent an aspect ratio of $3 / 2$.
-
+Queries the aspect ratio of the screen, supporting relational operators. The value can be a number or a fraction, for example, both `1.5` and `3/2` represent an aspect ratio of $3 / 2$.
 
 #### `max-aspect-ratio`
 
-
-Specifies the device's maximum screen aspect ratio.
-
+Specifies the maximum screen aspect ratio of the device.
 
 #### `min-aspect-ratio`
 
-
-Specifies the device's minimum screen aspect ratio.
-
+Specifies the minimum screen aspect ratio of the device.
 
 #### `orientation`
 
-
-Specifies the shape of the screen. Supported values ​​are:
-- `portrait`: indicates a vertical screen device;
-- `landscape`: Indicates horizontal screen device.
-
+Specifies the screen orientation. Supported values are:
+- `portrait`: Represents a portrait screen device;
+- `landscape`: Represents a landscape screen device.
 
 #### `memory-profile`
 
-
-The Memory profile attribute is a reference value used to guide developers in reducing functionality under different memory budgets. It is set based on parameters such as the device's actual memory capacity and screen resolution. Memory profiles can help developers optimize and adjust functions according to the set memory budget to ensure that applications can run smoothly on low-end devices.
-
+The memory profile attribute is a reference value used to guide developers in trimming features under different memory budgets. It is set based on parameters such as the device's actual memory capacity and screen resolution. The memory profile helps developers optimize and adjust features according to a set memory budget, ensuring that applications run smoothly even on low-end devices.
 
 The `memory-profile` attribute supports the following syntax:
 ``` ebnf
- memory-profile := <number>   (* 内存配置大小，默认单位为 KiB *)
-                 | <number> K (* 内存配置大小，单位为 KiB *)
-                 | <number> M (* 内存配置大小，单位为 MiB，可以带有小数 *)
+ memory-profile := <number>   (* Memory profile size, default unit is KiB *)
+                 | <number> K (* Memory profile size, unit is KiB *)
+                 | <number> M (* Memory profile size, unit is MiB, can include decimals *)
 ```
 
+Note that `memory-profile` is not the device's actual memory capacity. Generally, the values of this attribute are categorized as follows:
+- $2048$ ($2\rm M$): Less than $2\rm MiB$ belongs to low-end devices. Applications should cut features like fish-eye lists, long lists with a large number of images, etc. Some complex pages may also need to be simplified or removed.
+- $4096$ ($4\rm M$): Less than $4\rm MiB$ belongs to mid-to-low-end devices. Applications can use a small number of fish-eye lists, but overly long lists with images are not recommended.
+- $8192$ ($8\rm M$): Less than $8\rm MiB$ belongs to mid-to-high-end devices. Basically, all features can be used, but performance improvements can still be achieved with larger capacity.
 
-Note that `memory-profile` is not the actual memory capacity of the device. Generally speaking, the values ​​of this attribute are broken down as follows:
-- $2048$ ($2\rm M$): Devices less than $2\rm MiB$ are low-end devices. Applications should cut off fisheye lists, long lists with a large number of pictures, etc. Some complex pages may also need to be simplified or eliminated.
-- $4096$ ($4\rm M$): Devices less than $4\rm MiB$ are mid- to low-end devices. A small number of fisheye lists can be used in applications, but it is not recommended to use too long lists with pictures.
-- $8192$ ($8\rm M$): Less than $8\rm MiB$ is a mid-to-high-end device that can basically use all functions, but performance can be improved with larger capacity.
-
-
-For example, the following ligand query matches devices with memory profiles between $2{\rm MiB}\sim 4{\rm MiB}$:
-
+For example, the following media query statement matches devices with a memory profile between $2{\rm MiB}$ and $4{\rm MiB}$:
 
 ``` css
 @media (2M < memory-profile <= 4M) {
@@ -6527,44 +5055,37 @@ For example, the following ligand query matches devices with memory profiles bet
 }
 ```
 
-
-If you need to get a device's memory profile in JavaScript, use the `@system.device` module's [`memoryProfile`](/api/system-device.md#memoryprofile) attribute.
+If you need to get the device's memory profile in JavaScript, please use the [`memoryProfile`](/api/system-device.md#memoryprofile) property of the `@system.device` module.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/render/README.md
 
-# rendering mechanism
-
+# Rendering Mechanism
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/render/rich-text.md
 
-# rich text
+# Rich Text
 
+When using a flow layout, inline elements such as [`a`](/components/a.md), [`span`](/components/span.md), and [`checkbox`](/components/checkbox.md) can be laid out along lines and can wrap. The text of components like `span` can even span multiple lines, which can be used to implement rich text display.
 
-When using fluid layout, inline elements such as [`a`](/components/a.md), [`span`](/components/span.md) and [`checkbox`](/components/checkbox.md) can be laid out along the lines and can be broken. The text of components such as `span` can also be laid out across multiple lines. This can be used to achieve rich text display.
+## Plain Text Display
 
-
-## Plain text display
-
-
-Let's first take a look at how Glyphix displays plain text. The [`p`](/components/a.md) and [`text`](/components/text.md) components can be used for plain text display. Just specify a text string as the `text` attribute of these components:
+Let's first look at how Glyphix displays plain text. The [`p`](/components/a.md) and [`text`](/components/text.md) components can be used for plain text display. You simply need to specify the text string as the `text` property of these components:
 ``` html
 <p text="plain text string." />
 <text text="plain text string." />
 ```
-Web text nodes are also supported (i.e. the text is a child node of the element):
+Web-style text nodes (where the text is a child node of the element) are also supported:
 ``` html
 <p>plain text string."</p>
 <text>plain text string."</text>
 ```
-Glyphix will convert the component's only text child node into a `text` attribute, so the two ways of writing are essentially the same. In other words, as long as the custom component supports the `text` attribute, it can use text subnodes just like the `p` component.
+Glyphix converts the single text child node of a component into the `text` property, so these two syntaxes are essentially identical. In other words, as long as a custom component supports the `text` property, it can use text child nodes just like the `p` component.
 
+## Rich Text Display
 
-## Rich text display
-
-
-The `p` and `text` components cannot be used with rich text because they are always a complete box and cannot be laid out across multiple lines. To implement rich text, you first need to have a container with a fluid layout, and then you should use components such as `span` to display the text. For example:
+The `p` and `text` components cannot be used for rich text because they always form a complete box and cannot wrap across multiple lines. To implement rich text, you first need a container with a flow layout, and then use components such as `span` to display the text. For example:
 ``` html
 <div>
   <span>rich&nbsp;</span>
@@ -6572,116 +5093,86 @@ The `p` and `text` components cannot be used with rich text because they are alw
   <span>string.</span>
 </div>
 ```
-Many components use fluid layout by default, such as `div`, `p`, etc. For simplicity, you can also omit the `<span>` tag:
+Many components use a flow layout by default, such as `div`, `p`, etc. For simplicity, the `<span>` tags can also be omitted:
 ``` html
 <div>
   rich <span style="color: red">text</span> string.
 </div>
 ```
-When a component has multiple sub-elements, the text sub-elements will be automatically converted into `span` components.
+When a component has multiple child elements, any text child elements among them will be automatically converted into `span` components.
 
 ============================================================
 FILE_PATH: src/transl/EN/framework/render/animation.md
 
-# animation
+# Animation
 
+## Basics
 
-## basic knowledge
+"Animation" creates transition effects for an interface over a period of time by playing a sequence of frames continuously and rapidly. There are two ways to implement animations in Glyphix:
+- **Slideshow animation**, which rapidly plays a set of images;
+- **Keyframe animation**, where intermediate frames are automatically calculated by the program.
 
+### Keyframe Animation
 
-"Animation" plays several frames continuously and quickly to make the interface present a transition effect over a period of time. There are two ways to implement animation in Glyphix:
-- By quickly playing a **carousel animation** of a group of pictures;
-- **Keyframe animation** for intermediate frames is automatically calculated through the program.
-
-
-### Keyframe animation
-
-
-Carousel animation is implemented through specialized components, and its principle is similar to that of video. This section mainly introduces keyframe animation. The following example demonstrates a keyframe animation:
-
+Slideshow animations are implemented using dedicated components, and their principle is similar to that of videos. This section focuses primarily on keyframe animation. The following example demonstrates a keyframe animation:
 
 <div class="animation-example-box">
-
   <div style="visibility: hidden">Hello World!</div>
-
   <div class="animation-span">Hello World!</div>
-
   <div class="keyframes-from">Hello World</div>
-
   <div class="keyframes-to">Hello World</div>
-
 </div>
 
+To achieve this animation, developers need to define the starting frame (red text) and ending frame (green text) of the animation, while the program automatically calculates each frame in between. The start and end frames specified by the developer are called **keyframes**. Keyframe animations also allow defining intermediate keyframes. The frames calculated by the program are called **interpolation frames** (or tweened frames). In this example, the initial keyframe is the original text component, the ending keyframe is the text translated by $200\rm px$ and scaled by a factor of $0.75$, and the interpolation frames are the intermediate transformation values calculated based on the animation progress. For instance, the interpolation frame at $50\%$ animation progress translates the original text by $100\rm px$ and scales it by $0.875$.
 
+Compared to slideshows, keyframe animations are easier to create and are well-suited for interface element transition effects (such as button press visual effects).
 
-To implement this animation, developers need to define the start frame (red text) and end frame (green text) of the animation. The program will automatically calculate each frame in the animation. The start and end frames specified by the developer are called keyframes. Keyframe animation also allows the definition of intermediate keyframes. The frames calculated by the program are called **interpolated frames**. In this example, the starting keyframe is the original text component, while the ending keyframe translates the text $200\rm px$ and scales it $ 0.75 $ times, and the interpolated frame is the intermediate transformation value calculated based on the animation progress. For example, the interpolation frame when the animation plays to $50\%$ is to translate the original text $100\rm px$ and scale it $ 0.875 $ times.
+Keyframe animations are mainly defined by several elements:
+- Keyframes: Manually specified frames; typically, keyframes are used at $0\%$ and $100\%$ progress.
+- Animation duration: The time required for the animation progress to go from $0\%$ to $100\%$.
+- Easing function: Defines the progress adjustment curve for interpolation frames; linear animation effects tend to look less natural.
+- Repeat count, delay, playback direction (forward, reverse, alternate), etc.
 
+### Property Animation
 
-Compared with carousels, keyframe animations are easier to create and are suitable for transition effects of interface elements (such as button press animations).
-
-
-Keyframe animation is mainly defined by several elements:
-- Keyframe: Manually specified frame, usually keyframes are used at $0\%$ and $100\%$ progress;
-- Animation duration: that is, the time required for the animation progress from $0\%$ to $100\%$;
-- Easing function: defines the progress adjustment curve of the interpolation frame. The linear animation effect has a poor look and feel;
-- Number of repetitions, delay, playback direction (forward, reverse, reciprocating), etc.
-
-
-### Property animation
-
-
-The keyframe animation used in Glyphix is ​​mainly **attribute animation**. That is, keyframes are defined by the element's attributes, while interpolated frames calculate intermediate attribute values. For example, the animation implemented by [`transition` attribute modifier](../component/prop-modifier.md#transition-修饰符) is like this: the animation system will automatically handle the transition effect of attribute changes.
-
+Keyframe animations used in Glyphix are primarily **property animations**. This means that keyframes are defined by the properties of elements, and interpolation frames calculate the intermediate property values. For example, as implemented by the [`transition` property modifier](../component/prop-modifier.md#transition-modifier): the animation system automatically handles transition effects for property changes.
 
 Property animations are mainly divided into two categories:
-- Component property animation: Add animated transitions to component properties, implemented by the `transition` property modifier;
-- CSS Animation: Add animation to style properties.
+- Component property animations: Add animation transitions to component properties, implemented via the `transition` property modifier.
+- CSS animations: Add animations to style properties.
 
+## Easing Functions
 
-## Easing function
+Easing functions define the adjustment curve for animation progress, avoiding monotonous linear interpolation effects. Readers can experience the effects of easing functions at https://cubic-bezier.com/.
 
+In the [`transition` property modifier](../component/prop-modifier.md#transition-modifier) and CSS [`animation` property](../generic/styles.md#animation), the easing function is a string, as shown in the table below.
 
-The easing function defines the adjustment curve of the animation progress, thus avoiding the monotonous linear interpolation effect. Readers can go to https://cubic-bezier.com/ to experience the effect of the easing function.
+|              Value              | Description                                                                                                                                    |
+| :-----------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+|             `ease`              | Default value. The animation starts slowly, then accelerates, and slows down before ending.                                                    |
+|            `ease-in`            | The animation starts at a slow speed.                                                                                                          |
+|           `ease-out`            | The animation ends at a slow speed.                                                                                                            |
+|          `ease-in-out`          | The animation starts and ends at a slow speed.                                                                                                 |
+|            `linear`             | The animation has the same speed from start to finish.                                                                                         |
+|            `spring`             | Simulates a spring rebound animation effect, equivalent to `spring(1,1,1)`.                                                                    |
+| `cubic-bezier(x1, y1, x2, y2)`  | Defines the easing function using a [cubic Bézier curve](https://developer.mozilla.org/en-US/docs/Web/CSS/easing-function#cubic_b%C3%A9zier_easing_function). |
+| `spring(spring, damping, mass)` | Simulates a spring rebound animation effect, allowing you to specify elasticity coefficients, damping, and mass parameters (documentation needed). |
 
+For most animations, the `ease` easing function yields good results, while complex requirements can be handled using the `cubic-bezier()` function. The `spring()` function is suitable for scenarios requiring physical rebound effects, such as rotating pointers.
 
-In [`transition` attribute modifier](../component/prop-modifier.md#transition-修饰符) and CSS's [`animation` property](../generic/styles.md#animation). The easing function is a string whose contents are shown in the following table.
+## Examples
 
-
-| value | description |
-| :-----------------------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
-
-| `ease` | Default value. The animation starts at a slow speed, then speeds up, and slows down before ending. |
-| `ease-in` | The animation starts at a slow speed. |
-| `ease-out` | The animation ends at low speed. |
-| `ease-in-out` | The animation starts and ends at a slow speed. |
-| `linear` | The speed of the animation is the same from beginning to end. |
-| `spring` | Simulates the animation effect of spring rebound, equivalent to `spring(1,1,1)`. |
-| `cubic-bezier(x1, y1, x2, y2)` | Use [cubic bezier curve](https://developer.mozilla.org/en-US/docs/Web/CSS/easing-function#cubic_b%C3%A9zier_easing_function) to define the easing function. |
-| `spring(spring, damping, mass)` | Simulates the animation effect of spring rebound, and can specify elastic coefficient, damping and mass parameters (document required). |
-
-
-For most animations, the `ease` easing function can get good results, and for complex requirements, the `cubic-bezier()` function can be used. The `spring()` function is suitable for scenarios such as pointer rotation that require rebound physical effects.
-
-
-## Example
-
-
-### Button animation
-
+### Button Animation
 
 As shown below, the default button effect has no press animation:
 
-
 <Glyphix id="render-animation-button1" width="200" height="80">
-
-
 
 ``` html
 <div>
   <button>Button</button>
 </div>
 ```
-
 
 ``` css
 button {
@@ -6698,14 +5189,9 @@ button:active {
 ```
 </Glyphix>
 
-
-
 You can add interactive animations to this button using the CSS [`animation`](../generic/styles.md#animation) property:
 
-
 <Glyphix id="render-animation-button2" width="200" height="80">
-
-
 
 ``` html
 <div>
@@ -6713,18 +5199,17 @@ You can add interactive animations to this button using the CSS [`animation`](..
 </div>
 ```
 
-
 ``` css
-/* Define active pseudo-class keyframe, do not write from / 0% keyframe
-   The animation will start playing from the current state of the component */
+/* Define keyframes for the active pseudo-class. Omitting the from / 0% keyframe
+   causes the animation to start playing from the component's current state. */
 @keyframes button-active {
   to {
     transform: scale(1.1, 1.1);
   }
 }
 
-/* Define no pseudo-class keyframes, do not write from / 0% keyframes
-   The animation will start playing from the current state of the component */
+/* Define keyframes for the non-pseudo-class state. Omitting the from / 0% keyframe
+   causes the animation to start playing from the component's current state. */
 @keyframes button-normal {
   to {
     transform: scale(1, 1);
@@ -6737,33 +5222,25 @@ button {
   padding: 8px 16px;
   border-radius: 50%;
   margin: 16px;
-  /* Animate scaling of button to 100% in pseudo-class style */
+  /* Animate the button to scale to 100% in the normal style */
   animation: 0.2s ease button-normal;
 }
 
 button:active {
-  /* Animate scaling button to 120% in active pseudo-class style */
+  /* Animate the button to scale to 120% in the active pseudo-class style */
   animation: 0.2s ease button-active;
 }
 ```
 </Glyphix>
 
+Currently, the CSS `transition` property is not supported, so animations must be defined separately for the button's normal and `active` pseudo-class styles.
 
 
-The CSS `transition` attribute is not currently supported, so animations must be defined separately in the button's unpseudo-classed style and in the `active` pseudo-classed style.
+### `spring` Animation Effect
 
-
-
-
-### `spring` animation effect
-
-
-The `spring` easing function provides an interpolation effect similar to spring-damped vibration, which can be used for moving pointers. The following example demonstrates two methods of implementing pointer animation: uniform pointer rotation on the left, and using the `spring` easing function on the right.
-
+The `spring` easing function provides an interpolation effect similar to spring-damped oscillation, which can be used for moving pointers. The following example demonstrates two ways to implement pointer animation: the left side uses uniform pointer rotation, while the right side uses the `spring` easing function.
 
 <Glyphix id="render-animation-spring" width="400" height="200">
-
-
 
 ``` html
 <div class="window">
@@ -6781,7 +5258,6 @@ The `spring` easing function provides an interpolation effect similar to spring-
   </div>
 </div>
 ```
-
 
 ``` css
 .window {
@@ -6809,7 +5285,6 @@ The `spring` easing function provides an interpolation effect similar to spring-
 }
 ```
 
-
 ``` js
 export default {
   data: {
@@ -6821,84 +5296,45 @@ export default {
 }
 ```
 
-
 </Glyphix>
 
-
-
-Both animations update the pointer angle at $1$ second intervals, but the `transition` modifier of the component property automatically adds a rotation animation.
-
+Both animations update the pointer angle at $1$-second intervals, but the component property's `transition` modifier automatically adds the rotation animation.
 
 <style scoped>
-
 @keyframes animation-example {
-
   to {
-
     transform: translate(200px, 0) scale(0.75);
-
   }
-
 }
-
-
 
 .animation-example-box {
-
   position: relative;
-
   width: 320px;
-
   margin: 0 auto;
-
   font-family: sans-serif;
-
   font-size: 24px;
-
   user-select: none;
-
 }
-
-
 
 .animation-span {
-
   position: absolute;
-
   left: 0;
-
   top: 0;
-
   animation: 5s ease infinite animation-example;
-
 }
-
-
 
 .keyframes-from, .keyframes-to {
-
   color: red;
-
   position: absolute;
-
   left: 0;
-
   top: 0;
-
   opacity: 0.5;
-
 }
-
-
 
 .keyframes-to {
-
   color: green;
-
   transform: translate(200px, 0) scale(0.75);
-
 }
-
 </style>
 
 

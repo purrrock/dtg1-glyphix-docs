@@ -1,31 +1,21 @@
 # input
 
+Defaults to an inline element, providing an interactive interface to receive user input.
 
-The default is an inline element, which provides an interactive interface and receives user input.
-
-
-## property
-
+## Attributes
 
 ### `type` <decl type="'checkbox' | 'radio'" set />
 
-
-Controls that can be set to the above value types, the actual form of the final `input` component is determined according to the set type.
-
+Can be set to the above value types. The final actual form of the `input` component is determined by the configured type.
 
 ### `name` <decl type="string" set />
 
-
-Set the `input` component name.
-
+Sets the name of the `input` component.
 
 ### `checked` <decl type="boolean" set />
 
-
-The checked status of the current component can trigger the checked pseudo-class, which takes effect when the type is checkbox. When set to `on`, the checkbox is checked by default.
-
+The current checked state of the component, which can trigger the checked pseudo-class. This takes effect when the type is checkbox. Setting it to `on` makes the checkbox checked by default.
 
 ### `value` <decl type="string" set />
 
-
-Set the value of the `input` component.
+Sets the value of the `input` component.

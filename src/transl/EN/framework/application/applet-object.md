@@ -1,4 +1,3 @@
-# Application objects
+# Application Object
 
-
-There is a `app.ux` or `app.js` file in every application.
+Each application has an `app.ux` or `app.js` file.

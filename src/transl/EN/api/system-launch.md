@@ -1,25 +1,25 @@
-# Application jump
+# App Launch
 
-## Import module
+## Import Module
 
 ``` js
 import launch from '@system.launch'
 ```
 
-## Interface definition
+## API Definition
 
 ### `launch` <decl type="(app: string): Promise<bool>" method/>
 
-Start the specified application and switch to the foreground. `app` is an installed application ID string. The returned Promise indicates whether the application is loaded successfully.
+Launches the specified application and brings it to the foreground. `app` is a string representing the ID of an installed application. The returned Promise indicates whether the application was loaded successfully.
 
 ### `inactive` <decl type="(app?: string): Promise<void>" method/>
 
-Switch the app to the background. `app` is the ID of a started application. If no parameters are specified, the current application will be switched to the background. Only foreground applications can be switched to the background.
+Switches the application to the background. `app` is the ID of a launched application. If no parameter is specified, the current application is switched to the background. Only foreground applications can be switched to the background.
 
 ### `exit` <decl type="(app?: string): Promise<void>" method />
 
-Quit an application. The parameter `app` is the ID of a started application. If no parameter is specified, the current application will be exited.
+Exits an application. The `app` parameter is the ID of a launched application. If no parameter is specified, the current application is exited.
 
 ### `getRunning` <decl type="(): string[]" method />
 
-Get a list of running application package names, including those in the background.
+Gets the list of running application package names, including those in the background.

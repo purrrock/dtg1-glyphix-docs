@@ -1,6 +1,6 @@
-# vibration
+# Vibration
 
-## Import module
+## Import Module
 
 ``` js
 import vibrator from '@system.vibrator'
@@ -13,7 +13,7 @@ import vibrator from '@system.vibrator'
 (options: {
   mode: string
 }): bool
-</pre></decl>
+</pre></decl> 
 
-Trigger vibration. The functions of each field of the `option` parameter are:
-- `mode`: vibration mode, `long` means long vibration, `short` means short vibration. The default value is `long`.
+Triggers vibration. The fields of the `options` parameter are described as follows:
+- `mode`: Vibration mode. `long` indicates a long vibration, and `short` indicates a short vibration. The default value is `long`.

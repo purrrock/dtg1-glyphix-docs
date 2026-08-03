@@ -1,19 +1,19 @@
 ---
 home: true
-title: Главная
+title: Home
 icon: home
 heroImage: /logo.png
 heroText: Glyphix Framework
-tagline: GUI-решение для устройств на RTOS
+tagline: Решение GUI для RTOS-устройств
 actions:
-  - text: Уроки
+  - text: Tutorials
     link: /tutorials/
     type: primary
 
-  - text: Документация
+  - text: Docs
     link: /framework/
 
-  - text: Руководство по C++
+  - text: C++ Guide
     link: /cxxdev/
 
   - text: C++ API

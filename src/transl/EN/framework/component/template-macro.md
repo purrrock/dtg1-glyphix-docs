@@ -1,7 +1,6 @@
-# template macro
+# Template Macros
 
-
-Template macros are a way to simplify repetitive code and are top-level elements in UX files with a `macro:` attribute:
+Template macros are a way to simplify repetitive code. They are top-level `<template>` elements in UX files with the `macro:` attribute:
 ``` html
 <template macro:scroll>
   <scroll #props media-query="(shape: rect)">
@@ -13,12 +12,11 @@ Template macros are a way to simplify repetitive code and are top-level elements
   </scroll>
 </template>
 ```
-For example, a macro named `scroll` is defined here. The macro will replace the component of the same name in the `<template>` template of the current UX file, and
-- All attributes of components with the same name will replace the `#props` placeholder in the template macro;
-- Child elements of components with the same name replace the `<slot />` node in the template macro.
+For example, a macro named `scroll` is defined here. The macro will replace components with the same name inside the `<template>` of the current UX file, and:
+- All attributes of the component with the same name will replace the `#props` placeholder in the template macro;
+- The child elements of the component with the same name will replace the `<slot />` node in the template macro.
 
-
-For example
+For example:
 ``` html
 <template>
   <scroll :index="3" on:index="onIndexChange">
@@ -26,7 +24,7 @@ For example
   </scroll>
 </template>
 ```
-will be replaced by the `scroll` template macro
+will be replaced by the `scroll` template macro with:
 ``` html
 <template>
   <scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
@@ -39,18 +37,13 @@ will be replaced by the `scroll` template macro
 </template>
 ```
 
-
 ::: tip
-
-The macro name in this example is `scroll`, and the content of the macro also contains the `scroll` tag, but the macro replacement will only be performed once and will not be repeated.
+In this example, the macro name is `scroll`, and the macro content also contains the `scroll` tag, but macro replacement is only performed once and will not be repeated recursively.
 :::
 
+## Purpose
 
-
-## use
-
-
-As can be seen from the above example, template macros can statically replace ordinary components into another form. The replaced code is usually inconvenient to handwrite and understand. like:
+As can be seen from the above example, template macros can statically replace ordinary components into another form. The replaced code is usually inconvenient to write and understand manually. For example:
 ``` html
 <scroll :index="3" on:index="onIndexChange">
   <p for="i in 10">item {{i + 1}}</p>
@@ -66,21 +59,18 @@ is replaced with:
   <p for="i in 10">item {{i + 1}}</p>
 </scroll>
 ```
-The replaced code actually statically selects different `scroll` component properties based on the [media inquiries](/framework/render/media-query.md) of the screen shape. Specifically, it adds two properties to the [`scroll`](/components/scroll.md) component on circular screens:
-- [`deformation="fisheye"`](/components/scroll.md#deformation): Enable fisheye effect for circular screens;
-- [`scroll-snap="center"`](/components/scroll.md#scrollsnap): Center-align the `scroll` child elements on a circular screen.
+The replaced code actually statically selects different `scroll` component attributes based on screen shape [media queries](/framework/render/media-query.md). Specifically, it adds two attributes to the [`scroll`](/components/scroll.md) component on circular screens:
+- [`deformation="fisheye"`](/components/scroll.md#deformation): Enables the fisheye effect for circular screens;
+- [`scroll-snap="center"`](/components/scroll.md#scrollsnap): Aligns `scroll` child elements to the center on circular screens.
 
+This template macro adds adaptation for non-standard screen shapes to the original hand-written code. This modification does not require changing the template source code, making it non-intrusive.
 
-This template macro adds special-shaped screen shape adaptation to the original handwritten code. This modification does not require modification of the template source code and is therefore non-intrusive.
+## Usage
 
-
-## How to use
-
-
-There is currently no way to export template macros for use in other UX files. Therefore, the template macro needs to be written repeatedly in each required UX file, that is, something like
+Currently, there is no way to export template macros for use in other UX files. Therefore, template macros must be repeatedly written in each UX file where they are needed, meaning top-level elements like:
 ``` html
 <template macro:scroll>
   ...
 </template>
 ```
-top level element. Template macro nodes and `<template>` nodes can be in any order, but do not define template macros with the same name in a UX file.
+can be used. Template macro nodes and `<template>` nodes can appear in any order, but do not define template macros with the same name within a single UX file.

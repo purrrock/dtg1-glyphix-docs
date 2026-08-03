@@ -1,9 +1,9 @@
 ---
 icon: nodejs
 ---
-# Node.js Package Managers
+# Node.js Package Manager
 
-In addition to standalone usage, the `gx` build tool can be used in conjunction with JavaScript package managers such as npm, pnpm, or yarn. The prerequisite is installing the `glyphix` package:
+In addition to using it independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm, or yarn. This requires the `glyphix` package to be installed:
 
 ::: code-tabs
 @tab npm
@@ -27,18 +27,18 @@ $ gx build
 fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
 ```
 
-Using a JavaScript package manager in Glyphix application development mainly offers the following benefits:
-- Use TypeScript instead of JavaScript as the development language, providing type safety and a better development experience
-- Use JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
-- Use tools like ESLint and Prettier to improve code quality and development efficiency
-- Facilitate team collaboration and project maintenance
+The main benefits of using a JavaScript package manager in Glyphix app development include:
+- Using TypeScript instead of JavaScript as the development language, providing type safety and a better developer experience
+- Using JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
+- Using tools like ESLint and Prettier to improve code quality and development efficiency
+- Facilitating team collaboration and project maintenance
 
 ::: warning
-Currently, only standard JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
+Currently, package managers are only supported for managing standard JavaScript or TypeScript dependencies; Glyphix components cannot be reused in this way. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that depend on the DOM, Node.js-specific APIs, or are overly bloated.
 :::
 
 ::: tip
-If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly run commands like `gx build` to bundle the app; otherwise, you need to add `scripts` configuration in `package.json`.
+If the [Glyphix.js](glyphix.js/README.md) devtools are installed globally, you can directly run commands like `gx build` to package your project. Otherwise, you need to add `scripts` configuration in `package.json`.
 :::
 
 ## Project Configuration
@@ -97,26 +97,26 @@ If using TypeScript, you need to create a `tsconfig.json` file in the project ro
 ```
 
 ::: info
-The Glyphix build tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code completion.
+The Glyphix packaging tool automatically handles the compilation of TypeScript files. The configuration above is primarily used for IDE type checking and code hints.
 :::
 
 ## `glyphix.config.js` Configuration
 
-It is recommended to create a `glyphix.config.js` file in the project root directory (the directory containing `src/` or `package.json`) to customize build options:
+It is recommended to create a `glyphix.config.js` file in the project root directory (the directory where `src/` or `package.json` is located) to customize packaging options:
 ```js
 module.exports = {
-  minify: false, // Disable code minification for easier debugging with source line numbers
+  minify: false, // Disable code minification to facilitate debugging and mapping to source code line numbers
 };
 ```
-If you use TypeScript, you can create a `glyphix.config.ts` file instead.
+If you are using TypeScript, you can create a `glyphix.config.ts` file instead.
 
 ::: tip
-Be sure to create this file and configure `minify: false`; otherwise, the bundled code will be minified and obfuscated, making it impossible to map back to source line numbers during debugging.
+Be sure to create this file and configure `minify: false`. Otherwise, the packaged code will be minified and obfuscated, making it impossible to map to source code line numbers during debugging.
 :::
 
 ## Using TypeScript
 
-The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in application development.
+The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in your app development.
 
 ### Basic Component Example
 
@@ -141,13 +141,13 @@ export default defineComponent({
 </script>
 ```
 
-Compared to default JavaScript component scripts, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
+Compared to the default JavaScript component script, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to specify TypeScript as the language type.
 2. Import the `defineComponent` function from the `glyphix` module.
-3. Pass the component object to be exported as an argument to `defineComponent`, and export the return value of this function.
+3. Pass the component object to be exported as an argument to `defineComponent` and export the return value of this function.
 
-After using TypeScript, the `defineComponent` function will make code completion and type checking in the IDE more accurate.
+When using TypeScript, the `defineComponent` function makes code hints and type checking in your IDE much more accurate.
 
 ### `app.ts`
 
-Simply rename `app.js` to `app.ts` to switch to a TypeScript application entry file, and the build tool will handle it automatically.
+Rename `app.js` to `app.ts` to switch to the TypeScript app entry file, and the packaging tool will handle it automatically.

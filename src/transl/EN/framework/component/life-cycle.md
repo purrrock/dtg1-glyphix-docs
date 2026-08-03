@@ -1,13 +1,10 @@
-# life cycle
+# Lifecycle
 
+Components, pages, and applications all have lifecycles. You can invoke specific features during particular lifecycle stages using **lifecycle functions**.
 
-Components, pages, and applications all have life cycles. Specified functions can be called at specific life cycle stages of the object through **lifecycle functions**.
+## Component and Page Lifecycles
 
-
-## Component and page lifecycle
-
-
-Defining lifecycle functions in component and page objects can trigger calls. For example:
+You can trigger calls by defining lifecycle functions within component and page objects. For example:
 ``` html
 <script>
 export default {
@@ -17,104 +14,71 @@ export default {
 }
 </script>
 ```
-The `onInit()` lifecycle function will be called after the component is instantiated. Lifecycle functions have no parameters and do not use return values.
+The `onInit()` lifecycle function is called after the component is instantiated. Lifecycle functions take no parameters and do not use return values.
 
+### Component Lifecycle Functions
 
-### Component life cycle functions
-
-
-These lifecycle functions are common to components and pages.
-
+These lifecycle functions are common to both components and pages.
 
 #### `onInit` <decl type="(): Promise<any> | void" method />
 
-
-At this point, the component has been instantiated and the data in the view-model is ready. The data can be accessed through the `this` keyword. Developer-defined initialization logic is usually executed in this life cycle function.
-
+At this point, the component has been instantiated, and the data in the view-model is ready. You can access this data using the `this` keyword. Developers usually perform custom initialization logic in this lifecycle function.
 
 #### `onReady` <decl type="(): Promise<any> | void" method />
 
-
-At this point the component has been rendered. The component tree at this time has a corresponding control tree (similar to the DOM tree).
-
+At this point, the component rendering is complete. The component tree now has a corresponding control tree (similar to a DOM tree).
 
 #### `onDestroy` <decl type="(): Promise<any> | void" method />
 
+The component is about to be destroyed. Data in the view-model can still be accessed at this point. Custom resource release operations are usually performed in `onDestroy()`.
 
-The component is ready for destruction. The data in the view-model can still be accessed at this point. Custom resource release operations are usually performed in `onDestroy()`.
+### Page Lifecycle Functions
 
-
-### Page life cycle functions
-
-
-These lifecycle functions only exist within the page.
-
+These lifecycle functions exist only in pages.
 
 #### `onShow` <decl type="(): Promise<any> | void" method />
 
-
-Called when the page is about to be displayed. When returning using `router.back()`, `onShow()` will be called when the underlying page is about to be displayed; `onShow()` will also be called before the new page just created is displayed for the first time.
-
+Called when the page is about to be displayed. When returning via `router.back()`, `onShow()` is called when the underlying page is about to be displayed; it is also called before a newly created page is displayed for the first time.
 
 #### `onHide` <decl type="(): Promise<any> | void" method />
 
+Called when the page is about to be hidden. `onHide()` is called when the underlying page is hidden due to `router.push()`. However, the page is not hidden before it is destroyed, so `onHide()` will not be called in that case.
 
-Called when the page is about to be hidden. `onHide()` is called when using `router.push()` causes the underlying page to be hidden. However, the page will not be hidden until it is destroyed, so `onHide()` will not be called.
-
-
-When the device screen is closed, `onHide()` of the foreground page will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+When the device screen turns off, `onHide()` for the foreground page is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onBackPress` <decl type="(): boolean" method />
 
-
-This lifecycle function is called when the user swipes back. Developers can handle return logic in this function. If `true` is returned, it means that the developer has processed the return operation, and the system will not perform the default return behavior; if `false` is returned, it means that the developer has not processed the return operation, and the system will perform the default return behavior (that is, close the current page and return to the previous page).
-
+Called when the user swipes back from the edge. Developers can handle the return logic in this function. If it returns `true`, it indicates that the developer has handled the return operation, and the system will not execute the default back behavior; if it returns `false`, it indicates that the developer has not handled the return operation, and the system will execute the default back behavior (i.e., close the current page and return to the previous page).
 
 ::: warning
-
-This lifecycle function causes interactive slide returns (i.e. follow-up slides) to be disabled. It is generally not recommended to use this lifecycle function, nor to define a normal method named `onBackPress`. If you want to prevent the default return interaction, please refer to [The default event handling of the page](/framework/generic/properties.md#页面的默认事件处理), so that the interaction effect can be preserved.
+This lifecycle function disables interactive edge-swipe to go back (i.e., following the gesture). It is generally **not recommended** to use this lifecycle function, nor should you define a regular method named `onBackPress`. If you wish to prevent the default back interaction, please refer to [Default Event Handling for Pages](/framework/generic/properties.md#页面的默认事件处理) to preserve interaction transition effects.
 :::
-
-
 
 #### `onRefresh` <decl type="(): Promise<any> | void" version="0.8" method />
 
+Called when a page is opened in `singleTask` mode and returns to an existing page. For details, see [`launchMode`](../application/manifest.md#launchmode). You can refresh page data in this function.
 
-This life cycle function is called when the page is opened in `singleTask` mode and returned to an existing page. See [`launchMode`](../application/manifest.md#launchmode) for details. Page data can be refreshed in this function.
+## Application Lifecycle
 
-
-## Application life cycle
-
-
-### Application life cycle functions
-
+### Application Lifecycle Functions
 
 #### `onCreate` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app loads.
-
+Called when the application is loaded.
 
 #### `onDestroy` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app is about to be destroyed.
-
+Called when the application is about to be destroyed.
 
 #### `onShow` <decl type="(): Promise<any> | void" method />
 
-
-This lifecycle function is called when the app switches from the background to the foreground. The application's `onShow()` lifecycle function is always called after the page's `onShow()`. When the device screen is reopened, the `onShow()` of the foreground application will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+Called when the application switches from the background to the foreground. The application's `onShow()` lifecycle function is always called after the page's `onShow()`. When the device screen is turned back on, the foreground application's `onShow()` is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onHide` <decl type="(): Promise<any> | void" method />
 
+Called before the application is hidden from the foreground to the background.
 
-This lifecycle function is called before the app is hidden from the foreground to the background.
-
-
-If you don't want your app to remain active in the background, you can call [`launch.exit()`](/api/system-launch.md#exit) in `onHide()` to exit the app itself. For example:
+If you do not want the application to remain active in the background, you can call [`launch.exit()`](/api/system-launch.md#exit) in `onHide()` to exit the application itself. For example:
 ```js
 // in src/app.js
 import launch from '@system.launch'
@@ -126,75 +90,58 @@ export default {
 }
 ```
 
-
-The application's `onHide()` lifecycle function is always called after the page's `onHide()`. When the device screen is turned off, `onHide()` of the foreground application will also be called, see [Screen status changes](#屏幕状态变化) for details.
-
+The application's `onHide()` lifecycle function is always called after the page's `onHide()`. When the device screen turns off, the foreground application's `onHide()` is also called. For details, see [Screen State Changes](#screen-state-changes).
 
 #### `onRoute` <decl type="(page: string, query: {[key: string]: string}): Promise<any> | void" method />
 
-
-The `onRoute` lifecycle function is called when the application is launched via a deeplink URI. Parameters `page` and `query` are decoded URI fields. For example:
+The `onRoute` lifecycle function is called when the application is launched via a deeplink URI. The parameters `page` and `query` are the decoded URI fields. For example:
 ``` js
 // file: app.ux
 export default {
-  // Assume that through app:// example.app /page/to/deeplink?key=value&query=result
+  // Assuming launch via app://example.app/page/to/deeplink?key=value&query=result
   onRoute(page, query) {
-    console.log(page)  // Print the string '/page/to/deeplink'
-    console.log(query) // Print object {deeplink: 'key', query: 'result'}
+    console.log(page)  // Prints the string '/page/to/deeplink'
+    console.log(query) // Prints the object {deeplink: 'key', query: 'result'}
   }
 }
 ```
 
-
-`onRoute()` will be called after `onCreate()` and before `onShow()`. Developers can initialize in `onRoute()` based on the parameters specified by deeplink (such as jumping to a specific page).
-
+`onRoute()` is called after `onCreate()` and before `onShow()`. Developers can perform initialization in `onRoute()` based on parameters specified by the deeplink (such as navigating to a specific page).
 
 #### `onLocaleChanged` <decl type="(locale: {language: string}): void" method />
 
+Called when the application's locale changes. The `locale` parameter is an object containing the `language` field, which indicates the current locale (Language Tag), such as `'en-US'`, `zh-CN`, etc.
 
-This lifecycle function is called when the app's locale changes. Parameter `locale` is an object containing the `language` field, which represents the current language environment (Language Tag), such as `'en-US'`, `zh-CN`, etc.
+## Asynchronous Lifecycle Functions <experimental/>
 
-
-## Asynchronous life cycle function <experimental/>
-
-
-Component, page or application lifecycle functions can be asynchronous, i.e. `async` functions or return `Promise` objects. For example
+Lifecycle functions of components, pages, or applications can be asynchronous—that is, `async` functions or functions returning a `Promise` object. For example:
 ``` js
 import fs from "@system.file"
 
 export default {
   async onInit() {
-    // Wait for the asynchronous file reading to complete before continuing execution.
+    // Wait for asynchronous file reading to complete before proceeding.
     let text = await fs.readText({ uri: "internal://files/test.txt" })
     console.log(text)
   }
 }
 ```
-Assuming this is the `onInit()` life cycle function of a component, it will continue to perform component rendering only after the asynchronous file reading is completed. The following limitations exist during asynchronous lifecycle function execution:
-- Component rendering will not be performed repeatedly, and any operation on responsive properties during this period will not cause the interface to be updated;
-- Temporarily blocking user input, touch and key presses will not respond (otherwise if the user clicks repeatedly, it will cause repeated responses).
+Assuming this is the `onInit()` lifecycle function of a component, component rendering will only proceed after the asynchronous file reading completes. The following restrictions apply during the execution of asynchronous lifecycle functions:
+- Component rendering will not be repeated; any operations on reactive properties during this period will not trigger UI updates;
+- User input is temporarily blocked, and touches and key presses will not be responded to (otherwise, repeated user taps would cause repeated responses).
 
-
-The main function of the asynchronous life cycle function is to wait for asynchronous IO and resource operations to avoid prematurely displaying an unloaded interface. Especially when opening a new page, it will wait until the page's `onInit()`, `onReady()` and `onShow()` life cycle functions are all executed before starting to display the page or play the transition animation.
-
+The main purpose of asynchronous lifecycle functions is to wait for asynchronous I/O and resource operations, avoiding the premature display of interfaces that have not finished loading. In particular, when opening a new page, the system will wait for all of the page's `onInit()`, `onReady()`, and `onShow()` lifecycle functions to finish executing before starting to display the page or play transition animations.
 
 ::: warning
+Asynchronous lifecycle functions are currently experimental and may cause various issues, including crashes. Closing a page that is currently rendering during the execution of an asynchronous lifecycle function will cause a crash.
 
-Asynchronous lifecycle functions are currently experimental and they can cause various issues including crashes. Closing the rendering page during an asynchronous lifecycle function call will cause a crash.
-
-
-The firmware of most devices does not enable support for asynchronous lifecycle functions, and their behavior may not be as expected. Use asynchronous lifecycle functions with caution.
+Firmware on most devices does not enable support for asynchronous lifecycle functions, and their behavior may not meet expectations. Please use asynchronous lifecycle functions with caution.
 :::
 
+## Screen State Changes
 
-
-## Screen status changes
-
-
-Changes in the device's screen status will affect the life cycle function calls of applications and pages. When the device screen is turned off, the `onHide()` life cycle function of the foreground application and page will be called; when the screen is reopened, the `onShow()` life cycle function of the foreground application and page will be called. Developers can use these lifecycle functions to pause or resume network requests to reduce power consumption.
-
+Changes in the device screen state affect the invocation of application and page lifecycle functions. When the device screen turns off, the `onHide()` lifecycle functions of the foreground application and page are called; when the screen is turned back on, the `onShow()` lifecycle functions of the foreground application and page are called. Developers can use these lifecycle functions to pause or resume network requests to reduce power consumption.
 
 ::: tip
-
-Some devices will switch apps to the background after turning off the screen and kill the app after a while. For applications that need to continue running in the background, you need to pay attention to the [Backstage](../application/README.md#后台管理) method of keeping alive.
+Some devices switch applications to the background after the screen is turned off and kill the applications after a certain period of time. For applications that need to run continuously in the background, please pay attention to the background survival methods described in [Background Management](../application/README.md#后台管理).
 :::
