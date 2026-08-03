@@ -2,7 +2,7 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/README.md
+FILE_PATH: src/original_docs/framework/README.md
 
 # 框架
 
@@ -90,1716 +90,159 @@ Glyphix 是开面向 Web 开发者的友好框架，开发者可以使用熟悉�
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/application/applet-object.md
+FILE_PATH: src/original_docs/framework/component/life-cycle.md
 
-# 应用对象
+# 生命周期
 
-每个应用中都有一个 `app.ux` 或者 `app.js` 文件。
+组件、页面和应用都有生命周期。可以通过**生命周期函数**在对象的特定生命周期阶段调用指定的功能。
 
+## 组件和页面的生命周期
 
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/cross-device.md
-
-# 跨设备适配
-
-当你的应用需要在多种设备商运行时，可能会遇到多种交互兼容性问题，例如：
-- 不同设备的屏幕分辨率和尺寸都不相同，应用在不同设备中应该进行适当的布局和缩放；
-- 不同设备的系统字体、字号不尽相同，应用程序应遵循系统风格；
-- 界面布局要考虑不同的屏幕形状，如圆形屏幕常使用鱼眼变形的列表；
-- 不同的屏幕形状和屏幕分辨率下，页面的安全边距可能不同。
-
-本文档介绍怎样在编写较少的适配代码的情况下，通过 Glyphix 应用框架来开发兼容广泛设备的手表应用。
-
-## 模拟器参数
-
-在使用 `gx emu` 命令启动模拟器时，`-d` 或 `--device` 参数可以指定被模拟的设备，例如 `gx emu -d default-watch-466x466` 将会模拟器分辨率为 $466\times 466$ 像素的圆屏设备。`gx emu` 会记住上次 `-d` 指定的设备，而不是自动回退到默认设备。
-
-::: tip
-如果你安装了 gx 命令的 PowerShell 或者 Zsh 补全脚本，那么输入 `gx emu -d` 之后就可以通过 `Tab` 键补全可用的设备名称。否则请先使用 `gx list device` 查看设备列表，例如：
-``` bash
-$ gx list device
-default-watch-466x466
-default
-```
-:::
-
-默认情况下，模拟器的屏幕分辨率和实际设备一样，可以通过 `-r` 或 `--real-scale` 参数（`gx emu -r`）来模拟设备的实际屏幕尺寸而不是分辨率。不建议在非高分辨率显示器中使用 `-r` 参数，否则会导致显示过于模糊。
-
-通过 `-d` 和 `-r` 参数就可以通过模拟器来测试多种设备的显示效果，而不必准备物理设备。
-
-## 多分辨率适配
-
-在 Web 开发中，开发者通常依赖媒体查询和 `px` 等单位进行精细的布局和样式调整。然而，在穿戴设备上，不同设备的最佳字号差异过大，难以在开发时精确规划。更重要的是，如何通过统一的视觉规范，确保一款设备中的所有应用具备一致的可读性和操作体验，是穿戴设备 UI 设计的核心问题之一。
-
-以智能手表为例，不同设备的屏幕宽度可能分布在 $360\rm px$ 到 $466\rm px$ 之间，而高度则介于 $450\rm px$ 到 $500\rm px$ 左右。因此尽管存在 [`designWidth`](manifest.md#designwidth) 配置，通常也不能通过 `px` 单位来指定大多数界面元素的尺寸。无论怎样缩放，`px` 单位总会存在这些问题：
-- 设备的 DPI 或者尺寸不同，无法通过固定的像素尺寸得到理想的字号；
-- 圆形屏幕和矩形屏幕的宽高比差异大，难以通过像素值指定大的填充空隙。
-
-本节将介绍针对这些问题的布局技巧。
-
-### 字号规范
-
-请参考字体规范的 [`rem` 字号单位](font-config.md#rem-字号单位)指南来规范应用中的字号，**不要**使用 `px` 作为字号单位。
-
-### 边距配置
-
-可以使用 `px` 等任何[长度](/framework/render/style-and-layout.md#长度)单位来指定较小的边距值，例如：
-
-``` css
-p {
-  border: 2px solid gray;
-  font-size: 1.25rem;
-  padding: 8px; /* 使用 px 作为边距单位 */
-  margin: 8px;
-}
-```
-
-<glyphix id="font-config-margins-pixel" height="80" width="300" inline>
-
-```html
-<p>The message text.</p>
-```
-
-```css
-p {
-  border: 2px solid gray;
-  font-size: 1.25rem;
-  padding: 8px;
-  margin: 8px;
-}
-```
-
-</glyphix>
-
-其中除了 `font-size` 使用了 `rem` 以外，其他几处属性均使用 `px` 单位。这是因为 Glyphix 会为目标设备自动缩放 `px` 单位的比例，且较小的 `px` 值通常没有溢出或者裁剪风险。
-
-但是当尺寸值很大时，更建议建议使用百分比值，例如：
-
-``` css
-p {
-  border: 2px solid gray;
-  font-size: 1.25rem;
-  /* 左内边距使用百分比单位，请注意示例文本左侧的边距 */
-  padding: 8px 8px 8px 40%;
-}
-```
-
-<glyphix id="font-config-margins-percent" height="80" width="300" inline>
-
-```html
-<p>Message</p>
-```
-
-```css
-p {
-  border: 2px solid gray;
-  font-size: 1.25rem;
-  padding: 8px 8px 8px 40%;
-}
-```
-
-</glyphix>
-
-这样可以更好地适配分辨率差异很大的设备。
-
-::: warning
-手表设备的屏幕高度差异较大，垂直方向上的大边距需要更加注意兼容性问题。
-:::
-
-### flex 布局
-
-除了百分比长度单位以外，flex 布局可以提供更灵活的界面适应能力。应当优先使用 flex 布局，然后才是百分比长度单位。并应该避免手动布局，即直接指定元素的 `width` 和 `height` CSS 属性。
-
-应该进行手动布局的一种例外情况是显示网络图标的界面，例如：
+在组件和页面对象中定义生命周期函数即可触发调用。例如：
 ``` html
-<scroll>
-  <div class="item" for="item in items">
-    <image :src="item.icon" />
-    <p>{{ item.title }}</p>
-  </div>
-</scroll>
-```
-如果说 `item.icon` 指向的图片尺寸并不固定，那么为 `image` 元素指定合适的宽高会更美观，例如：
-``` css
-scroll {
-  display: flex;
-  flex-direction: column;
-}
-
-.item {
-  display: flex;
-}
-
-/* 为网络图标指定固定的宽高 */
-.item > image {
-  width: 92px;
-  height: 92px;
-  border-radius: 10px;
-  object-fit: fill; /* 必要时拉伸或缩放图片 */
-}
-
-/* item 中的文本占据行上的剩余空间 */
-.item > p {
-  flex: 1;
-}
-```
-
-由于 [`image`](/components/image.md) 组件会自动居中显示图片，因此不必关心图片长宽比的差异。
-
-### 媒体查询
-
-当任何布局策略都无法适应分辨率的差异时，还可以使用[媒体查询](/framework/render/media-query.md)针对性地进行调整。
-
-## 屏幕形状适配
-
-智能手表通常有圆形和矩形两种屏幕形状。其中圆形屏幕的四角需要留出较大的安全边距，并且可能会使用鱼眼效果的列表。
-
-### 媒体查询
-
-以顶栏为例，圆形屏幕可能需要顶栏文本居中对齐，而矩形屏幕的顶栏文本是左对齐的。以下示例展示了两种屏幕形状对应的布局差异。
-
-<glyphix id="circle-square-screens" height="400" width="800" title="异形屏幕布局">
-
-```html
-<div class="screens">
-  <div class="square-screen">
-    <p>TITLE BAR</p>
-  </div>
-  <div class="circle-screen">
-    <p>TITLE BAR</p>
-  </div>
-</div>
-```
-
-```css
-p {
-  font-size: 1.25rem;
-  color: #353535;
-  margin: 32px;
-}
-
-.screens {
-  display: flex;
-}
-
-.screens > div {
-  display: flex;
-  flex-direction: column;
-  background-color: #adb5bd;
-  flex: 1;
-  margin: 10px;
-}
-
-.square-screen {
-  border-radius: 10%;
-}
-
-.circle-screen {
-  border-radius: 50%;
-  /* 圆形屏幕的左右侧通常会留空，以改善显示效果 */
-  padding: 0 48px;
-}
-
-.square-screen > p {
-}
-
-.circle-screen > p {
-  text-align: center;
-}
-```
-
-</glyphix>
-
-可以通过媒体查询的 [`shape`](/framework/render/media-query.md#shape) 特性来分别处理两种屏幕形状，例如：
-``` css
-.title {
-  font-size: 1.25rem;
-  color: #353535;
-  /* 默认情况下，标题仅仅是在四周留出 32px 的安全间距。 */
-  margin: 32px;
-}
-
-/* 这些样式规则仅对圆形屏幕生效。 */
-@media (shape: circle) {
-  .title {
-    /* 圆形屏幕时，标题文本应该居中。其他属性继承自上面的 .title 规则。 */
-    text-align: center;
-  }
-}
-```
-这段 CSS 代码首先定义方形屏幕的样式规则，然后在一个媒体查询块中覆盖为适用于圆形屏幕的规则。
-
-### 模板宏
-
-使用媒体查询可以针对不同类型的设备来定义 CSS 规则，而结合[模板宏](/framework/component/template-macro.md)和 [`media-query` 属性](/framework/render/media-query.md#组件的-media-query-属性)可以为不同的设备应用不同的 UX 模板结构。这种技术可以自动为圆形设备上的列表界面添加鱼眼变形效果。
-
-具体的使用方法请参考[模板宏](/framework/component/template-macro.md)章节。
-
-## JavaScript 适配
-
-如果需要为不同的设备编写不同的逻辑，那么还可以获取[设备信息](/api/system-device.md)。例如可以通过 [`device.screenShape`](/api/system-device.md#screenshape) 在运行时获取设备的屏幕形状枚举值。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/font-config.md
-
-# 字体规范
-
-Glyphix 框架中内置了一些系统字体，应用程序也可以定义自己的字体。
-
-## 系统级字体
-
-所有运行 Glyphix 的环境中都保证提供这些系统字体：
-- `sans-serif`：默认的无衬线字体。
-
-不同的设备提供的实际字体文件可能不同，但这些字体名总是可用的。
-
-### 默认字体
-
-如果一个界面元素没有指定所有的字体属性（字体族、字号等），剩余属性将使用系统默认值。因此，当界面元素没有任何字体属性时就会使用系统默认字体。默认字体属性是由设备指定的，并具有以下属性：
-- [`font-family`](/framework/generic/styles.md#font-family) 为 `sans-serif`；
-- [`font-size`](/framework/generic/styles.md#font-size) 为 `1rem`。
-
-### 字形回退问题
-
-由于设备性能的限制，无法预装所有语言和字符集的完整字体。我们将只提供特定语言的“主要字体”，这些字体通常包括常见的字母、数字和符号。然而，如果你尝试使用不常见字符、特殊符号或者是未包含在这些主要字体中的字符，就会出现“字形回退”现象。
-
-当一个字符无法被当前支持的字体渲染时，它会回退显示为一个“方框” ，例如这是用不支持中文的 Roboto 字体显示“Hello, 世界。”文本的效果：
-
-<glyphix id="font-config-fallback" height="30" width="300" inline>
-
-```html
-<p>Hello, 世界。</p>
-```
-
-</glyphix>
-
-其中“世界。”三个字符不受支持，所以被渲染为三个方框。
-
-## 应用级字体
-
-### 字体映射文件
-
-[`manifest.config.fontFaces`](manifest.md#fontfaces) 字段可配置应用级字体映射文件。这是一个只包含 [`@font-face` 规则](/framework/generic/styles.md#font-face-规则)的 CSS 文件，其中定义的字体可以直接在本应用中使用，而无需引用 CSS 文件。
-
-假设字体映射文件在项目中的路径为 `src/assets/font-faces.css`，那么 `manifest.config.fontFaces` 字段需要填写为
-``` json
-{
-  "config": {
-    "fontFaces": "assets/font-faces.css"
-  }
-}
-```
-以下是 `src/assets/font-faces.css` 文件内容的示例
-``` css
-@font-face {
-  font-family: Montserrat;
-  src: url("fonts/Montserrat-Regular.ttf");
-  font-weight: 400;
-  font-style: normal;
-}
-```
-还可以通过 `@import` 规则导入其他 CSS 文件，但字体映射文件中只会保留 `@font-face` 规则信息。
-
-### `@font-face` 规则
-
-也可以直接在 CSS 中使用 [`@font-face` 规则](/framework/generic/styles.md#font-face-规则)来定义并使用字体。这种方法和一般的 Web 开发流程类似。
-
-::: tip
-相比于在各个 CSS 中定义字体，字体映射文件中定义的应用级字体运行效率更高，应当优先使用。
-:::
-
-### 何时使用应用级字体
-
-对于性能和资源受限的设备来说，系统提供的默认字体具有较低的资源占用和更好的性能表现，开发者应当优先使用。只有在特定需求中才建议使用应用级字体，以下是具体的准则：
-- **优先使用系统级字体**：系统级字体经过优化，能够减少存储占用和处理开销。它们在多数情况下能够满足普通文本显示的需求，例如菜单、主页面、描述性文本等。
-- **特定设计需求使用自定义字体**：如果应用需要符合特定的视觉设计风格或品牌要求时，可以使用自定义字体。例如，应用可能要显示一个有独特风格的数字时钟，或强调某些标题、按钮中的文字，使用自定义字体可以实现更符合设计语言的效果。
-- **自定义字体应精简字符集**：为了避免不必要的存储和处理开销，自定义字体的字符集应尽可能精简。通常情况下，只需要包含拉丁字母、数字以及必要的标点符号。例如，在设计数字时钟时，自定义字体应仅包含 $0 \sim 9$ 的数字字符。
-
-::: warning
-不要在应用中使用大型字体文件（例如中文字体）。大尺寸的字体文件可能会带来严重的性能和资源风险。通常，系统级字体已包含当前语言所需的字符支持，无需通过自定义字体来补充字符集。
-:::
-
-## `rem` 字号单位
-
-为了在不同的设备上实现和系统一致的字体风格，我们引入了和 Web 开发稍微不同的 `rem` 单位。`1rem` 是设备厂商定义的系统正文字号，当 CSS 中不定义 [`font-size`](/framework/generic/styles.md#font-size) 属性时，元素的默认字号就是 `1rem`。`rem` 和 `px` 或 `pt` 等[长度](/framework/render/style-and-layout.md#长度)单位没有固定的换算关系。`1rem` 的字号通常对应 `24px` 到 `32px` 左右。
-
-使用 `rem` 作为字号单位可以确保系统中所有的应用具有一致的显示。**不要**用 `px` 等单位设置字号，否则可能无法跨设备使用。具体来说，建议使用以下配置：
-- **标题**用 `1.25rem` 字号，多级标题可以适当选择其他字号；
-- **正文**用默认字号，即 `1rem`，且一般不要显式指定该字号；
-- **脚注**用 `0.85rem` 字号。
-
-建议开发者挑选少量且固定的字号档位，并在上述 $3$ 种场景中使用我们推荐的字号。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/i18n.md
-
-# 国际化
-
-国际化用于将界面翻译为不同的语言，以便不同语言的用户使用。
-
-## 国际化资源
-
-国际化机制需要开发者先编写好应用的国际化资源文件，然后在组件代码中使用。国际化资源是存放在应用的 `src/i18n` 目录中（开发者需要先建立此文件夹）下的一些 JSON 文件，每个文件以语言代码命名，例如：
-``` bash
-src                # 项目源代码路径
-└─ i18n            # 国际化资源文件夹
-   ├─ default.json # 默认回退语言
-   ├─ ja.json      # 日文翻译文件
-   ├─ it.json      # 意大利语翻译文件
-   └─ zh-CN.json   # 简体中文翻译文件
-```
-如例子中所示，`default.json` 是默认回退语言的翻译文件，当要翻译的文本不在选择的语言中时会使用该翻译文件的规则。
-
-国际化资源文件的内容是一个 JSON 对象，形式如下：
-``` json
-// default.json
-{
-  "helloWorld": "Hello, world!"
-}
-// zh-CN.json
-{
-  "helloWorld": "你好，世界！"
-}
-```
-该 JSON 对象的值是目标语言下的翻译文本，而键用于在代码中索引翻译文本。每个键在多个语言的国际化资源文件中对应相同含义的翻译文本，例如 `helloWorld` 键在英文中对应的翻译文本是 `Hello, world!`，而在中文中对应的文本是 `你好，世界！`。
-
-### `default.json`
-
-与一般的语言国际化文件不同，`default.json` 还用于当前语言未定义的翻译文本回退。即某个国际化字符串的键在该语言的 JSON 文件中没有定义，但是 `default.json` 中存在时会使用后者的翻译。
-
-当一个键不存在于以上所有国际化文件时，国际化框架会直接返回键本身。
-
-## 使用国际化文本
-
-### `$t()` 函数
-
-`$t()` 是用于获取国际化文本的全局函数，它们的签名为：
-``` ts
-function $t(key: string): string
-```
-`key` 是待翻译的键，而返回值是当前语言中对应的国际化文本。如果国际化资源中没有这个此键值对会返回 `key` 本身。
-
-这个函数通常用于组件代码，例如：
-``` html
-<p>{{ $t('helloWorld') }}</p>
-```
-
-也可以在 JavaScript 代码中使用：
-``` js
-console.log($t('helloWorld'))
-```
-
-### `t` 命令
-
-原生组件支持 `t` 命令用于自动翻译国际化文本：
-``` html
-<p t>helloWorld</p>
-```
-例子中的 `<p>` 组件包含名为 `t` 的属性（它实际上是一个命令），该命令等效于让文本子节点 `helloWorld` 作为参数自动调用 `$t()` 函数并使用返回的国际化文本来设置 `<p>` 组件的文本内容。在模板代码中，`t` 命令比 `$t()` 函数的用法更简单。
-
-`t` 命令还支持作为原生组件的属性前缀使用，例如：
-``` html
-<p t:text="helloWorld" />
-```
-和单独的 `t` 命令类似，属性值字符串 `helloWorld` 会作为键来查询对应的国际化文本。这同样比使用 `$t()` 函数的等效代码方便：
-``` html
-<p :text="$t('helloWorld')" />
-```
-
-::: tip
-`t` 命令现在仅支持原生组件，在自定义组件中则没有效果。
-
-在可以使用 `t` 命令的情况下，请优先使用 `t` 命令而不是 `$t()` 函数，因为 `t` 指令的实现方式决定了它的性能会更好。
-:::
-
-### 切换语言
-
-当应用切换语言之后所有组件的响应式属性都会重新计算，此时会重新查询国际化文本，因此不需要手动更新界面。但是不在响应式框架中调用的 `$t()` 函数没有这些效果。
-
-在切换语言时缓存的计算属性值不会重新计算，所以在计算属性的 `get()` 方法中调用 `$t()` 的翻译文本也不会重新获取。
-
-### 获取国际化配置
-
-可以通过 [`@system.i18n`](/api/i18n.md) 模块来访问应用的国际化配置。还可以通过应用的 [`onLocaleChanged()`](/framework/component/life-cycle.md#onlocalechanged) 生命周期函数来监听语言环境变化。
-
-## 布局和渲染
-
-### 自动行高
-
-[[待完成]]
-
-### 文本溢出 <version-badge since="0.9"/>
-
-在某些 UI 设计稿布局高度有限的场景中，部分国际化文本可能因为需要的行高太大而无法完全显示。这在针对中文或英文等语言设计的 UI 在翻译到其他语言时可能会出现，例如在藏文中同样的文本内容需要更大的行高来显示完整。
-
-下例展示了同一段藏文在 `line-height: 1` 时会因为默认的绘制行为而裁剪（左边红色框）：
-
-<div style="display:flex; gap:20px; font-family:monospace; font-size:22px">
-<span style="border:1px solid red; width:220px; line-height:1; overflow:clip; background:#fff8f8;white-space:nowrap">
-  &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
-</span>
-<div style="border:1px solid green; width:220px; line-height:1; overflow:visible; background:#f8fff8;white-space:nowrap">
-  &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
-</div>
-</div>
-
-针对中文或英文设计的 UI 的预留行高可能不够，意味着通常不能将 `line-height` 设置的更大或者采用 `line-height: auto` 来解决这个问题。那么只能通过 `overflow: visible` 来让文本溢出显示（右边绿色框）。
-
-在国际化场景中，建议使用 [`overflow: visible`](/framework/generic/styles.md#overflow) 来避免文本被裁剪。
-
-[`scroll` 组件](/components/scroll.md#i18n-场景的推荐设置)文档中也有关于 `overflow` 属性的 i18n 配置说明，更多细节请参考相关文档。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/manifest.md
-
-# manifest 文件
-
-`manifest.json` 文件中包含了应用描述、接口声明、页面路由等信息。
-
-`manifest.json` 是一个 JSON 文件，且文件内容必须是一个 JSON Object，本文档会介绍 `manifest.json` 各个字段的功能。
-
-## 字段说明
-
-### 根属性
-
-这些字段是 `manifest.json` 文件根 JSON 对象的属性。
-
-::: details 类型签名
-``` ts
-interface Manifest {
-  package: string,
-  name: string,
-  icon: string,
-  versionName: string,
-  versionCode: number,
-  config?: Config,
-  permissions?: PermissionInfo[],
-  router: Router,
-  display?: Display,
-  dial?: Dial,
-  widgets?: Widget[]
-}
-```
-:::
-
-#### `package` <decl type="string" />
-
-`package` 字段是应用的包名，必填字段。推荐采用 `com.company.module` 的格式，如：`com.example.demo`。系统中的应用包名必须唯一。
-
-::: important
-许多设备厂商的应用商店不支持短横线 `-` 作为包名的一部分，请注意避免。我们也不推荐使用下划线 `_` 或 `.` 来替代，这种情况请直接连接单词，例如 `com.wateralert.demo`。
-:::
-
-#### `name` <decl type="string" />
-
-应用的显示名称，必填字段。6 个汉字以内，与应用商店保存的名称一致，用于在桌面图标、弹窗等处显示应用名称。该字段可以用 `${}` 表达式来引用[国际化字符串](i18n.md)，例如：
-``` json
-{
-  "name": "${appName}"
-}
-```
-中 `appName` 就是一个国际化字符串的键。国际化的应用名可以让设备的应用列表以当前语言显示应用名称，而不是固定的语言。
-
-#### `icon` <decl type="string" />
-
-应用图标的路径，例如 `/assets/icon.png`。
-
-#### `versionName` <decl type="string" />
-
-应用版本字符串。
-
-#### `versionCode` <decl type="number" />
-
-应用版本代码，是一个整数。建议在每次发布应用时将版本代码加一。
-
-#### `config` <decl type="?: Config" />
-
-描述系统配置信息的可选字段，见 [`Config` 对象](#config-对象)。
-
-#### `permissions` <decl type="?: PermissionInfo[]" />
-
-由 `PermissionInfo` 对象组成的数组，表示应用使用的权限列表。当应用需要访问位置信息、传感器、设备信息、录音、蓝牙、健康数据等能力时，需要在此字段中声明对应的权限，例如：
-
-``` json
-{
-  "permissions": [
-    { "name": "watch.permission.LOCATION" },
-    { "name": "watch.permission.RECORD" }
-  ]
-}
-```
-`PermissionInfo` 对象描述应用所需权限信息，它目前只有一个 `name` 字段。其签名如下：
-``` ts
-type PermissionInfo = {
-  name: string; // 权限名称，唯一标识一个权限项
-}
-```
-`name` 字段标识具体的权限名称。权限名对应系统模块接口清单如下:
-
-| 权限名称                              | 对应系统模块                                        | 权限描述                         |
-| ------------------------------------- | --------------------------------------------------- | -------------------------------- |
-| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md)                 | 保持应用在前台运行               |
-| `watch.permission.LOCATION`           | [`@system.geolocation`](/api/system-geolocation.md) | 位置信息                         |
-| `watch.permission.ACCESS_SENSORS`     | [`@system.compass`](/api/system-sensor.md)         | 内置传感器(如指南针、加速度计等) |
-| `watch.permission.DEVICE_INFO`        | [`@system.device`](/api/system-device.md)           | 设备信息                        |
-| `watch.permission.RECORD`             | [`@system.media`](/api/system-media.md)             | 仅录音相关 API 需要权限          |
-| `watch.permission.BLUETOOTH`          | [`@system.bluetooth.ble`](/api/system-ble.md)       | 允许使用设备蓝牙                |
-| `watch.permission.READ_HEALTH_DATA`   | 暂不支持                                            | 读取健康数据(如步数、心率等)     |
-| `watch.permission.SCHEDULE`           | [`@system.schedule`](/api/system-schedule.md)       | 设置定时任务                   |
-| `watch.permission.NOTIFICATION`       | [`@system.notification`](/api/system-notified.md)   | 允许应用通知提醒                |
-
-#### `router` <decl type="Router" />
-
-描述应用内页面路由信息的必填字段，详见 [`Router` 对象](#router-对象)。
-
-#### `display` <decl type="?: Display" />
-
-应用内的显示效果配置，详见 [`Display` 对象](#display-对象)。
-
-#### `dial` <decl type="?: Dial" />
-
-如果存在 `dial` 字段则表示此项目是一个表盘包而不是应用。表盘的专属元数据由 [`Dial` 对象](#dial-对象)描述。表盘包 [`icon`](#icon) 不使用字段。
-
-#### `widgets` <decl type="?: Widget[]" />
-
-表示挂件和小组件列表的配置信息，配置字段详见 [`Widget` 对象](#widget-对象)。
-
-### `Config` 对象
-
-::: details 类型签名
-``` ts
-interface Config {
-  designWidth?: number,
-  designImageScale?: number,
-  fontFaces?: string,
-  assets?: string | string[]
-}
-```
-:::
-
-#### `designWidth` <decl type="?: number" />
-
-页面设计的基准宽度（单位是像素），默认值为 `750`。CSS 中的 `px` 长度单位会根据实际的设备宽度和 `designWidth` 的比值来缩放。例如当 `designWidth` 的值为 `466` 时，在实际宽度为 `410` 像素的设备上像素长度会被缩放 $410/466$ 倍。
-
-建议使用当前设计的设备尺寸，而不是默认的 `750`，以避免在开发中做大量的换算。
-
-#### `designImageScale` <decl type="?: number" />
-
-图片资源的切图缩放系数，默认值为 $1.0$。为了满足多设备分辨率适配，需要设计师将图片按照设计稿放大后切图来保证打包后的质量。
-
-`designImageScale` 是项目中资源原图的尺寸和缩放后图片逻辑分辨率的比值。具体来说，资源图片在实际设备上的缩放系数 $\it{scale}$ 为：
-$$
-\it{scale} = \tt{designImageScale}\frac{\tt{deviceWidth}}{\tt{designWidth}}
-$$
-其中 $\tt{deviceWidth}$ 为设备屏幕的实际宽度。因此，图片的实际显示尺寸 $(w', h')$ 为：
-$$
-(w', h') = \it{scale} \cdot (w, h)
-$$
-其中 $(w, h)$ 是资源原图的尺寸。
-
-::: tip
-不要使用小于 $1$ 的 `designImageScale` 配置，这意味着打包时会对资源图片进行放大，并因此产生明显的模糊和失真。如果你希望应用可以在多种设备中精致地显示图片，应该按照比实际需求更大的尺寸来准备资源图片，并设置正确的 `designImageScale` 参数。
-
-例如，如果实际设备（假设 $\tt{designWidth} == \tt{deviceWidth}$）上显示的图片尺寸为 $96\rm px \times 96\rm px$，那么可以准备两倍分辨率的 $192\rm px \times 192\rm px$ 素材，并将 `designImageScale` 设置为 $2$。
-:::
-
-#### `fontFaces` <decl type="?: string" />
-
-指定应用级的字体映射表文件路径，其中定义的字体可在应用中直接使用。此路径可以是相对于 `manifest.json` 的相对路径，也可以是相对于应用资源包根目录的绝对路径。
-
-参考[字体配置](font-config.md)。
-
-#### `assets` <decl type="?: string | string[]" />
-
-指定自定义资源的路径 glob 模式（文件通配符）。例如：
-``` json
-{
-  "config": {
-    "assets": [ "assets/**", "**/data.bin" ]
-  }
-}
-```
-会将项目中 `assets` 目录下的所有文件和项目中所有的 `data.bin` 文件进行打包。这些文件只会按照静态资源文件的形式打包（即直接拷贝文件）。
-
-文件通配符可以和路径相同，但是有以下特殊形式：
-- `*` 匹配一个路径组件，但不包含路径分隔符（`/`）。
-- `**` 匹配任意数量的路径组建，并可以包含路径分隔符。
-
-例如：
-- `test.js` 可以匹配项目跟目录下的 `test.js` 文件。
-- `**/*-data.bin` 可以匹配任意路径下具有 `-data.bin` 后缀的文件。
-- `*/*.bin` 匹配项目根中任意一级目录下具有 `.bin` 后缀的文件。
-
-### `Router` 对象
-
-定义页面的组成和相关配置信息。
-
-::: details 类型签名
-``` ts
-interface Router {
-  entry?: string,
-  pages: { [name: string]: PageInfo }
-}
-```
-:::
-
-#### `entry` <decl type="?: string" />
-
-应用首页的名称，启动应用后会先跳转到此页面。默认为 `"main"`。
-
-#### `pages` <decl type="{ [name: string]: PageInfo }" />
-
-声明各个页面的信息。 `pages` 属性的键 `name` 是页面名称，属性值 [`PageInfo` 对象](#pageinfo-对象)是页面的详细配置信息。例如：
-``` json
-{
-  "router": {
-    "entry": "Main",
-    "pages": {
-      "Main": {
-        "path": "/Path/To/Main",
-        "component": "index",
-        "launchMode": "singleTask"
-      }
-    }
-  }
-}
-```
-
-应用中所有的页面都必须填写到路由表中才可以使用，每个页面也必须具有唯一的名字。
-
-### `Display` 对象
-
-#### `pageAnimation` <decl type="?: PageAnimation" />
-
-应用内页面的默认转场动画配置，值是 [`PageAnimation` 对象](#pageanimation-对象)。
-
-## `PageInfo` 对象
-
-页面配置对象是 `router.pages` 对象的属性值。页面配置对象的类型是 Object。本节介绍页面配置对象的属性字段定义。
-
-::: details 类型签名
-``` ts
-interface PageInfo {
-  path?: string,
-  component?: string,
-  pageAnimation?: PageAnimation,
-  launchMode?: 'standard' | 'singleTask'
-}
-```
-:::
-
-#### `path` <decl type="?: string" />
-
-页面目录的路径（存放页面组件的文件夹的路径）。默认和页面名称相同，即 `Router` 对象的键。
-
-#### `component` <decl type="?: string" />
-
-页面组件的名称，和 UX 文件名一致并且不需要 *.ux* 后缀名，例如组件名 `"index"` 对应 `index.ux` 文件。
-
-#### `pageAnimation` <decl type="?: PageAnimation" />
-
-页面的转场动画配置，值是 [`PageAnimation` 对象](#pageanimation-对象)。此配置的优先级高于 `mainfest.json` 中的 `display.pageAnimation` 配置。
-
-#### `launchMode` <decl type="?: 'standard' | 'singleTask'" version="0.8" />
-
-页面的启动模式，默认为 `standard`。当页面的 `launchMode` 配置为 `singleTask` 时，如果要打开一个已经在返回栈中的页面实例，则会将该实例上方的页面全部出栈，并回到该实例所在的页面（类似于 [`router.back('<page-name>')`](/api/system-router.md#back)），而不是创建一个新的页面实例。
-
-在以 `singleTask` 模式“打开”并回到已经存在的页面时，会触发 [`onRefresh`](../component/life-cycle.md#onrefresh) 生命周期函数。
-
-### `PageAnimation` 对象
-
-此对象的属性配置页面转场动画的行为。转场动画只对顶部的页面有效，非顶部的页面是不会播放转场动画的。
-
-::: details 类型签名
-``` ts
-interface PageAnimation {
-  openEnter?: string,
-  closeEnter?: string,
-  openExit?: string,
-  closeExit?: string
-}
-```
-:::
-
-每个属性都可以取以下值：
-- `"none"`：无转场动画，这是所有属性的默认值
-- `"slide"`：页面以滑动动画进行转场，此转场效果在不同的转场配置属性下有所不同，其中：
-  - 对于 `openEnter` 转场，slide 效果是页面从屏幕左边向右开始进入，直到完全覆盖屏幕
-  - 对于 `closeExit` 转场，slide 效果是页面从完全覆盖屏幕的位置开始向右滑动，直到完全离开屏幕
-  - 对于 `closeEnter` 和 `openExit` 转场，slide 效果是没有动画的
-
-页面和应用的默认转场动画是由设备定义的。如果 `manifest.json` 中没有指定 `pageAnimation` 相关的字段，某些设备可能不播放转场动画，而另一些设备则可能使用厂商定制的动画效果。
-
-::: warning
-模拟器总会播放 slide 页面转场动画，而无论它在模拟哪一款设备。如果想确保关闭页面的转场动画，请使用
-``` json
-{
-  "pageAnimation": { "openEnter": "none" }
-}
-```
-这样的写法，而不是 `"pageAnimation": {}`，后者由于未知原因不生效。
-:::
-
-#### `openEnter` <decl type="?: string" />
-
-这个属性配置打开新页面时，新页面的转场动画。
-
-#### `closeEnter` <decl type="?: string" />
-
-这个属性配置打开新页面时，底下将被覆盖的旧页面的转场动画。
-
-#### `openExit` <decl type="?: string" />
-
-这个属性配置关闭页面时，被关闭页面的退出转场动画。
-
-#### `closeExit` <decl type="?: string" />
-
-这个属性配置关闭页面时，被关闭页面底下将要重新显示页面的转场动画。
-
-### `Dial` 对象
-
-`Dial` 对象描述表盘相关的配置信息。
-
-::: details 类型签名
-``` ts
-interface Dial {
-  component: string,
-  preview: string
-}
-```
-:::
-
-
-#### `component` <decl type="string" />
-
-表盘入口组件的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
-
-#### `preview` <decl type="string" />
-
-表盘预览图片的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
-
-### `Widget` 对象
-
-`Widget` 对象描述挂件或小组件的配置信息。
-
-::: details 类型签名
-``` ts
-interface Widget {
-  name: string,
-  component: string,
-  preview: string
-}
-```
-:::
-
-#### `name` <decl type="string" />
-
-挂件/小部件的名字，同一个应用包内的小部件不能重名。
-
-#### `component` <decl type="string" />
-
-挂件/小部件入口组件的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
-
-#### `preview` <decl type="string" />
-
-挂件/小部件预览图片的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/README.md
-
-# 应用框架
-
-Glyphix 应用是一个可以独立运行的交互式应用程序，专为 MCU（微控制器）设备设计。它由一系列页面、组件和相关逻辑组成，并受运行时环境的支持与管理。通过 Glyphix 应用框架，开发者可以以接近 Web 开发的方式，使用 HTML 模板、CSS 和 JavaScript 来构建和组织应用。
-
-你可以将应用视为手机应用那样的独立程序：它们可以被安装、启动、切换和卸载。每个应用都有自己的资源和数据存储空间，并且运行在一个受控的环境中。
-
-## 运行时
-
-运行时是集成到设备固件中的一个原生系统，它提供标准的应用运行环境，并管理应用所需的一切系统资源。本节将介绍运行时的多种职责及其行为标准。
-
-### 启动应用
-
-运行时可以通过原生或者 JavaScript 接口启动一个应用。每个应用都有独立的运行环境，这意味着：
-- 应用运行在独立的 JavaScript 执行环境中，互不干涉。
-- 每个应用的资源访问都是独立的，这包括页面结构、文件资源、数据存储等各种资源。
-- 无底层权限：应用的运行环境和底层系统无关，因此也无法越过运行时访问底层资源。
-
-但是，某些资源是全局唯一的，如屏幕的可见区域、公共文件目录等。随着用户的操作，某些应用会变为**前台**的可交互状态，而另一些应用则会切换到后台。
-
-### 页面管理
-
-Glyphix 应用的界面主要是由**页面提供**，因此运行时会维护每一个应用的页面对象，并管理全局的弹窗页面。这些管理机制包括了页面的切换、渲染和生命周期控制。
-
-### 内存资源管理
-
-运行时系统统一管理应用自身和多个应用间的内存和各种系统资源，从而优化开销并避免泄漏：
-- 推迟图片、文字等资源的加载作业，降低界面加载的延迟。
-- 缓存并优化页面和组件文件，加速热加载性能。
-- 维护资源和底层文件映射，实现设备无关的 IO 和资源访问。
-- 优化内存占用，避免耗尽 MCU 内存。
-
-### 资源回收
-
-当应用退出时，运行时会回收所有资源，从而将系统占用释放到启动应用之前的水平。这是一个系统机制，应用层面无法控制，这也意味着：
-- 应用退出时不会兑现挂起的 Promise 对象，因此异步操作可能永远不会得到结果。请注意在应用的 [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) 生命周期函数中做必要的处理。
-- 底层系统可能随时杀死应用，也有完全完全的操作权限。无法在应用层面绝对地保活，同时也不能假设设备的应用调度策略。
-
-### 标准接口
-
-运行时提供一套标准的 [API](/api/README.md) ，它们抽象了具体设备上的蓝牙、网络、传感器和系统功能等的差异。大部分 API 是所有设备都支持的，但也有一部分仅支持特定设备。
-
-### 后台管理
-
-应用框架支持应用的后台运行，这允许用户返回到应用列表等界面后回到当前应用中，而不重新启动应用。后台运行的应用会受到一些限制，例如：
-- 后台应用无法跳转页面，[`router.push()`](/api/system-router.md#push) 等 API 会直接挂起。
-- 后台的应用可能会自动回到主页面（即最底层页面），就像用户手动返回一样。
-- 大部分应用只能短暂留在后台，并在约半分钟内被系统杀死以释放资源。
-- 正在进行音频播放等特定任务的应用可以在后台持续运行。
-
-::: tip
-如果你的应用需要在后台播放音频（如播客类应用），请确保在主页面或界面无关的脚本中启动音频播放任务，而不要在深层页面中播放。否则，当后台应用个返回主页面时，音频播放可能会被中断并失去后台驻留。
-:::
-
-应用的后台机制涉及一系列生命周期管理，详情见[应用生命周期](../component/life-cycle.md)。
-
-## 页面
-
-应用会被划分为多个页面，这类似于 HTML 页面：每个页面实现一类交互逻辑，多个页面之间可以互相跳转。
-
-页面是一种充满整个屏幕的界面元素，因此设备上同时只能显示一个页面。为此，应用框架提供了页面栈机制：每一个应用在运行时都可以打开一些页面，这些页面按照栈的方式维护，同时只显示最顶部的页面。由于页面栈是一个栈（stack），所以它支持压入（push）和弹出（pop）操作，通过这两种操作可以向应用的页面栈中放入新页面或关闭顶部的页面。此外，应用框架还扩充了一些实用的页面操作。
-
-大部分页面存在于应用的页面栈中，当应用位于前台时（即它是正在显示的应用），页面栈顶的页面就会被显示，而后台应用的所有页面都不显示。各个应用之间的页面栈完全独立。
-
-一个页面由一个**页面组件**及若干个子组件构成。所有的页面必须在 [`manifest.json`](manifest.md#router) 中进行声明才可以使用。应用内的页面通过 [`system.router`](/api/system-router.md) API 进行导航和切换，这包含一套路由机制和页面间的数据传递方式。
-
-页面默认使用堆叠布局，就像 [`stack`](/components/stack.md) 组件那样，因此在页面组件中使用这样的模板：
-``` html
-<scroll>
-  <p>background</p>
-</scroll>
-<p>overlay</p>
-```
-
-和将其放在一个 `stack` 组件内具有相同的效果：
-``` html
-<stack>
-  <scroll>
-    <p>Background</p>
-  </scroll>
-  <p>Overlay</p>
-</stack>
-```
-
-使用下面的交互式演示可以观察到这种堆叠效果，你可以使用鼠标或者触摸板滚动“Background”文本并观察堆叠的层级效果。
-
-<glyphix id="application-page-component" height="200" width="300" title="页面组件堆叠效果">
-
-``` html
-<scroll>
-  <p>Background</p>
-</scroll>
-<p>Overlay</p>
-```
-
-``` css
-p {
-  text-align: center;
-  color: #f088;
-  font-size: 1.5rem;
-}
-
-scroll>p {
-  height: 100%;
-  color: black;
-  font-size: 1.25rem;
-}
-```
-
-</glyphix>
-
-## 组件
-
-详见[组件框架](/framework/component/README.md)。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/application/resource.md
-
-# 资源访问
-
-## URI 和路径
-
-可以在应用中通过 URI 或者路径访问应用中的资源。这些资源包括应用安装包中的文件、应用的运行时数据文件和共享数据文件等。与 Web 环境不同，Glyphix 应用中的 URI 和路径主要用于访问本地文件，而不能访问网络上的资源。
-
-许多 [API](/api/README.md) 和[原生组件](/components/README.md)都使用 URI 或者路径访问资源，在这些接口中 URI 或者路径一般可以混用。
-
-### URI
-
-URI 的格式和 [URL](https://developer.mozilla.org/docs/Glossary/URL) 类似，语法定义如下图所示：
-
-![](./figures/uri-syntax.svg)
-
-各字段的说明为：
-- **scheme**：指定资源访问的协议，例如 `app`、`internal` 等；
-- **authority**：通常表示包名或者域名，其意义由具体的资源协议决定；
-- **path**：资源在资源包内部的路径，必须是 `/` 字符开头的字符串（就像 Unix 中的路径一样）；
-- **query**：指定查询数据，一般只用于应用跳转时传递参数。
-
-这是一些 URI 的实例：
-```
-      authority
-      ↓
-app://com.example.app/icon.png
-↑                    ↑
-scheme               path
-           authority
-           ↓
-internal://files/favicon.png
-↑                ↑
-scheme           path
-      authority                query
-      ↓                        ↓
-app://com.example.app/icon.png?key=value
-↑                    ↑
-scheme               path
-```
-
-使用 URI 可以定位其他应用中的资源以及系统资源，也可以访问应用的缓存或临时文件，在访问外部资源时要注意应用是否有相应的权限。与 Web 平台不同，Glyphix URI 通常用于访问本地资源，而无法访问网络资源。请使用 [`system.fetch`](/api/system-fetch.md) 或者 [`system.request`](/api/system-request.md) 模块。
-
-### 路径
-
-路径是另一种定位资源的方式，它只能定义应用包内部的资源。路径有两种写法，一种是使用 `/` 开始的绝对路径，例如 `/assets/images/icon.png`；另一种是相对路径，例如 `images/icon.png`。绝对路径相对于应用资源包的根目录（也就是项目的 `src` 目录），而相对路径则相对于当前资源文件。因此
-``` js
-// in file: /Common/module-a.js
-import x from '/Common/module-b.js'
-import y from 'module-b.js'
-```
-中，`x` 和 `y` 实际上引入了同一个模块。
-
-使用 `..` 可以定位上一级目录，例如 `../fonts/Times.ttf` 或 `/images/../fonts/Times.ttf`。不过 `..` 无法超越项目根目录的层次，因此 `/a/../..` 会被限制为 `/`。
-
-绝对路径可以用于 URI 的 path 字段。
-
-## URI 协议
-
-### `app`
-
-此协议下 authority 字段为应用的包名，也就是 `mainfest.package` 字段。`path` 字段为应用资源包内资源的路径。
-
-使用 `app` 协议可以访问其他应用的资源。
-
-### `file`
-
-待补充
-
-### `pkg`
-
-待补充
-
-### `internal`
-
-`internal` URI 协议用于访问应用内部的资源文件，尤其是那些无法通过常规静态[路径](#路径)访问的文件。例如，应用程序可能生成临时文件、缓存文件或私有文件，这些文件无法通过路径访问（路径只能够访问资源包内的静态资源），而应通过 internal 协议来访问和管理。
-
-常见的 `internal` URI 协议的基本格式如下：
-``` ebnf
-internal://<authority>/<path>
-```
-- **authority**：决定资源文件的存储位置，具体作用见下文。
-- **path**：相对于指定存储位置的路径，指向具体的文件。
-
-#### authority 字段
-
-**authority** 字段决定了内部资源的类别和存储位置。依据不同的取值，`authority` 字段的含义如下：
-- `cache`：表示该 URI 定位到应用程序的缓存目录，通常用于存储缓存文件。此目录下的文件是应用运行时生成的临时文件，可以随时被删除或重建。
-- `files`：表示该 URI 定位到应用程序的私有文件目录。这是应用程序专用的存储位置，用于保存需要持久化的文件数据。
-- `mass`：表示该 URI 定位到所有应用共享的文件目录。这通常是一个公用目录，多个应用可以在此目录下存储和读取文件。
-- `tmp`：表示该 URI 定位到系统的临时文件目录，通常用于存储短期使用的临时文件。文件在这里存储的时间是短暂的，可能会在系统或应用重启时被清除。
-
-例如，`internal://cache/images/avatar.png` 表示访问缓存目录中的图片文件 `avatar.png`。该 URI 可用于 [image](/components/image.md) 组件等多个场景：
-``` html
-<image src="internal://cache/images/avatar.png" />
-```
-
-::: warning
-**authority** 字段不支持 URI 编码，必须直接使用 `cache`、`files` 这样的字面值，而不能用 `%63%61%63%68%65` 形式的编码。**path** 字段支持 URI 编码（但不推荐），但除了常规文件路径规则外，还需遵守以下限制：路径中不能出现 `%` 字符，且不能以 `..` 形式上溯根目录。
-
-这些限制旨在防止通过编码或路径上溯等方式绕过内部资源访问规则，从而避免潜在的安全风险。
-:::
-
-#### 应用文件隔离
-
-使用 `internal` URI 协议时，`cache`、`files` 和 `tmp` 类别都是应用的私有存储区域，只有当前应用可以访问这些目录下的文件。因此，同一个 `internal` URI 在不同的应用中可能指向不同的文件。每个应用都有独立的私有缓存、文件和临时文件存储空间，确保了应用之间的文件隔离和数据安全。
-
-假设有两个不同的应用 A 和 B，分别使用同一个 URI 来访问私有文件：
-```
-internal://files/config/settings.json
-```
-那么
-- **应用 A** 中该 URI 指向其私有文件目录中的 `settings.json` 文件。
-- **应用 B** 中该 URI 指向其私有文件目录中的 `settings.json` 文件。
-
-这种机制确保了应用之间各自管理自己的文件，互不干扰，也避免了潜在的数据泄露。
-
-于此不同 `internal://mass/` 是所有应用共享的公共文件存储区域。同一个 `internal` URI 在不同的应用中指向相同的文件。因此，`mass` 目录下的文件可以被多个应用共同访问和共享。例如应用 A 和应用 B 都使用：
-```
-internal://mass/public/shared_image.png
-```
-那么该 URI 在两个应用中指向同一个公用文件 `shared_image.png`，允许它们共享该文件资源。
-
-::: warning
-如果一个应用将敏感数据存储在 `mass` 空间中，其他应用可能会读取该数据。因此，开发者应避免在 `mass` 目录中存储任何敏感或私密的信息，确保存储在其中的文件是可公开访问和共享的资源。
-:::
-
-## 资源 API
-
-[`URI`](/api/global.md#uri) 全局函数、[`@system.path`](/api/system-path.md)、[`@system.file`](/api/system-file.md) 等接口提供在 JavaScript 中操作资源的能力。请参考相关文档了解详情。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/commands/for.md
-
----
-icon: format-list-bulleted
----
-# for 指令
-
-`for` 指令用于列表渲染。
-
-## 语法
-
-``` html
-<div for="expr"></div> <!-- 不定义下标和迭代变量 -->
-<div for="value in expr"></div> <!-- 不定义下标变量 -->
-<div for="index, value in expr"></div>
-<div for="(index, value) in expr"></div>
-```
-`expr` 表达的值是一个 [`Array` 对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)或者数值，`for` 指令会遍历整个列表并在迭代过程中传递下标值和迭代项的值。如果不定义下标变量或迭代变量，那么下标变量的默认名称为 `$idx`，迭代变量的默认名称为 `$item`。
-
-当 `for` 指令和 `if` 指令同时存在时，`if` 指令的优先级更高。这意味着如果 `if` 指令值为假，整个列表都不会渲染。
-
-`for` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法，因此也可以使用双大括号包围表达式。
-
-::: warning
-不推荐同时使用 `if` 和 `for` 指令以提升代码可读性。
-:::
-
-## 列表渲染
-
-通过 `for` 指令将一个 [JavaScript 数组](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps/Arrays)渲染为列表。它通常用于 [`scroll`](/components/scroll.md) 的子组件上，例如：
-``` html
-<scroll :damping="damping">
-  <p for="item in items" class="item">
-    {{ item.message }}
-  </p>
-</scroll>
-```
-`p` 组件上的 `for` 指令会遍历 `items` 数组并为每个迭代项生成一个 `p` 组件节点。`item` 是迭代项的变量名，在 `{{ item.message }}` [插值表达式](/framework/component/template.md#插值表达式)中访问了它的 `message` 属性。
-
-`items` 是一个类型为数组的[组件对象属性](/framework/component/component-object.md)，例如：
-``` js
+<script>
 export default {
-  data: {
-    items: [
-      { message: 'Foo' },
-      { message: 'Bar' },
-      { message: 'Baz' },
-    ]
-  }
-}
-```
-
-此代码会渲染出以下界面：
-
-<glyphix id="commands-for-1" height="200" width="360" inline>
-
-``` html
-<scroll :damping="damping">
-  <p for="item in items" class="item">
-    {{ item.message }}
-  </p>
-</scroll>
-```
-
-``` js
-export default {
-  data: {
-    items: [
-      { message: 'Foo' },
-      { message: 'Bar' },
-      { message: 'Baz' },
-    ]
-  }
-}
-```
-
-``` css
-scroll {
-  display: flex;
-  flex-direction: column;
-  background-color: #f0f0f0;
-}
-
-.item {
-  color: #fafafa;
-  background-color: #bdbdbd;
-  text-align: center;
-  padding: 40px 10px;
-  margin: 10px;
-  border-radius: 16px;
-}
-```
-
-</glyphix>
-
-渲染结果是一个包含三个表项的可滚动列表，内容为 “Foo”，“Bar” 和 “Baz”。你可以在原生[组件](/framework/component/README.md)或者自定义组件上使用 `for` 指令来实现列表渲染。
-
-也可以使用默认的 `$item` 迭代变量名：
-``` html
-<scroll :damping="damping">
-  <p for="items" class="item">
-    {{ $item.message }}
-  </p>
-</scroll>
-```
-这样的渲染结果和上面是一样的。
-
-## 嵌套和作用域
-
-在同一个标签中，下标和迭代变量必须在 `for` 指令之后才可以访问，因此需要注意相关属性的顺序：
-``` html
-<panel for="value in expr" title="value.title"></panel> <!-- 正确 -->
-<panel title="value.title" for="value in expr"></panel> <!-- 错误 -->
-```
-错误的顺序不会导致编译报错，而是尝试在 `this` 作用域中查找 `value` 属性。换言之，`for` 指令中定义的变量会隐藏外层作用域的名字，这包括：
-- 组件的 view-model（即通过 `this` 的属性访问）
-- 全局对象
-
-考虑到变量作用域和指令优先级的问题，`if` 指令应位于 `for` 指令之前，否则可能会引起令人困惑的行为。
-
-对于当前组件节点，`for` 指令中定义的变量只在其之后的属性中可见。也在静态的子组件中可以见，例如
-``` html
-<panel for="value in expr" title="value.title">
-  <p>message: {{value.message}}</p>
-</panel>
-<p>{{value.message}}</p> <!-- 此时访问 this.value.message -->
-```
-除最后一个 `{{value.message}}` 表达式以外，其他几处 `value` 均在 `for` 指令的作用域内。
-
-`for` 指令可以嵌套使用，此时的作用域规则同上。注意，同名下标和迭代变量的作用域会被内层的 `for` 指令隐藏，因此需要显式地定义这些变量。
-
-## 数组变化侦测
-
-`for` 指令可以检测[响应式](/framework/component/component-object.md#响应式编程)数组的变化并更新界面。以下操作都会触发 `for` 渲染更新：
-- 替换一个新数组；
-- 调用数组更新方法，如 [`push()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/push)，[`pop()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)，[`shift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)，[`unshift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)，[`splice()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)，[`sort()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) 和 [`reverse()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse)。
-
-### 替换一个数组
-
-可以将用于列表渲染的响应式属性替换为一个新的数组来触发界面更新。例如：
-``` js
-this.items = this.items.filter((item) => item.message.match(/Foo/))
-```
-这样，`this.items` 被赋值为一个新的数组，`for` 指令会在该操作之后重新渲染新的列表。
-
-::: tip
-数组有一些不可变 (immutable) 方法，例如 `filter()`，`concat()` 和 `slice()`，这些都不会更改原数组，而总是**返回一个新数组**。当遇到不可变方法时，需要用上面的方法将旧的数组替换为新的。
-:::
-
-### 数组更新方法
-
-使用数组的更新方法也可以触发视图更新，例如：
-``` js
-// 在原有的列表底部插入一个内容为 Grault 的新元素
-this.items.push({ message: 'Grault' })
-```
-
-还可以直接修改数组长度来截断数组，如：
-``` js
-// 删除列表中第三项之后的元素
-this.items.length = 2
-```
-
-还可以更改列表的元素：
-``` js
-// 将第二个元素内容更改为 Grault
-this.items[1] = { message: 'Grault' }
-```
-
-::: warning
-`for` 指令目前无法追踪列表元素的属性更改，详见[列表元素更新](#列表元素更新)。
-:::
-
-## 缺陷和限制
-
-### 列表元素更新
-
-`for` 指令无法监听数组项目的深层属性更新，这意味着
-``` js
-this.items[1].message = 'Grault'
-```
-将不能正确地触发界面更新。为了解决这种问题，必须将数组项目替换为一个新的对象：
-``` js
-this.items[1] = { message: 'Grault' }
-```
-
-当项目对象的属性比较多，但只希望更新其中少数属性的时候，建议先使用[展开语法（`...`）](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax) 拷贝对象，然后再更新属性：
-``` js
-this.items[1] = {
-  ...this.items[1], // 拷贝第二个元素的所有属性
-  message: 'Grault' // 更新 message 属性
-}
-```
-
-::: warning
-数组项目对象的属性数量会对性能造成影响，当你发现列表更新卡顿时，请参阅[不必要的更新](#不必要的更新)。
-
-由于界面中的其他元素一起更新等原因，直接更改项目的深层属性后界面也许会更新，但是这并不稳定，请不要这样使用。
-:::
-
-### 列表下标问题
-
-`for` 指令虽然支持在渲染时获取项目下标，如：
-``` html
-<p for="index, value in items">
-  {{ index }} - {{ value }}
-</p>
-```
-但是目前并不支持响应式地更新下标，对 `items` 数组的修改可能会导致显示错乱。更新整个数组可以避免这个问题。
-
-但由于某些优化机制，开发者很难保证**真正地**更新整个 `items` 数组，这会导致奇怪的非预期下标错乱问题。
-
-### 不必要的更新
-
-列表渲染可能是流畅性和性能的瓶颈之一，尤其是长列表的渲染速度可能较慢。减少不必要的列表更新可能是一种有效的优化手段。
-
-#### 直接更新列表
-
-考虑这样的一个列表：
-``` html
-<div for="(idx, task) in tasks" on:click="process(idx)">
-  <p>{{ task.name }}</p>
-  <p>{{ task.progress }}%</p>
-</div>
-```
-这是一个任务处理界面，它显示一个任务列表并在用户点击时处理某个任务。简单起见，我们这样初始化这个任务列表：
-``` js
-this.tasks = Array.from({ length: 10 },
-  (_, i) => ({ name: `Task #${i + 1}`, progress: 0 }))
-```
-此时你会看到一个包含 10 个项目的任务清单。以下的 `process()` 方法简单地实现了任务进度的更新：
-``` js
-process(idx) { // idx 是点击的任务项目下标
-  this.tasks[idx].progress = 0
-  // 创建一个定时器来模拟处理进度
-  let timer = setInterval(() => {
-    // 由于 for 指令不支持深层属性更新，所以先拷贝一个对象
-    let task = {...this.tasks[idx]}
-    task.progress += 10
-    this.tasks[idx] = task
-    if (task.progress >= 100)
-      clearInterval(timer) // 处理完成时删除定时器
-  }, 100)
-}
-```
-如下所示，这个实现是可以正常交互的。
-
-<glyphix id="commands-for-tasklist-1" height="360" width="360" title="任务清单列表">
-
-``` html
-<scroll>
-  <div for="(idx, task) in tasks" on:click="process(idx)">
-    <p>{{ task.name }}</p>
-    <p>{{ task.progress }}%</p>
-  </div>
-</scroll>
-```
-
-``` js
-export default {
-  data: {
-    tasks: []
-  },
   onInit() {
-    this.tasks = Array.from({ length: 10 },
-      (_, i) => ({ name: `Task #${i + 1}`, progress: 0 }))
-  },
-  process(idx) {
-    this.tasks[idx].progress = 0
-    let timer = setInterval(() => {
-      let task = {...this.tasks[idx]}
-      task.progress += 10
-      this.tasks[idx] = task
-      if (task.progress >= 100)
-        clearInterval(timer)
-    }, 100)
+    console.log("onInit() called!")
   }
 }
+</script>
 ```
+`onInit()` 生命周期函数会在组件实例化之后调用。生命周期函数都没有参数，也不使用返回值。
 
-``` css
-scroll {
-  display: flex;
-  flex-direction: column;
-  background-color: #f0f0f0;
-}
+### 组件生命周期函数
 
-div {
-  color: #fafafa;
-  background-color: #bdbdbd;
-  display: flex;
-  justify-content: space-between;
-  padding: 40px 10px;
-  margin: 10px;
-  border-radius: 16px;
-}
-```
+这些生命周期函数是组件和页面共有的。
 
-</glyphix>
+#### `onInit` <decl type="(): Promise<any> | void" method />
 
-这种简单的方法在复杂且较长的列表界面中可能会变得很卡顿，此时你可能会观察到：
-- 界面中的进度等动画出现掉帧；
-- 在列表中上下滚动会变得明显卡顿。
+此时组件已经实例化，且 view-model 中的数据已经准备好，可以通过 `this` 关键字访问其中的数据。通常在此生命周期函数中执行开发者自定义的初始化逻辑。
 
-#### 通过子组件优化
+#### `onReady` <decl type="(): Promise<any> | void" method />
 
-一种优化方法是将项目拆分成一个独立的组件，在本示例中可以添加一个 `Task` 组件：
-``` html
-<div on:click="process">
-  <p>{{ name }}</p>
-  <p>{{ progress }}%</p>
-</div>
-```
-`Task` 组件的 JavaScript 脚本中可以处理自己的 `process()` 操作：
-``` js
-export default {
-  data: {
-    name: null, // 任务名字要在外层传入
-    progress: 0
-  },
-  // 每个 Task 组件对象会处理自己的 process 操作，
-  // 并通过 this 访问自己的响应式属性。
-  process() {
-    this.progress = 0
-    let timer = setInterval(() => {
-      this.progress += 10
-      if (this.progress >= 100)
-        clearInterval(timer)
-    }, 100)
-  }
-}
-```
+此时组件已经渲染完成。此时的组件树具有对应的控件树（类似于 DOM 树）。
 
-相比于之前的方法，新的方案在[引入 `Task` 组件](/framework/component/README.md#引入组件)之后直接使用即可：
-``` html
-<task for="task in tasks" :name="task.name" />
-```
-而父组件的 JavaScript 代码也可以更简单：
-``` js
-export default {
-  data: {
-    tasks: []
-  },
-  onInit() {
-    for (let i = 0; i < 10; ++i)
-      this.tasks.push({ name: `Task #${i + 1}` })
-  }
-}
-```
-这相比于直接更新列表有以下变化：
-- 插入的数组项目没有 `progress` 属性，因为它只需要在 `Task` 子组件中处理；
-- `process()` 方法被删除并移动到了 `Task` 组件内；
-- 不需要使用 `idx` 下标变量来区分不同的项目。
+#### `onDestroy` <decl type="(): Promise<any> | void" method />
 
-这种方式可以实现相同的任务列表界面，只是将 `progress` 的处理移动到了 `Task` 子组件内，从而避免在修改进度时更新任务数组。使用这种方法可以优化列表元素内部界面更新的问题，同时可以降低代码复杂度。
+组件准备销毁。此时仍可以访问 view-model 中的数据。通常在在 `onDestroy()` 中执行自定义的资源释放操作。
 
+### 页面生命周期函数
 
-============================================================
-FILE_PATH: src/original_docs/src/framework/commands/if.md
+这些生命周期函数只存在于页面中。
 
----
-icon: file-tree
----
-# if / elif / else 指令
+#### `onShow` <decl type="(): Promise<any> | void" method />
 
-`if` / `elif` / `else` 指令用于条件渲染。这些指令控制组件是否会被渲染，例如 `if` 指令仅会在条件为真时渲染组件，否则会删除组件。这和组件 `show` 属性不同，后者控制组件是否显示但不会删除组件。
+页面即将显示时调用。使用 `router.back()` 返回时，底层的页面即将显示时会调用 `onShow()`；刚创建的新页面在第一次显示之前也会调用 `onShow()`。
 
-## 语法
+#### `onHide` <decl type="(): Promise<any> | void" method />
 
-### if 指令
+页面即将隐藏时调用。使用 `router.push()` 时导致底层页面隐藏时会调用 `onHide()`。但是页面销毁之前并不会隐藏页面，因此不会调用 `onHide()`。
 
-``` html
-<p if="cond">if: true</p>
-```
-如果 `cond` 表达式为真，那么组件会被渲染，否则不被渲染。
+设备屏幕关闭时，前台页面的 `onHide()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
 
-## elif 和 else 指令
+#### `onBackPress` <decl type="(): boolean" method />
 
-含有 `elif` 和 `else` 指令的组件必须跟随在含有 `if` 或 `elif` 指令的组件之后，并使用上一个条件的否定来控制组件是否被渲染：
-``` html
-<p if="cond1">if cond1: true</p> 
-<p elif="cond2">elif cond2: true</p>
-<p elif="cond3">elif cond3: true</p>
-<p else>else</p> <!-- else 指令不支持属性值 -->
-```
-该代码的行为如下：
-- 如果 `cond1` 条件为真，那么仅 `if cond1: true` 文本会被渲染；
-- 否则如果 `cond2` 为真，会只渲染 `elif cond2: true`；
-- 否则如果 `cond3` 为真，会只渲染 `elif cond3: true`；
-- 所有条件都为假，渲染 `else` 文本。
+当用户侧滑返回时调用此生命周期函数。开发者可以在此函数中处理返回逻辑。如果返回 `true`，表示开发者已经处理了返回操作，系统不会执行默认的返回行为；如果返回 `false`，表示开发者没有处理返回操作，系统会执行默认的返回行为（即关闭当前页面并返回到上一个页面）。
 
-`if` / `elif` / `else` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/commands/model.md
-
----
-icon: swap-horizontal
----
-# model 指令
-
-使用 `model` 指令可以实现组件属性的双向绑定。
-
-## 语法
-
-``` html
-<com model:prop="value"></com>
-<com ::prop="value"></com>
-```
-在属性中使用 `model:` 前缀或者简写的 `::` 来修饰属性即可使用 `model` 指令进行双向绑定。其中 `prop` 为目标组件的属性名字，而 `value` 为当前组件中需要双向绑定的 view-model 属性名。
-
-## 双向绑定
-
-使用 [`on` 指令](on.md)和[属性绑定表达式](/framework/component/template.md#属性绑定表达式)可以实现组件属性和 view model 属性之间的双向绑定：
-``` html
-<div>
-  <switch :value="state" on:value="state = $event"/> value: {{state}}
-</div>
-```
-
-``` js
-export default {
-  data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2000)
-  }
-}
-```
-
-<Glyphix id="commands-model-1" height="32" inline>
-
-``` html
-<div>
-  <switch :value="state" on:value="state = $event"/> value: {{state}}
-</div>
-```
-
-``` js
-export default {
-  data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2000)
-  }
-}
-```
-
-</Glyphix>
-
-当 JavaScript 代码中修改了 `this.state` 的值时，`switch` 标签中的 `:value="state"` 表达式会使 `switch` 元素的显示状态被更新，而 `on` 指令表达式会在用户点击 `switch` 元素后使 `state` 的值得到更新。
-
-这个过程中界面的显示状态（`switch` 组件和文本 `value: {{state}}`）和 view-model 中的 `state` 属性都是一致的，我们称这种机制为**双向绑定**。
-
-`model` 指令本质上是上面写法的语法糖，它可以简单地实现双向绑定：
-``` html
-<div>
-  <switch ::value="state"/> value: {{state}}
-</div>
-```
-
-<Glyphix id="commands-model-2" height="32" inline>
-
-``` html
-<div>
-  <switch ::value="state"/> value: {{state}}
-</div>
-```
-
-``` js
-export default {
-  data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2000)
-  }
-}
-```
-
-</Glyphix>
-
-## 自定义组件的双向绑定
-
-双向绑定常用于表单组件，但是 `model` 指令也支持自定义组件，只要为自定义组件的属性提供一个同名的事件并在属性变化时触发即可。例如：
-
-``` js
-// file: com.ux
-export default {
-  data: {
-    prop: 0 // 假设要对 prop 属性进行双向绑定
-  },
-  watch: {
-    prop(x) { // 在 prop 属性值变化时触发同名事件
-      this.$emit('prop', x)
-    }
-  }
-}
-```
-假设这是某个自定义组件的部分组件对象，其中 `prop` 属性用于双向绑定。这个例子中使用了 `watch` 对象来监听 `prop` 属性的变化，并在其变化时触发名为 `'prop'` 的事件。在调用方组件中只需这样进行双向绑定：
-``` html
-<com ::prop="valueName"></com>
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/commands/on.md
-
----
-icon: alternate-email
----
-# on 指令
-
-`on` 指令用于监听支持监听的属性值变化。
-
-## 语法
-
-``` html
-<div on:attribute="expr"></div>
-<div onattribute="expr"></div> <!-- 兼容快应用的语法 -->
-<div @attribute="expr"></div>  <!-- Vue 风格语法 -->
-```
-
-`attribute` 是需要监听变化的属性名字，`expr` 是属性变化时需要执行的表达式。标准的 `on` 指令使用 `on:` 前缀，也支持 `on` 和 `@` 字符前缀。
-
-`on` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法。
-
-::: tip
-建议使用 `on:attribute` 格式，`onattribute` 容易导致开发者在不知情的情况下混淆 `on` 指令和普通属性。此外，属性名如 `oneself` 会解析为 `on:eself` 的指令，应特别注意。
+::: warning
+此生命周期函数会导致交互式侧滑返回（即跟手侧滑）被禁用。通常**不建议**使用此生命周期函数，也不要定义名为 `onBackPress` 的普通方法。如果希望阻止默认的返回交互，请参考[页面的默认事件处理](/framework/generic/properties.md#页面的默认事件处理)，这样可以保留交互动效。
 :::
 
-## 监听表达式
+#### `onRefresh` <decl type="(): Promise<any> | void" version="0.8" method />
 
-### 基本用法
+当页面以 `singleTask` 模式打开并回到已经存在的页面时会调用此生命周期函数，详见 [`launchMode`](../application/manifest.md#launchmode)。可以在此函数中刷新页面数据。
 
-下面的代码监听一个 `div` 组件的触摸事件：
-``` html
-<div on:touchmove="console.log($event)"></div>
-```
-示例中监听 [`touchmove`](../generic/properties.md#touchmove) 事件此处直接打印了[触摸事件对象](../generic/properties.md#touchevent)。`$event` 变量用于获取事件值，它是由 `on` 指令定义的变量（作用域仅在 `on` 指令表达式内）。
+## 应用生命周期
 
-还可以调用在组件对象中定义的方法：
-``` html
-<div on:touchmove="onTouch('move', $event)"></div>
-```
+### 应用生命周期函数
 
-``` js
+#### `onCreate` <decl type="(): Promise<any> | void" method />
+
+应用加载时调用此生命周期函数。
+
+#### `onDestroy` <decl type="(): Promise<any> | void" method />
+
+应用将要销毁时调用此生命周期函数。
+
+#### `onShow` <decl type="(): Promise<any> | void" method />
+
+应用从后台切换到前台显示时调用此生命周期函数。应用的 `onShow()` 生命周期函数总是在页面的 `onShow()` 之后调用。设备屏幕重新打开时，前台应用的 `onShow()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
+
+#### `onHide` <decl type="(): Promise<any> | void" method />
+
+应用从前台隐藏到后台前调用此生命周期函数。
+
+如果你不希望应用在后台保持活动，可以在 `onHide()` 中调用 [`launch.exit()`](/api/system-launch.md#exit) 来退出应用自身。例如：
+```js
+// in src/app.js
+import launch from '@system.launch'
+
 export default {
-  onTouch(type, event) {
-    console(`touch ${type}:`, event)
+  onHide() {
+    launch.exit()
+  },
+}
+```
+
+应用的 `onHide()` 生命周期函数总是在页面的 `onHide()` 之后调用。设备屏幕关闭时，前台应用的 `onHide()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
+
+#### `onRoute` <decl type="(page: string, query: {[key: string]: string}): Promise<any> | void" method />
+
+通过 deeplink URI 启动应用时会调用 `onRoute` 生命周期函数。参数 `page` 和 `query` 是解码后的 URI 字段。例如：
+``` js
+// file: app.ux
+export default {
+  // 假设通过 app://example.app/page/to/deeplink?key=value&query=result
+  onRoute(page, query) {
+    console.log(page)  // 打印字符串 '/page/to/deeplink'
+    console.log(query) // 打印对象 {deeplink: 'key', query: 'result'}
   }
 }
 ```
 
-自定义事件的方法请参考[组件间通信](../component/communicate.md)。
+`onRoute()` 会在 `onCreate()` 之后，`onShow()` 之前调用。开发者可以在 `onRoute()` 中根据 deeplink 指定的参数进行初始化（例如跳转到特定的页面）。
 
-### 函数表达式
+#### `onLocaleChanged` <decl type="(locale: {language: string}): void" method />
 
-如果监听表达式的值是一个函数，那么会自动调用该函数：
-``` html
-<div on:click="onClick" />
-```
+当应用的语言环境发生变化时调用此生命周期函数。参数 `locale` 是一个对象，包含 `language` 字段，表示当前的语言环境（Language Tag），如 `'en-US'`、`zh-CN` 等。
 
+## 异步生命周期函数 <experimental/>
+
+组件、页面或者应用的生命周期函数可以是异步的，即 `async` 函数或者返回 `Promise` 对象。例如
 ``` js
+import fs from "@system.file"
+
 export default {
-  onClick(event) {
-    console.log(event)
+  async onInit() {
+    // 等待异步的文件读取完成再继续执行。
+    let text = await fs.readText({ uri: "internal://files/test.txt" })
+    console.log(text)
   }
 }
 ```
-如示例所示，事件值会作为唯一的参数传递给函数。
+假设这是某个组件的 `onInit()` 生命周期函数，那么它会在异步的文件读取完成后才会继续执行组件渲染。在异步生命周期函数执行期间存在以下限制：
+- 不会重复执行组件渲染，在此期间任何对响应式属性的操作不会导致界面更新；
+- 暂时屏蔽用户输入，触摸和按键都不会响应（否则用户如果反复点击会导致重复响应）。
 
-::: tip
-监听表达式不一定是一个函数变量，也可以是复杂表达式（例如包含函数调用的表达式）。只要该表达式的值是一个函数那么就会由 `on` 指令调用。
+异步生命周期函数的主要作用是等待异步的 IO 和资源操作，避免过早地显示未加载好的界面。特别是打开新页面时会等待页面的 `onInit()`、`onReady()` 和 `onShow()` 生命周期函数全部执行完才会开始显示页面或播放转场动画。
+
+::: warning
+目前异步生命周期函数是实验性的，它们可能引起包括崩溃在内的各种问题。在异步生命周期函数调用过程中关闭正在渲染的页面会导致崩溃。
+
+大部分设备的固件没有启用异步生命周期函数的支持，它们的行为可能不符合预期。请谨慎使用异步生命周期函数。
 :::
 
-## 监听组件属性值的变化
+## 屏幕状态变化
 
-有些组件的属性值在变化时会产生事件，可以通过 `on` 指令来监听：
+设备的屏幕状态变化会影响应用和页面的生命周期函数调用。当设备屏幕关闭时，前台应用和页面的 `onHide()` 生命周期函数会被调用；当屏幕重新打开时，前台应用和页面的 `onShow()` 生命周期函数会被调用。开发者可以利用这些生命周期函数来暂停或恢复网络请求，以降低功耗。
 
-``` html
-<list on:index="indexChanged($event)">
-  <content/>
-</list>
-```
-
-如[属性文档规范](../component/README.md#属性文档规范)中的描述，支持**监听**的属性可以使用 `on` 指令来监听值变化。
+::: tip
+部分设备在关闭屏幕后会将应用切换到后台，并在一段时间后杀死应用。对于需要持续后台运行的应用，需要注意[后台](../application/README.md#后台管理)保活的方法。
+:::
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/component/communicate.md
-
-# 组件间通信
-
-组件之间的通信由组件参数和事件绑定实现。例如：
-``` html
-<scroll scroll-snap="center" on:scroll="scrolled($event)" />
-```
-就向 `scroll` 组件实例传递了 `scroll-snap` 属性参数使元素居中对齐，并且会监听 `scroll` 属性的变化。
-
-## 属性参数
-
-通过组件节点的**属性**（attribute）字段可以向子组件传递参数，例如：
-``` html
-<p text="A message"></p>
-```
-会向一个 `p` 组件实例传递一个名称为 `text`，值为 `"A message"` 的属性。可以按照 XML/HTML 的语法传递多个属性。通过[插值表达式](template#插值表达式)可以向组件的属性中传递一个被计算的值。
-
-## 事件响应
-
-[原生组件](native-component)封装了很多 UI 输入事件，比如触摸手势的响应以及 UI 变化的事件。这些事件都可以通过 [`on` 指令](../commands/on.md)进行监听。
-
-## 触发事件
-
-对于自定义组件，可以使用组件对象的 [`$emit(name, value)`](/framework/component/component-apis.md#emit) 方法来触发一个事件：
-``` html
-<panel on:some-event="console.log(`the event ${$event} was emited!`)">
-```
-
-``` js
-// in panel.ux
-export default {
-  emitEvent() {
-    this.$emit('someEvent', 'hello')
-  }
-}
-```
-
-`$emit` 方法有两个参数：
-- `name`：需要发送事件的属性名称，必须使用小驼峰命名法（对应的模板属性为蛇形命名法或小驼峰命名法）
-- `value`：可选参数，事件属性的值，将作为 `on` 指令的 `$event` 变量的值
-
-如果组件对象的 view-model 中有名为 `name` 的属性，`$emit` 方法不会将属性值修改为 `value`。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/component-apis.md
+FILE_PATH: src/original_docs/framework/component/component-apis.md
 
 # 组件内置接口
 
@@ -1925,7 +368,245 @@ this.$component("Name", "url")
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/component/component-object.md
+FILE_PATH: src/original_docs/framework/component/javascript.md
+
+# JavaScript 脚本
+
+JavaScript 是 Glyphix 应用开发的脚本语言。开发者可以将 JavaScript 代码放在 UX 文件的 `<script>` 标签中，也可以直接引用 `*.js` 脚本文件。  
+
+## 语法支持
+
+支持 ES6 语法。
+
+## 导入模块
+
+通过导入模块在代码中引用其他 js 文件。通常，通过路径来导入开发者定义的模块，有两种导入方式：
+``` js
+import utils from '../Common/utils.js' // 使用 import 关键字
+const utils = require('../Common/utils.js') // 使用 require 函数
+```
+模块的路径规则请参考[路径和 URI](../application/resource)。此外，模块路径中可以省略作为文件后缀名出现的 `.js`，因此上面的导入语句可以写成
+``` js
+import utils from '../Common/utils' // 使用 import 关键字
+const utils = require('../Common/utils') // 使用 require 函数
+```
+
+使用模块名导入系统内置的模块，所有的系统模块都是以 `@` 字符开头的：
+``` js
+import router from '@system.router' // 使用 import 关键字
+const router = require('@system.router') // 使用 require 函数
+```
+
+::: warning
+开发者不要将模块名使用 `@` 字符开头，这些名称都是为系统模块保留的。
+:::
+
+# 导出模块
+
+使用 ES6 的 `export` 语法来导出模块，例如：
+``` js
+// 导出 default 值
+export default {
+  method() {
+    // ...
+  }
+  props: {
+    // ...
+  }
+}
+
+// 导出具名值
+export function process(args) {
+  // ...
+}
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/component/prop-modifier.md
+
+# 属性修饰符
+
+普通的属性操作可以实现属性的设置、监听功能。但是某些场合会对属性操作有一些共性需求，例如：要求组件的某个属性值设置操作不是立即变更到新的值，而是使用动画来过渡。直接的解决方法是编写逻辑代码来实现过渡效果，但实际上这种逻辑对任何属性而言都是通用的。
+
+为了简化或复用某些通用属性操作的代码，Glyphix 内置了若干属性修饰符。修饰符是使用 `.` 表示的属性后缀，例如
+
+``` html
+<progress :value="progress" value.transition="{curve: 'ease'}"/>
+```
+
+组件的 XML 属性中填写的属性修饰符键值对 `value.transition="{curve: 'ease'}"` 和属性键值对 `value="{{progress}}"` 是相互独立的，它们可能要求完全不同的参数。
+
+本文档将介绍各属性修饰符的功能。
+
+## `transition` 修饰符
+
+此修饰符会代理属性的赋值操作，将原本直接对属性进行赋值的过程转变成按照 `transition` 修饰符指定的动画过渡方式渐变赋值。例如
+
+``` html
+<!-- transition 修饰符定义 value 属性的过渡效果 -->
+<progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
+<!-- 无过渡效果 -->
+<progress :max="1000" :value="progress" />
+```
+
+
+<glyphix id="prop-modifier-transition" height="68" width="480" inline>
+
+``` html
+<div>
+  <progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
+  <progress :max="1000" :value="progress" />
+</div>
+```
+
+``` css
+div > * {
+  margin: 8px;
+  height: 0.75rem;
+}
+```
+
+``` js
+export default {
+  data: {
+    progress: 500
+  },
+  onInit() {
+    setInterval(() => this.progress = parseInt(Math.random() * 1000), 3000)
+  }
+}
+```
+
+</glyphix>
+
+由于定义了 [`progress`](/components/progress.md) 组件的 `value.transition` 修饰符，因此每次修改 `this.progress` 时，`progress` 组件的显示值不会直接跳变到新值，而是通过一个动画进行渐变。这个效果不需要编写任何动画逻辑就可以实现。
+
+::: tip
+例子中的 `progress` 组件的 `value` 属性是整数，由于默认的 $[0, 100]$ 范围在过渡动画中容易产生分段感，所以例子中通过 `:max="1000"` 来增加 `value` 的取值范围从而使动画更平滑。
+:::
+
+### 插值计算
+
+目前只有原生组件的部分属性支持 `transition` 修饰符。支持的属性必须具有“可插值”的值类型，具体来说：对所有的属性值类型的值 $a$ 和 $b$ 和进度 $p \in [0,1]$，运算 $(1-p)*a+p*b$ 有效。
+
+JavaScript 的 `number` 类型是可插值的，除此之外变换和颜色值也可以插值。
+
+#### 变换
+
+变换通常使用字符串来定义，例如 `scale(2) rotate(30deg)`。字符串本身不可插值，但是当它用于变换属性时则是可以插值的（因为这些字符串会被解析为变换操作序列，而它们是可插值的）。通常而言会逐个按变换操作进行插值。例如 `scale(2) rotate(30deg)` 和 `scale(1) rotate(90deg)` 在插值过程中每一帧的变换都包含缩放和旋转两个步骤，其中缩放倍数从 $2$ 过渡到 $1$，而旋转角度从 $30\deg$ 过渡到 $90\deg$。
+
+#### 颜色
+
+颜色通常使用字符串代码来表示，例如 `#ff0000`。颜色的插值按红、绿、蓝和透明通道逐一计算。
+
+### `Transition` 对象
+
+`transition` 修饰符的值类型是 `Transition` 对象：
+``` ts
+interface Transition {
+  curve?: string,
+  duration?: number
+}
+```
+
+#### `curve` <decl type="?: string"/>
+
+指定过渡动画的[缓动函数](../render/animation.md#缓动曲线)，默认为 `'ease'`。
+
+#### `duration` <decl type="?: number"/>
+
+动画的持续时间，单位为秒，默认为 `1`。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/component/reuse.md
+
+# 组件复用
+
+应用层面的组件复用主要由自定义组件来实现。
+
+## 子组件
+
+假设某个 [UX 文件](/framework/component/README.md#ux-文件)的 `<template>` 标签中的结构描述界面的组织结构，例如
+``` html
+<template>
+  <div>
+    <p>text</p>
+    <image src="path/to/image.png" />
+    <qrcode value="hello world!" />
+  </div>
+</template>
+```
+在运行时对应以下组件树结构：
+``` mermaid
+flowchart TB
+  div --- p
+  div --- image
+  div --- qrcode
+```
+这颗组件树有一个父节点 `div` 和 $3$ 个子节点 `p`、`image` 和 `qrcode`。`div` 组件是 `<template>` 标签中最外层的组件，我们把这种组件称为**根组件**。跟组件有时候不是唯一的，例如：
+``` html
+<template>
+  <p>text</p>
+  <image src="path/to/image.png" />
+  <qrcode value="hello world!" />
+</template>
+```
+中有 3 个根组件。此外使用 [`for` 指令](/framework/commands/for.md)也可能造成多个根组件实例，例如
+``` html
+<template>
+  <p for="x in ['one', 'two', 'three']">
+    label: {{x}}
+  </p>
+</template>
+```
+会被渲染为 $3$ 个 `p` 组件实例。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/component/native-component.md
+
+# 原生组件
+
+原生组件是指由 C++ 实现的组件。这些组件的主要设计目标是实现某种界面元素，例如按钮或列表效果，但不承载业务逻辑。和 Web 技术不同的是，原生组件本身不提供 DOM 接口，只提供响应式的组件接口。
+
+Glyphix 中的原生组件提供大量配置接口，可以实现丰富的显示效果。此外，内置组件还有针对嵌入式平台设计的优化功能。
+
+本文档中使用**原生组件**表示由 C++ 实现的组件；**内置组件**一词指代由 WearOS 所提供的组件包，不过这些组件则不一定是由 C++ 实现的。
+
+::: tip
+本文档在描述中会区分原生组件和内置组件，但读者一般不用不考虑二者的差别。
+:::
+
+## 界面功能机制
+
+大部分和界面相关的机制是只有原生组件才具备的，这些机制包括：
+- CSS 样式表、布局等机制
+- 手势和触摸事件
+- 渲染和绘制机制
+
+通过组件间的参数/事件传递可以在自定义组件中模拟某些原生组件机制的接口，但这些能力本质上还是由原生组件来实现的。
+
+## 界面渲染
+
+## 组件快照
+
+快照是一种帧率优化的技术，为复杂的组件开启快照可以加快绘制速度从而提高帧率。快照实本质是对组件进行“截图”，并通过直接绘制这些截图来加速。因此对于内容复杂但更新不频繁的组件而言，快照是一种有效的技术。对于另一些更新频繁，但是能够容忍不刷新的场景，也有对应的 API 来禁用快照更新。
+
+## 原生组件对象
+
+通过组件的 [`$element()`](component-apis#element) 方法可以获取原生组件对象，它可以访问原生组件的属性或调用其方法，例如：
+
+``` js
+let el = this.$element('scroll-id')
+console.log(`width: ${el.width}`) // 通过原生组件对象获取组件的宽度
+el.scrollTo({ top: 100 }) // 通过 API 滚动列表
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/component/component-object.md
 
 # 组件对象
 
@@ -2263,352 +944,88 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/component/javascript.md
+FILE_PATH: src/original_docs/framework/component/template-macro.md
 
-# JavaScript 脚本
+# 模板宏
 
-JavaScript 是 Glyphix 应用开发的脚本语言。开发者可以将 JavaScript 代码放在 UX 文件的 `<script>` 标签中，也可以直接引用 `*.js` 脚本文件。  
-
-## 语法支持
-
-支持 ES6 语法。
-
-## 导入模块
-
-通过导入模块在代码中引用其他 js 文件。通常，通过路径来导入开发者定义的模块，有两种导入方式：
-``` js
-import utils from '../Common/utils.js' // 使用 import 关键字
-const utils = require('../Common/utils.js') // 使用 require 函数
-```
-模块的路径规则请参考[路径和 URI](../application/resource)。此外，模块路径中可以省略作为文件后缀名出现的 `.js`，因此上面的导入语句可以写成
-``` js
-import utils from '../Common/utils' // 使用 import 关键字
-const utils = require('../Common/utils') // 使用 require 函数
-```
-
-使用模块名导入系统内置的模块，所有的系统模块都是以 `@` 字符开头的：
-``` js
-import router from '@system.router' // 使用 import 关键字
-const router = require('@system.router') // 使用 require 函数
-```
-
-::: warning
-开发者不要将模块名使用 `@` 字符开头，这些名称都是为系统模块保留的。
-:::
-
-# 导出模块
-
-使用 ES6 的 `export` 语法来导出模块，例如：
-``` js
-// 导出 default 值
-export default {
-  method() {
-    // ...
-  }
-  props: {
-    // ...
-  }
-}
-
-// 导出具名值
-export function process(args) {
-  // ...
-}
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/life-cycle.md
-
-# 生命周期
-
-组件、页面和应用都有生命周期。可以通过**生命周期函数**在对象的特定生命周期阶段调用指定的功能。
-
-## 组件和页面的生命周期
-
-在组件和页面对象中定义生命周期函数即可触发调用。例如：
+模板宏是一种简化重复代码的方法，它是 UX 文件中带有 `macro:` 属性的 `<template>` 顶级元素：
 ``` html
-<script>
-export default {
-  onInit() {
-    console.log("onInit() called!")
-  }
-}
-</script>
+<template macro:scroll>
+  <scroll #props media-query="(shape: rect)">
+    <slot />
+  </scroll>
+  <scroll #props deformation="fisheye"
+          scroll-snap="center" media-query="(shape: circle)">
+    <slot />
+  </scroll>
+</template>
 ```
-`onInit()` 生命周期函数会在组件实例化之后调用。生命周期函数都没有参数，也不使用返回值。
+例如这里定义了一个名为 `scroll` 的宏，宏会替换当前 UX 文件的 `<template>` 模板内的同名组件，并且
+- 同名组件的所有属性会替换模板宏中的 `#props` 占位符；
+- 同名组件的子元素会替换模板宏中的 `<slot />` 节点。
 
-### 组件生命周期函数
-
-这些生命周期函数是组件和页面共有的。
-
-#### `onInit` <decl type="(): Promise<any> | void" method />
-
-此时组件已经实例化，且 view-model 中的数据已经准备好，可以通过 `this` 关键字访问其中的数据。通常在此生命周期函数中执行开发者自定义的初始化逻辑。
-
-#### `onReady` <decl type="(): Promise<any> | void" method />
-
-此时组件已经渲染完成。此时的组件树具有对应的控件树（类似于 DOM 树）。
-
-#### `onDestroy` <decl type="(): Promise<any> | void" method />
-
-组件准备销毁。此时仍可以访问 view-model 中的数据。通常在在 `onDestroy()` 中执行自定义的资源释放操作。
-
-### 页面生命周期函数
-
-这些生命周期函数只存在于页面中。
-
-#### `onShow` <decl type="(): Promise<any> | void" method />
-
-页面即将显示时调用。使用 `router.back()` 返回时，底层的页面即将显示时会调用 `onShow()`；刚创建的新页面在第一次显示之前也会调用 `onShow()`。
-
-#### `onHide` <decl type="(): Promise<any> | void" method />
-
-页面即将隐藏时调用。使用 `router.push()` 时导致底层页面隐藏时会调用 `onHide()`。但是页面销毁之前并不会隐藏页面，因此不会调用 `onHide()`。
-
-设备屏幕关闭时，前台页面的 `onHide()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
-
-#### `onBackPress` <decl type="(): boolean" method />
-
-当用户侧滑返回时调用此生命周期函数。开发者可以在此函数中处理返回逻辑。如果返回 `true`，表示开发者已经处理了返回操作，系统不会执行默认的返回行为；如果返回 `false`，表示开发者没有处理返回操作，系统会执行默认的返回行为（即关闭当前页面并返回到上一个页面）。
-
-::: warning
-此生命周期函数会导致交互式侧滑返回（即跟手侧滑）被禁用。通常**不建议**使用此生命周期函数，也不要定义名为 `onBackPress` 的普通方法。如果希望阻止默认的返回交互，请参考[页面的默认事件处理](/framework/generic/properties.md#页面的默认事件处理)，这样可以保留交互动效。
-:::
-
-#### `onRefresh` <decl type="(): Promise<any> | void" version="0.8" method />
-
-当页面以 `singleTask` 模式打开并回到已经存在的页面时会调用此生命周期函数，详见 [`launchMode`](../application/manifest.md#launchmode)。可以在此函数中刷新页面数据。
-
-## 应用生命周期
-
-### 应用生命周期函数
-
-#### `onCreate` <decl type="(): Promise<any> | void" method />
-
-应用加载时调用此生命周期函数。
-
-#### `onDestroy` <decl type="(): Promise<any> | void" method />
-
-应用将要销毁时调用此生命周期函数。
-
-#### `onShow` <decl type="(): Promise<any> | void" method />
-
-应用从后台切换到前台显示时调用此生命周期函数。应用的 `onShow()` 生命周期函数总是在页面的 `onShow()` 之后调用。设备屏幕重新打开时，前台应用的 `onShow()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
-
-#### `onHide` <decl type="(): Promise<any> | void" method />
-
-应用从前台隐藏到后台前调用此生命周期函数。
-
-如果你不希望应用在后台保持活动，可以在 `onHide()` 中调用 [`launch.exit()`](/api/system-launch.md#exit) 来退出应用自身。例如：
-```js
-// in src/app.js
-import launch from '@system.launch'
-
-export default {
-  onHide() {
-    launch.exit()
-  },
-}
+例如
+``` html
+<template>
+  <scroll :index="3" on:index="onIndexChange">
+    <p for="i in 10">item {{i + 1}}</p>
+  </scroll>
+</template>
 ```
-
-应用的 `onHide()` 生命周期函数总是在页面的 `onHide()` 之后调用。设备屏幕关闭时，前台应用的 `onHide()` 也会被调用，详见[屏幕状态变化](#屏幕状态变化)。
-
-#### `onRoute` <decl type="(page: string, query: {[key: string]: string}): Promise<any> | void" method />
-
-通过 deeplink URI 启动应用时会调用 `onRoute` 生命周期函数。参数 `page` 和 `query` 是解码后的 URI 字段。例如：
-``` js
-// file: app.ux
-export default {
-  // 假设通过 app://example.app/page/to/deeplink?key=value&query=result
-  onRoute(page, query) {
-    console.log(page)  // 打印字符串 '/page/to/deeplink'
-    console.log(query) // 打印对象 {deeplink: 'key', query: 'result'}
-  }
-}
+会被 `scroll` 模板宏替换为
+``` html
+<template>
+  <scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
+    <p for="i in 10">item {{i + 1}}</p>
+  </scroll>
+  <scroll :index="3" on:index="onIndexChange" deformation="fisheye"
+          scroll-snap="center" media-query="(shape: circle)">
+    <p for="i in 10">item {{i + 1}}</p>
+  </scroll>
+</template>
 ```
-
-`onRoute()` 会在 `onCreate()` 之后，`onShow()` 之前调用。开发者可以在 `onRoute()` 中根据 deeplink 指定的参数进行初始化（例如跳转到特定的页面）。
-
-#### `onLocaleChanged` <decl type="(locale: {language: string}): void" method />
-
-当应用的语言环境发生变化时调用此生命周期函数。参数 `locale` 是一个对象，包含 `language` 字段，表示当前的语言环境（Language Tag），如 `'en-US'`、`zh-CN` 等。
-
-## 异步生命周期函数 <experimental/>
-
-组件、页面或者应用的生命周期函数可以是异步的，即 `async` 函数或者返回 `Promise` 对象。例如
-``` js
-import fs from "@system.file"
-
-export default {
-  async onInit() {
-    // 等待异步的文件读取完成再继续执行。
-    let text = await fs.readText({ uri: "internal://files/test.txt" })
-    console.log(text)
-  }
-}
-```
-假设这是某个组件的 `onInit()` 生命周期函数，那么它会在异步的文件读取完成后才会继续执行组件渲染。在异步生命周期函数执行期间存在以下限制：
-- 不会重复执行组件渲染，在此期间任何对响应式属性的操作不会导致界面更新；
-- 暂时屏蔽用户输入，触摸和按键都不会响应（否则用户如果反复点击会导致重复响应）。
-
-异步生命周期函数的主要作用是等待异步的 IO 和资源操作，避免过早地显示未加载好的界面。特别是打开新页面时会等待页面的 `onInit()`、`onReady()` 和 `onShow()` 生命周期函数全部执行完才会开始显示页面或播放转场动画。
-
-::: warning
-目前异步生命周期函数是实验性的，它们可能引起包括崩溃在内的各种问题。在异步生命周期函数调用过程中关闭正在渲染的页面会导致崩溃。
-
-大部分设备的固件没有启用异步生命周期函数的支持，它们的行为可能不符合预期。请谨慎使用异步生命周期函数。
-:::
-
-## 屏幕状态变化
-
-设备的屏幕状态变化会影响应用和页面的生命周期函数调用。当设备屏幕关闭时，前台应用和页面的 `onHide()` 生命周期函数会被调用；当屏幕重新打开时，前台应用和页面的 `onShow()` 生命周期函数会被调用。开发者可以利用这些生命周期函数来暂停或恢复网络请求，以降低功耗。
 
 ::: tip
-部分设备在关闭屏幕后会将应用切换到后台，并在一段时间后杀死应用。对于需要持续后台运行的应用，需要注意[后台](../application/README.md#后台管理)保活的方法。
+这个例子中的宏名字为 `scroll`，而宏的内容也含有 `scroll` 标签，但是宏替换只会进行一次，不会重复进行替换。
 :::
+
+## 用途
+
+从上面的示例可以看出，模板宏可以将普通的组件静态地替换为另一种形式，替换后的代码通常不便于手写和理解。如：
+``` html
+<scroll :index="3" on:index="onIndexChange">
+  <p for="i in 10">item {{i + 1}}</p>
+</scroll>
+```
+被替换为：
+``` html
+<scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
+  <p for="i in 10">item {{i + 1}}</p>
+</scroll>
+<scroll :index="3" on:index="onIndexChange" deformation="fisheye"
+        scroll-snap="center" media-query="(shape: circle)">
+  <p for="i in 10">item {{i + 1}}</p>
+</scroll>
+```
+替换后的代码实际上是根据屏幕形状的[媒体查询](/framework/render/media-query.md)来静态地选择不同的 `scroll` 组件属性。具体来说，它在圆形屏幕上为 [`scroll`](/components/scroll.md) 组件添加了两个属性：
+- [`deformation="fisheye"`](/components/scroll.md#deformation)：为圆形屏幕启用鱼眼效果；
+- [`scroll-snap="center"`](/components/scroll.md#scrollsnap)：圆形屏幕下 `scroll` 子元素居中对齐。
+
+这个模板宏为原先的手写代码添加了异形屏幕形状的适配。这种修改不需要修改模板源代码，因此是非侵入的。
+
+## 使用方法
+
+目前没有办法将模板宏导出到其他 UX 文件中使用。因此要在每个需要的 UX 文件重复编写模板宏，即类似
+``` html
+<template macro:scroll>
+  ...
+</template>
+```
+的顶级元素。模板宏节点和 `<template>` 节点可以具有任意的顺序，但不要在一个 UX 文件中定义同名的模板宏。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/component/native-component.md
-
-# 原生组件
-
-原生组件是指由 C++ 实现的组件。这些组件的主要设计目标是实现某种界面元素，例如按钮或列表效果，但不承载业务逻辑。和 Web 技术不同的是，原生组件本身不提供 DOM 接口，只提供响应式的组件接口。
-
-Glyphix 中的原生组件提供大量配置接口，可以实现丰富的显示效果。此外，内置组件还有针对嵌入式平台设计的优化功能。
-
-本文档中使用**原生组件**表示由 C++ 实现的组件；**内置组件**一词指代由 WearOS 所提供的组件包，不过这些组件则不一定是由 C++ 实现的。
-
-::: tip
-本文档在描述中会区分原生组件和内置组件，但读者一般不用不考虑二者的差别。
-:::
-
-## 界面功能机制
-
-大部分和界面相关的机制是只有原生组件才具备的，这些机制包括：
-- CSS 样式表、布局等机制
-- 手势和触摸事件
-- 渲染和绘制机制
-
-通过组件间的参数/事件传递可以在自定义组件中模拟某些原生组件机制的接口，但这些能力本质上还是由原生组件来实现的。
-
-## 界面渲染
-
-## 组件快照
-
-快照是一种帧率优化的技术，为复杂的组件开启快照可以加快绘制速度从而提高帧率。快照实本质是对组件进行“截图”，并通过直接绘制这些截图来加速。因此对于内容复杂但更新不频繁的组件而言，快照是一种有效的技术。对于另一些更新频繁，但是能够容忍不刷新的场景，也有对应的 API 来禁用快照更新。
-
-## 原生组件对象
-
-通过组件的 [`$element()`](component-apis#element) 方法可以获取原生组件对象，它可以访问原生组件的属性或调用其方法，例如：
-
-``` js
-let el = this.$element('scroll-id')
-console.log(`width: ${el.width}`) // 通过原生组件对象获取组件的宽度
-el.scrollTo({ top: 100 }) // 通过 API 滚动列表
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/prop-modifier.md
-
-# 属性修饰符
-
-普通的属性操作可以实现属性的设置、监听功能。但是某些场合会对属性操作有一些共性需求，例如：要求组件的某个属性值设置操作不是立即变更到新的值，而是使用动画来过渡。直接的解决方法是编写逻辑代码来实现过渡效果，但实际上这种逻辑对任何属性而言都是通用的。
-
-为了简化或复用某些通用属性操作的代码，Glyphix 内置了若干属性修饰符。修饰符是使用 `.` 表示的属性后缀，例如
-
-``` html
-<progress :value="progress" value.transition="{curve: 'ease'}"/>
-```
-
-组件的 XML 属性中填写的属性修饰符键值对 `value.transition="{curve: 'ease'}"` 和属性键值对 `value="{{progress}}"` 是相互独立的，它们可能要求完全不同的参数。
-
-本文档将介绍各属性修饰符的功能。
-
-## `transition` 修饰符
-
-此修饰符会代理属性的赋值操作，将原本直接对属性进行赋值的过程转变成按照 `transition` 修饰符指定的动画过渡方式渐变赋值。例如
-
-``` html
-<!-- transition 修饰符定义 value 属性的过渡效果 -->
-<progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
-<!-- 无过渡效果 -->
-<progress :max="1000" :value="progress" />
-```
-
-
-<glyphix id="prop-modifier-transition" height="68" width="480" inline>
-
-``` html
-<div>
-  <progress :max="1000" :value="progress" value.transition="{curve: 'ease'}"/>
-  <progress :max="1000" :value="progress" />
-</div>
-```
-
-``` css
-div > * {
-  margin: 8px;
-  height: 0.75rem;
-}
-```
-
-``` js
-export default {
-  data: {
-    progress: 500
-  },
-  onInit() {
-    setInterval(() => this.progress = parseInt(Math.random() * 1000), 3000)
-  }
-}
-```
-
-</glyphix>
-
-由于定义了 [`progress`](/components/progress.md) 组件的 `value.transition` 修饰符，因此每次修改 `this.progress` 时，`progress` 组件的显示值不会直接跳变到新值，而是通过一个动画进行渐变。这个效果不需要编写任何动画逻辑就可以实现。
-
-::: tip
-例子中的 `progress` 组件的 `value` 属性是整数，由于默认的 $[0, 100]$ 范围在过渡动画中容易产生分段感，所以例子中通过 `:max="1000"` 来增加 `value` 的取值范围从而使动画更平滑。
-:::
-
-### 插值计算
-
-目前只有原生组件的部分属性支持 `transition` 修饰符。支持的属性必须具有“可插值”的值类型，具体来说：对所有的属性值类型的值 $a$ 和 $b$ 和进度 $p \in [0,1]$，运算 $(1-p)*a+p*b$ 有效。
-
-JavaScript 的 `number` 类型是可插值的，除此之外变换和颜色值也可以插值。
-
-#### 变换
-
-变换通常使用字符串来定义，例如 `scale(2) rotate(30deg)`。字符串本身不可插值，但是当它用于变换属性时则是可以插值的（因为这些字符串会被解析为变换操作序列，而它们是可插值的）。通常而言会逐个按变换操作进行插值。例如 `scale(2) rotate(30deg)` 和 `scale(1) rotate(90deg)` 在插值过程中每一帧的变换都包含缩放和旋转两个步骤，其中缩放倍数从 $2$ 过渡到 $1$，而旋转角度从 $30\deg$ 过渡到 $90\deg$。
-
-#### 颜色
-
-颜色通常使用字符串代码来表示，例如 `#ff0000`。颜色的插值按红、绿、蓝和透明通道逐一计算。
-
-### `Transition` 对象
-
-`transition` 修饰符的值类型是 `Transition` 对象：
-``` ts
-interface Transition {
-  curve?: string,
-  duration?: number
-}
-```
-
-#### `curve` <decl type="?: string"/>
-
-指定过渡动画的[缓动函数](../render/animation.md#缓动曲线)，默认为 `'ease'`。
-
-#### `duration` <decl type="?: number"/>
-
-动画的持续时间，单位为秒，默认为 `1`。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/README.md
+FILE_PATH: src/original_docs/framework/component/README.md
 
 # 组件框架
 
@@ -2762,133 +1179,7 @@ el.setIndex(4) // 调用 setIndex() 方法
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/component/reuse.md
-
-# 组件复用
-
-应用层面的组件复用主要由自定义组件来实现。
-
-## 子组件
-
-假设某个 [UX 文件](/framework/component/README.md#ux-文件)的 `<template>` 标签中的结构描述界面的组织结构，例如
-``` html
-<template>
-  <div>
-    <p>text</p>
-    <image src="path/to/image.png" />
-    <qrcode value="hello world!" />
-  </div>
-</template>
-```
-在运行时对应以下组件树结构：
-``` mermaid
-flowchart TB
-  div --- p
-  div --- image
-  div --- qrcode
-```
-这颗组件树有一个父节点 `div` 和 $3$ 个子节点 `p`、`image` 和 `qrcode`。`div` 组件是 `<template>` 标签中最外层的组件，我们把这种组件称为**根组件**。跟组件有时候不是唯一的，例如：
-``` html
-<template>
-  <p>text</p>
-  <image src="path/to/image.png" />
-  <qrcode value="hello world!" />
-</template>
-```
-中有 3 个根组件。此外使用 [`for` 指令](/framework/commands/for.md)也可能造成多个根组件实例，例如
-``` html
-<template>
-  <p for="x in ['one', 'two', 'three']">
-    label: {{x}}
-  </p>
-</template>
-```
-会被渲染为 $3$ 个 `p` 组件实例。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/template-macro.md
-
-# 模板宏
-
-模板宏是一种简化重复代码的方法，它是 UX 文件中带有 `macro:` 属性的 `<template>` 顶级元素：
-``` html
-<template macro:scroll>
-  <scroll #props media-query="(shape: rect)">
-    <slot />
-  </scroll>
-  <scroll #props deformation="fisheye"
-          scroll-snap="center" media-query="(shape: circle)">
-    <slot />
-  </scroll>
-</template>
-```
-例如这里定义了一个名为 `scroll` 的宏，宏会替换当前 UX 文件的 `<template>` 模板内的同名组件，并且
-- 同名组件的所有属性会替换模板宏中的 `#props` 占位符；
-- 同名组件的子元素会替换模板宏中的 `<slot />` 节点。
-
-例如
-``` html
-<template>
-  <scroll :index="3" on:index="onIndexChange">
-    <p for="i in 10">item {{i + 1}}</p>
-  </scroll>
-</template>
-```
-会被 `scroll` 模板宏替换为
-``` html
-<template>
-  <scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
-    <p for="i in 10">item {{i + 1}}</p>
-  </scroll>
-  <scroll :index="3" on:index="onIndexChange" deformation="fisheye"
-          scroll-snap="center" media-query="(shape: circle)">
-    <p for="i in 10">item {{i + 1}}</p>
-  </scroll>
-</template>
-```
-
-::: tip
-这个例子中的宏名字为 `scroll`，而宏的内容也含有 `scroll` 标签，但是宏替换只会进行一次，不会重复进行替换。
-:::
-
-## 用途
-
-从上面的示例可以看出，模板宏可以将普通的组件静态地替换为另一种形式，替换后的代码通常不便于手写和理解。如：
-``` html
-<scroll :index="3" on:index="onIndexChange">
-  <p for="i in 10">item {{i + 1}}</p>
-</scroll>
-```
-被替换为：
-``` html
-<scroll :index="3" on:index="onIndexChange" media-query="(shape: rect)">
-  <p for="i in 10">item {{i + 1}}</p>
-</scroll>
-<scroll :index="3" on:index="onIndexChange" deformation="fisheye"
-        scroll-snap="center" media-query="(shape: circle)">
-  <p for="i in 10">item {{i + 1}}</p>
-</scroll>
-```
-替换后的代码实际上是根据屏幕形状的[媒体查询](/framework/render/media-query.md)来静态地选择不同的 `scroll` 组件属性。具体来说，它在圆形屏幕上为 [`scroll`](/components/scroll.md) 组件添加了两个属性：
-- [`deformation="fisheye"`](/components/scroll.md#deformation)：为圆形屏幕启用鱼眼效果；
-- [`scroll-snap="center"`](/components/scroll.md#scrollsnap)：圆形屏幕下 `scroll` 子元素居中对齐。
-
-这个模板宏为原先的手写代码添加了异形屏幕形状的适配。这种修改不需要修改模板源代码，因此是非侵入的。
-
-## 使用方法
-
-目前没有办法将模板宏导出到其他 UX 文件中使用。因此要在每个需要的 UX 文件重复编写模板宏，即类似
-``` html
-<template macro:scroll>
-  ...
-</template>
-```
-的顶级元素。模板宏节点和 `<template>` 节点可以具有任意的顺序，但不要在一个 UX 文件中定义同名的模板宏。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/component/template.md
+FILE_PATH: src/original_docs/framework/component/template.md
 
 # 模板语法
 
@@ -3140,7 +1431,53 @@ FILE_PATH: src/original_docs/src/framework/component/template.md
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/generic/properties.md
+FILE_PATH: src/original_docs/framework/component/communicate.md
+
+# 组件间通信
+
+组件之间的通信由组件参数和事件绑定实现。例如：
+``` html
+<scroll scroll-snap="center" on:scroll="scrolled($event)" />
+```
+就向 `scroll` 组件实例传递了 `scroll-snap` 属性参数使元素居中对齐，并且会监听 `scroll` 属性的变化。
+
+## 属性参数
+
+通过组件节点的**属性**（attribute）字段可以向子组件传递参数，例如：
+``` html
+<p text="A message"></p>
+```
+会向一个 `p` 组件实例传递一个名称为 `text`，值为 `"A message"` 的属性。可以按照 XML/HTML 的语法传递多个属性。通过[插值表达式](template#插值表达式)可以向组件的属性中传递一个被计算的值。
+
+## 事件响应
+
+[原生组件](native-component)封装了很多 UI 输入事件，比如触摸手势的响应以及 UI 变化的事件。这些事件都可以通过 [`on` 指令](../commands/on.md)进行监听。
+
+## 触发事件
+
+对于自定义组件，可以使用组件对象的 [`$emit(name, value)`](/framework/component/component-apis.md#emit) 方法来触发一个事件：
+``` html
+<panel on:some-event="console.log(`the event ${$event} was emited!`)">
+```
+
+``` js
+// in panel.ux
+export default {
+  emitEvent() {
+    this.$emit('someEvent', 'hello')
+  }
+}
+```
+
+`$emit` 方法有两个参数：
+- `name`：需要发送事件的属性名称，必须使用小驼峰命名法（对应的模板属性为蛇形命名法或小驼峰命名法）
+- `value`：可选参数，事件属性的值，将作为 `on` 指令的 `$event` 变量的值
+
+如果组件对象的 view-model 中有名为 `name` 的属性，`$emit` 方法不会将属性值修改为 `value`。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/generic/properties.md
 
 ---
 icon: xml
@@ -3843,7 +2180,7 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/generic/styles.md
+FILE_PATH: src/original_docs/framework/generic/styles.md
 
 ---
 icon: layers-outline
@@ -4560,7 +2897,2247 @@ Glyphix 只支持元素具有所有边框或者上、下、左、右边框之一
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/framework/render/animation.md
+FILE_PATH: src/original_docs/framework/commands/for.md
+
+---
+icon: format-list-bulleted
+---
+# for 指令
+
+`for` 指令用于列表渲染。
+
+## 语法
+
+``` html
+<div for="expr"></div> <!-- 不定义下标和迭代变量 -->
+<div for="value in expr"></div> <!-- 不定义下标变量 -->
+<div for="index, value in expr"></div>
+<div for="(index, value) in expr"></div>
+```
+`expr` 表达的值是一个 [`Array` 对象](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)或者数值，`for` 指令会遍历整个列表并在迭代过程中传递下标值和迭代项的值。如果不定义下标变量或迭代变量，那么下标变量的默认名称为 `$idx`，迭代变量的默认名称为 `$item`。
+
+当 `for` 指令和 `if` 指令同时存在时，`if` 指令的优先级更高。这意味着如果 `if` 指令值为假，整个列表都不会渲染。
+
+`for` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法，因此也可以使用双大括号包围表达式。
+
+::: warning
+不推荐同时使用 `if` 和 `for` 指令以提升代码可读性。
+:::
+
+## 列表渲染
+
+通过 `for` 指令将一个 [JavaScript 数组](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps/Arrays)渲染为列表。它通常用于 [`scroll`](/components/scroll.md) 的子组件上，例如：
+``` html
+<scroll :damping="damping">
+  <p for="item in items" class="item">
+    {{ item.message }}
+  </p>
+</scroll>
+```
+`p` 组件上的 `for` 指令会遍历 `items` 数组并为每个迭代项生成一个 `p` 组件节点。`item` 是迭代项的变量名，在 `{{ item.message }}` [插值表达式](/framework/component/template.md#插值表达式)中访问了它的 `message` 属性。
+
+`items` 是一个类型为数组的[组件对象属性](/framework/component/component-object.md)，例如：
+``` js
+export default {
+  data: {
+    items: [
+      { message: 'Foo' },
+      { message: 'Bar' },
+      { message: 'Baz' },
+    ]
+  }
+}
+```
+
+此代码会渲染出以下界面：
+
+<glyphix id="commands-for-1" height="200" width="360" inline>
+
+``` html
+<scroll :damping="damping">
+  <p for="item in items" class="item">
+    {{ item.message }}
+  </p>
+</scroll>
+```
+
+``` js
+export default {
+  data: {
+    items: [
+      { message: 'Foo' },
+      { message: 'Bar' },
+      { message: 'Baz' },
+    ]
+  }
+}
+```
+
+``` css
+scroll {
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f0f0;
+}
+
+.item {
+  color: #fafafa;
+  background-color: #bdbdbd;
+  text-align: center;
+  padding: 40px 10px;
+  margin: 10px;
+  border-radius: 16px;
+}
+```
+
+</glyphix>
+
+渲染结果是一个包含三个表项的可滚动列表，内容为 “Foo”，“Bar” 和 “Baz”。你可以在原生[组件](/framework/component/README.md)或者自定义组件上使用 `for` 指令来实现列表渲染。
+
+也可以使用默认的 `$item` 迭代变量名：
+``` html
+<scroll :damping="damping">
+  <p for="items" class="item">
+    {{ $item.message }}
+  </p>
+</scroll>
+```
+这样的渲染结果和上面是一样的。
+
+## 嵌套和作用域
+
+在同一个标签中，下标和迭代变量必须在 `for` 指令之后才可以访问，因此需要注意相关属性的顺序：
+``` html
+<panel for="value in expr" title="value.title"></panel> <!-- 正确 -->
+<panel title="value.title" for="value in expr"></panel> <!-- 错误 -->
+```
+错误的顺序不会导致编译报错，而是尝试在 `this` 作用域中查找 `value` 属性。换言之，`for` 指令中定义的变量会隐藏外层作用域的名字，这包括：
+- 组件的 view-model（即通过 `this` 的属性访问）
+- 全局对象
+
+考虑到变量作用域和指令优先级的问题，`if` 指令应位于 `for` 指令之前，否则可能会引起令人困惑的行为。
+
+对于当前组件节点，`for` 指令中定义的变量只在其之后的属性中可见。也在静态的子组件中可以见，例如
+``` html
+<panel for="value in expr" title="value.title">
+  <p>message: {{value.message}}</p>
+</panel>
+<p>{{value.message}}</p> <!-- 此时访问 this.value.message -->
+```
+除最后一个 `{{value.message}}` 表达式以外，其他几处 `value` 均在 `for` 指令的作用域内。
+
+`for` 指令可以嵌套使用，此时的作用域规则同上。注意，同名下标和迭代变量的作用域会被内层的 `for` 指令隐藏，因此需要显式地定义这些变量。
+
+## 数组变化侦测
+
+`for` 指令可以检测[响应式](/framework/component/component-object.md#响应式编程)数组的变化并更新界面。以下操作都会触发 `for` 渲染更新：
+- 替换一个新数组；
+- 调用数组更新方法，如 [`push()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/push)，[`pop()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)，[`shift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)，[`unshift()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)，[`splice()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)，[`sort()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) 和 [`reverse()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse)。
+
+### 替换一个数组
+
+可以将用于列表渲染的响应式属性替换为一个新的数组来触发界面更新。例如：
+``` js
+this.items = this.items.filter((item) => item.message.match(/Foo/))
+```
+这样，`this.items` 被赋值为一个新的数组，`for` 指令会在该操作之后重新渲染新的列表。
+
+::: tip
+数组有一些不可变 (immutable) 方法，例如 `filter()`，`concat()` 和 `slice()`，这些都不会更改原数组，而总是**返回一个新数组**。当遇到不可变方法时，需要用上面的方法将旧的数组替换为新的。
+:::
+
+### 数组更新方法
+
+使用数组的更新方法也可以触发视图更新，例如：
+``` js
+// 在原有的列表底部插入一个内容为 Grault 的新元素
+this.items.push({ message: 'Grault' })
+```
+
+还可以直接修改数组长度来截断数组，如：
+``` js
+// 删除列表中第三项之后的元素
+this.items.length = 2
+```
+
+还可以更改列表的元素：
+``` js
+// 将第二个元素内容更改为 Grault
+this.items[1] = { message: 'Grault' }
+```
+
+::: warning
+`for` 指令目前无法追踪列表元素的属性更改，详见[列表元素更新](#列表元素更新)。
+:::
+
+## 缺陷和限制
+
+### 列表元素更新
+
+`for` 指令无法监听数组项目的深层属性更新，这意味着
+``` js
+this.items[1].message = 'Grault'
+```
+将不能正确地触发界面更新。为了解决这种问题，必须将数组项目替换为一个新的对象：
+``` js
+this.items[1] = { message: 'Grault' }
+```
+
+当项目对象的属性比较多，但只希望更新其中少数属性的时候，建议先使用[展开语法（`...`）](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax) 拷贝对象，然后再更新属性：
+``` js
+this.items[1] = {
+  ...this.items[1], // 拷贝第二个元素的所有属性
+  message: 'Grault' // 更新 message 属性
+}
+```
+
+::: warning
+数组项目对象的属性数量会对性能造成影响，当你发现列表更新卡顿时，请参阅[不必要的更新](#不必要的更新)。
+
+由于界面中的其他元素一起更新等原因，直接更改项目的深层属性后界面也许会更新，但是这并不稳定，请不要这样使用。
+:::
+
+### 列表下标问题
+
+`for` 指令虽然支持在渲染时获取项目下标，如：
+``` html
+<p for="index, value in items">
+  {{ index }} - {{ value }}
+</p>
+```
+但是目前并不支持响应式地更新下标，对 `items` 数组的修改可能会导致显示错乱。更新整个数组可以避免这个问题。
+
+但由于某些优化机制，开发者很难保证**真正地**更新整个 `items` 数组，这会导致奇怪的非预期下标错乱问题。
+
+### 不必要的更新
+
+列表渲染可能是流畅性和性能的瓶颈之一，尤其是长列表的渲染速度可能较慢。减少不必要的列表更新可能是一种有效的优化手段。
+
+#### 直接更新列表
+
+考虑这样的一个列表：
+``` html
+<div for="(idx, task) in tasks" on:click="process(idx)">
+  <p>{{ task.name }}</p>
+  <p>{{ task.progress }}%</p>
+</div>
+```
+这是一个任务处理界面，它显示一个任务列表并在用户点击时处理某个任务。简单起见，我们这样初始化这个任务列表：
+``` js
+this.tasks = Array.from({ length: 10 },
+  (_, i) => ({ name: `Task #${i + 1}`, progress: 0 }))
+```
+此时你会看到一个包含 10 个项目的任务清单。以下的 `process()` 方法简单地实现了任务进度的更新：
+``` js
+process(idx) { // idx 是点击的任务项目下标
+  this.tasks[idx].progress = 0
+  // 创建一个定时器来模拟处理进度
+  let timer = setInterval(() => {
+    // 由于 for 指令不支持深层属性更新，所以先拷贝一个对象
+    let task = {...this.tasks[idx]}
+    task.progress += 10
+    this.tasks[idx] = task
+    if (task.progress >= 100)
+      clearInterval(timer) // 处理完成时删除定时器
+  }, 100)
+}
+```
+如下所示，这个实现是可以正常交互的。
+
+<glyphix id="commands-for-tasklist-1" height="360" width="360" title="任务清单列表">
+
+``` html
+<scroll>
+  <div for="(idx, task) in tasks" on:click="process(idx)">
+    <p>{{ task.name }}</p>
+    <p>{{ task.progress }}%</p>
+  </div>
+</scroll>
+```
+
+``` js
+export default {
+  data: {
+    tasks: []
+  },
+  onInit() {
+    this.tasks = Array.from({ length: 10 },
+      (_, i) => ({ name: `Task #${i + 1}`, progress: 0 }))
+  },
+  process(idx) {
+    this.tasks[idx].progress = 0
+    let timer = setInterval(() => {
+      let task = {...this.tasks[idx]}
+      task.progress += 10
+      this.tasks[idx] = task
+      if (task.progress >= 100)
+        clearInterval(timer)
+    }, 100)
+  }
+}
+```
+
+``` css
+scroll {
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f0f0;
+}
+
+div {
+  color: #fafafa;
+  background-color: #bdbdbd;
+  display: flex;
+  justify-content: space-between;
+  padding: 40px 10px;
+  margin: 10px;
+  border-radius: 16px;
+}
+```
+
+</glyphix>
+
+这种简单的方法在复杂且较长的列表界面中可能会变得很卡顿，此时你可能会观察到：
+- 界面中的进度等动画出现掉帧；
+- 在列表中上下滚动会变得明显卡顿。
+
+#### 通过子组件优化
+
+一种优化方法是将项目拆分成一个独立的组件，在本示例中可以添加一个 `Task` 组件：
+``` html
+<div on:click="process">
+  <p>{{ name }}</p>
+  <p>{{ progress }}%</p>
+</div>
+```
+`Task` 组件的 JavaScript 脚本中可以处理自己的 `process()` 操作：
+``` js
+export default {
+  data: {
+    name: null, // 任务名字要在外层传入
+    progress: 0
+  },
+  // 每个 Task 组件对象会处理自己的 process 操作，
+  // 并通过 this 访问自己的响应式属性。
+  process() {
+    this.progress = 0
+    let timer = setInterval(() => {
+      this.progress += 10
+      if (this.progress >= 100)
+        clearInterval(timer)
+    }, 100)
+  }
+}
+```
+
+相比于之前的方法，新的方案在[引入 `Task` 组件](/framework/component/README.md#引入组件)之后直接使用即可：
+``` html
+<task for="task in tasks" :name="task.name" />
+```
+而父组件的 JavaScript 代码也可以更简单：
+``` js
+export default {
+  data: {
+    tasks: []
+  },
+  onInit() {
+    for (let i = 0; i < 10; ++i)
+      this.tasks.push({ name: `Task #${i + 1}` })
+  }
+}
+```
+这相比于直接更新列表有以下变化：
+- 插入的数组项目没有 `progress` 属性，因为它只需要在 `Task` 子组件中处理；
+- `process()` 方法被删除并移动到了 `Task` 组件内；
+- 不需要使用 `idx` 下标变量来区分不同的项目。
+
+这种方式可以实现相同的任务列表界面，只是将 `progress` 的处理移动到了 `Task` 子组件内，从而避免在修改进度时更新任务数组。使用这种方法可以优化列表元素内部界面更新的问题，同时可以降低代码复杂度。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/commands/on.md
+
+---
+icon: alternate-email
+---
+# on 指令
+
+`on` 指令用于监听支持监听的属性值变化。
+
+## 语法
+
+``` html
+<div on:attribute="expr"></div>
+<div onattribute="expr"></div> <!-- 兼容快应用的语法 -->
+<div @attribute="expr"></div>  <!-- Vue 风格语法 -->
+```
+
+`attribute` 是需要监听变化的属性名字，`expr` 是属性变化时需要执行的表达式。标准的 `on` 指令使用 `on:` 前缀，也支持 `on` 和 `@` 字符前缀。
+
+`on` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法。
+
+::: tip
+建议使用 `on:attribute` 格式，`onattribute` 容易导致开发者在不知情的情况下混淆 `on` 指令和普通属性。此外，属性名如 `oneself` 会解析为 `on:eself` 的指令，应特别注意。
+:::
+
+## 监听表达式
+
+### 基本用法
+
+下面的代码监听一个 `div` 组件的触摸事件：
+``` html
+<div on:touchmove="console.log($event)"></div>
+```
+示例中监听 [`touchmove`](../generic/properties.md#touchmove) 事件此处直接打印了[触摸事件对象](../generic/properties.md#touchevent)。`$event` 变量用于获取事件值，它是由 `on` 指令定义的变量（作用域仅在 `on` 指令表达式内）。
+
+还可以调用在组件对象中定义的方法：
+``` html
+<div on:touchmove="onTouch('move', $event)"></div>
+```
+
+``` js
+export default {
+  onTouch(type, event) {
+    console(`touch ${type}:`, event)
+  }
+}
+```
+
+自定义事件的方法请参考[组件间通信](../component/communicate.md)。
+
+### 函数表达式
+
+如果监听表达式的值是一个函数，那么会自动调用该函数：
+``` html
+<div on:click="onClick" />
+```
+
+``` js
+export default {
+  onClick(event) {
+    console.log(event)
+  }
+}
+```
+如示例所示，事件值会作为唯一的参数传递给函数。
+
+::: tip
+监听表达式不一定是一个函数变量，也可以是复杂表达式（例如包含函数调用的表达式）。只要该表达式的值是一个函数那么就会由 `on` 指令调用。
+:::
+
+## 监听组件属性值的变化
+
+有些组件的属性值在变化时会产生事件，可以通过 `on` 指令来监听：
+
+``` html
+<list on:index="indexChanged($event)">
+  <content/>
+</list>
+```
+
+如[属性文档规范](../component/README.md#属性文档规范)中的描述，支持**监听**的属性可以使用 `on` 指令来监听值变化。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/commands/model.md
+
+---
+icon: swap-horizontal
+---
+# model 指令
+
+使用 `model` 指令可以实现组件属性的双向绑定。
+
+## 语法
+
+``` html
+<com model:prop="value"></com>
+<com ::prop="value"></com>
+```
+在属性中使用 `model:` 前缀或者简写的 `::` 来修饰属性即可使用 `model` 指令进行双向绑定。其中 `prop` 为目标组件的属性名字，而 `value` 为当前组件中需要双向绑定的 view-model 属性名。
+
+## 双向绑定
+
+使用 [`on` 指令](on.md)和[属性绑定表达式](/framework/component/template.md#属性绑定表达式)可以实现组件属性和 view model 属性之间的双向绑定：
+``` html
+<div>
+  <switch :value="state" on:value="state = $event"/> value: {{state}}
+</div>
+```
+
+``` js
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2000)
+  }
+}
+```
+
+<Glyphix id="commands-model-1" height="32" inline>
+
+``` html
+<div>
+  <switch :value="state" on:value="state = $event"/> value: {{state}}
+</div>
+```
+
+``` js
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2000)
+  }
+}
+```
+
+</Glyphix>
+
+当 JavaScript 代码中修改了 `this.state` 的值时，`switch` 标签中的 `:value="state"` 表达式会使 `switch` 元素的显示状态被更新，而 `on` 指令表达式会在用户点击 `switch` 元素后使 `state` 的值得到更新。
+
+这个过程中界面的显示状态（`switch` 组件和文本 `value: {{state}}`）和 view-model 中的 `state` 属性都是一致的，我们称这种机制为**双向绑定**。
+
+`model` 指令本质上是上面写法的语法糖，它可以简单地实现双向绑定：
+``` html
+<div>
+  <switch ::value="state"/> value: {{state}}
+</div>
+```
+
+<Glyphix id="commands-model-2" height="32" inline>
+
+``` html
+<div>
+  <switch ::value="state"/> value: {{state}}
+</div>
+```
+
+``` js
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2000)
+  }
+}
+```
+
+</Glyphix>
+
+## 自定义组件的双向绑定
+
+双向绑定常用于表单组件，但是 `model` 指令也支持自定义组件，只要为自定义组件的属性提供一个同名的事件并在属性变化时触发即可。例如：
+
+``` js
+// file: com.ux
+export default {
+  data: {
+    prop: 0 // 假设要对 prop 属性进行双向绑定
+  },
+  watch: {
+    prop(x) { // 在 prop 属性值变化时触发同名事件
+      this.$emit('prop', x)
+    }
+  }
+}
+```
+假设这是某个自定义组件的部分组件对象，其中 `prop` 属性用于双向绑定。这个例子中使用了 `watch` 对象来监听 `prop` 属性的变化，并在其变化时触发名为 `'prop'` 的事件。在调用方组件中只需这样进行双向绑定：
+``` html
+<com ::prop="valueName"></com>
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/commands/if.md
+
+---
+icon: file-tree
+---
+# if / elif / else 指令
+
+`if` / `elif` / `else` 指令用于条件渲染。这些指令控制组件是否会被渲染，例如 `if` 指令仅会在条件为真时渲染组件，否则会删除组件。这和组件 `show` 属性不同，后者控制组件是否显示但不会删除组件。
+
+## 语法
+
+### if 指令
+
+``` html
+<p if="cond">if: true</p>
+```
+如果 `cond` 表达式为真，那么组件会被渲染，否则不被渲染。
+
+## elif 和 else 指令
+
+含有 `elif` 和 `else` 指令的组件必须跟随在含有 `if` 或 `elif` 指令的组件之后，并使用上一个条件的否定来控制组件是否被渲染：
+``` html
+<p if="cond1">if cond1: true</p> 
+<p elif="cond2">elif cond2: true</p>
+<p elif="cond3">elif cond3: true</p>
+<p else>else</p> <!-- else 指令不支持属性值 -->
+```
+该代码的行为如下：
+- 如果 `cond1` 条件为真，那么仅 `if cond1: true` 文本会被渲染；
+- 否则如果 `cond2` 为真，会只渲染 `elif cond2: true`；
+- 否则如果 `cond3` 为真，会只渲染 `elif cond3: true`；
+- 所有条件都为假，渲染 `else` 文本。
+
+`if` / `elif` / `else` 指令的属性值支持[指令属性值](/framework/component/template.md#指令属性值)语法。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/font-config.md
+
+# 字体规范
+
+Glyphix 框架中内置了一些系统字体，应用程序也可以定义自己的字体。
+
+## 系统级字体
+
+所有运行 Glyphix 的环境中都保证提供这些系统字体：
+- `sans-serif`：默认的无衬线字体。
+
+不同的设备提供的实际字体文件可能不同，但这些字体名总是可用的。
+
+### 默认字体
+
+如果一个界面元素没有指定所有的字体属性（字体族、字号等），剩余属性将使用系统默认值。因此，当界面元素没有任何字体属性时就会使用系统默认字体。默认字体属性是由设备指定的，并具有以下属性：
+- [`font-family`](/framework/generic/styles.md#font-family) 为 `sans-serif`；
+- [`font-size`](/framework/generic/styles.md#font-size) 为 `1rem`。
+
+### 字形回退问题
+
+由于设备性能的限制，无法预装所有语言和字符集的完整字体。我们将只提供特定语言的“主要字体”，这些字体通常包括常见的字母、数字和符号。然而，如果你尝试使用不常见字符、特殊符号或者是未包含在这些主要字体中的字符，就会出现“字形回退”现象。
+
+当一个字符无法被当前支持的字体渲染时，它会回退显示为一个“方框” ，例如这是用不支持中文的 Roboto 字体显示“Hello, 世界。”文本的效果：
+
+<glyphix id="font-config-fallback" height="30" width="300" inline>
+
+```html
+<p>Hello, 世界。</p>
+```
+
+</glyphix>
+
+其中“世界。”三个字符不受支持，所以被渲染为三个方框。
+
+## 应用级字体
+
+### 字体映射文件
+
+[`manifest.config.fontFaces`](manifest.md#fontfaces) 字段可配置应用级字体映射文件。这是一个只包含 [`@font-face` 规则](/framework/generic/styles.md#font-face-规则)的 CSS 文件，其中定义的字体可以直接在本应用中使用，而无需引用 CSS 文件。
+
+假设字体映射文件在项目中的路径为 `src/assets/font-faces.css`，那么 `manifest.config.fontFaces` 字段需要填写为
+``` json
+{
+  "config": {
+    "fontFaces": "assets/font-faces.css"
+  }
+}
+```
+以下是 `src/assets/font-faces.css` 文件内容的示例
+``` css
+@font-face {
+  font-family: Montserrat;
+  src: url("fonts/Montserrat-Regular.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+```
+还可以通过 `@import` 规则导入其他 CSS 文件，但字体映射文件中只会保留 `@font-face` 规则信息。
+
+### `@font-face` 规则
+
+也可以直接在 CSS 中使用 [`@font-face` 规则](/framework/generic/styles.md#font-face-规则)来定义并使用字体。这种方法和一般的 Web 开发流程类似。
+
+::: tip
+相比于在各个 CSS 中定义字体，字体映射文件中定义的应用级字体运行效率更高，应当优先使用。
+:::
+
+### 何时使用应用级字体
+
+对于性能和资源受限的设备来说，系统提供的默认字体具有较低的资源占用和更好的性能表现，开发者应当优先使用。只有在特定需求中才建议使用应用级字体，以下是具体的准则：
+- **优先使用系统级字体**：系统级字体经过优化，能够减少存储占用和处理开销。它们在多数情况下能够满足普通文本显示的需求，例如菜单、主页面、描述性文本等。
+- **特定设计需求使用自定义字体**：如果应用需要符合特定的视觉设计风格或品牌要求时，可以使用自定义字体。例如，应用可能要显示一个有独特风格的数字时钟，或强调某些标题、按钮中的文字，使用自定义字体可以实现更符合设计语言的效果。
+- **自定义字体应精简字符集**：为了避免不必要的存储和处理开销，自定义字体的字符集应尽可能精简。通常情况下，只需要包含拉丁字母、数字以及必要的标点符号。例如，在设计数字时钟时，自定义字体应仅包含 $0 \sim 9$ 的数字字符。
+
+::: warning
+不要在应用中使用大型字体文件（例如中文字体）。大尺寸的字体文件可能会带来严重的性能和资源风险。通常，系统级字体已包含当前语言所需的字符支持，无需通过自定义字体来补充字符集。
+:::
+
+## `rem` 字号单位
+
+为了在不同的设备上实现和系统一致的字体风格，我们引入了和 Web 开发稍微不同的 `rem` 单位。`1rem` 是设备厂商定义的系统正文字号，当 CSS 中不定义 [`font-size`](/framework/generic/styles.md#font-size) 属性时，元素的默认字号就是 `1rem`。`rem` 和 `px` 或 `pt` 等[长度](/framework/render/style-and-layout.md#长度)单位没有固定的换算关系。`1rem` 的字号通常对应 `24px` 到 `32px` 左右。
+
+使用 `rem` 作为字号单位可以确保系统中所有的应用具有一致的显示。**不要**用 `px` 等单位设置字号，否则可能无法跨设备使用。具体来说，建议使用以下配置：
+- **标题**用 `1.25rem` 字号，多级标题可以适当选择其他字号；
+- **正文**用默认字号，即 `1rem`，且一般不要显式指定该字号；
+- **脚注**用 `0.85rem` 字号。
+
+建议开发者挑选少量且固定的字号档位，并在上述 $3$ 种场景中使用我们推荐的字号。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/cross-device.md
+
+# 跨设备适配
+
+当你的应用需要在多种设备商运行时，可能会遇到多种交互兼容性问题，例如：
+- 不同设备的屏幕分辨率和尺寸都不相同，应用在不同设备中应该进行适当的布局和缩放；
+- 不同设备的系统字体、字号不尽相同，应用程序应遵循系统风格；
+- 界面布局要考虑不同的屏幕形状，如圆形屏幕常使用鱼眼变形的列表；
+- 不同的屏幕形状和屏幕分辨率下，页面的安全边距可能不同。
+
+本文档介绍怎样在编写较少的适配代码的情况下，通过 Glyphix 应用框架来开发兼容广泛设备的手表应用。
+
+## 模拟器参数
+
+在使用 `gx emu` 命令启动模拟器时，`-d` 或 `--device` 参数可以指定被模拟的设备，例如 `gx emu -d default-watch-466x466` 将会模拟器分辨率为 $466\times 466$ 像素的圆屏设备。`gx emu` 会记住上次 `-d` 指定的设备，而不是自动回退到默认设备。
+
+::: tip
+如果你安装了 gx 命令的 PowerShell 或者 Zsh 补全脚本，那么输入 `gx emu -d` 之后就可以通过 `Tab` 键补全可用的设备名称。否则请先使用 `gx list device` 查看设备列表，例如：
+``` bash
+$ gx list device
+default-watch-466x466
+default
+```
+:::
+
+默认情况下，模拟器的屏幕分辨率和实际设备一样，可以通过 `-r` 或 `--real-scale` 参数（`gx emu -r`）来模拟设备的实际屏幕尺寸而不是分辨率。不建议在非高分辨率显示器中使用 `-r` 参数，否则会导致显示过于模糊。
+
+通过 `-d` 和 `-r` 参数就可以通过模拟器来测试多种设备的显示效果，而不必准备物理设备。
+
+## 多分辨率适配
+
+在 Web 开发中，开发者通常依赖媒体查询和 `px` 等单位进行精细的布局和样式调整。然而，在穿戴设备上，不同设备的最佳字号差异过大，难以在开发时精确规划。更重要的是，如何通过统一的视觉规范，确保一款设备中的所有应用具备一致的可读性和操作体验，是穿戴设备 UI 设计的核心问题之一。
+
+以智能手表为例，不同设备的屏幕宽度可能分布在 $360\rm px$ 到 $466\rm px$ 之间，而高度则介于 $450\rm px$ 到 $500\rm px$ 左右。因此尽管存在 [`designWidth`](manifest.md#designwidth) 配置，通常也不能通过 `px` 单位来指定大多数界面元素的尺寸。无论怎样缩放，`px` 单位总会存在这些问题：
+- 设备的 DPI 或者尺寸不同，无法通过固定的像素尺寸得到理想的字号；
+- 圆形屏幕和矩形屏幕的宽高比差异大，难以通过像素值指定大的填充空隙。
+
+本节将介绍针对这些问题的布局技巧。
+
+### 字号规范
+
+请参考字体规范的 [`rem` 字号单位](font-config.md#rem-字号单位)指南来规范应用中的字号，**不要**使用 `px` 作为字号单位。
+
+### 边距配置
+
+可以使用 `px` 等任何[长度](/framework/render/style-and-layout.md#长度)单位来指定较小的边距值，例如：
+
+``` css
+p {
+  border: 2px solid gray;
+  font-size: 1.25rem;
+  padding: 8px; /* 使用 px 作为边距单位 */
+  margin: 8px;
+}
+```
+
+<glyphix id="font-config-margins-pixel" height="80" width="300" inline>
+
+```html
+<p>The message text.</p>
+```
+
+```css
+p {
+  border: 2px solid gray;
+  font-size: 1.25rem;
+  padding: 8px;
+  margin: 8px;
+}
+```
+
+</glyphix>
+
+其中除了 `font-size` 使用了 `rem` 以外，其他几处属性均使用 `px` 单位。这是因为 Glyphix 会为目标设备自动缩放 `px` 单位的比例，且较小的 `px` 值通常没有溢出或者裁剪风险。
+
+但是当尺寸值很大时，更建议建议使用百分比值，例如：
+
+``` css
+p {
+  border: 2px solid gray;
+  font-size: 1.25rem;
+  /* 左内边距使用百分比单位，请注意示例文本左侧的边距 */
+  padding: 8px 8px 8px 40%;
+}
+```
+
+<glyphix id="font-config-margins-percent" height="80" width="300" inline>
+
+```html
+<p>Message</p>
+```
+
+```css
+p {
+  border: 2px solid gray;
+  font-size: 1.25rem;
+  padding: 8px 8px 8px 40%;
+}
+```
+
+</glyphix>
+
+这样可以更好地适配分辨率差异很大的设备。
+
+::: warning
+手表设备的屏幕高度差异较大，垂直方向上的大边距需要更加注意兼容性问题。
+:::
+
+### flex 布局
+
+除了百分比长度单位以外，flex 布局可以提供更灵活的界面适应能力。应当优先使用 flex 布局，然后才是百分比长度单位。并应该避免手动布局，即直接指定元素的 `width` 和 `height` CSS 属性。
+
+应该进行手动布局的一种例外情况是显示网络图标的界面，例如：
+``` html
+<scroll>
+  <div class="item" for="item in items">
+    <image :src="item.icon" />
+    <p>{{ item.title }}</p>
+  </div>
+</scroll>
+```
+如果说 `item.icon` 指向的图片尺寸并不固定，那么为 `image` 元素指定合适的宽高会更美观，例如：
+``` css
+scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+}
+
+/* 为网络图标指定固定的宽高 */
+.item > image {
+  width: 92px;
+  height: 92px;
+  border-radius: 10px;
+  object-fit: fill; /* 必要时拉伸或缩放图片 */
+}
+
+/* item 中的文本占据行上的剩余空间 */
+.item > p {
+  flex: 1;
+}
+```
+
+由于 [`image`](/components/image.md) 组件会自动居中显示图片，因此不必关心图片长宽比的差异。
+
+### 媒体查询
+
+当任何布局策略都无法适应分辨率的差异时，还可以使用[媒体查询](/framework/render/media-query.md)针对性地进行调整。
+
+## 屏幕形状适配
+
+智能手表通常有圆形和矩形两种屏幕形状。其中圆形屏幕的四角需要留出较大的安全边距，并且可能会使用鱼眼效果的列表。
+
+### 媒体查询
+
+以顶栏为例，圆形屏幕可能需要顶栏文本居中对齐，而矩形屏幕的顶栏文本是左对齐的。以下示例展示了两种屏幕形状对应的布局差异。
+
+<glyphix id="circle-square-screens" height="400" width="800" title="异形屏幕布局">
+
+```html
+<div class="screens">
+  <div class="square-screen">
+    <p>TITLE BAR</p>
+  </div>
+  <div class="circle-screen">
+    <p>TITLE BAR</p>
+  </div>
+</div>
+```
+
+```css
+p {
+  font-size: 1.25rem;
+  color: #353535;
+  margin: 32px;
+}
+
+.screens {
+  display: flex;
+}
+
+.screens > div {
+  display: flex;
+  flex-direction: column;
+  background-color: #adb5bd;
+  flex: 1;
+  margin: 10px;
+}
+
+.square-screen {
+  border-radius: 10%;
+}
+
+.circle-screen {
+  border-radius: 50%;
+  /* 圆形屏幕的左右侧通常会留空，以改善显示效果 */
+  padding: 0 48px;
+}
+
+.square-screen > p {
+}
+
+.circle-screen > p {
+  text-align: center;
+}
+```
+
+</glyphix>
+
+可以通过媒体查询的 [`shape`](/framework/render/media-query.md#shape) 特性来分别处理两种屏幕形状，例如：
+``` css
+.title {
+  font-size: 1.25rem;
+  color: #353535;
+  /* 默认情况下，标题仅仅是在四周留出 32px 的安全间距。 */
+  margin: 32px;
+}
+
+/* 这些样式规则仅对圆形屏幕生效。 */
+@media (shape: circle) {
+  .title {
+    /* 圆形屏幕时，标题文本应该居中。其他属性继承自上面的 .title 规则。 */
+    text-align: center;
+  }
+}
+```
+这段 CSS 代码首先定义方形屏幕的样式规则，然后在一个媒体查询块中覆盖为适用于圆形屏幕的规则。
+
+### 模板宏
+
+使用媒体查询可以针对不同类型的设备来定义 CSS 规则，而结合[模板宏](/framework/component/template-macro.md)和 [`media-query` 属性](/framework/render/media-query.md#组件的-media-query-属性)可以为不同的设备应用不同的 UX 模板结构。这种技术可以自动为圆形设备上的列表界面添加鱼眼变形效果。
+
+具体的使用方法请参考[模板宏](/framework/component/template-macro.md)章节。
+
+## JavaScript 适配
+
+如果需要为不同的设备编写不同的逻辑，那么还可以获取[设备信息](/api/system-device.md)。例如可以通过 [`device.screenShape`](/api/system-device.md#screenshape) 在运行时获取设备的屏幕形状枚举值。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/resource.md
+
+# 资源访问
+
+## URI 和路径
+
+可以在应用中通过 URI 或者路径访问应用中的资源。这些资源包括应用安装包中的文件、应用的运行时数据文件和共享数据文件等。与 Web 环境不同，Glyphix 应用中的 URI 和路径主要用于访问本地文件，而不能访问网络上的资源。
+
+许多 [API](/api/README.md) 和[原生组件](/components/README.md)都使用 URI 或者路径访问资源，在这些接口中 URI 或者路径一般可以混用。
+
+### URI
+
+URI 的格式和 [URL](https://developer.mozilla.org/docs/Glossary/URL) 类似，语法定义如下图所示：
+
+![](./figures/uri-syntax.svg)
+
+各字段的说明为：
+- **scheme**：指定资源访问的协议，例如 `app`、`internal` 等；
+- **authority**：通常表示包名或者域名，其意义由具体的资源协议决定；
+- **path**：资源在资源包内部的路径，必须是 `/` 字符开头的字符串（就像 Unix 中的路径一样）；
+- **query**：指定查询数据，一般只用于应用跳转时传递参数。
+
+这是一些 URI 的实例：
+```
+      authority
+      ↓
+app://com.example.app/icon.png
+↑                    ↑
+scheme               path
+           authority
+           ↓
+internal://files/favicon.png
+↑                ↑
+scheme           path
+      authority                query
+      ↓                        ↓
+app://com.example.app/icon.png?key=value
+↑                    ↑
+scheme               path
+```
+
+使用 URI 可以定位其他应用中的资源以及系统资源，也可以访问应用的缓存或临时文件，在访问外部资源时要注意应用是否有相应的权限。与 Web 平台不同，Glyphix URI 通常用于访问本地资源，而无法访问网络资源。请使用 [`system.fetch`](/api/system-fetch.md) 或者 [`system.request`](/api/system-request.md) 模块。
+
+### 路径
+
+路径是另一种定位资源的方式，它只能定义应用包内部的资源。路径有两种写法，一种是使用 `/` 开始的绝对路径，例如 `/assets/images/icon.png`；另一种是相对路径，例如 `images/icon.png`。绝对路径相对于应用资源包的根目录（也就是项目的 `src` 目录），而相对路径则相对于当前资源文件。因此
+``` js
+// in file: /Common/module-a.js
+import x from '/Common/module-b.js'
+import y from 'module-b.js'
+```
+中，`x` 和 `y` 实际上引入了同一个模块。
+
+使用 `..` 可以定位上一级目录，例如 `../fonts/Times.ttf` 或 `/images/../fonts/Times.ttf`。不过 `..` 无法超越项目根目录的层次，因此 `/a/../..` 会被限制为 `/`。
+
+绝对路径可以用于 URI 的 path 字段。
+
+## URI 协议
+
+### `app`
+
+此协议下 authority 字段为应用的包名，也就是 `mainfest.package` 字段。`path` 字段为应用资源包内资源的路径。
+
+使用 `app` 协议可以访问其他应用的资源。
+
+### `file`
+
+待补充
+
+### `pkg`
+
+待补充
+
+### `internal`
+
+`internal` URI 协议用于访问应用内部的资源文件，尤其是那些无法通过常规静态[路径](#路径)访问的文件。例如，应用程序可能生成临时文件、缓存文件或私有文件，这些文件无法通过路径访问（路径只能够访问资源包内的静态资源），而应通过 internal 协议来访问和管理。
+
+常见的 `internal` URI 协议的基本格式如下：
+``` ebnf
+internal://<authority>/<path>
+```
+- **authority**：决定资源文件的存储位置，具体作用见下文。
+- **path**：相对于指定存储位置的路径，指向具体的文件。
+
+#### authority 字段
+
+**authority** 字段决定了内部资源的类别和存储位置。依据不同的取值，`authority` 字段的含义如下：
+- `cache`：表示该 URI 定位到应用程序的缓存目录，通常用于存储缓存文件。此目录下的文件是应用运行时生成的临时文件，可以随时被删除或重建。
+- `files`：表示该 URI 定位到应用程序的私有文件目录。这是应用程序专用的存储位置，用于保存需要持久化的文件数据。
+- `mass`：表示该 URI 定位到所有应用共享的文件目录。这通常是一个公用目录，多个应用可以在此目录下存储和读取文件。
+- `tmp`：表示该 URI 定位到系统的临时文件目录，通常用于存储短期使用的临时文件。文件在这里存储的时间是短暂的，可能会在系统或应用重启时被清除。
+
+例如，`internal://cache/images/avatar.png` 表示访问缓存目录中的图片文件 `avatar.png`。该 URI 可用于 [image](/components/image.md) 组件等多个场景：
+``` html
+<image src="internal://cache/images/avatar.png" />
+```
+
+::: warning
+**authority** 字段不支持 URI 编码，必须直接使用 `cache`、`files` 这样的字面值，而不能用 `%63%61%63%68%65` 形式的编码。**path** 字段支持 URI 编码（但不推荐），但除了常规文件路径规则外，还需遵守以下限制：路径中不能出现 `%` 字符，且不能以 `..` 形式上溯根目录。
+
+这些限制旨在防止通过编码或路径上溯等方式绕过内部资源访问规则，从而避免潜在的安全风险。
+:::
+
+#### 应用文件隔离
+
+使用 `internal` URI 协议时，`cache`、`files` 和 `tmp` 类别都是应用的私有存储区域，只有当前应用可以访问这些目录下的文件。因此，同一个 `internal` URI 在不同的应用中可能指向不同的文件。每个应用都有独立的私有缓存、文件和临时文件存储空间，确保了应用之间的文件隔离和数据安全。
+
+假设有两个不同的应用 A 和 B，分别使用同一个 URI 来访问私有文件：
+```
+internal://files/config/settings.json
+```
+那么
+- **应用 A** 中该 URI 指向其私有文件目录中的 `settings.json` 文件。
+- **应用 B** 中该 URI 指向其私有文件目录中的 `settings.json` 文件。
+
+这种机制确保了应用之间各自管理自己的文件，互不干扰，也避免了潜在的数据泄露。
+
+于此不同 `internal://mass/` 是所有应用共享的公共文件存储区域。同一个 `internal` URI 在不同的应用中指向相同的文件。因此，`mass` 目录下的文件可以被多个应用共同访问和共享。例如应用 A 和应用 B 都使用：
+```
+internal://mass/public/shared_image.png
+```
+那么该 URI 在两个应用中指向同一个公用文件 `shared_image.png`，允许它们共享该文件资源。
+
+::: warning
+如果一个应用将敏感数据存储在 `mass` 空间中，其他应用可能会读取该数据。因此，开发者应避免在 `mass` 目录中存储任何敏感或私密的信息，确保存储在其中的文件是可公开访问和共享的资源。
+:::
+
+## 资源 API
+
+[`URI`](/api/global.md#uri) 全局函数、[`@system.path`](/api/system-path.md)、[`@system.file`](/api/system-file.md) 等接口提供在 JavaScript 中操作资源的能力。请参考相关文档了解详情。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/applet-object.md
+
+# 应用对象
+
+每个应用中都有一个 `app.ux` 或者 `app.js` 文件。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/manifest.md
+
+# manifest 文件
+
+`manifest.json` 文件中包含了应用描述、接口声明、页面路由等信息。
+
+`manifest.json` 是一个 JSON 文件，且文件内容必须是一个 JSON Object，本文档会介绍 `manifest.json` 各个字段的功能。
+
+## 字段说明
+
+### 根属性
+
+这些字段是 `manifest.json` 文件根 JSON 对象的属性。
+
+::: details 类型签名
+``` ts
+interface Manifest {
+  package: string,
+  name: string,
+  icon: string,
+  versionName: string,
+  versionCode: number,
+  config?: Config,
+  permissions?: PermissionInfo[],
+  router: Router,
+  display?: Display,
+  dial?: Dial,
+  widgets?: Widget[]
+}
+```
+:::
+
+#### `package` <decl type="string" />
+
+`package` 字段是应用的包名，必填字段。推荐采用 `com.company.module` 的格式，如：`com.example.demo`。系统中的应用包名必须唯一。
+
+::: important
+许多设备厂商的应用商店不支持短横线 `-` 作为包名的一部分，请注意避免。我们也不推荐使用下划线 `_` 或 `.` 来替代，这种情况请直接连接单词，例如 `com.wateralert.demo`。
+:::
+
+#### `name` <decl type="string" />
+
+应用的显示名称，必填字段。6 个汉字以内，与应用商店保存的名称一致，用于在桌面图标、弹窗等处显示应用名称。该字段可以用 `${}` 表达式来引用[国际化字符串](i18n.md)，例如：
+``` json
+{
+  "name": "${appName}"
+}
+```
+中 `appName` 就是一个国际化字符串的键。国际化的应用名可以让设备的应用列表以当前语言显示应用名称，而不是固定的语言。
+
+#### `icon` <decl type="string" />
+
+应用图标的路径，例如 `/assets/icon.png`。
+
+#### `versionName` <decl type="string" />
+
+应用版本字符串。
+
+#### `versionCode` <decl type="number" />
+
+应用版本代码，是一个整数。建议在每次发布应用时将版本代码加一。
+
+#### `config` <decl type="?: Config" />
+
+描述系统配置信息的可选字段，见 [`Config` 对象](#config-对象)。
+
+#### `permissions` <decl type="?: PermissionInfo[]" />
+
+由 `PermissionInfo` 对象组成的数组，表示应用使用的权限列表。当应用需要访问位置信息、传感器、设备信息、录音、蓝牙、健康数据等能力时，需要在此字段中声明对应的权限，例如：
+
+``` json
+{
+  "permissions": [
+    { "name": "watch.permission.LOCATION" },
+    { "name": "watch.permission.RECORD" }
+  ]
+}
+```
+`PermissionInfo` 对象描述应用所需权限信息，它目前只有一个 `name` 字段。其签名如下：
+``` ts
+type PermissionInfo = {
+  name: string; // 权限名称，唯一标识一个权限项
+}
+```
+`name` 字段标识具体的权限名称。权限名对应系统模块接口清单如下:
+
+| 权限名称                              | 对应系统模块                                        | 权限描述                         |
+| ------------------------------------- | --------------------------------------------------- | -------------------------------- |
+| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md)                 | 保持应用在前台运行               |
+| `watch.permission.LOCATION`           | [`@system.geolocation`](/api/system-geolocation.md) | 位置信息                         |
+| `watch.permission.ACCESS_SENSORS`     | [`@system.compass`](/api/system-sensor.md)         | 内置传感器(如指南针、加速度计等) |
+| `watch.permission.DEVICE_INFO`        | [`@system.device`](/api/system-device.md)           | 设备信息                        |
+| `watch.permission.RECORD`             | [`@system.media`](/api/system-media.md)             | 仅录音相关 API 需要权限          |
+| `watch.permission.BLUETOOTH`          | [`@system.bluetooth.ble`](/api/system-ble.md)       | 允许使用设备蓝牙                |
+| `watch.permission.READ_HEALTH_DATA`   | 暂不支持                                            | 读取健康数据(如步数、心率等)     |
+| `watch.permission.SCHEDULE`           | [`@system.schedule`](/api/system-schedule.md)       | 设置定时任务                   |
+| `watch.permission.NOTIFICATION`       | [`@system.notification`](/api/system-notified.md)   | 允许应用通知提醒                |
+
+#### `router` <decl type="Router" />
+
+描述应用内页面路由信息的必填字段，详见 [`Router` 对象](#router-对象)。
+
+#### `display` <decl type="?: Display" />
+
+应用内的显示效果配置，详见 [`Display` 对象](#display-对象)。
+
+#### `dial` <decl type="?: Dial" />
+
+如果存在 `dial` 字段则表示此项目是一个表盘包而不是应用。表盘的专属元数据由 [`Dial` 对象](#dial-对象)描述。表盘包 [`icon`](#icon) 不使用字段。
+
+#### `widgets` <decl type="?: Widget[]" />
+
+表示挂件和小组件列表的配置信息，配置字段详见 [`Widget` 对象](#widget-对象)。
+
+### `Config` 对象
+
+::: details 类型签名
+``` ts
+interface Config {
+  designWidth?: number,
+  designImageScale?: number,
+  fontFaces?: string,
+  assets?: string | string[]
+}
+```
+:::
+
+#### `designWidth` <decl type="?: number" />
+
+页面设计的基准宽度（单位是像素），默认值为 `750`。CSS 中的 `px` 长度单位会根据实际的设备宽度和 `designWidth` 的比值来缩放。例如当 `designWidth` 的值为 `466` 时，在实际宽度为 `410` 像素的设备上像素长度会被缩放 $410/466$ 倍。
+
+建议使用当前设计的设备尺寸，而不是默认的 `750`，以避免在开发中做大量的换算。
+
+#### `designImageScale` <decl type="?: number" />
+
+图片资源的切图缩放系数，默认值为 $1.0$。为了满足多设备分辨率适配，需要设计师将图片按照设计稿放大后切图来保证打包后的质量。
+
+`designImageScale` 是项目中资源原图的尺寸和缩放后图片逻辑分辨率的比值。具体来说，资源图片在实际设备上的缩放系数 $\it{scale}$ 为：
+$$
+\it{scale} = \tt{designImageScale}\frac{\tt{deviceWidth}}{\tt{designWidth}}
+$$
+其中 $\tt{deviceWidth}$ 为设备屏幕的实际宽度。因此，图片的实际显示尺寸 $(w', h')$ 为：
+$$
+(w', h') = \it{scale} \cdot (w, h)
+$$
+其中 $(w, h)$ 是资源原图的尺寸。
+
+::: tip
+不要使用小于 $1$ 的 `designImageScale` 配置，这意味着打包时会对资源图片进行放大，并因此产生明显的模糊和失真。如果你希望应用可以在多种设备中精致地显示图片，应该按照比实际需求更大的尺寸来准备资源图片，并设置正确的 `designImageScale` 参数。
+
+例如，如果实际设备（假设 $\tt{designWidth} == \tt{deviceWidth}$）上显示的图片尺寸为 $96\rm px \times 96\rm px$，那么可以准备两倍分辨率的 $192\rm px \times 192\rm px$ 素材，并将 `designImageScale` 设置为 $2$。
+:::
+
+#### `fontFaces` <decl type="?: string" />
+
+指定应用级的字体映射表文件路径，其中定义的字体可在应用中直接使用。此路径可以是相对于 `manifest.json` 的相对路径，也可以是相对于应用资源包根目录的绝对路径。
+
+参考[字体配置](font-config.md)。
+
+#### `assets` <decl type="?: string | string[]" />
+
+指定自定义资源的路径 glob 模式（文件通配符）。例如：
+``` json
+{
+  "config": {
+    "assets": [ "assets/**", "**/data.bin" ]
+  }
+}
+```
+会将项目中 `assets` 目录下的所有文件和项目中所有的 `data.bin` 文件进行打包。这些文件只会按照静态资源文件的形式打包（即直接拷贝文件）。
+
+文件通配符可以和路径相同，但是有以下特殊形式：
+- `*` 匹配一个路径组件，但不包含路径分隔符（`/`）。
+- `**` 匹配任意数量的路径组建，并可以包含路径分隔符。
+
+例如：
+- `test.js` 可以匹配项目跟目录下的 `test.js` 文件。
+- `**/*-data.bin` 可以匹配任意路径下具有 `-data.bin` 后缀的文件。
+- `*/*.bin` 匹配项目根中任意一级目录下具有 `.bin` 后缀的文件。
+
+### `Router` 对象
+
+定义页面的组成和相关配置信息。
+
+::: details 类型签名
+``` ts
+interface Router {
+  entry?: string,
+  pages: { [name: string]: PageInfo }
+}
+```
+:::
+
+#### `entry` <decl type="?: string" />
+
+应用首页的名称，启动应用后会先跳转到此页面。默认为 `"main"`。
+
+#### `pages` <decl type="{ [name: string]: PageInfo }" />
+
+声明各个页面的信息。 `pages` 属性的键 `name` 是页面名称，属性值 [`PageInfo` 对象](#pageinfo-对象)是页面的详细配置信息。例如：
+``` json
+{
+  "router": {
+    "entry": "Main",
+    "pages": {
+      "Main": {
+        "path": "/Path/To/Main",
+        "component": "index",
+        "launchMode": "singleTask"
+      }
+    }
+  }
+}
+```
+
+应用中所有的页面都必须填写到路由表中才可以使用，每个页面也必须具有唯一的名字。
+
+### `Display` 对象
+
+#### `pageAnimation` <decl type="?: PageAnimation" />
+
+应用内页面的默认转场动画配置，值是 [`PageAnimation` 对象](#pageanimation-对象)。
+
+## `PageInfo` 对象
+
+页面配置对象是 `router.pages` 对象的属性值。页面配置对象的类型是 Object。本节介绍页面配置对象的属性字段定义。
+
+::: details 类型签名
+``` ts
+interface PageInfo {
+  path?: string,
+  component?: string,
+  pageAnimation?: PageAnimation,
+  launchMode?: 'standard' | 'singleTask'
+}
+```
+:::
+
+#### `path` <decl type="?: string" />
+
+页面目录的路径（存放页面组件的文件夹的路径）。默认和页面名称相同，即 `Router` 对象的键。
+
+#### `component` <decl type="?: string" />
+
+页面组件的名称，和 UX 文件名一致并且不需要 *.ux* 后缀名，例如组件名 `"index"` 对应 `index.ux` 文件。
+
+#### `pageAnimation` <decl type="?: PageAnimation" />
+
+页面的转场动画配置，值是 [`PageAnimation` 对象](#pageanimation-对象)。此配置的优先级高于 `mainfest.json` 中的 `display.pageAnimation` 配置。
+
+#### `launchMode` <decl type="?: 'standard' | 'singleTask'" version="0.8" />
+
+页面的启动模式，默认为 `standard`。当页面的 `launchMode` 配置为 `singleTask` 时，如果要打开一个已经在返回栈中的页面实例，则会将该实例上方的页面全部出栈，并回到该实例所在的页面（类似于 [`router.back('<page-name>')`](/api/system-router.md#back)），而不是创建一个新的页面实例。
+
+在以 `singleTask` 模式“打开”并回到已经存在的页面时，会触发 [`onRefresh`](../component/life-cycle.md#onrefresh) 生命周期函数。
+
+### `PageAnimation` 对象
+
+此对象的属性配置页面转场动画的行为。转场动画只对顶部的页面有效，非顶部的页面是不会播放转场动画的。
+
+::: details 类型签名
+``` ts
+interface PageAnimation {
+  openEnter?: string,
+  closeEnter?: string,
+  openExit?: string,
+  closeExit?: string
+}
+```
+:::
+
+每个属性都可以取以下值：
+- `"none"`：无转场动画，这是所有属性的默认值
+- `"slide"`：页面以滑动动画进行转场，此转场效果在不同的转场配置属性下有所不同，其中：
+  - 对于 `openEnter` 转场，slide 效果是页面从屏幕左边向右开始进入，直到完全覆盖屏幕
+  - 对于 `closeExit` 转场，slide 效果是页面从完全覆盖屏幕的位置开始向右滑动，直到完全离开屏幕
+  - 对于 `closeEnter` 和 `openExit` 转场，slide 效果是没有动画的
+
+页面和应用的默认转场动画是由设备定义的。如果 `manifest.json` 中没有指定 `pageAnimation` 相关的字段，某些设备可能不播放转场动画，而另一些设备则可能使用厂商定制的动画效果。
+
+::: warning
+模拟器总会播放 slide 页面转场动画，而无论它在模拟哪一款设备。如果想确保关闭页面的转场动画，请使用
+``` json
+{
+  "pageAnimation": { "openEnter": "none" }
+}
+```
+这样的写法，而不是 `"pageAnimation": {}`，后者由于未知原因不生效。
+:::
+
+#### `openEnter` <decl type="?: string" />
+
+这个属性配置打开新页面时，新页面的转场动画。
+
+#### `closeEnter` <decl type="?: string" />
+
+这个属性配置打开新页面时，底下将被覆盖的旧页面的转场动画。
+
+#### `openExit` <decl type="?: string" />
+
+这个属性配置关闭页面时，被关闭页面的退出转场动画。
+
+#### `closeExit` <decl type="?: string" />
+
+这个属性配置关闭页面时，被关闭页面底下将要重新显示页面的转场动画。
+
+### `Dial` 对象
+
+`Dial` 对象描述表盘相关的配置信息。
+
+::: details 类型签名
+``` ts
+interface Dial {
+  component: string,
+  preview: string
+}
+```
+:::
+
+
+#### `component` <decl type="string" />
+
+表盘入口组件的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
+
+#### `preview` <decl type="string" />
+
+表盘预览图片的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
+
+### `Widget` 对象
+
+`Widget` 对象描述挂件或小组件的配置信息。
+
+::: details 类型签名
+``` ts
+interface Widget {
+  name: string,
+  component: string,
+  preview: string
+}
+```
+:::
+
+#### `name` <decl type="string" />
+
+挂件/小部件的名字，同一个应用包内的小部件不能重名。
+
+#### `component` <decl type="string" />
+
+挂件/小部件入口组件的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
+
+#### `preview` <decl type="string" />
+
+挂件/小部件预览图片的路径。可以是包中的绝对路径或相对于 `manifest.json` 文件的相对路径。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/i18n.md
+
+# 国际化
+
+国际化用于将界面翻译为不同的语言，以便不同语言的用户使用。
+
+## 国际化资源
+
+国际化机制需要开发者先编写好应用的国际化资源文件，然后在组件代码中使用。国际化资源是存放在应用的 `src/i18n` 目录中（开发者需要先建立此文件夹）下的一些 JSON 文件，每个文件以语言代码命名，例如：
+``` bash
+src                # 项目源代码路径
+└─ i18n            # 国际化资源文件夹
+   ├─ default.json # 默认回退语言
+   ├─ ja.json      # 日文翻译文件
+   ├─ it.json      # 意大利语翻译文件
+   └─ zh-CN.json   # 简体中文翻译文件
+```
+如例子中所示，`default.json` 是默认回退语言的翻译文件，当要翻译的文本不在选择的语言中时会使用该翻译文件的规则。
+
+国际化资源文件的内容是一个 JSON 对象，形式如下：
+``` json
+// default.json
+{
+  "helloWorld": "Hello, world!"
+}
+// zh-CN.json
+{
+  "helloWorld": "你好，世界！"
+}
+```
+该 JSON 对象的值是目标语言下的翻译文本，而键用于在代码中索引翻译文本。每个键在多个语言的国际化资源文件中对应相同含义的翻译文本，例如 `helloWorld` 键在英文中对应的翻译文本是 `Hello, world!`，而在中文中对应的文本是 `你好，世界！`。
+
+### `default.json`
+
+与一般的语言国际化文件不同，`default.json` 还用于当前语言未定义的翻译文本回退。即某个国际化字符串的键在该语言的 JSON 文件中没有定义，但是 `default.json` 中存在时会使用后者的翻译。
+
+当一个键不存在于以上所有国际化文件时，国际化框架会直接返回键本身。
+
+## 使用国际化文本
+
+### `$t()` 函数
+
+`$t()` 是用于获取国际化文本的全局函数，它们的签名为：
+``` ts
+function $t(key: string): string
+```
+`key` 是待翻译的键，而返回值是当前语言中对应的国际化文本。如果国际化资源中没有这个此键值对会返回 `key` 本身。
+
+这个函数通常用于组件代码，例如：
+``` html
+<p>{{ $t('helloWorld') }}</p>
+```
+
+也可以在 JavaScript 代码中使用：
+``` js
+console.log($t('helloWorld'))
+```
+
+### `t` 命令
+
+原生组件支持 `t` 命令用于自动翻译国际化文本：
+``` html
+<p t>helloWorld</p>
+```
+例子中的 `<p>` 组件包含名为 `t` 的属性（它实际上是一个命令），该命令等效于让文本子节点 `helloWorld` 作为参数自动调用 `$t()` 函数并使用返回的国际化文本来设置 `<p>` 组件的文本内容。在模板代码中，`t` 命令比 `$t()` 函数的用法更简单。
+
+`t` 命令还支持作为原生组件的属性前缀使用，例如：
+``` html
+<p t:text="helloWorld" />
+```
+和单独的 `t` 命令类似，属性值字符串 `helloWorld` 会作为键来查询对应的国际化文本。这同样比使用 `$t()` 函数的等效代码方便：
+``` html
+<p :text="$t('helloWorld')" />
+```
+
+::: tip
+`t` 命令现在仅支持原生组件，在自定义组件中则没有效果。
+
+在可以使用 `t` 命令的情况下，请优先使用 `t` 命令而不是 `$t()` 函数，因为 `t` 指令的实现方式决定了它的性能会更好。
+:::
+
+### 切换语言
+
+当应用切换语言之后所有组件的响应式属性都会重新计算，此时会重新查询国际化文本，因此不需要手动更新界面。但是不在响应式框架中调用的 `$t()` 函数没有这些效果。
+
+在切换语言时缓存的计算属性值不会重新计算，所以在计算属性的 `get()` 方法中调用 `$t()` 的翻译文本也不会重新获取。
+
+### 获取国际化配置
+
+可以通过 [`@system.i18n`](/api/i18n.md) 模块来访问应用的国际化配置。还可以通过应用的 [`onLocaleChanged()`](/framework/component/life-cycle.md#onlocalechanged) 生命周期函数来监听语言环境变化。
+
+## 布局和渲染
+
+### 自动行高
+
+[[待完成]]
+
+### 文本溢出 <version-badge since="0.9"/>
+
+在某些 UI 设计稿布局高度有限的场景中，部分国际化文本可能因为需要的行高太大而无法完全显示。这在针对中文或英文等语言设计的 UI 在翻译到其他语言时可能会出现，例如在藏文中同样的文本内容需要更大的行高来显示完整。
+
+下例展示了同一段藏文在 `line-height: 1` 时会因为默认的绘制行为而裁剪（左边红色框）：
+
+<div style="display:flex; gap:20px; font-family:monospace; font-size:22px">
+<span style="border:1px solid red; width:220px; line-height:1; overflow:clip; background:#fff8f8;white-space:nowrap">
+  &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
+</span>
+<div style="border:1px solid green; width:220px; line-height:1; overflow:visible; background:#f8fff8;white-space:nowrap">
+  &#x0F40;&#x0FB5; བོད་ཡིག་གི་ཚིག་ཐུང་།
+</div>
+</div>
+
+针对中文或英文设计的 UI 的预留行高可能不够，意味着通常不能将 `line-height` 设置的更大或者采用 `line-height: auto` 来解决这个问题。那么只能通过 `overflow: visible` 来让文本溢出显示（右边绿色框）。
+
+在国际化场景中，建议使用 [`overflow: visible`](/framework/generic/styles.md#overflow) 来避免文本被裁剪。
+
+[`scroll` 组件](/components/scroll.md#i18n-场景的推荐设置)文档中也有关于 `overflow` 属性的 i18n 配置说明，更多细节请参考相关文档。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/application/README.md
+
+# 应用框架
+
+Glyphix 应用是一个可以独立运行的交互式应用程序，专为 MCU（微控制器）设备设计。它由一系列页面、组件和相关逻辑组成，并受运行时环境的支持与管理。通过 Glyphix 应用框架，开发者可以以接近 Web 开发的方式，使用 HTML 模板、CSS 和 JavaScript 来构建和组织应用。
+
+你可以将应用视为手机应用那样的独立程序：它们可以被安装、启动、切换和卸载。每个应用都有自己的资源和数据存储空间，并且运行在一个受控的环境中。
+
+## 运行时
+
+运行时是集成到设备固件中的一个原生系统，它提供标准的应用运行环境，并管理应用所需的一切系统资源。本节将介绍运行时的多种职责及其行为标准。
+
+### 启动应用
+
+运行时可以通过原生或者 JavaScript 接口启动一个应用。每个应用都有独立的运行环境，这意味着：
+- 应用运行在独立的 JavaScript 执行环境中，互不干涉。
+- 每个应用的资源访问都是独立的，这包括页面结构、文件资源、数据存储等各种资源。
+- 无底层权限：应用的运行环境和底层系统无关，因此也无法越过运行时访问底层资源。
+
+但是，某些资源是全局唯一的，如屏幕的可见区域、公共文件目录等。随着用户的操作，某些应用会变为**前台**的可交互状态，而另一些应用则会切换到后台。
+
+### 页面管理
+
+Glyphix 应用的界面主要是由**页面提供**，因此运行时会维护每一个应用的页面对象，并管理全局的弹窗页面。这些管理机制包括了页面的切换、渲染和生命周期控制。
+
+### 内存资源管理
+
+运行时系统统一管理应用自身和多个应用间的内存和各种系统资源，从而优化开销并避免泄漏：
+- 推迟图片、文字等资源的加载作业，降低界面加载的延迟。
+- 缓存并优化页面和组件文件，加速热加载性能。
+- 维护资源和底层文件映射，实现设备无关的 IO 和资源访问。
+- 优化内存占用，避免耗尽 MCU 内存。
+
+### 资源回收
+
+当应用退出时，运行时会回收所有资源，从而将系统占用释放到启动应用之前的水平。这是一个系统机制，应用层面无法控制，这也意味着：
+- 应用退出时不会兑现挂起的 Promise 对象，因此异步操作可能永远不会得到结果。请注意在应用的 [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) 生命周期函数中做必要的处理。
+- 底层系统可能随时杀死应用，也有完全完全的操作权限。无法在应用层面绝对地保活，同时也不能假设设备的应用调度策略。
+
+### 标准接口
+
+运行时提供一套标准的 [API](/api/README.md) ，它们抽象了具体设备上的蓝牙、网络、传感器和系统功能等的差异。大部分 API 是所有设备都支持的，但也有一部分仅支持特定设备。
+
+### 后台管理
+
+应用框架支持应用的后台运行，这允许用户返回到应用列表等界面后回到当前应用中，而不重新启动应用。后台运行的应用会受到一些限制，例如：
+- 后台应用无法跳转页面，[`router.push()`](/api/system-router.md#push) 等 API 会直接挂起。
+- 后台的应用可能会自动回到主页面（即最底层页面），就像用户手动返回一样。
+- 大部分应用只能短暂留在后台，并在约半分钟内被系统杀死以释放资源。
+- 正在进行音频播放等特定任务的应用可以在后台持续运行。
+
+::: tip
+如果你的应用需要在后台播放音频（如播客类应用），请确保在主页面或界面无关的脚本中启动音频播放任务，而不要在深层页面中播放。否则，当后台应用个返回主页面时，音频播放可能会被中断并失去后台驻留。
+:::
+
+应用的后台机制涉及一系列生命周期管理，详情见[应用生命周期](../component/life-cycle.md)。
+
+## 页面
+
+应用会被划分为多个页面，这类似于 HTML 页面：每个页面实现一类交互逻辑，多个页面之间可以互相跳转。
+
+页面是一种充满整个屏幕的界面元素，因此设备上同时只能显示一个页面。为此，应用框架提供了页面栈机制：每一个应用在运行时都可以打开一些页面，这些页面按照栈的方式维护，同时只显示最顶部的页面。由于页面栈是一个栈（stack），所以它支持压入（push）和弹出（pop）操作，通过这两种操作可以向应用的页面栈中放入新页面或关闭顶部的页面。此外，应用框架还扩充了一些实用的页面操作。
+
+大部分页面存在于应用的页面栈中，当应用位于前台时（即它是正在显示的应用），页面栈顶的页面就会被显示，而后台应用的所有页面都不显示。各个应用之间的页面栈完全独立。
+
+一个页面由一个**页面组件**及若干个子组件构成。所有的页面必须在 [`manifest.json`](manifest.md#router) 中进行声明才可以使用。应用内的页面通过 [`system.router`](/api/system-router.md) API 进行导航和切换，这包含一套路由机制和页面间的数据传递方式。
+
+页面默认使用堆叠布局，就像 [`stack`](/components/stack.md) 组件那样，因此在页面组件中使用这样的模板：
+``` html
+<scroll>
+  <p>background</p>
+</scroll>
+<p>overlay</p>
+```
+
+和将其放在一个 `stack` 组件内具有相同的效果：
+``` html
+<stack>
+  <scroll>
+    <p>Background</p>
+  </scroll>
+  <p>Overlay</p>
+</stack>
+```
+
+使用下面的交互式演示可以观察到这种堆叠效果，你可以使用鼠标或者触摸板滚动“Background”文本并观察堆叠的层级效果。
+
+<glyphix id="application-page-component" height="200" width="300" title="页面组件堆叠效果">
+
+``` html
+<scroll>
+  <p>Background</p>
+</scroll>
+<p>Overlay</p>
+```
+
+``` css
+p {
+  text-align: center;
+  color: #f088;
+  font-size: 1.5rem;
+}
+
+scroll>p {
+  height: 100%;
+  color: black;
+  font-size: 1.25rem;
+}
+```
+
+</glyphix>
+
+## 组件
+
+详见[组件框架](/framework/component/README.md)。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/testing/api.md
+
+# API
+
+## 内容定位
+
+
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/testing/README.md
+
+# 测试框架
+
+Glyphix 提供了一套应用的自动化测试框架，用于模拟用户操作并检查界面行为。该测试框架并不是随机模拟操作，而是需要开发者编写测试用例。
+
+## 基本概念
+
+Glyphix 的测试框架实际上是一组 JavaScript API，它们大体上实现以下功能：
+
+- 注册测试用例
+- 查找界面元素
+- 模拟用户操作或动作
+- 断言和验证逻辑
+
+### 测试步骤
+
+一个测试步骤的基本原理是**查找特定元素**、**执行模拟动作**和（可选的）**验证内容**。例如：
+
+1. 查找一个 CSS 类为 `play-button` 的元素；
+2. 点击这个元素；
+3. 不验证内容。
+
+在实际界面中，`.play-button` 也许是一个播放按钮，点击此按钮后会开始播放音乐。这个测试对应的 JavaScript 代码如下：
+
+```js
+await tc.getByClass("play-button").click();
+```
+
+该测试代码会自动等待 `.play-button` 元素出现并将其移动到界面视口内，然后再点击该元素。这些测试 API 会自动等待界面中的动画或者手势，并且会在点击手势完全完成后兑现 `await`。因此，通常不需要手动移动元素，也不需要显式地等待操作完成。
+
+### 查找元素
+
+测试框架提供了一系列接口来查找界面中的元素，例如：
+
+- `tc.getByClass()`：根据类名查找元素；
+- `tc.getByTag()`：根据 tag 名查找元素。
+
+这些接口都会等待元素出现并会在下一步操作之前尝试将元素移动到可视区域内。
+
+### 模拟用户操作
+
+## 开始编写测试
+
+### 测试用例文件
+
+Glyphix 的测试用例是一些 JavaScript 代码，并且存储在应用的资源包内。建议将测试用例单独存放在项目的 `src/tests` 目录下，例如：
+
+```shell
+<app-name>
+├─ README.md         # 项目自述文件
+└─ src               # 项目的源代码目录
+    ├─ app.js        # app 入口脚本文件
+    ├─ manifest.json # 配置应用基本信息
+    ├─ tests         # 存放所有的测试用例
+    │  └─ spec.js    # 测试用例代码
+    └─ Main          # 存放主页面的目录
+        └─ index.ux  # 主页面的界面描述文件
+```
+
+这个例子中的测试代码就是 `src/tests/spec.js` 文件，还可以根据需要创建多个测试文件。
+
+::: tip
+测试用例的文件名通常是 spec，即 specification 的缩写。spec 文件用于定义和描述软件的预期行为及其功能，通常包含一组测试用例，用于验证软件是否按照预期工作。
+:::
+
+### 编写测试用例
+
+假设我们的应用有一个主页面，并且存在一个类名为 `clickable` 的 `span` 元素：
+
+```html
+<div>
+  <span class="clickable" on:click="console.log('click span')"> click me </span>
+</div>
+```
+
+现在，我们要编写一个自动测试脚本，它会点每隔一秒钟点击一次 `span` 组件，并且在点击 3 次之后结束测试。为此，我们要在 `src/tests/spec.js` 中添加以下代码：
+
+```js
+// 导入 @system.test 模块提供测试框架的 API
+import tc from "@system.test";
+
+// 注册一个名为 click-test 的自动化测试用例
+tc.testcase("click-test", async () => {
+  for (let i = 0; i < 3; ++i) {
+    // 查找 class="clickable" 的元素并点击它
+    await tc.getByClass("clickable").click();
+    // 等待一秒钟
+    await tc.wait(1);
+  }
+});
+```
+
+接下来还需要注册这个测试脚本并启动测试。
+
+### 注册测试脚本
+
+一般的代码中通常会使用 `import 'tests/spec.js'` 这样的语句来引入脚本，但这会导致总是加载该 JavaScript 模块。为了优化应用的加载速度和内存占用，我们不需要在非测试环境中引入这些脚本。为此，你可以在 `src/app.js` 文件中的 App 对象中注册测试脚本：
+
+```js
+export default {
+  // 使用 testsuite 属性来注册测试脚本列表
+  testsuite: ["tests/spec.js"],
+  onCreate() {
+    /* ... */
+  },
+  // ...
+};
+```
+
+这种方法不会立即导入这些测试脚本，而是会延迟到执行测试的时候再导入。因此在不执行测试的时候，使用 `testsuite` 属性并不会增加开销，开发者也无需考虑优化加载测试脚本带来的性能负担。
+
+::: warning
+即便只有一个测试脚本，`testsuite` 属性也要是一个 `Array` 对象，而测试脚本的路径包含在其中，就像本节的示例一样。测试脚本的路径总是相对于 `app.js` 文件所在的目录，你也可以使用绝对路径，例如 `/tests/spec.js`。
+:::
+
+## 运行测试用例
+
+### 模拟器
+
+要运行测试用例，应使用 `gx emu -i` 命令来启动模拟器。你会在终端中看到这样的信息：
+
+```shell
+❯ gx emu -i
+[emu] Open inspector http://localhost:14200 in browser.
+```
+
+接下来在浏览器中打开 `http://localhost:14200` 链接，并进入“Console” 选项卡，然后在底部的“RPC”栏输入以下文本：
+```json
+{"fn": "test.start", "name": "click-test"}
+```
+即可启动前面编写的 `click-test` 测试用例，此时你应该在日志浏览器中看到以下日志：
+
+```log
+19:14:33.320 [inspector] test com.example.app . click-test started
+19:14:33.640 [js] 'click span'
+19:14:35.090 [js] 'click span'
+19:14:36.510 [js] 'click span'
+19:14:37.600 [tester] com.example.app testcase click-test finished
+```
+
+这表明测试已经成功执行，并且 `span` 元素确实被点击了 $3$ 次。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/render/style-and-layout.md
+
+# 样式和布局
+
+Glyphix 的样式系统和 Web 技术中的 CSS 相似。通常直接在 UX 文件的 `<style>` 标签内定义 CSS。
+
+## 编写 CSS
+
+你可以在 `<style>` 标签内编写 CSS：
+
+``` html
+<style>
+  div { display: flex; }
+</style>
+```
+
+可以使用 `@import` 命令来导入 CSS 文件：
+
+``` html
+<style>
+  @import 'style.css';
+  div { display: flex; }
+</style>
+```
+
+Glyphix 还提供有限的内联样式支持，内联样式直接写在组件的 style 属性中：
+``` html
+<div style="background: #f00; color: #fff"> ... </div>
+```
+内联样式的值是一个字符串，你可以通过更改这个字符串来更新样式。支持在内联样式中使用的 [CSS 属性](/framework/generic/styles.md)会添加 <badge type="info" text="内联" /> 标签。
+
+::: warning
+当前版本的内联样式效率较低，只应将其作为 js 逻辑更新组件样式的解决方案，大量使用可能引起性能问题。一般情况下应该使用在 `<style>` 标签中定义 CSS 规则的方案。
+:::
+
+## 样式选择器
+
+目前，样式框架支持以下选择器：
+
+- class 选择器
+- type 选择器
+- id 选择器
+- 伪类（较少用到）
+- 伪元素（较少用到）
+- 后代选择器和直接后代选择器，例如 `div > .title` 或者 `div .title`
+- 复合选择器，如 `#id.class` 或者 `div.class`
+
+### class 选择器
+
+class 选择器会选中具有对应 class 属性的组件，组件可以具有多个 class 值，例如
+``` html
+<p class="ceil content">...</p>
+```
+会匹配以下两个样式定义：
+``` css
+.ceil {
+  background-color: #222;
+  border-radius: 12px;
+}
+
+.content {
+  font-size: 24px;
+  padding: 12px;
+}
+```
+
+### 组合选择器
+
+支持用 `,` 为 rule-set 指定多个选择器：
+``` css
+#id, .class, div {
+  display: flex;
+  flex-direction: column;
+  color: red;
+}
+```
+
+### 继承属性
+
+某些 CSS 属性可以从父级元素继承到子元素，以 `font-size` 为例：
+``` html
+<div>
+  <p>Text</p>
+</div>
+```
+
+``` css
+div {
+  font-size: 1.25rem;
+}
+```
+尽管没有对 `<p>` 元素设置 `font-size` 属性，它还是会显示 `1.25rem` 的字号，这是由于 `<p>` 元素从父级 `<div>` 处继承了字号设置。换言之，在一个容器中设置了可以继承的样式属性之后，所有的子元素也会获得该属性设置。但要注意 CSS 属性继承机制的优先级很低，只有在元素没有指定被继承的样式属性时才会采用继承的值。假设对上面的例子使用以下 CSS：
+``` css
+* {
+  font-size: 1rem;
+}
+div {
+  font-size: 1.25rem;
+}
+```
+由于 `*` 规则样式块的存在，现在 `<p>` 元素的字号会是 `1rem`，而不是采用继承值。
+
+在 [CSS 属性](/framework/generic/styles.md)文档中，支持继承的属性会添加 <badge type="info" text="继承" /> 标签。
+
+### 响应式支持
+
+目前 `class` 属性和 `id` 属性都不支持响应式，因此
+``` html
+<div class="{{expr}}" id="{{expr}}"> ... </div>
+```
+都不支持，只能直接写静态的 `class` 和 `id` 属性值。
+
+::: warning
+开发者要留意 `class` 和 `id` 不支持响应式属性的限制！
+:::
+
+## 颜色值
+
+### 颜色代码
+
+颜色值支持 `#` 字符开头的 RGB 或 RGBA 颜色代码，合法的颜色代码有：
+
+- `#RRGGBB[AA]`，例如 `#102000`，`#00ff0080`
+- `#RGB[A]`，例如 `#0f0`，`#ff08`
+
+如果颜色代码不包含 alpha 通道，那么该通道的值就是 `ff`（`#RRGGBB` 格式）或 `f`（`#RGB` 格式）。颜色代码中的每一位都是一个十六进制数，可用的字符为 `0-9`、`A-F` 和 `a-f`。`#RGB[A]` 是一种针对 `#RRGGBB[AA]` 代码的简写方法，例如 `#0f38` 的颜色和 `#00ff3388` 相同。
+
+### 颜色函数
+
+目前，CSS 块中支持用 `rgb()` 和 `rgba()` 函数定义颜色值。不支持 HSL 颜色格式。
+
+### 标准颜色名
+
+可以在 CSS 块中使用 Web 标准的颜色名，例如：
+``` css
+color: brown;
+color: lightgray;
+```
+
+### 内联样式中的颜色
+
+内联样式中只支持 `#` 开头的颜色代码，例如：
+``` html
+<p style="color: #ff00ff">...</p> <!-- 支持 -->
+<p style="color: gray">...</p> <!-- 不支持，无法解析 -->
+```
+
+## 长度
+
+长度值的通用格式为 `<value><unit>`，`value` 是长度的数值，`unit` 为长度单位，例如 `15px`。`value` 和 `unit` 之间不应添加空格。
+
+还支持一种特殊的长度值 `auto`。这个长度值没有具体的数值和单位，实际渲染中的长度由具体的场景和规则来确定。
+
+以下是可用的长度单位：
+
+- `px`：以像素作为长度单位
+- `pt`：将磅作为长度单位，一磅是 $1/72$ 英寸
+- `%`：百分比长度单位，具体的值依属性和布局不同会有不同的换算关系
+- [`rem`](/framework/application/font-config.md#rem-字号单位)：相对于系统默认字号的长度单位，例如 `1rem` 等于系统默认字号的尺寸，$1.5\rm rem$ 是前者的 $1.5$ 倍
+
+其中 `pt` 是一种绝对长度单位，例如 `72pt` 对应 $1''$ （英寸）或者 $25.4\rm mm$，这与设备无关。而 `px` 是与设备有关的，但并不直接对应物理像素，其换算关系请参考 [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) 字段说明。百分比长度单位通常相对于父元素和元素本身的尺寸来计算，例如 `width`、`margin` 等 CSS 属性的百分比值是按父元素的尺寸来计算的，而 `border-radius` 则是按照元素自身的尺寸来计算的。
+
+`rem` 单位专门用于字号（即 `font-size` 属性），这是一种简单的跨设备字体一致性方案。更多说明请参考 [`rem` 字号单位](/framework/application/font-config.md#rem-字号单位)。
+
+## 布局
+
+布局框架可以根据界面内容和屏幕的几何信息自动排列元素，开发者无需手动指定元素的位置和尺寸。布局框架是一种强大的机制，它可以让界面适用于不同分辨率或尺寸的设备，还可以处理变化的内容。Glyphix 的大部分原生组件支持两种自动布局模式：流式布局（flow layout）和弹性盒子布局（flexbox layout），同时也支持手动布局。某些原生组件具有强制的特殊布局，例如 [`swiper`](/components/swiper.md) 组件的子元素总是和视口一样大，而 [`stack`](/components/stack.md) 组件完全是用来提供堆叠布局的。
+
+流式布局和弹性盒子布局的概念来自于 Web 标准，但针对低性能设备做了调整。
+
+## 媒体查询
+
+在 CSS 中，[媒体查询](media-query.md)主要是通过 [`@media` 规则](media-query.md#css-media-规则)根据特定的设备或媒体类型控制 CSS 样式。关于媒体查询的具体细节请参考相关[文档](media-query.md)。
+
+## Less 扩展
+
+如果要使用 [less](https://lesscss.org/) 作为 CSS 预处理器，首先要通过一种[包管理器](/tutorials/nodejs.md)安装 `less` 包：
+
+::: code-tabs
+@tab npm
+```bash
+npm install -D less
+```
+
+@tab pnpm
+```bash
+pnpm i -D less
+
+@tab yarn
+```bash
+yarn add -D less
+```
+:::
+
+::: tip
+全局安装的 `less`（如 `npm install -g less`）不会被 Glyphix 打包工具识别，因此必须使用上面的方法在项目中安装 `less` 包。
+:::
+
+然后，你将可以在 UX 文件的 `<style>` 标签中使用 `lang="less"` 属性来指定样式类型：
+
+``` html
+<style lang="less">
+@color: #4D926F;
+
+.header {
+  color: @color;
+  .nested {
+    font-size: 0.75rem;
+  }
+}
+</style>
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/render/media-query.md
+
+# 媒体查询
+
+媒体查询允许开发者根据不同的设备类型使用不同的样式。目前媒体查询支持 CSS 的 `@media` 规则，尚不支持组件的 `media` 属性。
+
+## CSS `@media` 规则
+
+`@media` 规则的语法形式为
+``` css
+@media <查询条件> {
+  <css-rules>
+}
+```
+[`<查询条件>`](#查询条件)用于查询媒体类型和媒体特性，并且可以使用多种逻辑操作符进行组合。当媒体查询条件满足时 `<css-rules>` 中的 CSS 规则就会生效。例如
+``` css
+@media screen and (shape: circle) {
+  @import "circle.css";
+}
+```
+仅在圆形屏幕的设备上使用 `@import "circle.css"` 规则。`<css-rules>` 可以是任意的 CSS 规则，这包含任意数量的 `@import`、`@font-face`、选择器以及 `@media` 规则等。
+
+## 组件的 `media-query` 属性
+
+可以在任意组件上使用 `media-query` 属性来利用媒体[查询条件](#查询条件)决定组件是否被渲染。例如
+``` html
+<div media-query="(shape: circle)">
+  ...
+</div>
+```
+中的 `<div>` 是一个只会在圆形屏幕的设备上才会渲染的组件。
+
+`media-query` 属性只会在打包阶段进行处理，不符合媒体查询条件的组件会被直接删除掉。当需要用 `media-query` 属性选择的元素较为复杂时，可以考虑使用[模板宏](../component/template-macro.md)
+
+## 查询条件
+
+查询条件是一种表达式，它的结构如下：
+``` ebnf
+(* 媒体查询表达式 *)
+<query> := <query> and | or | , <query>  (* 可以使用 and or , 来组合逻辑 *)
+         | (not <query>) (* not 表达式 *)
+         | <media-type>  (* 媒体类型 *)
+         | (<feature>: <value>)
+         | (<feature> <relop> <value>)
+         | (<value> <relop> <feature> <relop> <value>)
+(* 关系运算符 *)
+<relop> := < | <= | > | >=
+```
+其中，`<media-type>` 是一种[媒体类型](#媒体类型)，`<feature>` 是任意一种[媒体特性](#媒体特性)，`<value>` 是该媒体特性支持的值。以下都是合法的查询条件表达式：
+``` css
+@media screen { ... }
+@media screen and (shape: rect) and (width < 500px) { ... }
+@media not (shape: rect) { ... } /* 这个等效于选择圆形屏 */
+```
+
+### 逻辑运算符
+
+使用 `and`、`or` 以及 `,` 可以组合多个查询条件表达式，使用 `not` 运算符可以对查询条件取反。还可以使用括号来提高运算符的优先级：
+``` css
+@media (not (width < 500px)) or (orientation: portrait) { ... }
+```
+各种运算符的含义如下：
+- 同时满足 `A` 和 `B` 时满足 `A and B`；
+- 满足 `A` 或 `B` 之一时满足 `A and B` 以及 `A, B`；
+- 满足 `A` 时不满足 `not A`，反之亦然。
+
+### 关系运算符
+
+某些媒体特性支持关系运算符，例如 `width`：
+``` css
+@media (width > 500px) { ... } /* 选择宽度大于 500px 的设备 */
+@media (400px < width <= 600px) { ... } /* 支持范围比较 */
+```
+关系运算符有 4 种：`<`、`<=`、`>`、`>=`。
+
+## 查询属性
+
+### 媒体类型
+
+媒体类型是一个名字，目前只支持 `screen` 媒体类型，`screen` 也是默认的媒体类型，因此可以不写。
+
+### 媒体特性
+
+#### `width`
+
+查询设备屏幕的宽度，支持关系运算符。值的单位必须为 `px`，例如 `500px`。
+
+#### `max-width`
+
+指定屏幕的最大宽度，值的单位必须是 `px`。`(max-width: 500px)` 等价于 `(width <= 500px)`。
+
+#### `min-width`
+
+指定屏幕的最小宽度，值的单位必须是 `px`。`(min-width: 500px)` 等价于 `(width >= 500px)`。
+
+#### `height`
+
+查询设备屏幕的高度，支持关系运算符。值的单位必须为 `px`，例如 `500px`。
+
+#### `max-height`
+
+指定屏幕的最大高度，值的单位必须是 `px`。`(max-height: 500px)` 等价于 `(height <= 500px)`。
+
+#### `min-height`
+
+指定屏幕的最小高度，值的单位必须是 `px`。`(min-height: 500px)` 等价于 `(height >= 500px)`。
+
+#### `shape`
+
+指定屏幕的形状，支持的值有：
+- `rect`：表示矩形屏幕；
+- `circle`：表示圆形屏幕；
+
+#### `aspect-ratio`
+
+查询屏幕的宽高比，支持关系运算符。值可以是一个数或者分数，例如 `1.5` 和 `3/2` 都表示宽高比为 $3 / 2$。
+
+#### `max-aspect-ratio`
+
+指定设备最大的屏幕宽高比。
+
+#### `min-aspect-ratio`
+
+指定设备最小的屏幕宽高比。
+
+#### `orientation`
+
+指定屏幕的形状，支持的值有：
+- `portrait`：表示竖屏设备；
+- `landscape`：表示横屏设备。
+
+#### `memory-profile`
+
+Memory profile（内存配置文件）属性是一个用于指导开发者在不同内存预算下裁减功能的参考值。它是根据设备的实际内存容量和屏幕分辨率等参数设置的。内存配置文件可以帮助开发者根据设定的内存预算进行功能优化和调整，以确保应用在低端设备上也能流畅运行。
+
+`memory-profile` 属性支持以下语法：
+``` ebnf
+ memory-profile := <number>   (* 内存配置大小，默认单位为 KiB *)
+                 | <number> K (* 内存配置大小，单位为 KiB *)
+                 | <number> M (* 内存配置大小，单位为 MiB，可以带有小数 *)
+```
+
+注意，`memory-profile` 并不是设备的真实内存容量。一般来说，该属性的值分档如下：
+- $2048$ ($2\rm M$)：小于 $2\rm MiB$ 的属于低端设备，应用应该砍掉鱼眼列表、有大量图片的长列表等。某些复杂的页面可能也需要简化或者砍掉。
+- $4096$ ($4\rm M$)：小于 $4\rm MiB$ 的属于中低端设备，应用中可以使用少量的鱼眼列表，但是不建议使用太长的带图片的列表。
+- $8192$ ($8\rm M$)：小于 $8\rm MiB$ 的属于中高端设备，基本可以使用所有的功能，但是容量更大时还可有性能提升。
+
+例如以下配体查询语句匹配内存配置文件在 $2{\rm MiB}\sim 4{\rm MiB}$ 之间的设备：
+
+``` css
+@media (2M < memory-profile <= 4M) {
+  /* 具体的 CSS rule-set */
+}
+```
+
+如果需要在 JavaScript 中获取设备的内存配置文件，请使用 `@system.device` 模块的 [`memoryProfile`](/api/system-device.md#memoryprofile) 属性。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/render/README.md
+
+# 渲染机制
+
+
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/render/rich-text.md
+
+# 富文本
+
+在使用流式布局时，[`a`](/components/a.md)、[`span`](/components/span.md) 以及 [`checkbox`](/components/checkbox.md) 等行内元素可以沿着行进行布局并且可以断行，其中 `span` 等组件的文本还能跨越多行进行布局，利用这一点可以实现富文本显示。
+
+## 纯文本显示
+
+我们先看一下 Glyphix 是怎样显示纯文本的。[`p`](/components/a.md) 和 [`text`](/components/text.md) 组件可以用于纯文本显示。只需要将文本字符串指定为这些组件的 `text` 属性即可：
+``` html
+<p text="plain text string." />
+<text text="plain text string." />
+```
+也支持 Web 的文本节点（即文本是元素的子节点）：
+``` html
+<p>plain text string."</p>
+<text>plain text string."</text>
+```
+Glyphix 会把组件的唯一文本子节点转换成 `text` 属性，因此这两种写法本质上是一致的。换言之只要自定义组件支持 `text` 属性，就可以像 `p` 组件那样使用文本子节点。
+
+## 富文本显示
+
+`p` 和 `text` 组件无法用于富文本，因为它们总是一个完整的盒子而不能跨越多行布局。要实现富文本，首先需要有一个流式布局的容器，然后应使用 `span` 等组件来显示文本。例如：
+``` html
+<div>
+  <span>rich&nbsp;</span>
+  <span style="color: red">text&nbsp;</span>
+  <span>string.</span>
+</div>
+```
+很多组件默认都使用流式布局，例如 `div`、`p` 等。简单起见，也可以省略 `<span>` 标签：
+``` html
+<div>
+  rich <span style="color: red">text</span> string.
+</div>
+```
+组件有多个子元素时，其中的文本子元素会自动转换成 `span` 组件。
+
+
+============================================================
+FILE_PATH: src/original_docs/framework/render/animation.md
 
 # 动画
 
@@ -4794,582 +5371,5 @@ export default {
   transform: translate(200px, 0) scale(0.75);
 }
 </style>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/render/media-query.md
-
-# 媒体查询
-
-媒体查询允许开发者根据不同的设备类型使用不同的样式。目前媒体查询支持 CSS 的 `@media` 规则，尚不支持组件的 `media` 属性。
-
-## CSS `@media` 规则
-
-`@media` 规则的语法形式为
-``` css
-@media <查询条件> {
-  <css-rules>
-}
-```
-[`<查询条件>`](#查询条件)用于查询媒体类型和媒体特性，并且可以使用多种逻辑操作符进行组合。当媒体查询条件满足时 `<css-rules>` 中的 CSS 规则就会生效。例如
-``` css
-@media screen and (shape: circle) {
-  @import "circle.css";
-}
-```
-仅在圆形屏幕的设备上使用 `@import "circle.css"` 规则。`<css-rules>` 可以是任意的 CSS 规则，这包含任意数量的 `@import`、`@font-face`、选择器以及 `@media` 规则等。
-
-## 组件的 `media-query` 属性
-
-可以在任意组件上使用 `media-query` 属性来利用媒体[查询条件](#查询条件)决定组件是否被渲染。例如
-``` html
-<div media-query="(shape: circle)">
-  ...
-</div>
-```
-中的 `<div>` 是一个只会在圆形屏幕的设备上才会渲染的组件。
-
-`media-query` 属性只会在打包阶段进行处理，不符合媒体查询条件的组件会被直接删除掉。当需要用 `media-query` 属性选择的元素较为复杂时，可以考虑使用[模板宏](../component/template-macro.md)
-
-## 查询条件
-
-查询条件是一种表达式，它的结构如下：
-``` ebnf
-(* 媒体查询表达式 *)
-<query> := <query> and | or | , <query>  (* 可以使用 and or , 来组合逻辑 *)
-         | (not <query>) (* not 表达式 *)
-         | <media-type>  (* 媒体类型 *)
-         | (<feature>: <value>)
-         | (<feature> <relop> <value>)
-         | (<value> <relop> <feature> <relop> <value>)
-(* 关系运算符 *)
-<relop> := < | <= | > | >=
-```
-其中，`<media-type>` 是一种[媒体类型](#媒体类型)，`<feature>` 是任意一种[媒体特性](#媒体特性)，`<value>` 是该媒体特性支持的值。以下都是合法的查询条件表达式：
-``` css
-@media screen { ... }
-@media screen and (shape: rect) and (width < 500px) { ... }
-@media not (shape: rect) { ... } /* 这个等效于选择圆形屏 */
-```
-
-### 逻辑运算符
-
-使用 `and`、`or` 以及 `,` 可以组合多个查询条件表达式，使用 `not` 运算符可以对查询条件取反。还可以使用括号来提高运算符的优先级：
-``` css
-@media (not (width < 500px)) or (orientation: portrait) { ... }
-```
-各种运算符的含义如下：
-- 同时满足 `A` 和 `B` 时满足 `A and B`；
-- 满足 `A` 或 `B` 之一时满足 `A and B` 以及 `A, B`；
-- 满足 `A` 时不满足 `not A`，反之亦然。
-
-### 关系运算符
-
-某些媒体特性支持关系运算符，例如 `width`：
-``` css
-@media (width > 500px) { ... } /* 选择宽度大于 500px 的设备 */
-@media (400px < width <= 600px) { ... } /* 支持范围比较 */
-```
-关系运算符有 4 种：`<`、`<=`、`>`、`>=`。
-
-## 查询属性
-
-### 媒体类型
-
-媒体类型是一个名字，目前只支持 `screen` 媒体类型，`screen` 也是默认的媒体类型，因此可以不写。
-
-### 媒体特性
-
-#### `width`
-
-查询设备屏幕的宽度，支持关系运算符。值的单位必须为 `px`，例如 `500px`。
-
-#### `max-width`
-
-指定屏幕的最大宽度，值的单位必须是 `px`。`(max-width: 500px)` 等价于 `(width <= 500px)`。
-
-#### `min-width`
-
-指定屏幕的最小宽度，值的单位必须是 `px`。`(min-width: 500px)` 等价于 `(width >= 500px)`。
-
-#### `height`
-
-查询设备屏幕的高度，支持关系运算符。值的单位必须为 `px`，例如 `500px`。
-
-#### `max-height`
-
-指定屏幕的最大高度，值的单位必须是 `px`。`(max-height: 500px)` 等价于 `(height <= 500px)`。
-
-#### `min-height`
-
-指定屏幕的最小高度，值的单位必须是 `px`。`(min-height: 500px)` 等价于 `(height >= 500px)`。
-
-#### `shape`
-
-指定屏幕的形状，支持的值有：
-- `rect`：表示矩形屏幕；
-- `circle`：表示圆形屏幕；
-
-#### `aspect-ratio`
-
-查询屏幕的宽高比，支持关系运算符。值可以是一个数或者分数，例如 `1.5` 和 `3/2` 都表示宽高比为 $3 / 2$。
-
-#### `max-aspect-ratio`
-
-指定设备最大的屏幕宽高比。
-
-#### `min-aspect-ratio`
-
-指定设备最小的屏幕宽高比。
-
-#### `orientation`
-
-指定屏幕的形状，支持的值有：
-- `portrait`：表示竖屏设备；
-- `landscape`：表示横屏设备。
-
-#### `memory-profile`
-
-Memory profile（内存配置文件）属性是一个用于指导开发者在不同内存预算下裁减功能的参考值。它是根据设备的实际内存容量和屏幕分辨率等参数设置的。内存配置文件可以帮助开发者根据设定的内存预算进行功能优化和调整，以确保应用在低端设备上也能流畅运行。
-
-`memory-profile` 属性支持以下语法：
-``` ebnf
- memory-profile := <number>   (* 内存配置大小，默认单位为 KiB *)
-                 | <number> K (* 内存配置大小，单位为 KiB *)
-                 | <number> M (* 内存配置大小，单位为 MiB，可以带有小数 *)
-```
-
-注意，`memory-profile` 并不是设备的真实内存容量。一般来说，该属性的值分档如下：
-- $2048$ ($2\rm M$)：小于 $2\rm MiB$ 的属于低端设备，应用应该砍掉鱼眼列表、有大量图片的长列表等。某些复杂的页面可能也需要简化或者砍掉。
-- $4096$ ($4\rm M$)：小于 $4\rm MiB$ 的属于中低端设备，应用中可以使用少量的鱼眼列表，但是不建议使用太长的带图片的列表。
-- $8192$ ($8\rm M$)：小于 $8\rm MiB$ 的属于中高端设备，基本可以使用所有的功能，但是容量更大时还可有性能提升。
-
-例如以下配体查询语句匹配内存配置文件在 $2{\rm MiB}\sim 4{\rm MiB}$ 之间的设备：
-
-``` css
-@media (2M < memory-profile <= 4M) {
-  /* 具体的 CSS rule-set */
-}
-```
-
-如果需要在 JavaScript 中获取设备的内存配置文件，请使用 `@system.device` 模块的 [`memoryProfile`](/api/system-device.md#memoryprofile) 属性。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/render/README.md
-
-# 渲染机制
-
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/render/rich-text.md
-
-# 富文本
-
-在使用流式布局时，[`a`](/components/a.md)、[`span`](/components/span.md) 以及 [`checkbox`](/components/checkbox.md) 等行内元素可以沿着行进行布局并且可以断行，其中 `span` 等组件的文本还能跨越多行进行布局，利用这一点可以实现富文本显示。
-
-## 纯文本显示
-
-我们先看一下 Glyphix 是怎样显示纯文本的。[`p`](/components/a.md) 和 [`text`](/components/text.md) 组件可以用于纯文本显示。只需要将文本字符串指定为这些组件的 `text` 属性即可：
-``` html
-<p text="plain text string." />
-<text text="plain text string." />
-```
-也支持 Web 的文本节点（即文本是元素的子节点）：
-``` html
-<p>plain text string."</p>
-<text>plain text string."</text>
-```
-Glyphix 会把组件的唯一文本子节点转换成 `text` 属性，因此这两种写法本质上是一致的。换言之只要自定义组件支持 `text` 属性，就可以像 `p` 组件那样使用文本子节点。
-
-## 富文本显示
-
-`p` 和 `text` 组件无法用于富文本，因为它们总是一个完整的盒子而不能跨越多行布局。要实现富文本，首先需要有一个流式布局的容器，然后应使用 `span` 等组件来显示文本。例如：
-``` html
-<div>
-  <span>rich&nbsp;</span>
-  <span style="color: red">text&nbsp;</span>
-  <span>string.</span>
-</div>
-```
-很多组件默认都使用流式布局，例如 `div`、`p` 等。简单起见，也可以省略 `<span>` 标签：
-``` html
-<div>
-  rich <span style="color: red">text</span> string.
-</div>
-```
-组件有多个子元素时，其中的文本子元素会自动转换成 `span` 组件。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/render/style-and-layout.md
-
-# 样式和布局
-
-Glyphix 的样式系统和 Web 技术中的 CSS 相似。通常直接在 UX 文件的 `<style>` 标签内定义 CSS。
-
-## 编写 CSS
-
-你可以在 `<style>` 标签内编写 CSS：
-
-``` html
-<style>
-  div { display: flex; }
-</style>
-```
-
-可以使用 `@import` 命令来导入 CSS 文件：
-
-``` html
-<style>
-  @import 'style.css';
-  div { display: flex; }
-</style>
-```
-
-Glyphix 还提供有限的内联样式支持，内联样式直接写在组件的 style 属性中：
-``` html
-<div style="background: #f00; color: #fff"> ... </div>
-```
-内联样式的值是一个字符串，你可以通过更改这个字符串来更新样式。支持在内联样式中使用的 [CSS 属性](/framework/generic/styles.md)会添加 <badge type="info" text="内联" /> 标签。
-
-::: warning
-当前版本的内联样式效率较低，只应将其作为 js 逻辑更新组件样式的解决方案，大量使用可能引起性能问题。一般情况下应该使用在 `<style>` 标签中定义 CSS 规则的方案。
-:::
-
-## 样式选择器
-
-目前，样式框架支持以下选择器：
-
-- class 选择器
-- type 选择器
-- id 选择器
-- 伪类（较少用到）
-- 伪元素（较少用到）
-- 后代选择器和直接后代选择器，例如 `div > .title` 或者 `div .title`
-- 复合选择器，如 `#id.class` 或者 `div.class`
-
-### class 选择器
-
-class 选择器会选中具有对应 class 属性的组件，组件可以具有多个 class 值，例如
-``` html
-<p class="ceil content">...</p>
-```
-会匹配以下两个样式定义：
-``` css
-.ceil {
-  background-color: #222;
-  border-radius: 12px;
-}
-
-.content {
-  font-size: 24px;
-  padding: 12px;
-}
-```
-
-### 组合选择器
-
-支持用 `,` 为 rule-set 指定多个选择器：
-``` css
-#id, .class, div {
-  display: flex;
-  flex-direction: column;
-  color: red;
-}
-```
-
-### 继承属性
-
-某些 CSS 属性可以从父级元素继承到子元素，以 `font-size` 为例：
-``` html
-<div>
-  <p>Text</p>
-</div>
-```
-
-``` css
-div {
-  font-size: 1.25rem;
-}
-```
-尽管没有对 `<p>` 元素设置 `font-size` 属性，它还是会显示 `1.25rem` 的字号，这是由于 `<p>` 元素从父级 `<div>` 处继承了字号设置。换言之，在一个容器中设置了可以继承的样式属性之后，所有的子元素也会获得该属性设置。但要注意 CSS 属性继承机制的优先级很低，只有在元素没有指定被继承的样式属性时才会采用继承的值。假设对上面的例子使用以下 CSS：
-``` css
-* {
-  font-size: 1rem;
-}
-div {
-  font-size: 1.25rem;
-}
-```
-由于 `*` 规则样式块的存在，现在 `<p>` 元素的字号会是 `1rem`，而不是采用继承值。
-
-在 [CSS 属性](/framework/generic/styles.md)文档中，支持继承的属性会添加 <badge type="info" text="继承" /> 标签。
-
-### 响应式支持
-
-目前 `class` 属性和 `id` 属性都不支持响应式，因此
-``` html
-<div class="{{expr}}" id="{{expr}}"> ... </div>
-```
-都不支持，只能直接写静态的 `class` 和 `id` 属性值。
-
-::: warning
-开发者要留意 `class` 和 `id` 不支持响应式属性的限制！
-:::
-
-## 颜色值
-
-### 颜色代码
-
-颜色值支持 `#` 字符开头的 RGB 或 RGBA 颜色代码，合法的颜色代码有：
-
-- `#RRGGBB[AA]`，例如 `#102000`，`#00ff0080`
-- `#RGB[A]`，例如 `#0f0`，`#ff08`
-
-如果颜色代码不包含 alpha 通道，那么该通道的值就是 `ff`（`#RRGGBB` 格式）或 `f`（`#RGB` 格式）。颜色代码中的每一位都是一个十六进制数，可用的字符为 `0-9`、`A-F` 和 `a-f`。`#RGB[A]` 是一种针对 `#RRGGBB[AA]` 代码的简写方法，例如 `#0f38` 的颜色和 `#00ff3388` 相同。
-
-### 颜色函数
-
-目前，CSS 块中支持用 `rgb()` 和 `rgba()` 函数定义颜色值。不支持 HSL 颜色格式。
-
-### 标准颜色名
-
-可以在 CSS 块中使用 Web 标准的颜色名，例如：
-``` css
-color: brown;
-color: lightgray;
-```
-
-### 内联样式中的颜色
-
-内联样式中只支持 `#` 开头的颜色代码，例如：
-``` html
-<p style="color: #ff00ff">...</p> <!-- 支持 -->
-<p style="color: gray">...</p> <!-- 不支持，无法解析 -->
-```
-
-## 长度
-
-长度值的通用格式为 `<value><unit>`，`value` 是长度的数值，`unit` 为长度单位，例如 `15px`。`value` 和 `unit` 之间不应添加空格。
-
-还支持一种特殊的长度值 `auto`。这个长度值没有具体的数值和单位，实际渲染中的长度由具体的场景和规则来确定。
-
-以下是可用的长度单位：
-
-- `px`：以像素作为长度单位
-- `pt`：将磅作为长度单位，一磅是 $1/72$ 英寸
-- `%`：百分比长度单位，具体的值依属性和布局不同会有不同的换算关系
-- [`rem`](/framework/application/font-config.md#rem-字号单位)：相对于系统默认字号的长度单位，例如 `1rem` 等于系统默认字号的尺寸，$1.5\rm rem$ 是前者的 $1.5$ 倍
-
-其中 `pt` 是一种绝对长度单位，例如 `72pt` 对应 $1''$ （英寸）或者 $25.4\rm mm$，这与设备无关。而 `px` 是与设备有关的，但并不直接对应物理像素，其换算关系请参考 [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) 字段说明。百分比长度单位通常相对于父元素和元素本身的尺寸来计算，例如 `width`、`margin` 等 CSS 属性的百分比值是按父元素的尺寸来计算的，而 `border-radius` 则是按照元素自身的尺寸来计算的。
-
-`rem` 单位专门用于字号（即 `font-size` 属性），这是一种简单的跨设备字体一致性方案。更多说明请参考 [`rem` 字号单位](/framework/application/font-config.md#rem-字号单位)。
-
-## 布局
-
-布局框架可以根据界面内容和屏幕的几何信息自动排列元素，开发者无需手动指定元素的位置和尺寸。布局框架是一种强大的机制，它可以让界面适用于不同分辨率或尺寸的设备，还可以处理变化的内容。Glyphix 的大部分原生组件支持两种自动布局模式：流式布局（flow layout）和弹性盒子布局（flexbox layout），同时也支持手动布局。某些原生组件具有强制的特殊布局，例如 [`swiper`](/components/swiper.md) 组件的子元素总是和视口一样大，而 [`stack`](/components/stack.md) 组件完全是用来提供堆叠布局的。
-
-流式布局和弹性盒子布局的概念来自于 Web 标准，但针对低性能设备做了调整。
-
-## 媒体查询
-
-在 CSS 中，[媒体查询](media-query.md)主要是通过 [`@media` 规则](media-query.md#css-media-规则)根据特定的设备或媒体类型控制 CSS 样式。关于媒体查询的具体细节请参考相关[文档](media-query.md)。
-
-## Less 扩展
-
-如果要使用 [less](https://lesscss.org/) 作为 CSS 预处理器，首先要通过一种[包管理器](/tutorials/nodejs.md)安装 `less` 包：
-
-::: code-tabs
-@tab npm
-```bash
-npm install -D less
-```
-
-@tab pnpm
-```bash
-pnpm i -D less
-
-@tab yarn
-```bash
-yarn add -D less
-```
-:::
-
-::: tip
-全局安装的 `less`（如 `npm install -g less`）不会被 Glyphix 打包工具识别，因此必须使用上面的方法在项目中安装 `less` 包。
-:::
-
-然后，你将可以在 UX 文件的 `<style>` 标签中使用 `lang="less"` 属性来指定样式类型：
-
-``` html
-<style lang="less">
-@color: #4D926F;
-
-.header {
-  color: @color;
-  .nested {
-    font-size: 0.75rem;
-  }
-}
-</style>
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/testing/api.md
-
-# API
-
-## 内容定位
-
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/framework/testing/README.md
-
-# 测试框架
-
-Glyphix 提供了一套应用的自动化测试框架，用于模拟用户操作并检查界面行为。该测试框架并不是随机模拟操作，而是需要开发者编写测试用例。
-
-## 基本概念
-
-Glyphix 的测试框架实际上是一组 JavaScript API，它们大体上实现以下功能：
-
-- 注册测试用例
-- 查找界面元素
-- 模拟用户操作或动作
-- 断言和验证逻辑
-
-### 测试步骤
-
-一个测试步骤的基本原理是**查找特定元素**、**执行模拟动作**和（可选的）**验证内容**。例如：
-
-1. 查找一个 CSS 类为 `play-button` 的元素；
-2. 点击这个元素；
-3. 不验证内容。
-
-在实际界面中，`.play-button` 也许是一个播放按钮，点击此按钮后会开始播放音乐。这个测试对应的 JavaScript 代码如下：
-
-```js
-await tc.getByClass("play-button").click();
-```
-
-该测试代码会自动等待 `.play-button` 元素出现并将其移动到界面视口内，然后再点击该元素。这些测试 API 会自动等待界面中的动画或者手势，并且会在点击手势完全完成后兑现 `await`。因此，通常不需要手动移动元素，也不需要显式地等待操作完成。
-
-### 查找元素
-
-测试框架提供了一系列接口来查找界面中的元素，例如：
-
-- `tc.getByClass()`：根据类名查找元素；
-- `tc.getByTag()`：根据 tag 名查找元素。
-
-这些接口都会等待元素出现并会在下一步操作之前尝试将元素移动到可视区域内。
-
-### 模拟用户操作
-
-## 开始编写测试
-
-### 测试用例文件
-
-Glyphix 的测试用例是一些 JavaScript 代码，并且存储在应用的资源包内。建议将测试用例单独存放在项目的 `src/tests` 目录下，例如：
-
-```shell
-<app-name>
-├─ README.md         # 项目自述文件
-└─ src               # 项目的源代码目录
-    ├─ app.js        # app 入口脚本文件
-    ├─ manifest.json # 配置应用基本信息
-    ├─ tests         # 存放所有的测试用例
-    │  └─ spec.js    # 测试用例代码
-    └─ Main          # 存放主页面的目录
-        └─ index.ux  # 主页面的界面描述文件
-```
-
-这个例子中的测试代码就是 `src/tests/spec.js` 文件，还可以根据需要创建多个测试文件。
-
-::: tip
-测试用例的文件名通常是 spec，即 specification 的缩写。spec 文件用于定义和描述软件的预期行为及其功能，通常包含一组测试用例，用于验证软件是否按照预期工作。
-:::
-
-### 编写测试用例
-
-假设我们的应用有一个主页面，并且存在一个类名为 `clickable` 的 `span` 元素：
-
-```html
-<div>
-  <span class="clickable" on:click="console.log('click span')"> click me </span>
-</div>
-```
-
-现在，我们要编写一个自动测试脚本，它会点每隔一秒钟点击一次 `span` 组件，并且在点击 3 次之后结束测试。为此，我们要在 `src/tests/spec.js` 中添加以下代码：
-
-```js
-// 导入 @system.test 模块提供测试框架的 API
-import tc from "@system.test";
-
-// 注册一个名为 click-test 的自动化测试用例
-tc.testcase("click-test", async () => {
-  for (let i = 0; i < 3; ++i) {
-    // 查找 class="clickable" 的元素并点击它
-    await tc.getByClass("clickable").click();
-    // 等待一秒钟
-    await tc.wait(1);
-  }
-});
-```
-
-接下来还需要注册这个测试脚本并启动测试。
-
-### 注册测试脚本
-
-一般的代码中通常会使用 `import 'tests/spec.js'` 这样的语句来引入脚本，但这会导致总是加载该 JavaScript 模块。为了优化应用的加载速度和内存占用，我们不需要在非测试环境中引入这些脚本。为此，你可以在 `src/app.js` 文件中的 App 对象中注册测试脚本：
-
-```js
-export default {
-  // 使用 testsuite 属性来注册测试脚本列表
-  testsuite: ["tests/spec.js"],
-  onCreate() {
-    /* ... */
-  },
-  // ...
-};
-```
-
-这种方法不会立即导入这些测试脚本，而是会延迟到执行测试的时候再导入。因此在不执行测试的时候，使用 `testsuite` 属性并不会增加开销，开发者也无需考虑优化加载测试脚本带来的性能负担。
-
-::: warning
-即便只有一个测试脚本，`testsuite` 属性也要是一个 `Array` 对象，而测试脚本的路径包含在其中，就像本节的示例一样。测试脚本的路径总是相对于 `app.js` 文件所在的目录，你也可以使用绝对路径，例如 `/tests/spec.js`。
-:::
-
-## 运行测试用例
-
-### 模拟器
-
-要运行测试用例，应使用 `gx emu -i` 命令来启动模拟器。你会在终端中看到这样的信息：
-
-```shell
-❯ gx emu -i
-[emu] Open inspector http://localhost:14200 in browser.
-```
-
-接下来在浏览器中打开 `http://localhost:14200` 链接，并进入“Console” 选项卡，然后在底部的“RPC”栏输入以下文本：
-```json
-{"fn": "test.start", "name": "click-test"}
-```
-即可启动前面编写的 `click-test` 测试用例，此时你应该在日志浏览器中看到以下日志：
-
-```log
-19:14:33.320 [inspector] test com.example.app . click-test started
-19:14:33.640 [js] 'click span'
-19:14:35.090 [js] 'click span'
-19:14:36.510 [js] 'click span'
-19:14:37.600 [tester] com.example.app testcase click-test finished
-```
-
-这表明测试已经成功执行，并且 `span` 元素确实被点击了 $3$ 次。
 
 

@@ -1,9 +1,9 @@
 ---
 icon: nodejs
 ---
-# Node.js Package Manager
+# Node.js Package Managers
 
-In addition to being used independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm or yarn. The prerequisite is to install the `glyphix` package:
+In addition to standalone usage, the `gx` build tool can be used in conjunction with JavaScript package managers such as npm, pnpm, or yarn. The prerequisite is installing the `glyphix` package:
 
 ::: code-tabs
 @tab npm
@@ -21,31 +21,31 @@ yarn add -D glyphix
 ```
 :::
 
-Otherwise, you may encounter an error like this when executing `gx build`:
+Otherwise, you may encounter an error like this when running `gx build`:
 ```bash
 $ gx build
 fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
 ```
 
-The main benefits of using the JavaScript package manager in the development of Glyphix applications are as follows:
-- Use TypeScript instead of JavaScript as the development language to provide type safety and a better development experience
-- Use JavaScript libraries in the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
-- Use tools such as ESLint and Prettier to improve code quality and development efficiency
-- Facilitates team collaboration and project maintenance
+Using a JavaScript package manager in Glyphix application development mainly offers the following benefits:
+- Use TypeScript instead of JavaScript as the development language, providing type safety and a better development experience
+- Use JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
+- Use tools like ESLint and Prettier to improve code quality and development efficiency
+- Facilitate team collaboration and project maintenance
 
 ::: warning
-Currently, only common JavaScript or TypeScript dependencies are managed through the package manager, and Glyphix components cannot be reused. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that rely on the DOM, Node.js-specific APIs, or are too bulky.
+Currently, only standard JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
 :::
 
 ::: tip
-If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly use a command like `gx build` to package it, otherwise you need to add `scripts` configuration in `package.json`.
+If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly run commands like `gx build` to bundle the app; otherwise, you need to add `scripts` configuration in `package.json`.
 :::
 
-## Project configuration
+## Project Configuration
 
-### `package.json` configuration
+### `package.json` Configuration
 
-When using the Node.js package manager, it is recommended to add the necessary scripts and configuration in `package.json`:
+When using a Node.js package manager, it is recommended to add the necessary scripts and configurations to `package.json`:
 
 ```json
 {
@@ -63,7 +63,7 @@ When using the Node.js package manager, it is recommended to add the necessary s
 }
 ```
 
-### `tsconfig.json` configuration
+### `tsconfig.json` Configuration
 
 If using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
 
@@ -97,30 +97,30 @@ If using TypeScript, you need to create a `tsconfig.json` file in the project ro
 ```
 
 ::: info
-The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code prompts.
+The Glyphix build tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code completion.
 :::
 
-## `glyphix.config.js` configuration
+## `glyphix.config.js` Configuration
 
-It is recommended to create a `glyphix.config.js` file in the project root directory (`src/` or the directory where `package.json` is located) to customize packaging options:
+It is recommended to create a `glyphix.config.js` file in the project root directory (the directory containing `src/` or `package.json`) to customize build options:
 ```js
 module.exports = {
-  minify: false, // Turn off code compression to facilitate debugging and obtain source code line numbers
+  minify: false, // Disable code minification for easier debugging with source line numbers
 };
 ```
 If you use TypeScript, you can create a `glyphix.config.ts` file instead.
 
 ::: tip
-Be sure to create this file and configure `minify: false`, otherwise the packaged code will be compressed and obfuscated, resulting in the inability to correspond to the source code line number during debugging.
+Be sure to create this file and configure `minify: false`; otherwise, the bundled code will be minified and obfuscated, making it impossible to map back to source line numbers during debugging.
 :::
 
 ## Using TypeScript
 
-The Glyphix framework offers experimental TypeScript support, allowing you to take advantage of type safety and modern JavaScript syntax in app development.
+The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in application development.
 
-### Basic component example
+### Basic Component Example
 
-Here's an example of a component written in TypeScript:
+Below is an example of a component written in TypeScript:
 
 ```html
 <template>
@@ -141,13 +141,13 @@ export default defineComponent({
 </script>
 ```
 
-Compared with the default JavaScript component script, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to mark the language type as TypeScript.
+Compared to default JavaScript component scripts, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
 2. Import the `defineComponent` function from the `glyphix` module.
-3. The component object to be exported should be used as a parameter of `defineComponent`, and the return value of this function should be exported.
+3. Pass the component object to be exported as an argument to `defineComponent`, and export the return value of this function.
 
-After using TypeScript, the `defineComponent` function will make code hints and type checking in the IDE more accurate.
+After using TypeScript, the `defineComponent` function will make code completion and type checking in the IDE more accurate.
 
 ### `app.ts`
 
-Rename `app.js` to `app.ts` to use the TypeScript application entry file, which will be processed automatically by the packaging tool.
+Simply rename `app.js` to `app.ts` to switch to a TypeScript application entry file, and the build tool will handle it automatically.

@@ -7,9 +7,9 @@ FILE_PATH: src/transl/EN/tutorials/nodejs.md
 ---
 icon: nodejs
 ---
-# Node.js Package Manager
+# Node.js Package Managers
 
-In addition to being used independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm or yarn. The prerequisite is to install the `glyphix` package:
+In addition to standalone usage, the `gx` build tool can be used in conjunction with JavaScript package managers such as npm, pnpm, or yarn. The prerequisite is installing the `glyphix` package:
 
 ::: code-tabs
 @tab npm
@@ -27,31 +27,31 @@ yarn add -D glyphix
 ```
 :::
 
-Otherwise, you may encounter an error like this when executing `gx build`:
+Otherwise, you may encounter an error like this when running `gx build`:
 ```bash
 $ gx build
 fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
 ```
 
-The main benefits of using the JavaScript package manager in the development of Glyphix applications are as follows:
-- Use TypeScript instead of JavaScript as the development language to provide type safety and a better development experience
-- Use JavaScript libraries in the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
-- Use tools such as ESLint and Prettier to improve code quality and development efficiency
-- Facilitates team collaboration and project maintenance
+Using a JavaScript package manager in Glyphix application development mainly offers the following benefits:
+- Use TypeScript instead of JavaScript as the development language, providing type safety and a better development experience
+- Use JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
+- Use tools like ESLint and Prettier to improve code quality and development efficiency
+- Facilitate team collaboration and project maintenance
 
 ::: warning
-Currently, only common JavaScript or TypeScript dependencies are managed through the package manager, and Glyphix components cannot be reused. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that rely on the DOM, Node.js-specific APIs, or are too bulky.
+Currently, only standard JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
 :::
 
 ::: tip
-If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly use a command like `gx build` to package it, otherwise you need to add `scripts` configuration in `package.json`.
+If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly run commands like `gx build` to bundle the app; otherwise, you need to add `scripts` configuration in `package.json`.
 :::
 
-## Project configuration
+## Project Configuration
 
-### `package.json` configuration
+### `package.json` Configuration
 
-When using the Node.js package manager, it is recommended to add the necessary scripts and configuration in `package.json`:
+When using a Node.js package manager, it is recommended to add the necessary scripts and configurations to `package.json`:
 
 ```json
 {
@@ -69,7 +69,7 @@ When using the Node.js package manager, it is recommended to add the necessary s
 }
 ```
 
-### `tsconfig.json` configuration
+### `tsconfig.json` Configuration
 
 If using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
 
@@ -103,30 +103,30 @@ If using TypeScript, you need to create a `tsconfig.json` file in the project ro
 ```
 
 ::: info
-The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code prompts.
+The Glyphix build tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code completion.
 :::
 
-## `glyphix.config.js` configuration
+## `glyphix.config.js` Configuration
 
-It is recommended to create a `glyphix.config.js` file in the project root directory (`src/` or the directory where `package.json` is located) to customize packaging options:
+It is recommended to create a `glyphix.config.js` file in the project root directory (the directory containing `src/` or `package.json`) to customize build options:
 ```js
 module.exports = {
-  minify: false, // Turn off code compression to facilitate debugging and obtain source code line numbers
+  minify: false, // Disable code minification for easier debugging with source line numbers
 };
 ```
 If you use TypeScript, you can create a `glyphix.config.ts` file instead.
 
 ::: tip
-Be sure to create this file and configure `minify: false`, otherwise the packaged code will be compressed and obfuscated, resulting in the inability to correspond to the source code line number during debugging.
+Be sure to create this file and configure `minify: false`; otherwise, the bundled code will be minified and obfuscated, making it impossible to map back to source line numbers during debugging.
 :::
 
 ## Using TypeScript
 
-The Glyphix framework offers experimental TypeScript support, allowing you to take advantage of type safety and modern JavaScript syntax in app development.
+The Glyphix framework provides experimental TypeScript support, allowing you to enjoy the benefits of type safety and modern JavaScript syntax in application development.
 
-### Basic component example
+### Basic Component Example
 
-Here's an example of a component written in TypeScript:
+Below is an example of a component written in TypeScript:
 
 ```html
 <template>
@@ -147,16 +147,16 @@ export default defineComponent({
 </script>
 ```
 
-Compared with the default JavaScript component script, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to mark the language type as TypeScript.
+Compared to default JavaScript component scripts, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
 2. Import the `defineComponent` function from the `glyphix` module.
-3. The component object to be exported should be used as a parameter of `defineComponent`, and the return value of this function should be exported.
+3. Pass the component object to be exported as an argument to `defineComponent`, and export the return value of this function.
 
-After using TypeScript, the `defineComponent` function will make code hints and type checking in the IDE more accurate.
+After using TypeScript, the `defineComponent` function will make code completion and type checking in the IDE more accurate.
 
 ### `app.ts`
 
-Rename `app.js` to `app.ts` to use the TypeScript application entry file, which will be processed automatically by the packaging tool.
+Simply rename `app.js` to `app.ts` to switch to a TypeScript application entry file, and the build tool will handle it automatically.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/name-spec.md
@@ -164,13 +164,13 @@ FILE_PATH: src/transl/EN/tutorials/name-spec.md
 ---
 icon: code-tags-check
 ---
-# Component naming convention
+# Component Naming Conventions
 
-This document describes the mandatory naming conventions and recommended naming styles for component frameworks. Among them, the mandatory naming convention has mandatory requirements. If not followed, the effect may not meet the expectations. Using the recommended naming convention ensures maximum compatibility.
+This document describes the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strict requirements, and non-compliance may lead to unexpected behavior. Using the recommended naming conventions ensures maximum compatibility.
 
-## Template naming convention
+## Template Naming Conventions
 
-Tag names in templates must be kebab-case or PascalCase:
+Tag names in templates must be named in kebab-case or PascalCase:
 ``` html
 <Button></Button>
 <button></button>
@@ -178,20 +178,19 @@ Tag names in templates must be kebab-case or PascalCase:
 <ScrollArea></ScrollArea>
 ```
 
-Attribute names must be dash or camelCase nomenclature:
+Attribute names must be in kebab-case or camelCase:
 ``` html
 <component prop-name="expr"></component>
 <component propName="expr"></component>
 ```
 
-It is recommended to use the dash nomenclature that complies with web standards.
+It is recommended to consistently use kebab-case, which aligns with Web standards.
 
-## JavaScript code naming convention
+## JavaScript Code Naming Conventions
 
+Component names in JavaScript code must use PascalCase, while the corresponding kebab-case names are used in templates.
 
-Component names in JavaScript code must be Pascal naming, while the corresponding dash names are used in templates.
-
-Component property names in JavaScript code must be camelCase:
+Component property names in JavaScript code must use camelCase:
 ``` js
 export default {
   data: {
@@ -199,17 +198,16 @@ export default {
   }
 }
 ```
-These attribute names will be automatically converted into corresponding dash names in the template code.
+These property names will automatically be converted to the corresponding kebab-case names in template code.
 
-## File name naming convention
+## File Naming Conventions
 
-The UX file must use the same name as the component, which is Pascal naming. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute should be named using Pascal naming or a dash:
+UX files must use the same name as the component, which means PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, while the `name` attribute uses PascalCase or kebab-case:
 ``` html
 <import src="path/to/UxFile" name="UxFile"/>
 <import src="path/to/UxFile" name="ux-file"/>
 ```
-In fact, the naming requirements of the `name` attribute are consistent with the tag names in the template.
-
+In fact, the naming requirements for the `name` attribute are consistent with the tag names in templates.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/qa.md
@@ -217,176 +215,175 @@ FILE_PATH: src/transl/EN/tutorials/qa.md
 ---
 icon: help-circle-outline
 ---
-# FAQ
+# Frequently Asked Questions
 
-## Packaging tools
+## Bundling Tools
 
-### Project build issues
+### Project Build Issues
 
-#### `Lisp Error: thread killed` error report
+#### `Lisp Error: thread killed` Error
 
-The specific phenomenon is that an error message similar to the following appears:
+Specifically, an error message similar to the following appears:
 
 ``` log
 [ 47%] Process image src/assets/images/frame1.png
 error: Lisp Error: thread killed
 ```
 
-This problem is due to a previous build error, which caused the image conversion build operation being executed to be cancelled. You only need to fix the `fatal` error reporting build operation to resume without special processing.
+This issue is caused by an error in a preceding build task, which causes the ongoing image conversion build task to be canceled. Simply fix the build task that threw the `fatal` error to resolve it; no special handling is required for this error itself.
 
 ### Emulator
 
-#### Simulator default language
+#### Default Emulator Language
 
-The default language of the simulator is `zh-CN`. Therefore, if you add the [Internationalization](/framework/component/i18n.md) configuration, the `zh-CN.json` translation file will be used by default. To run the simulator with the `gx` command you can use the `-l` or `--language` option to specify the language:
+The default language for the emulator is `zh-CN`. Therefore, if you have added [i18n](/framework/component/i18n.md) configurations, the `zh-CN.json` translation file will be used by default. When running the emulator with the `gx` command, you can use the `-l` or `--language` option to specify the language:
 ``` shell
 gx emu -l en-US # Use American English
 ```
-You can also change the language dynamically while the emulator is running using the inspector debugging tool.
-
+You can also dynamically change the language using the inspector debugging tool while the emulator is running.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/quick-orientation.md
 
 ---
-title: Quick View: From Web to Glyphix
+title: Quick Start: From Web to Glyphix
 icon: compass
 ---
 
-# Development Quick Tour: From Web to Glyphix
+# Quick Start: From Web to Glyphix
 
-This document is designed for developers familiar with web front-ends (specifically Vue.js). We will skip the basic grammar teaching and go directly to the core mechanism of the Glyphix framework to help you quickly establish a correct mental model.
+This document is designed for developers familiar with Web front-end development (especially Vue.js). We will skip basic syntax tutorials and jump directly into the core mechanisms of the Glyphix framework to help you quickly build the correct mental model.
 
-## Core concepts and operating environment
+## Core Concepts and Runtime Environment
 
-Glyphix is ​​an application framework that runs on MCU (microcontroller) devices. Although it is developed using HTML/CSS/JS, it is not a browser. This framework is used to develop complete applications instead of refreshable pages. Each application runs in an independent sandbox container.
+Glyphix is an application framework running on MCU (Microcontroller Unit) devices. Although it uses HTML/CSS/JS for development, it is **not** a browser. This framework is used to build complete applications rather than refreshable web pages, and each application runs in an independent sandbox container.
 
-There are several core differences you need to understand:
-- **No DOM**: The bottom layer is directly rendered by the C++ native engine, and there is no DOM tree.
-- **No Web API**: Browser APIs such as `window`, `document`, `localStorage`, etc. are not supported. System capabilities (network, storage, sensors) are provided through `@system.*` modules.
-- **JS Engine**: Uses a lightweight JS engine (supports ES6 standard), but is extremely memory-constrained.
+You need to understand the following core differences:
+- **No DOM**: The underlying layer is rendered directly by a native C++ engine; there is no DOM tree.
+- **No Web APIs**: Browser APIs such as `window`, `document`, and `localStorage` are not supported. System capabilities (network, storage, sensors) are provided via `@system.*` modules.
+- **JS Engine**: It uses a lightweight JS engine (supporting ES6 standards), but memory is extremely limited.
 
-### Resource limits
+### Resource Constraints
 
-Resource limitations are the biggest difference with web development. MCU devices typically have only a few MB of RAM. This means don't use network requests to load very large JSON data, or directly [`fetch`](../api/system-fetch.md) an image. Please keep the following points in mind:
-- You can use the [`@system.request`](../api/system-request.md) module to download resources as files, and `fetch` will load the response into memory.
-- Image resources are usually stored in the application package, and the size matches the screen resolution as much as possible.
-- **Background Freeze**: After the application enters the background (`onHide`), it will usually be suspended or destroyed by the system within tens of seconds. Please note the save status.
+Resource constraints are the biggest difference compared to Web development. The RAM of MCU devices is typically only a few megabytes. This means you should not use network requests to load massive JSON data or directly [`fetch`](../api/system-fetch.md) an image. Keep the following points in mind:
+- You can use the [`@system.request`](../api/system-request.md) module to download resources as files; `fetch` loads the response directly into memory.
+- Image resources are usually stored inside the application package, and their dimensions should match the screen resolution as closely as possible.
+- **Background Freezing**: After an application enters the background (`onHide`), it will typically be suspended or destroyed by the system within a few tens of seconds. Please make sure to save the application state.
 
-### Equipment form
+### Device Form Factors
 
-Glyphix apps typically run on small-screen devices such as smartwatches. Watch screen sizes are usually around 1.5 to 2 inches, with a typical resolution of 466×466 pixels, but round and rectangular screens exist. Lower-end devices may have lower pixel density, but the dimensions will be essentially similar. Such devices often use touch screens for interaction, which may support physical buttons or knobs, and the system handles most interaction details transparently.
+Glyphix applications typically run on small-screen devices such as smartwatches. Watch screens are usually around 1.5 to 2 inches, with a typical resolution of 466×466 pixels, though both circular and rectangular screens exist. Lower-end devices may have lower pixel density, but their dimensions are generally similar. These devices commonly interact via touchscreens and may support physical buttons or rotating crowns; the system transparently handles most interaction details.
 
-Simulators are usually used for development and debugging, because the real machine deployment and debugging process is still fragmented and takes a long time.
+Emulators are typically used for development and debugging, as physical device deployment and debugging workflows are still relatively fragmented and time-consuming.
 
-### Typical project structure
+### Typical Project Structure
 
-This is our recommended project file structure, which is also the standard structure of quick applications:
+This is our recommended project file structure, which is also the standard structure for Quick Apps:
 ```bash
 src/
-├─ manifest.json # Application manifest: configuration permissions, registration page routing
-├─ app.js # Application entry: global life cycle (onCreate, onDestroy)
-├─ pages/ # Page directory
-│ └─ Main/
-│ └─ index.ux # Page component
-└─ assets/ # public resources
+├─ manifest.json  # Application manifest: configure permissions and register page routes
+├─ app.js         # Application entry point: global lifecycles (onCreate, onDestroy)
+├─ pages/         # Pages directory
+│  └─ Main/
+│     └─ index.ux # Page component
+└─ assets/        # Common assets
   └─ icon.png
 ```
-You can introduce the [Node.js](nodejs.md) tool chain to manage dependencies as needed. The directory structure can also be adjusted as needed, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must be fixed at this location.
+You can introduce the [Node.js](nodejs.md) toolchain to manage dependencies as needed. You can also adjust the directory structure as required, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must remain in these fixed locations.
 
 ## UI Development
 
-Glyphix uses the [`.ux`](../framework/component/README.md) single-file component (similar to Vue SFC), which is similar in style to the Vue Options API, but there are significant differences.
+Glyphix adopts [`.ux`](../framework/component/README.md) single-file components (similar to Vue SFC), with a style close to the Vue Options API, but with significant differences.
 
-### Flexbox layout first
+### Flexbox Layout First
 
-The web defaults to a flow layout (Flow Layout), and the Glyphix page defaults to a stacked layout: if you put two divs on the page, they will overlap instead of being arranged one above the other. This is because this framework supports the use of multiple root nodes in `<template>`, for example:
+Web defaults to Flow Layout, whereas Glyphix pages default to a stacked layout: if you place two `div` elements on a page, they will **overlap** rather than be arranged vertically. This is because the framework supports multiple root nodes in `<template>`, for example:
 ```html
 <template>
   <image class="background" src="/assets/bg.png" />
   <div class="content"> ... </div>
 </template>
 ```
-The default stacked layout is usually very suitable for this scenario.
+The default stacked layout is usually very suitable for this kind of scenario.
 
-Although containers such as `div` use fluid layout by default, it is recommended to use Flexbox for layout control. Most containers should explicitly declare `display: flex`, combined with `flex-direction` to control the arrangement of child elements.
+Although containers like `div` default to flow layout, Flexbox is recommended for layout control. Most containers should explicitly declare `display: flex`, combined with `flex-direction` to control child element layout.
 
-Considering that device screen sizes vary greatly, please pay special attention to the use of length units:
-- Use `px` units in smaller sizes, which are logical pixels and automatically scale based on screen density.
-- Fonts should always use `rem` units, which are baselined by the device manufacturer and more consistent with system UX specifications.
-- You can use percentage (`%`) units to implement responsive layout, but there are currently many limitations and defects, so please pay attention to debugging.
+Given the significant variations in device screen sizes, pay special attention to the use of length units:
+- Use `px` units for small dimensions; it represents logical pixels and scales automatically based on screen density.
+- Fonts should always use `rem` units, whose baseline is defined by device manufacturers to better align with system UX consistency standards.
+- Percentage (`%`) units can be used to achieve responsive layouts, but there are currently many limitations and flaws, so please be careful when debugging.
 
-Since the screen is too small, you may specifically need the [`scroll`](../components/scroll.md) component to implement the scroll area. Unlike the web, the `div` container itself does not support scrolling and cannot be controlled using the `overflow` property.
+Because screens are very small, you may particularly need the [`scroll`](../components/scroll.md) component to create scrollable areas. Unlike the Web, `div` containers themselves do not support scrolling, nor can they be controlled using the `overflow` property.
 
-### Template syntax differences
+### Template Syntax Differences
 
-Although it looks like a Vue template, please note the following differences:
-- Commands without `v-` prefix: such as `<div if="show">` or `<div for="item in items">`
-- Event binding can be done with `on` or `@`, such as: `<p on:click="handler">`
-- Text components such as `<p>` must be used: `<text>Hello</text>` can be displayed normally, but `<div>Hello</div>` will not render anything.
-- Supports using `model:prop="state"` or `::prop="state"` [two-way binding](../framework/commands/model.md) for any component attribute, as long as an event with the same name as the attribute is triggered.
+Although it looks like Vue templates, note the following differences:
+- Directives do not have the `v-` prefix: e.g., `<div if="show">` or `<div for="item in items">`.
+- Event binding can use `on` or `@`: e.g., `<p on:click="handler">`.
+- Text components like `<p>` must be used: `<text>Hello</text>` renders correctly, but `<div>Hello</div>` will not render any content.
+- Supports [two-way binding](../framework/commands/model.md) on any component property using `model:prop="state"` or `::prop="state"`, as long as an event with the same name as the property is triggered.
 
-### Style restrictions
+### Style Limitations
 
 CSS support is a subset:
-- Supports classes (`.class`), IDs (`#id`), tags (`div`) and descendants (`.a .b`). **Not supported** Complex relationship selectors such as `~`, `+`, `>`, etc.
-- **Effect limitations**: Gradient, shadow and other effects are not supported. `transition` animation is not supported yet.
-- **Performance Limitation**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none` and is recommended to be left as default.
-- Currently there is no support for dynamic `class` binding, nor for CSS variables.
+- Supports class (`.class`), ID (`#id`), tag (`div`), and descendant (`.a .b`). Complex combinators such as `~`, `+`, and `>` are **not supported**.
+- **Visual effect limitations**: Gradients, shadows, etc., are not supported. `transition` animations are currently not supported.
+- **Performance limitations**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none`, and keeping the default is recommended.
+- Dynamic `class` binding and CSS variables are currently not supported.
 
 ## Components and Logic
 
-### Script model
+### Script Model
 
-Component scripts are very close to the Vue Options API, and the following demonstration points out the main differences:
+Component scripts are very close to the Vue Options API; the following example highlights the main differences:
 ```js
 export default {
-  // Data model (Data), no need to declare attributes, data attributes are automatically exported as attributes
+  // Data model (Data): no need to declare props, data properties are automatically exported as props
   data: {
-    count: 0, // Modifying this.count will automatically trigger a view update
+    count: 0, // Mutating this.count automatically triggers view updates
   },
-  timer: null, // Non-responsive fields are defined directly on the component instance, or they do not need to be declared.
-  // life cycle
-  onInit() {}, // The data has been initialized and network requests can be initiated.
-  onReady() {}, // The interface has been rendered
-  onDestroy() {}, // Be sure to clean up the timer and subscribe to events here
+  timer: null, // Non-reactive fields defined directly on the component instance (or left undeclared)
+  // Lifecycle hooks
+  onInit() {}, // Data initialized; network requests can be initiated
+  onReady() {}, // UI rendering completed
+  onDestroy() {}, // Be sure to clear timers and event subscriptions here
 
-//Methods, defined directly in the component object
+  // Methods, defined directly in the component object
   handleTap() {
     this.count++
-    // Trigger custom events to the parent component
+    // Emit custom event to parent component
     this.$emit('change', { value: this.count })
   }
 }
 ```
-The fields in the `data` object are responsive properties, which currently only support JSON-compatible types (`Date`, `Map`, `Set`, etc. are not supported). If responsive updates are not required, it is recommended to define the field on the component instance (`this`).
+Fields in the `data` object are reactive properties, which currently only support JSON-compatible types (no `Date`, `Map`, `Set`, etc.). If reactive updates are not required, it is recommended to define fields on the component instance (`this`).
 
 ::: tip
-Do not use the `methods` object to wrap methods, just define them directly in the component object. There is no need to use `props` to define properties, fields in the `data` object are automatically exported as properties.
+Do not wrap methods inside a `methods` object; define them directly in the component object. You also do not need to use `props` to define properties—fields in the `data` object are automatically exported as props.
 
-Nor can you use DOM APIs such as `document.getElementById` to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get the element instance with the specified ID.
+DOM APIs like `document.getElementById` cannot be used to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get an element instance with a specified ID.
 :::
 
-### Pages and routing
+### Pages and Routing
 
-A Glyphix application consists of multiple pages, which are navigated through routes. All pages need to be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field in `manifest.json`. Page components are similar to normal components, but support `onShow` and `onHide` lifecycle hooks.
+Glyphix applications consist of multiple pages, navigated via routing. All pages must be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field in `manifest.json`. Page components are similar to regular components, but they support `onShow` and `onHide` lifecycle hooks.
 
-Use the `system.router` system module to jump:
+Use the `system.router` system module for navigation:
 ```js
 import router from '@system.router'
 
-// Jump and pass parameters
+// Navigate and pass parameters
 router.push({ uri: 'pages/Detail', params: { id: 123 } })
 ```
 ::: tip
-Don't use other routing libraries, and don't pretend to be developing a single page application (SPA). Otherwise, existing functions such as transition effects and page stack management will not be available.
+Do not use other routing libraries, and do not pretend to build a single-page application (SPA). Otherwise, you won't be able to utilize existing features such as transition animations and page stack management.
 :::
 
-### TypeScript support
+### TypeScript Support
 
-If you use Node.js scaffolding to create a project, you can use TypeScript in the project for development after installing dependencies such as `glyphix` and `typescript` using npm, pnpm, etc.
+If you create a project using the Node.js scaffolding tool and install dependencies such as `glyphix` and `typescript` via npm, pnpm, etc., you can use TypeScript for development.
 
-For `.ux` single-file components, you can enable TypeScript support by adding the `lang="ts"` attribute on the `<script>` tag. For example:
+For `.ux` single-file components, you can add the `lang="ts"` attribute to the `<script>` tag to enable TypeScript support. For example:
 ```html
 <script lang="ts">
 import { defineComponent } from 'glyphix'
@@ -400,23 +397,23 @@ export default defineComponent({
 </script>
 ```
 
-## System capability integration
+## System Capabilities Integration
 
-Don't try to use the browser API, use Glyphix [standard library](../api/README.md).
+Do not attempt to use browser APIs; please use the Glyphix [standard library](../api/README.md).
 
-### Quick check of commonly used modules
+### Common Modules Quick Reference
 
-| Function | Glyphix module | Description |
+| Feature | Glyphix Module | Description |
 | :--- | :--- | :--- |
-| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle asynchronous callbacks or Promise |
-| **Pop-up** | [`@system.prompt`](../api/system-prompt.md) | Provide Toast and Dialog |
-| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronize local storage, directly read and write objects instead of strings |
-| **Routing** | [`@system.router`](../api/system-router.md) | Management page stack |
-| **Log** | `console.log` | Output to debugging terminal, same as browser |
+| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle async callbacks or Promises |
+| **Prompt** | [`@system.prompt`](../api/system-prompt.md) | Provides Toast and Dialog |
+| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronous local storage, reading/writing objects directly instead of strings |
+| **Router** | [`@system.router`](../api/system-router.md) | Manages page stack |
+| **Logging** | `console.log` | Outputs to debug terminal, same as browsers |
 
-### Asynchronous programming mode
+### Asynchronous Programming Patterns
 
-System APIs usually support asynchronous callback and Promise styles. It is recommended to use `async/await` to keep the code clean.
+System APIs usually support both asynchronous callback and Promise styles. Using `async/await` is recommended to keep code clean.
 
 ```js
 import fetch from '@system.fetch'
@@ -428,11 +425,11 @@ export default {
     try {
       const response = await fetch.fetch({
         url: 'https://api.example.com/data',
-        method: 'GET', //default is GET
-        responseType: 'json', // This does not require manual JSON.parse parsing
+        method: 'GET', // Defaults to GET
+        responseType: 'json', // Avoids manual parsing with JSON.parse
       })
 
-if (response.data.code === 200)
+      if (response.data.code === 200)
         this.data = response.data.data
     } catch (err) {
       prompt.showToast({ message: 'Network Error' })
@@ -441,47 +438,47 @@ if (response.data.code === 200)
 }
 ```
 
-## Build and run
+## Build and Run
 
-Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to start the emulator, or use `gx build` to build the application package. If you use Node.js scaffolding, you can also use the `gx` command directly.
+Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to launch the emulator, or `gx build` to build the application package. If you are using the Node.js CLI scaffolding, you can also run `gx` commands directly.
 
 Please refer to the [Quick Start](getting-started.md) tutorial for detailed steps.
 
-## Comprehensive example
+## Comprehensive Example
 
-The following is a complete component example that demonstrates the combined use of layout, data binding, event handling, and system APIs. You can view this example directly in your browser by clicking the `>` button to see the full code.
+The following is a complete component example demonstrating the combined usage of layout, data binding, event handling, and system APIs. You can preview this example directly in the browser and click the `>` button to view the full code.
 
-<glyphix id="quick-orientation-example" title="Counter component example" height="240">
+<glyphix id="quick-orientation-example" title="Counter Component Example" height="240">
 
 ```html
-<!-- It is recommended to use Flex layout for the root container, operations are not allowed during loading -->
+<!-- Flex layout recommended for root container; disabled during loading -->
 <div class="container" :disabled="loading">
   <text class="title">Hello, {{ name }}</text>
 
-<div class="card">
+  <div class="card">
     <text class="count">{{ count }}</text>
     <text class="btn" value="+1" on:click="increment">Add</text>
   </div>
 </div>
 
-<!-- Use the stacking layout of the page to overlay the loading status prompt -->
+<!-- Overlay loading prompt using page's stacked layout -->
 <text if="loading" class="loading">Loading...</text>
 ```
 
 ```css
 .container {
-  /* Page components do not need to set width and height, they are always full */
+  /* Page components do not need width/height set; they always fill the screen */
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  /* Note that the page background is generally not set, this is just a demonstration */
+  /* Note: Page background is rarely set; this is for demonstration only */
   background-color: #f5f5f5;
   border-radius: 16px;
-  padding: 10%; /* percentage margin */
+  padding: 10%; /* Percentage padding */
 }
 
 .title {
-  font-size: 1.25rem; /* The font uses rem units */
+  font-size: 1.25rem; /* Use rem units for fonts */
   color: #333333;
   align-self: center;
 }
@@ -505,7 +502,7 @@ The following is a complete component example that demonstrates the combined use
   width: 120px;
   background-color: #007aff;
   color: #ffffff;
-  border-radius: 50%; /* round button */
+  border-radius: 50%; /* Circular button */
   text-align: center;
 }
 
@@ -515,7 +512,7 @@ The following is a complete component example that demonstrates the combined use
   text-align: center;
 }
 
-/* Fade style for disabled state */
+/* Dimmed style for disabled state */
 *:disabled {
   opacity: 0.5;
 }
@@ -525,18 +522,18 @@ The following is a complete component example that demonstrates the combined use
 import prompt from '@system.prompt'
 
 export default {
-  // component data
+  // Component data
   data: {
     name: 'Glyphix',
     count: 0,
     loading: false
   },
-  // Life cycle: component initialization completed
+  // Lifecycle: component initialized
   onInit() {
     console.log('Component initialized')
     this.simulateFetch()
   },
-  //method definition
+  // Method definitions
   increment() {
     this.count++
     if (this.count % 5 === 0) {
@@ -547,7 +544,7 @@ export default {
   },
   async simulateFetch() {
     this.loading = true
-    // Simulate an asynchronous operation, which produces a loading state
+    // Simulate async operation, creating a loading state
     setTimeout(() => {
       this.loading = false
       this.name = 'Developer'

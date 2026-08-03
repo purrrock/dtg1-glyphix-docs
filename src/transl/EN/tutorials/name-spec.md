@@ -1,13 +1,13 @@
 ---
 icon: code-tags-check
 ---
-# Component naming convention
+# Component Naming Conventions
 
-This document describes the mandatory naming conventions and recommended naming styles for component frameworks. Among them, the mandatory naming convention has mandatory requirements. If not followed, the effect may not meet the expectations. Using the recommended naming convention ensures maximum compatibility.
+This document describes the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strict requirements, and non-compliance may lead to unexpected behavior. Using the recommended naming conventions ensures maximum compatibility.
 
-## Template naming convention
+## Template Naming Conventions
 
-Tag names in templates must be kebab-case or PascalCase:
+Tag names in templates must be named in kebab-case or PascalCase:
 ``` html
 <Button></Button>
 <button></button>
@@ -15,20 +15,19 @@ Tag names in templates must be kebab-case or PascalCase:
 <ScrollArea></ScrollArea>
 ```
 
-Attribute names must be dash or camelCase nomenclature:
+Attribute names must be in kebab-case or camelCase:
 ``` html
 <component prop-name="expr"></component>
 <component propName="expr"></component>
 ```
 
-It is recommended to use the dash nomenclature that complies with web standards.
+It is recommended to consistently use kebab-case, which aligns with Web standards.
 
-## JavaScript code naming convention
+## JavaScript Code Naming Conventions
 
+Component names in JavaScript code must use PascalCase, while the corresponding kebab-case names are used in templates.
 
-Component names in JavaScript code must be Pascal naming, while the corresponding dash names are used in templates.
-
-Component property names in JavaScript code must be camelCase:
+Component property names in JavaScript code must use camelCase:
 ``` js
 export default {
   data: {
@@ -36,13 +35,13 @@ export default {
   }
 }
 ```
-These attribute names will be automatically converted into corresponding dash names in the template code.
+These property names will automatically be converted to the corresponding kebab-case names in template code.
 
-## File name naming convention
+## File Naming Conventions
 
-The UX file must use the same name as the component, which is Pascal naming. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute should be named using Pascal naming or a dash:
+UX files must use the same name as the component, which means PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, while the `name` attribute uses PascalCase or kebab-case:
 ``` html
 <import src="path/to/UxFile" name="UxFile"/>
 <import src="path/to/UxFile" name="ux-file"/>
 ```
-In fact, the naming requirements of the `name` attribute are consistent with the tag names in the template.
+In fact, the naming requirements for the `name` attribute are consistent with the tag names in templates.

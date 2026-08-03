@@ -2,541 +2,7 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/component-basic.md
-
----
-icon: information-outline
----
-# 组件基础
-
-上一篇文档“[快速开始](getting-started)”中简单介绍了组件的概念。而本教程会进一步讲解关于组件的知识。在阅读本文档之前，您需要知道如何新建并构建项目，以及如何编辑源文件，如果您不了解，请阅读“[快速开始](getting-started)”教程。
-
-## 简介
-
-在 Glyphix 的应用开发中，所有的界面都是组件——小到按钮，大到页面。组件技术允许使用简单的模板语言开发界面：
-``` html
-<!-- main/index.ux -->
-<template>
-  <p>{{text}}</p>
-</template>
-
-<style>
-  * {
-    text-align: center;
-  }
-</style>
-
-<script>
-  export default {
-    data: {
-      text: "Hello, World!"
-    }
-  }
-</script>
-```
-这基本上就是默认项目模板的 `main/index.ux` 文件，使用 `gx emu` 命令即可观察显示效果。`<template>` 标签中的内容是组件的模板，它描述组件的外观。这里，`<p>` 节点将显示组件模型对象中的 `text` 属性。请注意，组件框架内部会将 `<p>` 节点的内容和组件模型的 `text` 属性关联，只要修改 `text` 属性的值，界面就会同步更新。
-
-我们可以用一个定时器进行测试：
-``` js
-export default {
-  data: { text: "begin!" },
-  onInit() {
-    let count = 0
-    setInterval(() => this.text = "timeout: " + count++, 1000)
-  }
-}
-```
-现在，你将看到显示的计数值每秒都会加 1。
-
-## 组件的编程模型
-
-GUI 程序的的一个重要功能是根据数据和输入改变自己的外观，从而实现交互。 在传统的 GUI 编程和原生的 HTML 中，开发者需要找到界面树中的目标元素节点，然后调用 API 更新它。事实证明这样开发界面会非常的复杂，因此有了诸如 MVC、MVP、MVVM 等适用于 GUI 的设计模式，Web 开发领域也出现了一些新框架，这些技术都大大降低了界面开发的难度。
-
-Glyphix 组件的编程模型和 Vue 之类的前端框架很相似。这些框架的基本思路是根据界面模型的状态去计算新的界面，而不是要求状态改变时更新界面元素。相比于传统技术，这种方案中的界面视图部分是无状态的，因此更加简单。让我们继续使用前面的例子来介绍：
-``` html
-<template>
-  <p>{{ text }}</p>
-</template>
-```
-我们已经知道，组件模型的 `text` 属性更新时界面将会自动更新。但是在传统的 GUI 框架中，往往需要在模型的 `text` 更新之后（这一般来自于输入或者内部数据的改变）手动更新 `<p>` 节点。MVC 等框架可以简化这些操作，但是并不非常简洁。
-
-现在考虑一个非常简单的方法：我们编写了一个 `render()` 函数，它根据模型当前的状态生成一颗界面树。如果我们在每一帧都用 `render()` 函数的值取代原来的界面树，那么模型的任何变化都会体现到界面中。这个方案非常简单，但是你会因为效率而否定它。实际上正是为了解决这个方案的效率问题才诞生了传统的 GUI 编程模型：只修改界面中变动的元素，但它在视图层引入了状态，也带来了不少复杂度。
-
-Glyphix 组件框架就基于这个简单的理念：`<template>` 标签内的内容便实现了 `render()` 函数的功能，而 js 代码则专注于维护模型，而模型的数据变更会自动体现到相关的界面。你可以认为 Glyphix 组件框架总是根据模型的状态计算新的界面，所以我们不用手动更新界面元素。
-
-::: tip
-Glyphix 底层的并不是 DOM 树，自然也没有操作 DOM 元素的 API。实际上组件框架才是原生的 Glyphix JavaScript API。
-:::
-
-## 响应输入
-
-有一些组件可以响应用户的输入事件，此时可以使用 `on` 指令指定事件的监听器。例如监听对文本组件的点击事件：
-``` html
-<template>
-  <p on:click="text += ' click'">{{text}}</p>
-</template>
-
-<style>
-  * {
-    text-align: center;
-  }
-</style>
-
-<script>
-  export default {
-    data: {
-      text: "Text "
-    }
-  }
-</script>
-```
-点击文本将自动更新的显示内容。`on:click` 属性的值 `text += ' click'` 是一个 JavaScript 表达式，Glyphix 会自动将表达式中变量的 `this` 绑定到组件对象。
-
-## 条件渲染
-
-`if` 指令用于条件性地渲染组件内容，受到该指令控制的内容区域只有在 `if` 指令中的表达式的值为真时会被渲染。
-``` html
-<p if="display">Hello World</p>
-```
-
-下面的例子会实现一个互斥的开关效果，连续点击时界面将交替显示 "Component A" 或 "Component B" 文本。
-``` html
-<template>
-  <p if="display" on:click="display = false">Component A</p>
-  <p if="!display" on:click="display = true">Component B</p>
-</template>
-
-<style>
-  * {
-    font-size: 48;
-    text-align: center;
-  }
-</style>
-
-<script>
-  export default {
-    data: {
-      display: true
-    }
-  }
-</script>
-```
-
-## 列表渲染
-
-使用 `for` 指令重复渲染一个组件以生成列表。`for` 指令的基本用法为：
-``` html
-<p for="(index, value) in list">{{index}}: {{value}}</p>
-```
-其中 `list` 是组件模型中的一个列表属性（必须是 `Array` 类型），`index` 和 `value` 是两个迭代变量，`index` 的值是当前项的索引，`value` 的值是当前项的值。
-
-`for` 指令可以简写为以下几种形式
-``` html
-<p for="list">{{$idx}}: {{$item}}</p>
-<p for="value in list">{{$idx}}: {{value}}</p>
-<p for="index, value in list">{{$idx}}: {{value}}</p>
-```
-第一种简写是只写需要迭代的表达式，此时将使用 `$idx` 和 `$item` 作为默认的迭代变量名称；第二种写法显式定义了当前值的迭代变量，而当前索引变量名则使用默认的 `$idx`；第三种写法是标准写法省略括号的简写。
-
-::: tip
-由于作用域的关系，书写 `for` 指令时迭代使用的变量只有在 `for` 指令之后使用才能生效。
-:::
-
-``` html
-<!-- correct -->
-<button for="list" text="{{$item}}"/>
-<!-- error -->
-<button text="{{$item}}" for="list"/>
-```
-
-### 同时使用 `if` 和 `for` 指令
-
-可以在一个元素上同时使用 `if` 和 `for` 指令，此时 `if` 指令具有更高的优先级。在这个例子中，当 `display` 属性为假时，整个 `button` 组件列表将不会渲染：
-```html
-<button for="value in items" if="display">Hello {{value}}</button>
-<p if="!display">Paragraph 1</p>
-```
-
-而如果你的目的是想要按照条件渲染 `for` 指令所生成列表中的部分节点时，就需要将 `if` 指令置于 `for` 指令的内层元素上。
-```html
-<button for="value in items">
-  <p if="display">item: {{value}}</p>
-</button>
-```
-
-::: tip
-不推荐在同一元素上使用 `if` 和 `for` 指令，因为这会降低代码的可读性。
-:::
-
-## 插槽
-
-类似于其他框架的内容分发，在 Glyphix 也实现了一套内容分发的 API，我们可以使用 `slot` 组件作为承载分发内容的出口。
-
-在子组件中，使用 `slot` 组件来承载父组件中定义的内容。`slot` 组件在渲染时会变成由父组件传入的元素。
-
-```html
-<div>
-  <slot/>
-</div>
-```
-
-## 组合使用组件
-
-将多个组件组合成更大的界面是 Glyphix 组件框架的界面构建方式。假如有一个名为 `Menu` 的组件，在需要引用它的 UX 文件根节点下使用 `<import>` 标签即可导入它：
-``` html
-<import src="path/to/Menu" name="Menu"/>
-```
-`src` 属性是组件的路径，请勿加上 `.ux` 后缀。`name` 属性是可选的组件名，如果不填写此属性，将使用组件的文件名作为组件名。
-
-多次使用 `<import>` 标签来导入所有依赖的组件：
-``` html
-<import src="path/to/ComA"/>
-<import src="path/to/ComB"/>
-<import src="path/to/ComC"/>
-```
-
-可以像使用原生组件那样使用自定义的组件：
-``` html
-<div>
-  <menu for="menus" on:click="clickMenu($idx, $item)">
-    <p>Menu {{$item}}</p>
-  </menu>
-</div>
-```
-
-``` css
-div {
-  display: flex;
-  flex-direction: column;
-}
-
-text {
-  text-align: center;
-}
-```
-
-``` js
-export default {
-  data: {
-    menus: ["Dog", "Cat", "Pig", "Fish"],
-  },
-  clickMenu(id, name) {
-    console.log(`clicked id: ${id}, name: ${name}.`)
-  }
-}
-```
-
-这是一个菜单界面，我们希望用户点击菜单的时候通过 `clickMenu` 方法打印当前菜单项的信息。因此 `Menu` 组件需要能够显示菜单内容，并且能够将自己的点击事件通过 `on:click` 监听到。
-
-这是 `Menu.ux` 文件的内容：
-``` html
-<template>
-  <div on:click="$emit('click')"> <slot /> </div>
-</template>
-
-<style>
-  div { display: flex; }
-</style>
-
-<script>
-  export default {}
-</script>
-```
-我们只是简单地使用一个原生组件 `div` 响应用户的点击并上报。`div` 组件内部还会显示上次传递进来的子组件，最终使菜单列表得以显示。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/tutorials/getting-started.md
-
----
-icon: rocket
----
-# 快速开始
-
-在本章节中，我们将介绍如何使用 Glyphix.js 来创建一个简单的应用程序。我们会从安装打包工具开始，接着创建一个项目，并运行模拟器来查看效果。最后，我们会简要介绍项目的结构和主要文件。本教程不涉及怎样在真实设备上运行应用，以及如何发布应用。
-
-## 准备工作
-
-在开始之前，请先参照[此文档](/tutorials/glyphix.js/README.md#npm-安装)来安装 Glyphix 打包工具。简单来说，你可以用 [npm](https://nodejs.org) 来安装 `glyphix-cli` 包：
-```bash
-npm install -g glyphix-cli
-```
-
-由于 Glyphix 的开发工具以命令行为主，建议安装 Zsh、PowerShell 7+ 等现代 shell，并安装一些实用插件以提高操作效率。
-
-### 终端工具
-
-对于 Linux 或者 macOS 用户，建议安装 [Oh My Zsh](https://ohmyz.sh/)。而 Windows 用户建议安装 [Windows Terminal](https://aka.ms/terminal) 并使用 [Oh My Posh](https://ohmyposh.dev/)。另请参照 [`gx completion`](/tutorials/glyphix.js/README.md#gx-completion) 文档来安装 `gx` 命令的自动补全脚本。
-
-您可以使用任何编辑器来开发 Glyphix 应用，如 [VS Code](https://code.visualstudio.com/) 或者[快应用 IDE](https://www.quickapp.cn/devtool)。
-
-::: tip
-快应用 IDE 中没有内置 glyphix.js 打包工具，你仍需安装 `glyphix-cli` 并终端中使用 `gx` 命令来构建和运行项目。在使用 VS Code 等编辑器时，建议将 `*.ux` 文件绑定为 `html` 格式，以获得基本的语法高亮。
-:::
-
-### 使用 Node.js
-
-如果您决定在项目中使用 npm 包，或者任何 Web 开发生态的资源，请参考 [Node.js](/tutorials/nodejs.md) 配置文档。使用 Node.js 并非必须，但它可以支持 TypeScript 等现代开发工具。
-
-### 使用打包工具
-
-一切妥当之后，在终端中输入 `gx list device` 命令，若得到类似以下输出就表示安装成功：
-``` bash
-$ gx list device
-  default
-  ...
-```
-
-接下来创建一个应用项目并模拟运行！只需使用以下命令：
-``` bash
-gx new myapp # 创建名为 myapp 的项目，这将创建一个名为 myapp 的目录
-cd myapp     # 切换到 myapp 目录
-gx emu       # 运行模拟器
-```
-不出意外，你会看到一个显示 “Hello World!” 的窗口。后面的教程中会进一步讲解 glyphix.js 工具的命令使用方法。
-
-::: tip
-参考 [`gx build`](/tutorials/glyphix.js/README.md#gx-build) 和 [`gx emu`](glyphix.js/emulator.html) 文档了解更多关于构建和运行模拟器的信息。
-:::
-
-## 项目结构
-
-你可以使用文件浏览器查看 `myapp` 目录的结构。在现在的版本中它的结构如下：
-``` bash
-<app-name>
-├─ README.md         # 项目自述文件
-└─ src               # 项目的源代码目录
-    ├─ app.js        # app 入口脚本文件
-    ├─ manifest.json # 配置应用基本信息
-    ├─ assets        # 存放公共资源（字体、图片等）
-    │  ├─ fonts      # 存放字体资源
-    │  └─ images     # 存放图片资源
-    └─ main          # 存放主页面的目录
-        └─ index.ux  # 主页面的界面描述文件
-```
-
-在默认的项目模板中，源代码位于 `<app-name>/src` 目录中，项目中的文档等不需要打包释放的资源可以放在其他目录。
-
-我们推荐为每个页面准备一个目录（并使用页面的名字作为目录的名字），并将这个目录放在源码的根目录下。仅在页面中使用的组件源文件（`*.ux` 文件）应当放在页面的目录下，而公共文件可以按以下规则存放：
-- 公共的 UX 文件和脚本可以放在 `common` 目录下
-- 仅在页面中引用的脚本文件直接存放在页面目录下
-- 字体文件存放在 `assets/fonts` 目录下
-- 图片文件存放在 `assets/images` 目录下
-- 其他资源可以存放在 `assets` 目录下的合适位置
-
-### 项目文件
-
-现在，你已经看到了 `myapp` 里面有一些文件。请注意后缀为 `*.ux` 的文件和 `manifest.json` 文件，这些是开发时最常接触的文件。下面的教程将简单地介绍它们。
-
-## `manifest.json` 文件
-
-`manifest.json` 文件是应用的配置文件，此文件会用于应用打包。这个文件中包含了应用的基本信息，包括应用名称、版本信息等，它还包含应用内所有页面的描述和路由信息。换言之，要把页面描述添加到 `manifest.json` 之后才能在代码中跳转到此页面。
-
-这是 `gx` 命令所生成的模板应用的 `manifest.json` 文件内容：
-``` json
-{
-  "package": "com.example.app",
-  "name": "Example App",
-  "versionName": "1.0.0",
-  "versionCode": 1,
-  "features": [],
-  "router": { // 页面路由信息
-    "entry": "main", // 应用的初始页面
-    "pages": { // 页面描述信息
-      "main": {
-        "component": "index"
-      }
-    }
-  }
-}
-```
-
-::: warning
-出于教学目的，此 `manifest.json` 代码片段中有一些注释，但是 JSON 是不支持注释的，请勿在项目的 `manifest.json` 文件中添加任何注释。
-:::
-
-### 填写应用信息
-
-你可以在 `manifest.json` 中填写你的应用信息。
-
-### 添加页面描述信息
-
-在  `manifest.json` 文件的根字段中，`router` 和 `pages` 字段和页面描述有关。`router` 字段是应用的页面路由表，它至少要有 `entry` 字段来指定应用的入口页面，通常使用 `main` 页面作为入口页面。
-
-如果你要增加新的页面，就需要在 `pages` 字段中增加内容。例如，我们要新建一个名为 `NewPage` 的页面，此页面的入口组件为 `NewPage/index.ux`，那么现在 `pages` 字段的内容如下：
-``` json
-"pages": {
-  "main": {
-    "component": "index"
-  },
-  "NewPage": { // 这是新添加的页面
-    "component": "index"
-  }
-}
-```
-`pages` 字段是一个 JSON 对象，它的每一个键都是页面的名称，默认情况下也是页面目录的路径。页面名对应的值也是一个对象，它的 `component` 是页面的入口组件名，这个组件必须存放在页面目录下。`component` 字段就是页面入口组件的文件名（不包含后缀）。所有的名字都区分大小写。
-
-当你新增或者删除了页面，记得更新 `manifest.json` 的有关字段。
-
-`manifest.json` 文件的结构说明详见相关文档。
-
-## UX 文件介绍
-
-UX（UI XML）是 Glyphix 的界面描述文件。以最初的模板工程为例，`main/index.ux` 文件的内容如下：
-``` html
-<template>
-  <p>{{text}}</p>
-</template>
-
-<style>
-  * {
-    text-align: center;
-  }
-</style>
-
-<script>
-  export default {
-    data: {
-      text: "Hello, World!"
-    }
-  }
-</script>
-```
-
-UX 文件实际上是一种 XML 文件，这个 UX 文件有两个根节点：`<template>`、`<style>` 和 `<script>`。其中 `<template>` 节点中的内容是界面的结构描述，`<style>` 节点中定义了样式表，而 `<script>` 节点中的内容是 JavaScript 脚本，它实现这个组件的交互逻辑。
-
-::: tip
-VS Code 不会对 UX 文件进行语法着色，你可以在右下角将语言切换到“HTML”，这样就会有较好的高亮效果。
-:::
-
-### 组件简介
-
-UX 文件在运行时所对应的对象称为**组件**。组件是 Glyphix JavaScript 应用框架中的重要概念，每一个组件都是一个界面元素，它具有这些特征：
-- 组件有自己的显示效果
-- 有些组件可以响应用户的输入
-- 有些组件可以根据数据和状态显示对应的效果
-- 组件可以嵌入到其他组件中使用
-
-常用的界面元素在 Glyphix JavaScript 应用框架中都是组件，例如：
-- 文本：用于显示文字信息
-- 按钮：按钮也可以显示文字信息，最重要的是它可以响应点击事件（当然也会显示点击时的效果）
-- 列表：列表容纳其他组件并将它们垂直排列，另外可以通过滑动手势使列表中的元素组件移动
-
-像列表这样能够容纳其他组件的组件也被称为**容器组件**。
-
-可以想象，组件有两个要素：显示外观和行为逻辑。UX 文件中的 `<template>` 标签便声明了组件的外观，以 `main/index.ux` 为例：
-``` html
-<template>
-  <p>{{text}}</p>
-</template>
-```
-`main/index.ux` 组件由一个 `<p>` 组件实现内容的显示，这种组件用于显示文本，`{{text}}` 表达式的值就是要显示的文本。
-
-`<script>` 标签中的 JavaScript 脚本实现了组件的行为逻辑，该标签内总是使用 `export default` 导出一个**组件对象**。首先要关注的是组件对象的 `data` 属性，它通常是一个对象：
-``` js
-export default {
-  data: {
-    text: 'Hello, World!'
-  }
-}
-```
-这里，`data` 对象有一个 `text` 属性，这个属性的值将作为前面 `<text>` 组件的显示内容。
-
-### 组件模型和状态更新
-
-假如我们需要设计这样一个组件：当组件被点击之后显示不同的文字，这时候就要监听组件上的输入事件并更新显示内容。下面的代码将监听 `<p>` 组件上的点击事件：
-``` html
-<template>
-  <p on:click="text += '!'">{{text}}</p>
-</template>
-```
-`on:click` 属性中的表达式会在文本被点击的时候执行。因此在点击时，`<p>` 组件中显示的 `text` 文本尾部会增加一个 `'!'` 字符：
-
-<glyphix id="getting-started-click-p" height="120" width="360" title="点击事件">
-
-``` html
-<p on:click="text += '!'">{{text}}</p>
-```
-
-``` js
-export default {
-  data: {
-    text: "Hello, World!"
-  }
-}
-```
-
-``` css
-p {
-  font-size: 32px;
-  text-align: center;
-}
-```
-
-</glyphix>
-
-在后面的教程中我们将详细介绍组件的更新机制。
-
-## 开始开发应用
-
-现在，你可以开始开发自己的 Glyphix 应用程序了！从默认的项目模板开始编写代码，并使用 `gx emu` 命令运行模拟器。本文档的其他章节将介绍如何用 Glyphix 内置的机制、API 和组件来构建界面，以及怎样实现应用的交互逻辑。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/tutorials/name-spec.md
-
----
-icon: code-tags-check
----
-# 组件命名规范
-
-本文档介绍组件框架的强制命名规范以及建议的命名风格。其中强制命名规范强制性的要求，如果不遵守可能导致效果不符合预期。而使用推荐的命名规范则可以保证最大的兼容性。
-
-## 模板命名规范
-
-模板中的标签名称必须是短横线式（kebab-case）或者帕斯卡式（PascalCase）命名：
-``` html
-<Button></Button>
-<button></button>
-<scroll-area></scroll-area>
-<ScrollArea></ScrollArea>
-```
-
-属性名称必须是短横线式或者驼峰式（camelCase）命名法：
-``` html
-<component prop-name="expr"></component>
-<component propName="expr"></component>
-```
-
-推荐统一使用符合 Web 规范的短横线命名法。
-
-## JavaScript 代码命名规范
-
-
-JavaScript 代码中的组件名必须是帕斯卡命名，而模板中则使用对应的短横线命名。
-
-JavaScript 代码中的组件属性名称必须是驼峰式命名：
-``` js
-export default {
-  data: {
-    propName: 0 // 在模板中的属性名是 prop-name
-  }
-}
-```
-这些属性名在模板代码中会自动转换成成对应的短横线命名。
-
-## 文件名命名规范
-
-UX 文件必须使用和组件相同的名字，也就是帕斯卡命名。在 `<import>` 标签中，`src` 属性（attribute）必须是区分大小写的文件 URL，而 `name` 属性则使用帕斯卡命名或者短横线命名：
-``` html
-<import src="path/to/UxFile" name="UxFile"/>
-<import src="path/to/UxFile" name="ux-file"/>
-```
-实际上 `name` 属性的命名要求和模板中的标签名称是一致的。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/tutorials/nodejs.md
+FILE_PATH: src/original_docs/tutorials/nodejs.md
 
 ---
 icon: nodejs
@@ -694,7 +160,60 @@ export default defineComponent({
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/qa.md
+FILE_PATH: src/original_docs/tutorials/name-spec.md
+
+---
+icon: code-tags-check
+---
+# 组件命名规范
+
+本文档介绍组件框架的强制命名规范以及建议的命名风格。其中强制命名规范强制性的要求，如果不遵守可能导致效果不符合预期。而使用推荐的命名规范则可以保证最大的兼容性。
+
+## 模板命名规范
+
+模板中的标签名称必须是短横线式（kebab-case）或者帕斯卡式（PascalCase）命名：
+``` html
+<Button></Button>
+<button></button>
+<scroll-area></scroll-area>
+<ScrollArea></ScrollArea>
+```
+
+属性名称必须是短横线式或者驼峰式（camelCase）命名法：
+``` html
+<component prop-name="expr"></component>
+<component propName="expr"></component>
+```
+
+推荐统一使用符合 Web 规范的短横线命名法。
+
+## JavaScript 代码命名规范
+
+
+JavaScript 代码中的组件名必须是帕斯卡命名，而模板中则使用对应的短横线命名。
+
+JavaScript 代码中的组件属性名称必须是驼峰式命名：
+``` js
+export default {
+  data: {
+    propName: 0 // 在模板中的属性名是 prop-name
+  }
+}
+```
+这些属性名在模板代码中会自动转换成成对应的短横线命名。
+
+## 文件名命名规范
+
+UX 文件必须使用和组件相同的名字，也就是帕斯卡命名。在 `<import>` 标签中，`src` 属性（attribute）必须是区分大小写的文件 URL，而 `name` 属性则使用帕斯卡命名或者短横线命名：
+``` html
+<import src="path/to/UxFile" name="UxFile"/>
+<import src="path/to/UxFile" name="ux-file"/>
+```
+实际上 `name` 属性的命名要求和模板中的标签名称是一致的。
+
+
+============================================================
+FILE_PATH: src/original_docs/tutorials/qa.md
 
 ---
 icon: help-circle-outline
@@ -728,7 +247,7 @@ gx emu -l en-US # 使用美式英语
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/quick-orientation.md
+FILE_PATH: src/original_docs/tutorials/quick-orientation.md
 
 ---
 title: 开发速览：从 Web 到 Glyphix
@@ -1042,7 +561,7 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/README.md
+FILE_PATH: src/original_docs/tutorials/README.md
 
 ---
 title: Glyphix 应用开发教程
@@ -1110,152 +629,488 @@ Glyphix 应用开发完全使用 HTML、CSS 和 JavaScript，因此不需要使�
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/glyphix.js/cli.md
+FILE_PATH: src/original_docs/tutorials/component-basic.md
 
 ---
-icon: console-line
+icon: information-outline
 ---
-# 命令行选项
+# 组件基础
 
-待迁移。
+上一篇文档“[快速开始](getting-started)”中简单介绍了组件的概念。而本教程会进一步讲解关于组件的知识。在阅读本文档之前，您需要知道如何新建并构建项目，以及如何编辑源文件，如果您不了解，请阅读“[快速开始](getting-started)”教程。
+
+## 简介
+
+在 Glyphix 的应用开发中，所有的界面都是组件——小到按钮，大到页面。组件技术允许使用简单的模板语言开发界面：
+``` html
+<!-- main/index.ux -->
+<template>
+  <p>{{text}}</p>
+</template>
+
+<style>
+  * {
+    text-align: center;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      text: "Hello, World!"
+    }
+  }
+</script>
+```
+这基本上就是默认项目模板的 `main/index.ux` 文件，使用 `gx emu` 命令即可观察显示效果。`<template>` 标签中的内容是组件的模板，它描述组件的外观。这里，`<p>` 节点将显示组件模型对象中的 `text` 属性。请注意，组件框架内部会将 `<p>` 节点的内容和组件模型的 `text` 属性关联，只要修改 `text` 属性的值，界面就会同步更新。
+
+我们可以用一个定时器进行测试：
+``` js
+export default {
+  data: { text: "begin!" },
+  onInit() {
+    let count = 0
+    setInterval(() => this.text = "timeout: " + count++, 1000)
+  }
+}
+```
+现在，你将看到显示的计数值每秒都会加 1。
+
+## 组件的编程模型
+
+GUI 程序的的一个重要功能是根据数据和输入改变自己的外观，从而实现交互。 在传统的 GUI 编程和原生的 HTML 中，开发者需要找到界面树中的目标元素节点，然后调用 API 更新它。事实证明这样开发界面会非常的复杂，因此有了诸如 MVC、MVP、MVVM 等适用于 GUI 的设计模式，Web 开发领域也出现了一些新框架，这些技术都大大降低了界面开发的难度。
+
+Glyphix 组件的编程模型和 Vue 之类的前端框架很相似。这些框架的基本思路是根据界面模型的状态去计算新的界面，而不是要求状态改变时更新界面元素。相比于传统技术，这种方案中的界面视图部分是无状态的，因此更加简单。让我们继续使用前面的例子来介绍：
+``` html
+<template>
+  <p>{{ text }}</p>
+</template>
+```
+我们已经知道，组件模型的 `text` 属性更新时界面将会自动更新。但是在传统的 GUI 框架中，往往需要在模型的 `text` 更新之后（这一般来自于输入或者内部数据的改变）手动更新 `<p>` 节点。MVC 等框架可以简化这些操作，但是并不非常简洁。
+
+现在考虑一个非常简单的方法：我们编写了一个 `render()` 函数，它根据模型当前的状态生成一颗界面树。如果我们在每一帧都用 `render()` 函数的值取代原来的界面树，那么模型的任何变化都会体现到界面中。这个方案非常简单，但是你会因为效率而否定它。实际上正是为了解决这个方案的效率问题才诞生了传统的 GUI 编程模型：只修改界面中变动的元素，但它在视图层引入了状态，也带来了不少复杂度。
+
+Glyphix 组件框架就基于这个简单的理念：`<template>` 标签内的内容便实现了 `render()` 函数的功能，而 js 代码则专注于维护模型，而模型的数据变更会自动体现到相关的界面。你可以认为 Glyphix 组件框架总是根据模型的状态计算新的界面，所以我们不用手动更新界面元素。
+
+::: tip
+Glyphix 底层的并不是 DOM 树，自然也没有操作 DOM 元素的 API。实际上组件框架才是原生的 Glyphix JavaScript API。
+:::
+
+## 响应输入
+
+有一些组件可以响应用户的输入事件，此时可以使用 `on` 指令指定事件的监听器。例如监听对文本组件的点击事件：
+``` html
+<template>
+  <p on:click="text += ' click'">{{text}}</p>
+</template>
+
+<style>
+  * {
+    text-align: center;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      text: "Text "
+    }
+  }
+</script>
+```
+点击文本将自动更新的显示内容。`on:click` 属性的值 `text += ' click'` 是一个 JavaScript 表达式，Glyphix 会自动将表达式中变量的 `this` 绑定到组件对象。
+
+## 条件渲染
+
+`if` 指令用于条件性地渲染组件内容，受到该指令控制的内容区域只有在 `if` 指令中的表达式的值为真时会被渲染。
+``` html
+<p if="display">Hello World</p>
+```
+
+下面的例子会实现一个互斥的开关效果，连续点击时界面将交替显示 "Component A" 或 "Component B" 文本。
+``` html
+<template>
+  <p if="display" on:click="display = false">Component A</p>
+  <p if="!display" on:click="display = true">Component B</p>
+</template>
+
+<style>
+  * {
+    font-size: 48;
+    text-align: center;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      display: true
+    }
+  }
+</script>
+```
+
+## 列表渲染
+
+使用 `for` 指令重复渲染一个组件以生成列表。`for` 指令的基本用法为：
+``` html
+<p for="(index, value) in list">{{index}}: {{value}}</p>
+```
+其中 `list` 是组件模型中的一个列表属性（必须是 `Array` 类型），`index` 和 `value` 是两个迭代变量，`index` 的值是当前项的索引，`value` 的值是当前项的值。
+
+`for` 指令可以简写为以下几种形式
+``` html
+<p for="list">{{$idx}}: {{$item}}</p>
+<p for="value in list">{{$idx}}: {{value}}</p>
+<p for="index, value in list">{{$idx}}: {{value}}</p>
+```
+第一种简写是只写需要迭代的表达式，此时将使用 `$idx` 和 `$item` 作为默认的迭代变量名称；第二种写法显式定义了当前值的迭代变量，而当前索引变量名则使用默认的 `$idx`；第三种写法是标准写法省略括号的简写。
+
+::: tip
+由于作用域的关系，书写 `for` 指令时迭代使用的变量只有在 `for` 指令之后使用才能生效。
+:::
+
+``` html
+<!-- correct -->
+<button for="list" text="{{$item}}"/>
+<!-- error -->
+<button text="{{$item}}" for="list"/>
+```
+
+### 同时使用 `if` 和 `for` 指令
+
+可以在一个元素上同时使用 `if` 和 `for` 指令，此时 `if` 指令具有更高的优先级。在这个例子中，当 `display` 属性为假时，整个 `button` 组件列表将不会渲染：
+```html
+<button for="value in items" if="display">Hello {{value}}</button>
+<p if="!display">Paragraph 1</p>
+```
+
+而如果你的目的是想要按照条件渲染 `for` 指令所生成列表中的部分节点时，就需要将 `if` 指令置于 `for` 指令的内层元素上。
+```html
+<button for="value in items">
+  <p if="display">item: {{value}}</p>
+</button>
+```
+
+::: tip
+不推荐在同一元素上使用 `if` 和 `for` 指令，因为这会降低代码的可读性。
+:::
+
+## 插槽
+
+类似于其他框架的内容分发，在 Glyphix 也实现了一套内容分发的 API，我们可以使用 `slot` 组件作为承载分发内容的出口。
+
+在子组件中，使用 `slot` 组件来承载父组件中定义的内容。`slot` 组件在渲染时会变成由父组件传入的元素。
+
+```html
+<div>
+  <slot/>
+</div>
+```
+
+## 组合使用组件
+
+将多个组件组合成更大的界面是 Glyphix 组件框架的界面构建方式。假如有一个名为 `Menu` 的组件，在需要引用它的 UX 文件根节点下使用 `<import>` 标签即可导入它：
+``` html
+<import src="path/to/Menu" name="Menu"/>
+```
+`src` 属性是组件的路径，请勿加上 `.ux` 后缀。`name` 属性是可选的组件名，如果不填写此属性，将使用组件的文件名作为组件名。
+
+多次使用 `<import>` 标签来导入所有依赖的组件：
+``` html
+<import src="path/to/ComA"/>
+<import src="path/to/ComB"/>
+<import src="path/to/ComC"/>
+```
+
+可以像使用原生组件那样使用自定义的组件：
+``` html
+<div>
+  <menu for="menus" on:click="clickMenu($idx, $item)">
+    <p>Menu {{$item}}</p>
+  </menu>
+</div>
+```
+
+``` css
+div {
+  display: flex;
+  flex-direction: column;
+}
+
+text {
+  text-align: center;
+}
+```
+
+``` js
+export default {
+  data: {
+    menus: ["Dog", "Cat", "Pig", "Fish"],
+  },
+  clickMenu(id, name) {
+    console.log(`clicked id: ${id}, name: ${name}.`)
+  }
+}
+```
+
+这是一个菜单界面，我们希望用户点击菜单的时候通过 `clickMenu` 方法打印当前菜单项的信息。因此 `Menu` 组件需要能够显示菜单内容，并且能够将自己的点击事件通过 `on:click` 监听到。
+
+这是 `Menu.ux` 文件的内容：
+``` html
+<template>
+  <div on:click="$emit('click')"> <slot /> </div>
+</template>
+
+<style>
+  div { display: flex; }
+</style>
+
+<script>
+  export default {}
+</script>
+```
+我们只是简单地使用一个原生组件 `div` 响应用户的点击并上报。`div` 组件内部还会显示上次传递进来的子组件，最终使菜单列表得以显示。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/glyphix.js/emulator.md
+FILE_PATH: src/original_docs/tutorials/getting-started.md
 
 ---
-icon: watch-import-variant
+icon: rocket
 ---
-# 模拟器和调试
+# 快速开始
 
-要运行模拟器，你需要在命令行中切换到项目的根目录，然后运行 `gx emu` 子命令来启动模拟器。Glyphix 模拟器拥有和真实设备运行时高度一致的环境，因此可以利用模拟器开发和调试大部分界面和功能，而不需要频繁地将应用安装到真实设备上。
+在本章节中，我们将介绍如何使用 Glyphix.js 来创建一个简单的应用程序。我们会从安装打包工具开始，接着创建一个项目，并运行模拟器来查看效果。最后，我们会简要介绍项目的结构和主要文件。本教程不涉及怎样在真实设备上运行应用，以及如何发布应用。
+
+## 准备工作
+
+在开始之前，请先参照[此文档](/tutorials/glyphix.js/README.md#npm-安装)来安装 Glyphix 打包工具。简单来说，你可以用 [npm](https://nodejs.org) 来安装 `glyphix-cli` 包：
+```bash
+npm install -g glyphix-cli
+```
+
+由于 Glyphix 的开发工具以命令行为主，建议安装 Zsh、PowerShell 7+ 等现代 shell，并安装一些实用插件以提高操作效率。
+
+### 终端工具
+
+对于 Linux 或者 macOS 用户，建议安装 [Oh My Zsh](https://ohmyz.sh/)。而 Windows 用户建议安装 [Windows Terminal](https://aka.ms/terminal) 并使用 [Oh My Posh](https://ohmyposh.dev/)。另请参照 [`gx completion`](/tutorials/glyphix.js/README.md#gx-completion) 文档来安装 `gx` 命令的自动补全脚本。
+
+您可以使用任何编辑器来开发 Glyphix 应用，如 [VS Code](https://code.visualstudio.com/) 或者[快应用 IDE](https://www.quickapp.cn/devtool)。
 
 ::: tip
-由于当前 [`glyphix`](https://www.npmjs.com/package/glyphix) npm 包的限制，请务必配置 [`glyphix.config.js`](/tutorials/nodejs.md#glyphix-config-js-配置)，否则在执行 `gx emu` 时无法看到错误信息的源代码行号。
+快应用 IDE 中没有内置 glyphix.js 打包工具，你仍需安装 `glyphix-cli` 并终端中使用 `gx` 命令来构建和运行项目。在使用 VS Code 等编辑器时，建议将 `*.ux` 文件绑定为 `html` 格式，以获得基本的语法高亮。
 :::
 
+### 使用 Node.js
 
-## `gx emu` 子命令
+如果您决定在项目中使用 npm 包，或者任何 Web 开发生态的资源，请参考 [Node.js](/tutorials/nodejs.md) 配置文档。使用 Node.js 并非必须，但它可以支持 TypeScript 等现代开发工具。
 
-使用上次的构建目标设备配置来运行模拟器。该命令需要在 Glyphix 项目的根目录中执行。它会自动构建项目并创建模拟器所需的资源文件，因此无需先执行 `gx build`。
+### 使用打包工具
 
-#### 命令选项
-
-- `-d --device=NAME`：指定模拟的设备名称，默认为 `default`（分辨率为 $410 \times 502\rm px$）。
-- `-e --emulator-exe=CMD`：指定模拟器的可执行文件，默认为 `glyphix-emu`。通常不需要修改。
-- `-l --language=NAME`：指定模拟器的语言环境，默认为 `zh-CN`（简体中文）。通过 `gx list language` 命令可以查看支持的语言列表。
-- `--target=URI`：设置模拟器启动时的包名或者 deeplink，例如 `app://com.example.app/SomePage?query=value` 或者 `com.example.app`。
-- `-i --inspector`：在运行模拟器时启用检查器，检查器是一个 Web 页面，可以在浏览器中调试模拟器中的界面元素。
-- `-m --mobile-network`：（尚未实现）仅在模拟器中启用手机 SDK 的网络代理，而不直接访问网络。
-- `-w --watch`：运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并刷新模拟器界面。
-- `-r --real-scale`：使用真实尺寸显示模拟器窗口，而不是按设备分辨率缩放显示。此选项建议在 HiDPI 屏幕上使用。
-- `-t --top`：保持模拟器窗口置顶。
-- `-p --profiling`：启用性能分析模式。由于模拟器和设备性能差异较大，该选项通常不是很有用。
-
-## 启动模式
-
-默认情况下，`gx emu` 会按照上次构建时使用的设备配置来启动模拟器。还可以通过命令选项来调整模拟器的启动行为。
-
-### 指定设备型号
-
-使用 `-d` 或 `--device` 选项可以指定希望模拟的设备型号，例如：
-```bash
-gx emu -d generic-watch-466x466
+一切妥当之后，在终端中输入 `gx list device` 命令，若得到类似以下输出就表示安装成功：
+``` bash
+$ gx list device
+  default
+  ...
 ```
-将会为 `generic-watch-466x466` 这款设备启动模拟器。可以使用 `gx list device` 命令查看已安装的设备列表。
 
-如果不指定该选项，则会使用上次指定过的设备。第一次或 `gx clean` 之后启动模拟器时会使用 `default` 设备。
-
-### Deeplink 启动
-
-默认情况下，模拟器会启动当前项目的应用，或是启动一个应用菜单界面。但在调试 [`onRoute()`](/framework/component/life-cycle.md#onroute) 生命周期函数时，可能希望通过 deeplink 启动应用，以确保 `onRoute()` 接收到特定参数。可以使用 `--target` 选项来指定 deeplink，例如：
-```bash
-gx emu --target app://com.example.app/SomePage?query=value
+接下来创建一个应用项目并模拟运行！只需使用以下命令：
+``` bash
+gx new myapp # 创建名为 myapp 的项目，这将创建一个名为 myapp 的目录
+cd myapp     # 切换到 myapp 目录
+gx emu       # 运行模拟器
 ```
-这会启动包名为 `com.example.app` 的应用，而 Deeplink URI 的 path（含根目录 `/`，即 `/SomePage`）和 query 字段会被传递给该应用的 `onRoute()` 函数。
-
-### 模拟设备尺寸
-
-默认情况下，模拟器会使用设备的实际像素分辨率，这会导致电脑上的显示尺寸大于设备的实际屏幕尺寸，并使开发者难以确认 UI 元素（包括设计稿）在设备上的具有较佳尺寸。`-r` 或 `--real-scale` 选项可以按真实设备尺寸来模拟：
-```bash
-gx emu -r
-```
-使用此选项时，您不需要将应用安装到设备上即可确认 UI 的实际尺寸。但考虑到大部分手表的 DPI 超过 300，1080p 显示器在使用 real-scale 模式时会导致界面过于模糊，建议在 HiDPI 显示器（如 4K 显示器，或者 macOS 上的 Retina 屏幕）上使用此选项。
+不出意外，你会看到一个显示 “Hello World!” 的窗口。后面的教程中会进一步讲解 glyphix.js 工具的命令使用方法。
 
 ::: tip
-使用 real-scale 模式时，您应该通过 `--device` 选项来指定希望模拟的目标设备。值得注意的是：由于 DPI 不同，两款相同的分辨率设备可能有不同的屏幕尺寸，因此 real-scale 模式的显示尺寸也会不同。
+参考 [`gx build`](/tutorials/glyphix.js/README.md#gx-build) 和 [`gx emu`](glyphix.js/emulator.html) 文档了解更多关于构建和运行模拟器的信息。
 :::
 
-### 自动刷新
+## 项目结构
 
-`-w` 或 `--watch` 选项可以在运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并重启应用。通常建议配合 `--top` 选项使用，例如：
-```bash
-gx emu -wt
+你可以使用文件浏览器查看 `myapp` 目录的结构。在现在的版本中它的结构如下：
+``` bash
+<app-name>
+├─ README.md         # 项目自述文件
+└─ src               # 项目的源代码目录
+    ├─ app.js        # app 入口脚本文件
+    ├─ manifest.json # 配置应用基本信息
+    ├─ assets        # 存放公共资源（字体、图片等）
+    │  ├─ fonts      # 存放字体资源
+    │  └─ images     # 存放图片资源
+    └─ main          # 存放主页面的目录
+        └─ index.ux  # 主页面的界面描述文件
 ```
-这样可以保持模拟器窗口置顶，并且在修改源文件后自动重启应用。这对于开发调试非常有用：直接从代码编辑器切换到模拟器，不需要手动重启模拟器，也不需要频繁切换窗口。
+
+在默认的项目模板中，源代码位于 `<app-name>/src` 目录中，项目中的文档等不需要打包释放的资源可以放在其他目录。
+
+我们推荐为每个页面准备一个目录（并使用页面的名字作为目录的名字），并将这个目录放在源码的根目录下。仅在页面中使用的组件源文件（`*.ux` 文件）应当放在页面的目录下，而公共文件可以按以下规则存放：
+- 公共的 UX 文件和脚本可以放在 `common` 目录下
+- 仅在页面中引用的脚本文件直接存放在页面目录下
+- 字体文件存放在 `assets/fonts` 目录下
+- 图片文件存放在 `assets/images` 目录下
+- 其他资源可以存放在 `assets` 目录下的合适位置
+
+### 项目文件
+
+现在，你已经看到了 `myapp` 里面有一些文件。请注意后缀为 `*.ux` 的文件和 `manifest.json` 文件，这些是开发时最常接触的文件。下面的教程将简单地介绍它们。
+
+## `manifest.json` 文件
+
+`manifest.json` 文件是应用的配置文件，此文件会用于应用打包。这个文件中包含了应用的基本信息，包括应用名称、版本信息等，它还包含应用内所有页面的描述和路由信息。换言之，要把页面描述添加到 `manifest.json` 之后才能在代码中跳转到此页面。
+
+这是 `gx` 命令所生成的模板应用的 `manifest.json` 文件内容：
+``` json
+{
+  "package": "com.example.app",
+  "name": "Example App",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "features": [],
+  "router": { // 页面路由信息
+    "entry": "main", // 应用的初始页面
+    "pages": { // 页面描述信息
+      "main": {
+        "component": "index"
+      }
+    }
+  }
+}
+```
+
+::: warning
+出于教学目的，此 `manifest.json` 代码片段中有一些注释，但是 JSON 是不支持注释的，请勿在项目的 `manifest.json` 文件中添加任何注释。
+:::
+
+### 填写应用信息
+
+你可以在 `manifest.json` 中填写你的应用信息。
+
+### 添加页面描述信息
+
+在  `manifest.json` 文件的根字段中，`router` 和 `pages` 字段和页面描述有关。`router` 字段是应用的页面路由表，它至少要有 `entry` 字段来指定应用的入口页面，通常使用 `main` 页面作为入口页面。
+
+如果你要增加新的页面，就需要在 `pages` 字段中增加内容。例如，我们要新建一个名为 `NewPage` 的页面，此页面的入口组件为 `NewPage/index.ux`，那么现在 `pages` 字段的内容如下：
+``` json
+"pages": {
+  "main": {
+    "component": "index"
+  },
+  "NewPage": { // 这是新添加的页面
+    "component": "index"
+  }
+}
+```
+`pages` 字段是一个 JSON 对象，它的每一个键都是页面的名称，默认情况下也是页面目录的路径。页面名对应的值也是一个对象，它的 `component` 是页面的入口组件名，这个组件必须存放在页面目录下。`component` 字段就是页面入口组件的文件名（不包含后缀）。所有的名字都区分大小写。
+
+当你新增或者删除了页面，记得更新 `manifest.json` 的有关字段。
+
+`manifest.json` 文件的结构说明详见相关文档。
+
+## UX 文件介绍
+
+UX（UI XML）是 Glyphix 的界面描述文件。以最初的模板工程为例，`main/index.ux` 文件的内容如下：
+``` html
+<template>
+  <p>{{text}}</p>
+</template>
+
+<style>
+  * {
+    text-align: center;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      text: "Hello, World!"
+    }
+  }
+</script>
+```
+
+UX 文件实际上是一种 XML 文件，这个 UX 文件有两个根节点：`<template>`、`<style>` 和 `<script>`。其中 `<template>` 节点中的内容是界面的结构描述，`<style>` 节点中定义了样式表，而 `<script>` 节点中的内容是 JavaScript 脚本，它实现这个组件的交互逻辑。
 
 ::: tip
-目前不支持热更新页面，而是在修改源文件后重启整个应用。如果想要更快的调试速度，可以将 [`manifest.router.entry`](/framework/application/manifest.md#entry) 调整为正在开发的页面，这样每次重启应用时都会直接进入该页面。
+VS Code 不会对 UX 文件进行语法着色，你可以在右下角将语言切换到“HTML”，这样就会有较好的高亮效果。
 :::
 
-## 连接手机
+### 组件简介
 
-可以通过 [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android 手机应用连接模拟器，以便于调试真实设备和手机互联相关的功能。
+UX 文件在运行时所对应的对象称为**组件**。组件是 Glyphix JavaScript 应用框架中的重要概念，每一个组件都是一个界面元素，它具有这些特征：
+- 组件有自己的显示效果
+- 有些组件可以响应用户的输入
+- 有些组件可以根据数据和状态显示对应的效果
+- 组件可以嵌入到其他组件中使用
 
-### 准备工作
+常用的界面元素在 Glyphix JavaScript 应用框架中都是组件，例如：
+- 文本：用于显示文字信息
+- 按钮：按钮也可以显示文字信息，最重要的是它可以响应点击事件（当然也会显示点击时的效果）
+- 列表：列表容纳其他组件并将它们垂直排列，另外可以通过滑动手势使列表中的元素组件移动
 
-你需要在手机上安装 Glyphix Debug 应用，并确保手机和电脑处于同一局域网内，例如连接到同一个 Wi-Fi。启动模拟器并打开打开 Glyphix Debug 应用后，点击“Socket 连接”按钮，应用会显示一个连接界面，你可以选择搜索到的模拟器 IP 地址，或手动输入电脑 IP 和模拟器端口进行连接。
+像列表这样能够容纳其他组件的组件也被称为**容器组件**。
 
-模拟器默认监听 7768 网络端口，如果该端口被占用（通常是启动了多个模拟器），则自动选择下一个可用端口，并在启动时打印实际使用的端口号。例如：
-```bash
-$ gx emu
-[simulator.socket] MAS TCP server bind port 7768 successful 
+可以想象，组件有两个要素：显示外观和行为逻辑。UX 文件中的 `<template>` 标签便声明了组件的外观，以 `main/index.ux` 为例：
+``` html
+<template>
+  <p>{{text}}</p>
+</template>
+```
+`main/index.ux` 组件由一个 `<p>` 组件实现内容的显示，这种组件用于显示文本，`{{text}}` 表达式的值就是要显示的文本。
+
+`<script>` 标签中的 JavaScript 脚本实现了组件的行为逻辑，该标签内总是使用 `export default` 导出一个**组件对象**。首先要关注的是组件对象的 `data` 属性，它通常是一个对象：
+``` js
+export default {
+  data: {
+    text: 'Hello, World!'
+  }
+}
+```
+这里，`data` 对象有一个 `text` 属性，这个属性的值将作为前面 `<text>` 组件的显示内容。
+
+### 组件模型和状态更新
+
+假如我们需要设计这样一个组件：当组件被点击之后显示不同的文字，这时候就要监听组件上的输入事件并更新显示内容。下面的代码将监听 `<p>` 组件上的点击事件：
+``` html
+<template>
+  <p on:click="text += '!'">{{text}}</p>
+</template>
+```
+`on:click` 属性中的表达式会在文本被点击的时候执行。因此在点击时，`<p>` 组件中显示的 `text` 文本尾部会增加一个 `'!'` 字符：
+
+<glyphix id="getting-started-click-p" height="120" width="360" title="点击事件">
+
+``` html
+<p on:click="text += '!'">{{text}}</p>
 ```
 
-::: tip
-一旦模拟器端口被占用并选择了非 7768 端口号，Glyphix Debug 应用将无法自动搜索到该模拟器，必须手动输入正确的 IP 地址和端口号进行连接。
-:::
-
-强烈建议模拟器开启下一节的手机网络代理模式，以免同时使用电脑网络和手机网络。否则可能会干扰 [`@system.interconnect`](/api/system-interconnect.md) 之类依赖手机互联 API 的正常工作。
-
-### 手机网络代理
-
-使用 `-m` 或者 `--mobile-network` 选项可以只启用手机 SDK 的网络代理功能，这类似于真实设备的网络环境。使用此选项时，模拟器不会自动启动目标应用，而是显示一个应用列表界面。
-
-在手动启动应用之前，应通过 Glyphix Debug 手机应用通过“Socket 网络”连接模拟器，然后再点击目标应用。否则应用将无法访问网络。
-
-::: tip
-在使用 `-m` 手机网络代理时，可以通过杀死手机调试应用、重新连接模拟器等方式来模拟网络中断的情况。否则模拟器会自动切换到电脑网络。
-:::
-
-### 常见连接问题
-
-如果无法通过 Glyphix Debug 应用连接模拟器，请检查电脑和手机是否连接到同一个局域网，且模拟器程序和端口未被防火墙规则屏蔽。如果你连接到了公共网络，那么和可能因为防火墙或者网络隔离而无法连接。
-
-如果你使用了 VPN 或者代理软件，请确保局域网内的流量不被代理，否则也会无法连接。
-
-## 其他操作
-
-### 清除应用数据
-
-你可以使用 [`gx clean`](README.md#gx-clean) 清除模拟器运行时的应用数据，之后再启动模拟器时将从首次安装的状态开始运行。
-
-### 组合命令选项
-
-你可以将多个选项组合在一起使用，例如：
-```bash
-gx emu -rwt -d default-watch-466x466
+``` js
+export default {
+  data: {
+    text: "Hello, World!"
+  }
+}
 ```
-等效于分开使用
-```bash
-gx emu -r -w -t -d devault-watch-466x466
-gx emu --real-scale --watch --top --device default-watch-466x466
+
+``` css
+p {
+  font-size: 32px;
+  text-align: center;
+}
 ```
-建议按 [`gx completion`](#gx-completion) 中介绍的方法安装自动补全脚本，以便在终端中选择设备名称和命令选项。
+
+</glyphix>
+
+在后面的教程中我们将详细介绍组件的更新机制。
+
+## 开始开发应用
+
+现在，你可以开始开发自己的 Glyphix 应用程序了！从默认的项目模板开始编写代码，并使用 `gx emu` 命令运行模拟器。本文档的其他章节将介绍如何用 Glyphix 内置的机制、API 和组件来构建界面，以及怎样实现应用的交互逻辑。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/glyphix.js/image-forge.md
+FILE_PATH: src/original_docs/tutorials/glyphix.js/image-forge.md
 
 ---
 icon: image-filter
@@ -1463,7 +1318,152 @@ image-build: image-convert-pal.scm # 图片转换脚本相对于本 Yaml 文件�
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/tutorials/glyphix.js/README.md
+FILE_PATH: src/original_docs/tutorials/glyphix.js/cli.md
+
+---
+icon: console-line
+---
+# 命令行选项
+
+待迁移。
+
+
+============================================================
+FILE_PATH: src/original_docs/tutorials/glyphix.js/emulator.md
+
+---
+icon: watch-import-variant
+---
+# 模拟器和调试
+
+要运行模拟器，你需要在命令行中切换到项目的根目录，然后运行 `gx emu` 子命令来启动模拟器。Glyphix 模拟器拥有和真实设备运行时高度一致的环境，因此可以利用模拟器开发和调试大部分界面和功能，而不需要频繁地将应用安装到真实设备上。
+
+::: tip
+由于当前 [`glyphix`](https://www.npmjs.com/package/glyphix) npm 包的限制，请务必配置 [`glyphix.config.js`](/tutorials/nodejs.md#glyphix-config-js-配置)，否则在执行 `gx emu` 时无法看到错误信息的源代码行号。
+:::
+
+
+## `gx emu` 子命令
+
+使用上次的构建目标设备配置来运行模拟器。该命令需要在 Glyphix 项目的根目录中执行。它会自动构建项目并创建模拟器所需的资源文件，因此无需先执行 `gx build`。
+
+#### 命令选项
+
+- `-d --device=NAME`：指定模拟的设备名称，默认为 `default`（分辨率为 $410 \times 502\rm px$）。
+- `-e --emulator-exe=CMD`：指定模拟器的可执行文件，默认为 `glyphix-emu`。通常不需要修改。
+- `-l --language=NAME`：指定模拟器的语言环境，默认为 `zh-CN`（简体中文）。通过 `gx list language` 命令可以查看支持的语言列表。
+- `--target=URI`：设置模拟器启动时的包名或者 deeplink，例如 `app://com.example.app/SomePage?query=value` 或者 `com.example.app`。
+- `-i --inspector`：在运行模拟器时启用检查器，检查器是一个 Web 页面，可以在浏览器中调试模拟器中的界面元素。
+- `-m --mobile-network`：（尚未实现）仅在模拟器中启用手机 SDK 的网络代理，而不直接访问网络。
+- `-w --watch`：运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并刷新模拟器界面。
+- `-r --real-scale`：使用真实尺寸显示模拟器窗口，而不是按设备分辨率缩放显示。此选项建议在 HiDPI 屏幕上使用。
+- `-t --top`：保持模拟器窗口置顶。
+- `-p --profiling`：启用性能分析模式。由于模拟器和设备性能差异较大，该选项通常不是很有用。
+
+## 启动模式
+
+默认情况下，`gx emu` 会按照上次构建时使用的设备配置来启动模拟器。还可以通过命令选项来调整模拟器的启动行为。
+
+### 指定设备型号
+
+使用 `-d` 或 `--device` 选项可以指定希望模拟的设备型号，例如：
+```bash
+gx emu -d generic-watch-466x466
+```
+将会为 `generic-watch-466x466` 这款设备启动模拟器。可以使用 `gx list device` 命令查看已安装的设备列表。
+
+如果不指定该选项，则会使用上次指定过的设备。第一次或 `gx clean` 之后启动模拟器时会使用 `default` 设备。
+
+### Deeplink 启动
+
+默认情况下，模拟器会启动当前项目的应用，或是启动一个应用菜单界面。但在调试 [`onRoute()`](/framework/component/life-cycle.md#onroute) 生命周期函数时，可能希望通过 deeplink 启动应用，以确保 `onRoute()` 接收到特定参数。可以使用 `--target` 选项来指定 deeplink，例如：
+```bash
+gx emu --target app://com.example.app/SomePage?query=value
+```
+这会启动包名为 `com.example.app` 的应用，而 Deeplink URI 的 path（含根目录 `/`，即 `/SomePage`）和 query 字段会被传递给该应用的 `onRoute()` 函数。
+
+### 模拟设备尺寸
+
+默认情况下，模拟器会使用设备的实际像素分辨率，这会导致电脑上的显示尺寸大于设备的实际屏幕尺寸，并使开发者难以确认 UI 元素（包括设计稿）在设备上的具有较佳尺寸。`-r` 或 `--real-scale` 选项可以按真实设备尺寸来模拟：
+```bash
+gx emu -r
+```
+使用此选项时，您不需要将应用安装到设备上即可确认 UI 的实际尺寸。但考虑到大部分手表的 DPI 超过 300，1080p 显示器在使用 real-scale 模式时会导致界面过于模糊，建议在 HiDPI 显示器（如 4K 显示器，或者 macOS 上的 Retina 屏幕）上使用此选项。
+
+::: tip
+使用 real-scale 模式时，您应该通过 `--device` 选项来指定希望模拟的目标设备。值得注意的是：由于 DPI 不同，两款相同的分辨率设备可能有不同的屏幕尺寸，因此 real-scale 模式的显示尺寸也会不同。
+:::
+
+### 自动刷新
+
+`-w` 或 `--watch` 选项可以在运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并重启应用。通常建议配合 `--top` 选项使用，例如：
+```bash
+gx emu -wt
+```
+这样可以保持模拟器窗口置顶，并且在修改源文件后自动重启应用。这对于开发调试非常有用：直接从代码编辑器切换到模拟器，不需要手动重启模拟器，也不需要频繁切换窗口。
+
+::: tip
+目前不支持热更新页面，而是在修改源文件后重启整个应用。如果想要更快的调试速度，可以将 [`manifest.router.entry`](/framework/application/manifest.md#entry) 调整为正在开发的页面，这样每次重启应用时都会直接进入该页面。
+:::
+
+## 连接手机
+
+可以通过 [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android 手机应用连接模拟器，以便于调试真实设备和手机互联相关的功能。
+
+### 准备工作
+
+你需要在手机上安装 Glyphix Debug 应用，并确保手机和电脑处于同一局域网内，例如连接到同一个 Wi-Fi。启动模拟器并打开打开 Glyphix Debug 应用后，点击“Socket 连接”按钮，应用会显示一个连接界面，你可以选择搜索到的模拟器 IP 地址，或手动输入电脑 IP 和模拟器端口进行连接。
+
+模拟器默认监听 7768 网络端口，如果该端口被占用（通常是启动了多个模拟器），则自动选择下一个可用端口，并在启动时打印实际使用的端口号。例如：
+```bash
+$ gx emu
+[simulator.socket] MAS TCP server bind port 7768 successful 
+```
+
+::: tip
+一旦模拟器端口被占用并选择了非 7768 端口号，Glyphix Debug 应用将无法自动搜索到该模拟器，必须手动输入正确的 IP 地址和端口号进行连接。
+:::
+
+强烈建议模拟器开启下一节的手机网络代理模式，以免同时使用电脑网络和手机网络。否则可能会干扰 [`@system.interconnect`](/api/system-interconnect.md) 之类依赖手机互联 API 的正常工作。
+
+### 手机网络代理
+
+使用 `-m` 或者 `--mobile-network` 选项可以只启用手机 SDK 的网络代理功能，这类似于真实设备的网络环境。使用此选项时，模拟器不会自动启动目标应用，而是显示一个应用列表界面。
+
+在手动启动应用之前，应通过 Glyphix Debug 手机应用通过“Socket 网络”连接模拟器，然后再点击目标应用。否则应用将无法访问网络。
+
+::: tip
+在使用 `-m` 手机网络代理时，可以通过杀死手机调试应用、重新连接模拟器等方式来模拟网络中断的情况。否则模拟器会自动切换到电脑网络。
+:::
+
+### 常见连接问题
+
+如果无法通过 Glyphix Debug 应用连接模拟器，请检查电脑和手机是否连接到同一个局域网，且模拟器程序和端口未被防火墙规则屏蔽。如果你连接到了公共网络，那么和可能因为防火墙或者网络隔离而无法连接。
+
+如果你使用了 VPN 或者代理软件，请确保局域网内的流量不被代理，否则也会无法连接。
+
+## 其他操作
+
+### 清除应用数据
+
+你可以使用 [`gx clean`](README.md#gx-clean) 清除模拟器运行时的应用数据，之后再启动模拟器时将从首次安装的状态开始运行。
+
+### 组合命令选项
+
+你可以将多个选项组合在一起使用，例如：
+```bash
+gx emu -rwt -d default-watch-466x466
+```
+等效于分开使用
+```bash
+gx emu -r -w -t -d devault-watch-466x466
+gx emu --real-scale --watch --top --device default-watch-466x466
+```
+建议按 [`gx completion`](#gx-completion) 中介绍的方法安装自动补全脚本，以便在终端中选择设备名称和命令选项。
+
+
+============================================================
+FILE_PATH: src/original_docs/tutorials/glyphix.js/README.md
 
 ---
 icon: package-variant-closed
@@ -1846,5 +1846,586 @@ image-build: image-convert.scm
 # 环境变量的路径下，否则会无法执行。
 emulator: glyphix-emu
 ```
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/layout-tricks.md
+
+# 布局技巧
+
+## 限制元素宽度
+
+你可以使用 `margin` 属性来限制元素的宽度。
+
+<glyphix id="cookbook-margin-layout-1" width="360" height="100">
+
+```html
+<div>
+  <div class="limit">
+    <p>{{text}}</p>
+  </div>
+</div>
+```
+
+```css
+div {
+  background-color: lightgreen;
+}
+
+.limit {
+  border: 1px solid red;
+  margin: 0 150px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+p {
+  border: 1px solid gray;
+  margin: 2px;
+}
+```
+
+```js
+export default {
+  data: { text: 'A' },
+  onInit() {
+    let index = 1
+    setInterval(() => {
+      this.text += String.fromCharCode(index++ + 0x41)
+      if (index > 26) {
+        this.text = 'A'
+        index = 1
+      }
+    }, 200)
+  }
+}
+```
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/swiper-indicator.md
+
+# Swiper 页面指示器
+
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
+
+``` html
+<stack>
+  <swiper ::index="index">
+    <p for="i in panels">Panel {{i + 1}}</p>
+  </swiper>
+  <div class="indicator">
+    <image for="x in indicator" :src="x" />
+  </div>
+</stack>
+```
+
+``` js
+export default {
+  data: {
+    panels: 5,
+    index: 2
+  },
+  computed: {
+    indicator() {
+      let result = []
+      for (let i = 0; i < this.panels; i++) {
+        let suffix = i == this.index ? '1' : '0'
+        result.push(`/assets/images/ind-${suffix}.png`)
+      }
+      return result
+    }
+  }
+}
+```
+
+``` css
+swiper > p {
+  background-color: #888;
+  margin: 32px;
+  border-radius: 32px;
+  text-align: center;
+}
+
+.indicator {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.indicator > * {
+  margin: 0 4px 56px 4px;
+}
+```
+
+</Glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/game-2048.md
+
+# 2048 游戏
+
+## 效果展示
+
+提示：在“2048 游戏”中使用鼠标上下左右快速滑动来操作。
+
+<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
+
+</glyphix>
+
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/async.md
+
+# 异步操作
+
+在 JavaScript 脚本中引入异步操作的目的主要是将耗时的工作放到后台执行，避免 JavaScript 线程阻塞，放到后台处理的工作主要是 IO 密集型操作。Glyphix 提供一个基本的 JavaScript 异步框架供开发者使用，该框架只对异步工作流做必要的抽象，因此不会引入额外的开销。
+
+## 适用场景
+
+异步工作流模型适用场景
+
+- 由 JavaScript 代码发起请求，原生异步处理线程处理后返回结果；
+- 由 JavaScript 代码发起请求，原生异步处理线程处理后定时上报消息；
+  - JavaScript 代码可主动要求撤销/取消请求。
+
+## 数据请求模式
+
+在数据请求模式中，JavaScript 代码调用 C++ API 创建请求，并在异步线程中执行操作后将结果返回给 JavaScript 代码。在这个过程中数据会通过异步队列进行传输，`async::ResultSession` 模板类提供了该模式的通用操作框架。
+
+### 场景说明
+
+以下场景是典型的数据请求模式：
+
+- **文件读写**：JavaScript 发起调用时需要指定文件的路径，读写的文件偏移位置、数据长度或要写入的数据；请求发送到异步线程执行时会进行真正的文件读写操作，并在操作完成后通知或将结果返回到 JavaScript 代码。
+- **网络请求**：和文件读写类似，JavaScript 发起调用时要制定请求参数，然后在后台线程处理并返回结果。
+
+数据请求模式的场景具有以下特点：
+- 请求返回的结果是单次的，因此可能多次触发的传感器或者定时器监听不适用这种模式；
+- 请求总是会有结果：如果请求成功则返回结果，否则返回错误信息，结果的返回也是异步的；
+- 请求一旦发起无法撤销。
+
+### 实例：电量值获取
+
+#### JavaScript API
+
+假设要实现一个获取电池电量的异步 JavaScript 函数：
+``` ts
+getLevel(): Promise<number> // Promise 风格 API
+getLevel(options: { // 回调风格 API
+    success: (level: number) => void,
+    fail: (code: number, msg: string) => void // 电池电量读取实际上不会 fail
+}): void
+```
+使用 `getLevel()` 函数异步地获取电池电量，该函数提供两种 API 风格：`Promise` 风格和回调风格。这两种风格的代码如下：
+``` js
+async function printBatteryLevel() {
+    const level = await getLevel() // 异步获取电量值
+    console.log(`battery level: ${level}%`)
+}
+printBatteryLevel() // 打印电量值，控制台输出示例:
+// battery level: 59%
+
+// 下面是回调风格的代码，不建议使用：
+getLevel({
+    success(level) { console.log(`battery level: ${level}%`) }
+})
+```
+
+#### C++ 原生接口导出
+
+JavaScript 中的 `getLevel()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会发起一个获取电池电量的异步请求，并在得到结果后通过回调函数或者 `Promise` 将结果值返回给 JavaScript 代码。实现 `getLevel()` 的 C++ 函数如下：
+``` cpp
+static JsValue getLevel(const JsCallContext &ctx) {
+    typedef async::ResultSession<BatteryGetLevel> Session;
+    Session *session = new Session; // 创建 Session 对象
+    session->request(ctx.argc() ? ctx.arg(0) : JsValue());
+    return session->promise();
+}
+```
+
+模板类 `async::ResultSession` （下文省略 `async` 命名空间）实现了异步数据请求所需的框架，每个异步数据请求都包含下列步骤：
+1. 创建一个 `ResultSession` 对象
+2. 调用 `ResultSession::request()` 方法发起请求
+3. 使用 `ResultSession::promise()` 将 `Promise` 对象返回到 JavaScript。
+
+这行代码
+``` cpp
+session->request(ctx.argc() ? ctx.arg(0) : JsValue());
+```
+除了发起请求外，我们还将 JavaScript 调用方传入的第 $0$ 个参数传递给 `ResultSession::request()` 方法，`ResultSession` 会自动根据该参数是否存在 `success` / `fail` 等回调函数选择回调和 `Promise` 风格。如果是 `Promise` 风格，那么
+``` cpp
+return session->promise();
+```
+会返回一个 `Promise` 对象用于获取异步请求的结果，否则会返回 `undefined` 并由回调函数来处理结果。
+
+#### `ResultSession` 模板类
+
+`ResultSession` 模板类的声明如下：
+``` cpp
+template<class T, class H = ResultHandler> class ResultSession;
+```
+模板参数 `T` 是一个类，它实现具体的异步操作，本示例会实现一个 `BatteryGetLevel` 类来实现电池电量的异步获取。模板参数 `H` 决定怎样处理异步请求的结果，默认的 `ResultHandler` 会自动选择回调或者 `Promise` 风格，开发者一般不需要修改。
+
+#### `BatteryGetLevel` 类
+
+`BatteryGetLevel` 类的定义如下：
+``` cpp
+struct BatteryGetLevel {
+    async::Result<int> resolve() const {
+        return battery_read_level(); // 获取电池电量
+    }
+    // errorMessage() 用于将错误码翻译成文本。不过电量读取不会出错，可以随意实现。
+    static const char *errorMessage(Status) {
+        return "get battery level failed";
+    }
+};
+```
+可以看到，`BatteryGetLevel` 有两个成员函数。`resolve()` 函数用于在异步线程中执行具体的操作。`resolve()` 函数的返回值必须是一个 `async::Result<T>` 类型，在本例中则是 `async::Result<int>`。
+
+`resolve()` 函数的返回值 `async::Result<T>` 的模板参数 `T` 类型和 JavaScript API 的回调函数参数或 `Promise` 数据的类型是一致的，例如本例中 `int` 对应到 JavaScript API 为
+``` ts
+// C++ 的 BatteryGetLevel::resolve() 函数返回值类型
+// async::Result<int> 对应 JavaScript 的 Promise<number>
+getLevel(): Promise<number>
+```
+
+换言之，如果 `resolve()` 返回 `async::Result<String>` 值，那么对应到 JavaScript 中会返回 `Promise<string>`，对于回调函数来说则是 `{ success(value: string): void }`。关于 C++ 和 JavaScript 数据类型的转换细节请参考[数据类型转换](#数据类型转换)。
+
+### 实例：文件读取
+
+#### JavaScript API
+
+假设要实现一个文件读取的异步 JavaScript 函数：
+``` ts
+readfile(url:string): Promise<string> // Promise 风格 API
+readFile(option: {   // 回调风格API
+  uri: string,
+  success?: (data: string) => void,
+  fail?: (code: number, msg: string) => void,
+}): void
+```
+该函数会异步读取文件的内容并通过 `Promise` 对象返回，返回值是文件内容是。实际的 JavaScript 代码是这样的；
+``` js
+async function printReadFile() {
+    const data = await readFile("file.txt") // 异步获取电量值
+    console.log('文件读取成功：', data)
+}
+
+printReadFile() // 以字符串的形式打印文件内容，控制台输出示例:
+// 文件读取成功：hello
+
+// 下面是回调风格的代码
+readFile({
+    url: "file.txt", 
+    success: (data: string) => {  
+        console.log('文件读取成功：', data);  
+    }
+})
+```
+
+#### C++ 原生接口导出
+
+JavaScript 中的 `readFile()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会发起一个读取文件的异步请求，并在得到结果后通过回调函数或者 `Promise` 将结果值返回给 JavaScript 代码。实现 `readFile()` 的 C++ 函数如下：
+``` cpp
+JsValue readFile(const JsCallContext &ctx) {
+    typedef async::ResultSession<ReadFileRequest> Session;
+    if (ctx.argc() > 0 && ctx.arg(0).isObject()) { 
+        Session *session = new Session;
+        // 将JavaScript 函数参数的 url 字段转换为 C++ String 
+        session->client().url = ctx.arg(0)["url"].toString(); 
+        session->request(ctx.argc() ? ctx.arg(0) : JsValue());
+        return JsValue();
+    }
+}
+```
+使用的模板类解释参考 [resultsession-模板类](#resultsession-模板类) 和代码解释参考 电量值获取的 [c-原生接口导出](#c-原生接口导出)。
+
+#### readFile类
+
+`ReadFileRequest` 类的定义如下：
+``` cpp
+struct ReadFileRequest {
+    String url; // 待读取文件的 url。
+    Result<String> resolve() {
+        ByteArray array = File::read(url); // 通过 url 读取文件内容
+        return String(array.charData(), array.size());
+    }
+    // errorMessage() 用于将错误码翻译成文本
+    const char *errorMessage(Status) { return "read file error"; }
+};
+```
+可以看到，`ReadFileRequest` 有两个成员函数。`resolve()` 函数用于在异步线程中执行具体的操作。`resolve()` 函数的返回值必须是一个 `async::Result<T>` 类型，在本例中则是 `async::Result<String>`。需要注意的是 `resolve()` 函数中不能处理 JavaScript 中的数据类型，url 是在 `readFile()` 函数中转换成 C++ 的 String 类型才发起的异步请求，不能在 `resolve()` 函数中处理类似的数据转换。
+
+## 监听模式
+
+在监听模式中，JavaScript 代码调用了 C++ API 创建请求，对多次的异步请求例如传感器数据的监听，在数据发生改变时会执行异步事件将结果返回给 JavaScript，`async::ListenSession` 和 `async::Signal` 模板类提供了该模式的通用操作框架。
+
+### 场景说明
+
+以下场景是典型的监听模式：
+
+- **各种传感器的监听**：由 JavaScript 发起调用，调用监听对应传感器的 C++ API，需要指定回调函数，当传感器读取数据发送改变时，通过异步线程将会将新数据返回到 JavaScript 代码中，作为回调函数的形参。
+- **周期性定时任务**：JavaScript 发起调用时需要设置定时任务的时间，任务超时后的回调函数，是否为周期性；当发送请求后每一次定时任务超时后，异步线程会将结果返回到 JavaScript 中，触发 JavaScript 设置的回调函数。
+
+监听模式的场景具有以下特点：
+- 启动监听后，支持多次的异步请求，因此可能不适用单次对文件读写和网络状态请求的异步事件；
+- 启动监听后，不用时必须要取消监听，不然会造成内存泄漏。
+
+### 实例：监听电池电量值
+
+#### JavaScript API
+
+假如要实现一个监听电池电量的异步 JavaScript 函数：
+``` ts
+subscribe(callback: (Level: number) => void): number // 监听电池电量值
+unsubscribe(subscribeID: number): void // 取消监听
+```
+
+使用 `subscribe()` 函数异步地监听电池电量值和 `unsubscribe()` 函数取消监听，使用实例如下：
+``` js
+// 启动监听，返回一个 id 用来取消监听
+let id = subscribe(level => {
+  // 若电池电量值发生改变，就会触发监听的回调函数，控制台打印示例：
+  // now battery level: 59
+  console.log(`now battery level: ${level}%`)
+})
+
+unsubscribe(id); // 取消监听
+``` 
+
+#### C++ 监听接口导出
+
+JavaScript 中的 `subscribe()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会监听电池电量值，每当电量值改变后都会发起一个异步请求，通过回调函数将结果值返回给 JavaScript 代码。实现 `subscribe()` 的 C++ 函数如下：
+``` cpp
+async::Signal<int> Level; // 创建一个全局的对象 Level
+
+level(45); // Level 数值改变，发送异步请求
+
+static JsValue subscribe(const JsCallContext &ctx) {
+    Applet *applet = Applet::current(&ctx.vm());
+    if (applet && ctx.argc())  // 检查是否传入的参数
+        return applet->bindObject(Level.connect(ctx.arg(0)));
+    return JsValue();
+}
+```
+必须要创建了一个全局的对象 `Level`，使用到的模板类 `sync::Signal`（下文省略 `async` 命名空间）实现了监听请求的框架，监听请求包含下列步骤：
+1. 在监听之前，必须创建一个全局 `Siganal` 类的对象；
+2. 使用`Signal::connect()` 方法将 JavaScript 传入的第一个参数和 `Level` 关联起来；
+3. 调用 `Applet::bindObject` 绑定 `Level` 对象；当 `Level` 的状态发生改变时，调用回调函数将结果返回 JavaScript 代码。
+
+这行代码
+```cpp
+level(45);
+```
+`Level` 数值变 $45$ ,触发监听机制将会发起一个异步请求，变化后的值作为回调函数的形参，最后将结果返回给 JavaScript 代码。
+
+#### C++ 取消监听接口导出
+
+JavaScript 中的 `unsubscribe()` 函数也是由 C++ 实现的，JavaScript 代码调用这个函数时取消监听。避免不使用监听时造成的内存泄漏。实现 `unsubscribe()` 的 C++ 函数如下：
+``` cpp
+static JsValue unsubscribe(const JsCallContext &ctx) {
+    Applet *applet = Applet::current(&ctx.vm());
+    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // 检查传递的参数是否正确
+        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());   
+    return JsValue();
+}
+```
+取消监听请求需要调用 `Applet::unbindObject` 解除绑定，需要传入 `subscribe()` 函数的返回 ID 来确定解绑的对象。
+
+#### `Signal` 模板类
+
+``` cpp
+template<class T, class H = ListenHandler> class Signal;
+```
+模板参数 T 是一个类，它实现具体的异步操作，本示例展示一个 `int` 类型来实现电池电量的监听。模板参数 H 决定怎样处理异步请求的结果，默认的 ResultHandler 会自动选择回调或者 Promise 风格，开发者一般不需要修改。
+
+## 数据类型转换
+
+在 `ResultSession` 或者 `ListenSession` 中，异步操作的数据必须要转换成 `JsValue` 对象才能在 JavaScript 代码中使用。例如 [BatteryGetLevel](#batterygetlevel-类) 中定义了
+``` cpp
+async::Result<int> BatteryGetLevel::resolve() const;
+```
+函数，这个函数声明意味着电池电量请求的返回数据类型是 `int`，该数据类型是可以转换成 `JsValue` 的，事实上以下类型都可以转换为 `JsValue`：
+- `bool`：转换为 `boolean` 类型；
+- `int`：转换为 `number` 类型；
+- `float` 、`double`：转换为 `number` 类型；
+- `String`：转换为 `string` 类型。
+
+::: warning
+不支持 C 风格字符串。它会转换换成 `boolean` 类型。
+:::
+
+转换的时机是自动的，无需开发者介入。
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/clangd-lsp.md
+
+# Clangd 配置
+
+在用交叉编译工具链开发固件时，如果使用 arm-none-eabi-gcc 工具链，并且使用 CMake 等构建系统时，可以配置 Clangd 语言服务器以提升开发体验。具体而言你将得到这些好处：
+- 基于实际项目结构准确地跳转到声明或者定义；
+- 查看 API 文档（使用 `/**`、`//!` 等 Doxygen 格式的注释写的文档注释）；
+- 支持 `.clange-format` 定义的的代码格式化规则；
+- 无需编译，实时的静态检查或者错误检查；
+- 输入时的代码提示和补全；
+- 查找用法，代码重构等。
+
+## 准备工作
+
+首先要使用一种支持 LSP（语言服务器协议）的编辑器，如 Visual Studio Code，然后安装 clangd 及相关插件。如果需要手动安装 clangd，那么可以下载 [LLVM](https://github.com/llvm/llvm-project/releases) 的合适版本，或者使用操作系统的包管理器进行安装。
+
+在安装必要的插件之后，clangd 可能不需要任何配置就可以在简单的主机项目中使用，但是在复杂的交叉编译环境中还需要进一步配置。
+
+## 交叉编译环境配置
+
+### CMake 选项
+
+如果使用 CMake 作为构建系统，那么要打开 `CMAKE_EXPORT_COMPILE_COMMANDS` 选项，你可以通过命令行参数做到：
+``` bash
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # CMake 配置阶段的命令行参数
+```
+如果不方便使用命令行参数，也可以在任意一个 `CMakeLists.txt` 文件中定义这个变量：
+``` cmake
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+```
+然后在使用 CMake 配置或者构建项目时会在输出目录生成一个 `compile_commands.json` 文件，这个文件将会供 clangd 使用。
+
+### Clangd 配置
+
+在配置好 CMake 并生成 `compile_commands.json` 之后，clangd 可能可以部分工作，但是很可能遇到如下问题：
+- `compile_commands.json` 处在很深的目录层级，clangd 找不到它；
+- clangd 找不到适用于交叉编译环境的标准头文件，如 `stdint.h` 等。
+
+要解决这几个问题，首先要在项目的根目录（也就是编辑器所打开的目录，通常是 `.git` 文件夹所在的目录）创建一个 `.clangd` 文件，它是一个 YAML 文件，并填写内容如下：
+``` yaml
+CompileFlags:
+  CompilationDatabase: "包含 compile_commands.json 的目录的相对路径"
+  Add: 
+    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
+  Remove:
+    - -fno-reorder-functions
+```
+请根据实际情况修改文件路径。然后在 clangd 的启动参数中添加以下命令行选项：
+``` bash
+--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # 路径根据实际情况填写
+```
+然后重启语言 clangd 应该就可以正常工作了。
+
+vscode 可以在项目的 `.vscode/settings.json` 中通过 `clangd.arguments` 来添加参数：
+``` json
+{
+  "clangd.arguments": [
+    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
+  ]
+}
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/blur-overlay.md
+
+# 模糊覆盖菜单
+
+## 效果展示
+
+本教程展示将背景模糊之后展示遮盖层菜单的开发技巧。下面的示例展示了这种交互效果（点击右下角的 “...” 按钮会显示遮挡界面）。
+
+<glyphix id="cookbook-blur-overlay" width="410" height="502" title="模糊覆盖层" inline>
+
+</glyphix>
+
+本教程的主要目的是展示如何用 Glyphix 实现带有模糊的界面。
+
+## 实现方法
+
+### 文字阴影
+
+示例中的文字 “Hokkaido sika deer” 阴影可以通过叠加一层模糊文本来实现：
+``` html
+<stack class="wallpaper-title">
+  <p class="shadow">Hokkaido sika deer</p>
+  <p>Hokkaido sika deer</p>
+</stack>
+```
+将两段相同的文本放置在一个 [`stack`](/components/stack.md) 组件内，并将底层文本作为阴影。这是通过底层文本的 `shadow` CSS 类实现的：
+``` css
+.shadow {
+  color: #0008;
+  /* 为背景文本添加模糊，以呈现阴影效果 */
+  filter: blur(8px);
+  /* 必须使用 transparent 标记元素是透明的 */
+  transparent: true;
+}
+```
+将背景文本的颜色设置为半透明的灰色，并通过模糊过滤器（[`filter: blur(8px)`](/framework/generic/styles.md#filter)）属性将 `<p>` 文本组件作为阴影。请注意前景的文字颜色不应该透明，否则可能和 `.shadow` 层叠加。
+
+### 自定义字体
+
+文本 “Hokkaido sika deer” 通过自定义字体来呈现，在 Glyphix 中可以使用和 Web 一样的方法来引入自定义字体：
+``` css
+@font-face {
+  font-family: 'Playwrite Australia SA';
+  src: url('/assets/PlaywriteAUSA-Regular.ttf');
+}
+
+.wallpaper-title {
+  font-family: 'Playwrite Australia SA', 'sans-serif';
+  color: #ffffff;
+  margin-top: 25%;
+}
+```
+如你所见，可以在 CSS 通过 [`@font-face`](/framework/generic/styles.md#font-face-规则) 块来声明一个字体，并在元素的 [`font-family`](/framework/generic/styles.md#font-family) 属性中引用。
+
+### 背景层模糊
+
+由于目前通过 [`router` API](/api/system-router.md) 弹出的页面不支持半透明背景，因此不能使用页面来实现弹出菜单。但可以使用这种技巧来模拟弹出的“页面”：
+``` html
+<stack class="window" :disabled="popups">
+  <image class="wallpaper" src="/assets/images/sika-deer.jpg" />
+  ...
+</stack>
+<div class="overlay" if="popups">
+  ...
+</div>
+```
+你需要在页面中添加两层元素（本例中是 `stack.window` 和 `div.overlay`）,并通过一个条件（如 `popups`）来控制。具体来说：
+- `popups` 控制底层元素的 `disabled` 属性，因此当 `popups` 为真时，底层元素不会响应手势等输入；
+- `popups` 同时还控制顶层元素的渲染，当它为真时顶层元素会显示出来。
+
+在遮挡层弹出时，[`disabled`](/framework/generic/properties.md#disabled) 属性还提供了模糊底层元素的机会：
+``` css
+.window:disabled {
+  filter: blur(40px);
+}
+```
+当元素被设置了 `disabled` 属时，底层元素的 `:disabled` 伪元素也会激活，因此上面 CSS 的模糊效果会起作用。
+
+::: tip
+由于 Glyphix 不支持浏览器的 [`backrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) 属性，所以不能直接通过 `div.overlay` 的 CSS 规则来实现背景模糊，而是要用本示例的技巧。
+:::
+
+## 性能风险
+
+由于模糊效果是计算密集的，开发者需要特别注意它的性能负担。我们建议仅在静态界面中使用模糊效果，最好还要为需要模糊的元素添加 [`quiescent`](/framework/generic/properties.md#quiescent) 属性。
+
+如果可能的话，应该在物理设备上测试带有模糊的界面是否满足性能预期。
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/README.md
+
+# 实用指南
+
+
 
 

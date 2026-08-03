@@ -2,46 +2,830 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/a.md
+FILE_PATH: src/original_docs/components/span.md
 
-# a
+# span
 
-锚点组件，默认为行内元素，用于跳转到指定的页面。
+`span` 也是一种文本组件。和 [`p` 组件](p)不同，`span` 组件默认是行内元素并且可以跨行，[`label` ](label) 组件和 [`a`](a) 组件也有类似的效果。文本跨行是指元素可以跨越多行进行布局，而不是占据一整个“盒子”。
+
+`span` 组件可以用于实现[富文本排版](/framework/render/rich-text.md#富文本显示)。
+
+<glyphix id="span" :height="36">
+
+``` html
+<div>
+  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
+</div>
+```
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/components/canvas.md
+
+# canvas
+
+画布组件，通过使用 JavaScript 中的脚本，可以在 `canvas` 上绘制图形等。
+
+### `context`
+
+**值类型**：画布 API 获取的上下文内容
+
+**操作**：设置
+
+设置画布要绘制图形的上下文。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/marquee.md
+
+# marquee
+
+`marquee` 组件用于显示滚动的文本内容，只支持单行显示。`marquee` 组件不支持包括 `span` 在内的任何子组件。
+
+`marquee` 支持通用的 CSS 属性，但是由于实现的原因，现在可能不支持 `text-align` 属性。由于 `marquee` 只显示单行文本，并会在文本内容超长时滚动显示，`max-lines` 等属性也均不起作用。
 
 ## 属性
 
-### `href` <decl type="string" get set />
+### `text` <decl type="string" get set/>
 
-指定需要跳转的[页面名称](/framework/application/manifest.md#pages)或者 URI 字符串。
+设置文本内容，和 `p` 组件的 [`text`](p.md#text) 属性用法相同。当文本内容的长度超过 `marquee` 的宽度时，文本会自动滚动显示。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/scroll-bar.md
+
+# scroll-bar
+
+滚动条组件。该组件可以在滚动内容较多时显示滚动条，用户可以通过滚动条来控制内容的滚动。
+
+## 属性
+
+### `value` <decl type="number" set get listen />
+
+滚动条的当前值，该值是 `min` 和 `max` 之间的一个值，默认值为 $0$。
+
+### `min` <decl type="number" set />
+
+滚动条的最小值，该值应该不大于 `max`。默认值为 $0$。
+
+### `max` <decl type="number" set />
+
+滚动条的最大值，该值应该不小于 `min`。默认值为 $100$。
+
+### `pagestep` <decl type="number" set />
+
+滚动条的滚动步长，即每次滚动的距离。默认值为 $10$。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/p.md
+
+# p
+
+文本组件。`p` 默认是块级元素，和 [`span`](span) 不同，`p` 组件在设置为行内元素时也不支持文本跨行，如果需要实现富文本排版应考虑使用 `span` 等组件。
+
+## 属性
+
+### `text` <decl type="string" get set/>
+
+设置文本内容，支持如下两种写法。
 
 ``` html
-<a href="page1">跳转到 page1 页面</a>
-``` 
-
-与 Web 中的 `<a>` 标签不同，`a` 组件只支持页面跳转而不支持超链接跳转。
-
-`href` 属性还支持形如 `PageName?key=value` 的 [URI](/framework/application/resource.md#uri) 字符串，即由页面名称（作为 path 字段）和 query 字段构成的 URI。该 URI 的 query 字段会被解析为页面的跳转参数。如点击这个 `<a>` 元素时：
-
-``` html
-<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+<p text="Hello Glyphix"></p>
+<p>Hello Glyphix</p>
 ```
 
-等效于调用以下 [`router.push()`](/api/system-router.md#push) 方法：
+<glyphix id="p" :height="70" inline>
+
+``` html
+<div>
+  <p text="Hello Glyphix"></p>
+  <p>Hello Glyphix</p>
+</div>
+```
+
+</glyphix>
+
+### `color` <decl type="string" get set/>
+
+设置文本颜色，只支持十六进制的颜色代码，如 `#f00`，`#e8bb80ff` 等。该属性是修改 CSS 内联属性 [`color`](/framework/generic/styles.md#color) 的一个快捷方式。
+
+### `lines` <decl type="number" get set/>
+
+设置文本的最大行数，超过该行数的文本会被截断或者省略。该属性是修改 CSS 内联属性 [`max-lines`](/framework/generic/styles.md#max-lines) 的一个快捷方式。
+
+### `text-align` <decl type="string" set/>
+
+设置文本对齐方式，支持 `left`、`center`、`right` 等值。该属性是修改 CSS 内联属性 [`text-align`](/framework/generic/styles.md#text-align) 的一个快捷方式。
+
+### `font-size` <decl type="string" set/>
+
+设置文本字体大小，支持 `12px`、`1.5em` 等 CSS 字体大小值。该属性是修改 CSS 内联属性 [`font-size`](/framework/generic/styles.md#font-size) 的一个快捷方式。
+
+### `font-weight` <decl type="number" set/>
+
+设置文本字体字重，目前只支持整数值，如 `400`，`600` 等。该属性是修改 CSS 内联属性 [`font-weight`](/framework/generic/styles.md#font-weight) 的一个快捷方式。
+
+## 使用技巧
+
+### 尺寸控制
+
+一般情况下，不要手动设置 `p` 组件的高度，例如
+``` css
+p.my-paragraph {
+  height: 48px;
+  font-size: 32px;
+}
+```
+表面上看，这为 `p` 组件设置了一个大于字体大小的高度，但实际情况是：
+- 对于单行文本，某些字体的实际高度可能超过字体大小，即便 `48px` 的高度也可能出现垂直的裁剪。
+- 对于多行文本，设置固定高度会导致多行文本被裁剪，无法完整显示。
+
+如果你希望控制文本的显示行数，应使用 [`max-lines`](/framework/generic/styles.md#max-lines) 和 [`text-overflow`](/framework/generic/styles.md#text-overflow) 来实现文本的截断和省略，而不是设置固定高度。
+
+### 文字裁剪动画 <version-badge since="0.9"/>
+
+可以使用 [`width`](/framework/generic/styles.md#width) 属性配合 [`transition`](/framework/component/prop-modifier.md#transition-修饰符) 修饰来实现文字裁剪动画。例如：
+
+``` html
+<p :width="state ? 240 : 0"
+   width.transition="{duration: 2.0}">
+  Hello Glyphix!
+</p>
+```
+
+配合 `max-lines: 1` 样式可以实现文字从左到右的裁剪动画。但是这个动画存在一个问题：当宽度不足时，最后一个字符会被直接丢弃而不是被裁剪。目前的绕过方法是将文本内容放在一个子组件中，并对父组件设置宽度动画：
+
+``` html
+<div :width="state ? 240 : 1"
+     width.transition="{duration: 2.0}">
+  <p style="max-lines: 1">Hello Glyphix!</p>
+</div>
+```
+
+<glyphix id="p-width-transition" title="文字裁剪动画" height="120">
+
+``` html
+<div class="container">
+  <p class="animated-text"
+     :width="state ? 240 : 0"
+     width.transition="{duration: 2.0}">
+    Hello Glyphix!
+  </p>
+  <div class="animated-text"
+       :width="state ? 240 : 1"
+       width.transition="{duration: 2.0}">
+    <p>Hello Glyphix!</p>
+  </div>
+</div>
+```
 
 ``` js
-router.push({
-  uri: 'page1',
-  params: {text: 'test-text', message: 'hello'}
-})
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2500)
+  }
+}
 ```
 
+```css
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.animated-text {
+  margin: 4px;
+  border: 1px solid #f00;
+}
+
+p {
+  max-lines: 1;
+  text-overflow: clip;
+}
+````
+
+</glyphix>
+
+但是，当使用 `div` 元素作为父组件时，动画会有一个问题：当宽度为 `0` 时，布局尺寸会计算为 `(width: 0, height: 0)`，这会导致该元素无法占据垂直空间，并在动画开始时出现垂直跳动。解决方法是将宽度设置为一个非常小的值（例如 `1px`）而不是 `0`，这样元素就可以占据垂直空间，从而避免跳动问题。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/div.md
+
+# div
+
+`div` 是最基本的容器组件。`div` 支持子组件及布局，但是不支持滚动（内容超出边界会直接裁剪）。如果想要内容滚动，请使用 [scroll](scroll) 组件。
+
+## 注意事项
+
+### 文本显示
+
+`div` 组件不能直接用于显示文本，而是要使用 `p` 等文本组件来显示文本，例如：
+
+```html
+<!-- 错误的写法，不会显示文本 -->
+<div>text content.</div>
+<!-- 正确的写法 -->
+<p>text content.</p>
+```
+
+不过如果 `div` 内有多个子元素，那么可以将文本作为它的子元素：
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+<Glyphix id="components-div-text-element" height="48" width="360" inline >
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+</Glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/components/image-animator.md
+
+# image-animator
+
+`image-animator` 组件用于播放一组图片序列帧动画，组件默认是行内元素。
+
+<glyphix id="image-animator-1" height="190" width="360" >
+
+```html
+<div class="flex-column">
+  <div class="frame-box">
+    <image-animator :images="frames" :play="play" :duration="100" />
+  </div>
+  <div>
+    <button on:click="play = 'start'">start</button>
+    <button on:click="play = 'pause'">pause</button>
+    <button on:click="play = 'stop'">stop</button>
+  </div>
+</div>
+```
+
+```js
+export default {
+  data: {
+    play: "stop",
+  },
+  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
+};
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frame-box {
+  border: 2px solid lightgray;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+```
+
+</glyphix>
+
+## 属性
+
+### `images` <decl type="string[]" set />
+
+设置序列帧图片集合。`images` 的每个元素都是该帧图片的路径或者 URI。通常，每帧图片的尺寸是一致的。
+
+支持 PNG 或者 JPEG 格式的图片。
+
+如果序列帧不会变化，那么建议将其作为非响应式属性以节省内存：
+
+```js
+export default {
+  // frames 是组件的非响应式属性
+  frames: [
+    "/assets/sprite-1.png",
+    "/assets/sprite-2.png",
+    "/assets/sprite-3.png",
+  ],
+};
+```
+
+这样做的好处是多个组件对象会公用同一个 `frames` 数组对象（响应式属性会拷贝到每一个组件实例）。仅当序列帧确实需要响应式特性时，才应该将其写在 `data` 对象中。
+
+如果序列帧是按顺序编码的，那么可以使用这种技巧来简化序列帧数组的创建：
+
+```js
+export default {
+  // 从 0 开始编号的 4 帧序列帧
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
+  // 或者，从 1 开始编号的 4 帧序列帧
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
+};
+```
+
+在组件模板中将 `frames` 数组传递给 `images` 属性以指定序列帧，从而播放动画：
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+::: note
+`images` 属性现在还不支持快应用的 `ImageFrame` 结构，因此你不能使用 `[{ src: '...' }, ...]` 这样的帧集合定义。
+:::
+
+### `duration` <decl type="number" get set />
+
+指定每一帧的播放时长，单位为毫秒。
+
+### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
+
+设置播放状状态，支持开始、暂停、结束状态。`image-animator` 在初始时处于 `stop` 状态，因此会自动停在 [`images`](#images) 的第一帧位置。
+
+|    值     | 描述                   |
+| :-------: | ---------------------- |
+| `'start'` | 从当前帧开始播放。     |
+| `'pause'` | 暂停播放并显示当前帧。 |
+| `'stop'`  | 停止播放并显示第一帧。 |
+
+如上所示，`play` 只支持 `'start`、`'pause'` 或者 `'stop'` 三种枚举值。但是下面的技巧可以用来自动播放动画：
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+即直接写一个没有值的 `play` 属性，它是等效于 `:play="true"` 的[隐式属性](/framework/component/template.md#隐式属性值)写法。`true` 这种布尔类型总是会转换为默认的 `'start'` 枚举值。这种写法非常适用于需要自动播放序列帧动画的场景。
+
+### `iteration` <decl type="number" set />
+
+设置设置 `images` 中所有序列帧的重复播放次数，当达到次数上限时将自动切换到 `'pause'` 模式。`0` 表示无限次数播放。
+
+## 继承的属性
+
+`image-animator` 具有和 `image` 相同的[继承属性](/components/image.md#继承的属性)行为。
+
+## CSS 说明
+
+`image-animator` 具有和 `image` 相同的 [CSS 行为](/components/image.md#css-说明)。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/drawer-navigation.md
+
+# drawer-navigation
+
+[`drawer`](drawer) 的子组件，用来展示具体的抽屉内容。
+
+## 属性
+
+### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
+
+`direction` 属性用于设置 `drawer-navigation` 的方向，可选值为 `'left'`、`'right'`、`'up'`、`'down'`。
+
+|    值     | 描述                                              |
+| :-------: | ------------------------------------------------ |
+| `'left'`  | 屏幕左边的drawer-navigation，用于响应从左往右滑动的手势。       |
+| `'right'` | 屏幕右边的drawer-navigation，用于相应从右往左滑动的手势。       |
+|  `'up'`   | 屏幕下边的drawer-navigation，用于相应从从下往上滑动的手势。     |
+| `'down'`  | 屏幕上边的drawer-navigation，用于相应从上往下滑动的手势。       |
+
+
+
+
+
+
+============================================================
+FILE_PATH: src/original_docs/components/text.md
+
+# text
+
+文本组件，`text` 组件和 [`p` 组件](p)除了组件名称之外完全相同。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/picker.md
+
+# picker
+
+文本选择器组件。该组件显示一组文本，点击中间的文本项会触发选中事件，而滑动操作可以使所有的文本项滚动显示。
+
+::: warning
+`picker` 组件的功能没有验证过，并且无人维护。
+:::
+
+## 属性
+
+### `range` <decl type="string[]" set />
+
+`range` 属性值中的所有字符串将显示在 `picker` 组件中。用户可以操作 `picker` 组件滚动或者选择这些字符串。
+
+`range` 属性值中字符串的索引方式参考 [`index` 属性](#index)。
+
+### `loop` <decl type="boolean" set />
+
+配置 `picker` 组件是否循环（即无限长）显示。此属性值为 `true` 时开启循环显示，默认为 `false`。
+
+### `value` <decl type="string" listen />
+
+监听当前的选中项文本，滚动操作中选中项变化后会触发此监听。本属性的功能也可以通过 `on:index="handle(rangeData[$event])"` 的方法实现。
+
+### `index` <decl type="Integer" get set listen />
+
+`picker` 组件的选中项索引值。索引的规则是：[`range` 属性](#range) 属性值数组的第一个字符串项目的索引值为 $0$，其他字符串的索引依次加一。设置 `index` 属性可以指定 `picker` 组件的选中项，同时也可以监听该属性的变化来检测滚动操作导致的选中项变化。
+
+### `scroll` <decl type="{ x: number y: number }" get set listen />
+
+通过 `scroll` 属性可以监听滚动操作，同时也可以在代码中操纵 `picker` 组件显示滚动效果。类似于对齐的列表组件，`picker` 的 `scroll` 操作也会对齐到最近的项目。
+
+由于 `picker` 组件只支持垂直模式，所以 `scroll` 属性值的 `x` 字段始终为 `0`。
+
+### `scrolled` <decl type="boolean" read listen />
+
+通过 `scrolled` 属性监听 `picker` 是否处于滚动状态。事件触发的属性值为 `true` 表示 `picker` 正在滚动，否则意味着 `picker` 已经停止滚动。
+
+用户触摸产生的滚动操作和通过 `scroll` 属性来滚动都会触发 `scrolled` 事件。当 `picker` 从滚动状态停止时，`scrolled` 事件的参数值为 `false`。
+
+### `damping` <decl type="number" set />
+
+设置 `picker` 滚动动画的阻尼系数，有效取值范围为 $[0.1, 50]$（不支持的值会自动修改为上下限），默认值为 $1.5$。更大的阻尼系数会使动画停顿得更快，默认的阻尼系数值可以产生距离比较长、持续时间也比较久的惯性效果。
+
+阻尼系数应当设置成常量而不要修改，修改阻尼系数不会影响回弹时的动画。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/drawer.md
+
+# drawer
+
+抽屉组件，默认隐藏，可以通过滑动的方式展示内容。
+drawer 是基本的抽屉组件。drawer 支持子组件及布局，可以在drawer内设置4个drawer-navigation组件用于显示上下左右四个位置的抽屉。
+
+[`drawer`](drawer)组件滑动速度跟随手势滑动速度，手势滑动速度越快，组件滑动速度越快。
+
+### 示例
+
+下面的例子演示了drawer的功能
+
+<glyphix id="components-drawer" height="360" width="360" >
+
+``` html
+ <drawer class="drop-down">
+      <drawer-navigation direction="down" class="drop-down1">
+        <p>dawn panel</p>
+      </drawer-navigation>
+      <drawer-navigation direction="up" class="drop-down1">
+        <p>up panel</p>
+      </drawer-navigation>
+       <drawer-navigation direction="left" class="drop-down1">
+        <p>left panel</p>
+      </drawer-navigation>
+       <drawer-navigation direction="right" class="drop-down1">
+        <p>right panel</p>
+      </drawer-navigation>
+</drawer>
+```
+``` css
+.drop-down {
+    background-color: pink;
+  }
+.drop-down1 {
+    background-color: blue;
+  }
+p {
+  background-color: lightgreen;
+  text-align: center;
+  margin: 10px;
+}
+```
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/components/switch.md
+
+# switch
+
+开关选择组件，默认为行内元素。用于表示开/关两种状态，并允许用户在两种状态之间切换。`switch` 的功能和 `checkbox` 类似，但是交互效果和意图不同，即分别表达开关和复选。
+
+<glyphix id="components-switch" height="30">
+
+``` html
+<div>
+  <switch ::value="enabled" />
+  <span>switch state: {{ enabled ? 'on' : 'off' }}</span>
+</div>
+```
+
+``` js
+export default {
+  data: {
+    enabled: false
+  }
+}
+```
+</glyphix>
+
+::: note
+`switch` 组件的样式通常如示例中所示，但也可能因设备而异。尤其需要注意的是，不同设备上的 `switch` 宽度可能是有差异的，开发者应该预留合适的布局余量。
+:::
+
+## 属性
+
+### `value` <decl type="boolean" set get listen/>
+
+表示 `switch` 的状态，值为 `true` 时，`switch` 处于开启状态，否则处于关闭状态。当不指定 `value` 属性时，`switch` 组件默认是关闭的。
+
+### `checked` <decl type="boolean" set get/>
+
+这是快应用兼容属性，通常更推荐使用 [`value`](#value)
+
+### `change` <decl type="{ checked: boolean }" get listen/>
+
+这是快应用兼容属性，通常更推荐使用 [`value`](#value)
+
+## CSS 行为
+
+`switch` 组件的整体风格由系统决定，不受开发者控制，正如 [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) 和 [Material 3](https://m3.material.io/components/switch/overview) 的风格差异那样。Glyphix 允许在 CSS 中定制 `switch` 的颜色，并且可以调整 `switch` 的大小。
+
+### CSS 属性
+
+#### `color`
+
+设置 `switch` 组件的滑块颜色，与一般的 CSS [`color`](/framework/generic/styles.md#color) 不同，`switch` 的 `color` 属性不支持继承，因此你必须将它定义在当前 `switch` 组件上。
+
+<glyphix id="components-switch-color" height="36" title="siwtch 滑块颜色">
+
+``` html
+<div>
+  red color: <switch class="red"/>,
+  not inherited: <switch/>
+</div>
+```
+
+``` css
+div {
+  color: red; /* 注意 switch 不会继承 color 属性 */
+}
+
+.red {
+  color: red; /* 必须在 switch 组件的样式上定义 color */
+}
+```
+</glyphix>
+
+#### `background-color`
+
+控制 `switch` 组件的背景颜色，详见 [`active`](#active) 伪类的文档。 
+
+#### `font-size`
+
+可以通过 [`font-size`](/framework/generic/styles.md#font-size) CSS 属性来调整 `switch` 的大小，使其行内（inline）的文字尺寸配合协调。下面的示例演示了 `font-size` 与 `switch` 大小的关系：
+
+<glyphix id="components-switch-size" height="100" title="font-size 与 siwtch 大小">
+
+``` html
+<div>
+  <p class="title">
+    title text: <switch/> (1.25rem)
+  </p>
+  <p>
+    content text: <switch/> (1rem)
+  </p>
+</div>
+```
+
+``` css
+div {
+  line-height: 1.8rem;
+}
+
+.title {
+  color: #415a77; /* 注意 switch 不会继承 color 属性 */
+  font-size: 1.25rem;
+}
+```
+</glyphix>
+
+::: warning
+`switch` 的显示大小并不受 `width` 和 `height` 等属性的控制，而是总是由 `font-size` 决定。因此请不要手动指定 `width` 等尺寸属性，以免显示异常。
+:::
+
+### CSS 伪类
+
+#### `active`
+
+`active` 伪类用于定义 `switch` 处于打开状态的样式。如下面的示例所示，它通常和常规样式规则一起配置：
+
+<glyphix id="components-switch-colors" height="36" title="siwtch 滑块颜色设置">
+
+``` html
+<div>
+  color switch: <switch/>
+</div>
+```
+
+``` css
+/* switch 关闭状态下的样式 */
+switch {
+  color: #415a77;
+  background-color: #bde0fe;
+}
+
+/* switch 打开状态下的样式 */
+switch:active {
+  color: #fefae0;
+  background-color: #ffafcc;
+}
+```
+</glyphix>
+
+本示例通过 `color` 和 `background-color` CSS 属性来控制 `switch` 切换时的颜色样式。`switch` 组件在 `active` 伪类激活的状态下也只会响应这两个 CSS 属性的配置。
+
 ::: tip
-请注意，URI 中 query 字段的值只会被解析为字符串类型，因此 `page1?size=100` 中的 `100` 会被解析为字符串 `'100'`，而不是数字 `100`。如果需要传递特定类型的参数，请使用 [`router`](/api/system-router.md) API。
+请同时定义普通状态和 `active` 状态下的 `color` 和 `background-color` 属性，否则 `switch` 切换时不会有相应的颜色转变。
 :::
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/barcode.md
+FILE_PATH: src/original_docs/components/image.md
+
+# image
+
+图片组件用于显示图片元素，默认居中对齐。 `image` 组件默认是行内元素。
+
+## 属性
+
+### `src` <decl type="string" get set />
+
+设置图片的 [URI](/framework/application/resource.md)，对于应用包内的资产图片，支持相对路径和绝对路径。`image` 组件支持 PNG 和 JPEG 通用图片格式。
+
+::: tip
+`image` 组件只支持本地的图片资源，而不像 Web 的 `img` 元素可以直接显示网络图片资源。详情请参考如何在 Glyphix 中[显示网络图片](#显示网络图片)。
+:::
+
+### `noCache` <decl type="boolean" get set />
+
+设置图片是否要进行缓存，默认情况下会使用缓存以优化图片加载速度。在开启 `noCache` 属性时 `image` 组件不会使用缓存，此时更改 [`src`](#src) 属性后总是会从文件中重新加载图片。
+
+图片缓存是一种优化加载速度并减少内存占用的技术，当系统中已经加载了相同 URI 的图片时，开启缓存的 `image` 组件会直接使用该资源。但是从网络中下载的名称固定、内容可能变动的图片文件（如用户头像的 `internal://cache/avatar.png`）通常需要开启 `noCache` 属性才能保证行为正确。 
+
+即便开启了 `noCache` 属性，`image` 组件依然不会检测图片文件内容的更新，此时需要手动更改 [`src`](#src) 属性。考虑到响应式框架会过滤相同的赋值操作，你必须使用这样的技巧：
+``` html
+<!-- 假设这是需要更新显示的图片，no-cache 属性是必须的。 -->
+<image :src="avatarImage" no-cache />
+```
+
+``` js
+const avatarImage = 'internal://cache/avatar.png' // 假设这是从网上下载的图片
+
+export default {
+  data: {
+    avatarImage: avatarImage
+  },
+  // 在头像下载完成后调用这个方法以更新界面
+  onAvatarDownloaded() {
+    this.avatarImage = null // 必须先赋一个新的值
+    this.avatarImage = avatarImage // 重新赋值为正确的 URI
+  }
+}
+```
+在上面的示例中，响应式属性 `this.avatarImage` 首先被更改为 `null`，然后再重新赋值，这样值会发生变化，从而绕过响应式框架的优化机制，并实现图片更新。
+
+
+::: warning
+必须使用此技巧更新固定 URI 的资源，否则显示内容可能不会变化。保险起见，如果从网络中获取的资源路径可能重复，那么也需要使用此技巧确保界面更新。
+
+此外，必须等待图片下载或者文件写入完成后才能更新 `image` 组件的 `src` 属性，否则也无法正常更新界面。
+:::
+
+### `async` <decl type="boolean" get set />
+
+使用异步的方式加载图片资源。这种模式可以保证图片加载不会阻塞 UI 线程，提升界面的流畅性。但是相比于默认的同步加载模式，异步加载中的图片不会显示实际内容，因此不适用于所有界面。
+
+异步加载模式适用于从网络中下载的图片。与应用打包时会自动优化的图片资产不同，网络图片通常是 PNG 或者 JPEG 这类解码缓慢的通用格式。同步解码网络图片会非常卡顿，而且这类场景中通常不需要立即显示图片。
+
+`async` 可以和 [`noCache`](#nocache) 属性一起使用，因为后者也主要用于网络图片：
+``` html
+<image :src="avatarImage" no-cache async />
+```
+
+## 继承的属性
+
+这些属性继承自原生组件的[通用属性](/framework/generic/properties.md)，但是 `image` 组件对这些属性做了特殊处理。
+
+### `opacity` <decl type="number" set />
+
+设置图片的透明度，取值范围为 $[0, 1]$，其中 $0$ 表示完全透明，$1$ 表示完全不透明，默认值为 $1$。
+
+### `transform` <decl type="string" set />
+
+设置图片的变换效果，等效于 CSS 的 [`transform`](/framework/generic/styles.md#transform) 属性。
+
+## CSS 说明
+
+### 不支持的通用属性
+
+相比于其他原生组件，`image` 比较特殊，它不支持 `background-color`、`border` 等通用属性。这一点和 Web 标准也是非常不同的。具体而言，以下 CSS 属性不受支持：
+
+- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
+- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
+
+这意味着不能通过设置 CSS 属性为 `image` 组件添加背景颜色或图片，也不能为其设置边框样式。不过 `image` 组件是支持 [`border-radius`](/framework/generic/styles.md#border-radius) 属性的。
+
+### 特殊属性
+
+`image` 组件支持其他可用于非容器组件的 CSS 属性，但是有几个属性可用于实现特殊的效果。
+
+#### `transform`
+
+设置图片的变换，该 CSS 属性用于 `image` 时和其他元素的 [`transform`](/framework/generic/styles.md#transform) 效果类似，但是不需要设置 [`transparent`](/framework/generic/styles.md#transparent) 属性也可以正常显示。
+
+#### `opacity`
+
+设置图片的透明度，和 [`opacity`](#opacity) 属性效果一样。
+
+#### `border-radius`
+
+设置图片的圆角半径，可以使用此属性为图片添加圆角，使用方法和通用的 [`border-radius`](/framework/generic/styles.md#border-radius) 相同。`image` 组件总是会将圆角应用到图片的四个角上，无论图片的长宽比和 `image` 组件本身的长宽比是否一致。
+
+#### `object-fit`
+
+`image` 组件的 `object-fit` 属性默认值为 `none`，这与 Web 标准（默认为 `fill`）不同。默认情况下，图片不会自动缩放，而是按原始尺寸居中显示，若尺寸超出容器则会被裁剪。这种设计是出于对 MCU 设备特性的考虑：
+- **性能优先**：图片缩放通常需要额外的计算，部分设备甚至通过软件方式实现插值缩放，这会显著降低帧率。
+- **画质一致性**：某些设备上，即使是等比缩小也可能导致明显的模糊或锯齿。默认不缩放可确保像素级渲染效果不失真。
+- **内存受限**：默认缩放可能掩盖资源使用问题，导致无意中加载过大的图像，从而浪费宝贵的存储与内存空间。
+
+建议在设计阶段就提供与显示区域匹配的图片资源，尽量让图像在默认状态下即可正确显示；只有在确有需要时，才应通过显式设置 `object-fit`（如 `contain`）来调整显示效果。
+
+## 使用技巧
+
+### 显示网络图片
+
+#### 头像类场景
+
+本节演示一种需要从网络上加载图片的方法，该方法主要用于用户头像等场合，即图片在本地有固定的存储位置，但是内容可能会变化。由于 Glyphix 运行时的缓存策略，你需要使用本示例中的技巧来确保显示内容更新。
+
+``` html
+<template>
+  <image :src="avatar" no-cache />
+</template>
+```
+
+``` js
+import request from '@system.request'
+
+export default {
+  data: {
+    avatar: null
+  },
+  onInit() {
+    this.downloadAvatar()
+  },
+  async downloadAvatar() {
+    const saveFile = 'internal://files/avatar.png'
+    await request.download({
+      url: 'https://example.com/url/to/avatar.png',
+      filename: saveFile,
+    }).complete
+    // 此处技巧详见 noCache 属性的说明
+    this.avatar = null
+    this.avatar = saveFile
+  }
+}
+```
+
+
+
+============================================================
+FILE_PATH: src/original_docs/components/barcode.md
 
 # barcode
 
@@ -117,7 +901,408 @@ p {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/button.md
+FILE_PATH: src/original_docs/components/slider.md
+
+# slider
+
+滑动选择器，默认为块级元素。
+
+## 属性
+
+### `value` <decl type="number" get set listen />
+
+当前值，默认值：$10$。
+
+设置 `value` 属性时，将会改变组件的当前值。可以通过 `on` 指令监听当前值的改变，每次当前值改变都会被触发。
+
+### `min` <decl type="number" set />
+
+最小值，默认值：$0$。
+
+### `max` <decl type="number" set />
+
+最大值，默认值：$100$。
+
+### `vertical` <decl type="boolean" set />
+
+如果 `vertical` 属性的值为 `true`，`slider` 组件将会垂直显示，否则水平显示。默认值为 `false`。 
+
+## CSS 规范
+
+开发者可以通过 CSS 来调整 `slider` 组件的外观。
+
+### 尺寸计算
+
+`slider` 默认宽高和元素的字体尺寸一样，字体尺寸由 [`font-size`](/framework/generic/styles.md#font-size) 属性设置（也可以继承而来）。通过 [`width`](/framework/generic/styles.md#width) 和 [`height`](/framework/generic/styles.md#height) 属性可以自定义 `progress` 的尺寸。
+
+### CSS 属性
+
+以下 CSS 属性可能会非常有用：
+- [`background-color`](/framework/generic/styles.md#background-color) 可以控制 `slider` 的背景颜色；
+- [`color`](/framework/generic/styles.md#color) 可以控制 `slider` 的进度条颜色；
+- [`border-radius`](/framework/generic/styles.md#border-radius) 可以将 `slider` 设置为圆角边框，例如 `50%` 会产生半圆边框；
+
+其他的 CSS 属性可能也有用，例如可以使用 [`border`](/framework/generic/styles.md#border) 属性设置边框样式。
+
+### CSS 伪元素
+
+#### `value`
+
+该伪元素可以单独定义 `slider` 进度条而不包含背景部分的样式。例如可以分别设置滚动条背景和进度条部分的圆角半径，以实现外边框具有圆形线冒而进度条则是直线帽的效果。
+
+``` css
+slider {
+  border-radius: 50%; /* 滚动条背景圆角 */
+}
+
+slider::value {
+  border-radius: 0; /* 滚动条的进度条没有圆角 */
+}
+```
+
+#### `thumb` <experimental/>
+
+`thumb` 伪元素用于定义 `slider` 滑块的样式。默认情况下 `slider` 不包含手柄，要想显示手柄必须指定 `thumb` 元素的宽度和高度：
+``` css
+slider::thumb {
+  width: 150%;
+  height: 150%;
+  border-radius: 50%;
+}
+```
+百分比单位的 `width` 和 `height` 是相对于元素本身的尺寸计算的，水平 `slider` 的滑块宽高根据元素 CSS 的 `height` 计算百分比，而垂直 `slider` 的手柄宽高根据元素 CSS 的 `width` 属性计算百分比。例如元素 CSS 为
+``` css
+slider {
+  width: 200px;
+  height: 24px;
+}
+```
+此时上面的 `slider::thumb` 对应的滑块宽度和高度都是 $24\rm{px} \times 150\% = 36\rm{px}$。而手柄的圆角半径百分比尺寸则是根据手柄自己的尺寸来计算的，本例子中 `50%` 的 `thumb` 伪元素圆角半径计算值为 $36\rm{px} \times 50\%=18\rm{px}$。
+
+`thumb` 伪元素支持 `border` CSS 属性，不过边框不会超出 `thumb` 伪元素的尺寸。
+
+### CSS 示例
+
+下面的例子演示了一些通过 CSS 来自定义进度条外观的方法。
+<glyphix id="components-slider-styles" height="180" width="480" title="Slider 样式">
+
+``` html
+<div>
+  <!-- 默认样式 -->
+  <slider ::value="value" />
+  <!-- 直头进度条样式 -->
+  <slider class="flat" ::value="value" />
+  <slider class="more-style" ::value="value" />
+  <p>value: {{value}}</p>
+</div>
+```
+
+``` css
+div > * {
+  margin: 8px;
+  padding: 6px;
+}
+
+.flat::value {
+  /* value 伪元素的圆角半径设置为 0 即可实现进度条直头效果 */
+  border-radius: 0;
+}
+
+.more-style {
+  /* 自定义圆角半径 */
+  border-radius: 30%;
+  /* slider 背景色 */
+  background-color: #b3c5d7;
+  /* slider 前景颜色 */
+  color: #b5179e;
+  /* padding 可以调整 slider 前景的边距 */
+  padding: 6px;
+  height: 1rem;
+}
+
+/* 定义滚动条滑块样式 */
+.more-style::thumb {
+  width: 300%; /* 宽高比 2:1 的胶囊形滑块 */
+  height: 150%;
+  background-color: white;
+  border: 4px solid #f3722c; /* 滑块边框 */
+  border-radius: 50%;
+}
+```
+
+``` js
+export default {
+  data: { value: 50 }
+}
+```
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/components/textarea.md
+
+# textarea
+
+`textarea` <experimental/><version-badge since="0.9" /> 是一个多行文本输入组件，默认显示为块级元素。和手机或 PC 上的类似 GUI 元素不同，`textarea` 目前不响应键盘等输入设备，也不会弹出输入法界面，因此你必须手动编辑其内容。`textarea` 支持通过触摸手势操作光标（如点击和滚动），并提供了上下左右移动光标的方法。
+
+`textarea` 适合作为多行文本输入的底层组件，并根据你的需求自己实现软键盘和光标控制，详情请参考[示例](#基本示例)。
+
+::: important 兼容性
+`textarea` 是一个实验性的扩展组件，目前仅在 Glyphix 0.9 及以上版本可用，并且仅部分设备支持该组件。
+:::
+
+## 属性
+
+### `text` <decl type="string" get set listen />
+
+`text` 属性是一个字符串，它是 `textarea` 当前编辑的文本内容。读取或者监听这个值可以获取输入的文本，也可以设置该属性。
+
+通常会将 `text` 双向绑定到特定的响应式属性，也可以通过元素内部的内容来设置文本，如：
+
+```html
+<textarea ::text="inputText" />
+```
+
+或者
+
+```html
+<textarea @text="onTextChanged">{{ inputText }}</textarea>
+```
+
+:::tip
+`textarea` 的 `text` 属性与 [`text-field`](text-field.md) 的 [`value`](text-field.md#value) 属性功能类似。
+:::
+
+### `placeholder` <decl type="string" set get />
+
+当 `textarea` 的内容为空时，可以通过 `placeholder` 向用户提供一个简短的提示，如“请输入文本”等短语。
+
+`placeholder` 在输入文本为空时自动显示，因此通常只需一个固定的内容，如：
+
+```html
+<textarea ::text="inputText" placeholder="type here" />
+```
+
+### `insert` <decl type="(text: string): void" method />
+
+在光标处插入一段内容为 `text` 的文本，光标会自动移动到插入的文本之后。调用该函数会触发 `text` 监听事件。
+
+### `backspace` <decl type="(): void" method />
+
+删除光标处的字符，光标会自动向前移动。调用该函数会触发 `text` 监听事件。
+
+### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
+
+将光标向指定方向移动一个位置。`direction` 参数可选值为 `'up'`、`'down'`、`'left'`、`'right'`，分别对应上下左右四个方向。
+
+## 使用说明
+
+### 基本示例
+
+以下示例展示了 `textarea` 的基本用法。用户可以直接在文本框中输入多行文本，也可以使用下方的虚拟键盘来编辑内容：点击字母/符号键插入字符；"`×`" 键删除光标处的内容；"`Aa`" 键切换大小写；"`1#`" 键切换至符号键盘；"`Enter`" 键插入换行符；箭头键移动光标。
+
+<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea 基本示例">
+
+```html
+  <div class="window">
+    <textarea
+      id="textarea"
+      :placeholder="placeholder"
+      @text="onTextChanged"
+    >
+      {{ text }}
+    </textarea>
+    <div class="keyboard">
+      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
+        <button
+          class="kb-key"
+          for="key in row.keys"
+          :width="key.width ? key.width : null"
+          on:touchstart="onKeyEvent(key, 'down')"
+          on:touchend="onKeyEvent(key, 'up')"
+          on:touchcancel="onKeyEvent(key, 'up')"
+        >
+          {{ key.code ? key.code : key }}
+        </button>
+      </div>
+    </div>
+  </div>
+```
+
+```js
+const keyboardQwert = [
+  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
+  {
+    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboardQwertUpper = [
+  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
+  {
+    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboard123 = [
+  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
+  {
+    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+export default {
+  data: {
+    placeholder: "Enter your text here...",
+    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
+    keyboard: keyboardQwert,
+  },
+  keyboardType: "qwerty",
+
+  ta: null,
+  onReady() {
+    this.ta = this.$element("textarea");
+  },
+
+  onTextChanged() {
+    console.log("You have edited the text");
+  },
+  toggleCase() {
+    if (this.keyboardType == "qwerty") {
+      this.keyboard = keyboardQwertUpper;
+      this.keyboardType = "qwertyUpper";
+    } else if (this.keyboardType == "qwertyUpper") {
+      this.keyboard = keyboardQwert;
+      this.keyboardType = "qwerty";
+    }
+  },
+  keyboardRowStyle(row) {
+    if (row.margin)
+      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
+    return "";
+  },
+  backspaceTimer: null,
+  onKeyEvent(key, event) {
+    if (event !== "down") {
+      clearInterval(this.backspaceTimer);
+      this.backspaceTimer = null;
+      return; // skip if the key is released
+    }
+
+    if (key.code) key = key.code;
+    switch (key) {
+      case "Aa": this.toggleCase(); break;
+      case "1#":
+        this.keyboard = keyboard123;
+        this.keyboardType = "123";
+        break;
+      case "abc":
+        this.keyboard = keyboardQwert;
+        this.keyboardType = "qwerty";
+        break;
+      case "×":
+        this.ta.backspace();
+        if (event == "down") {
+          this.backspaceTimer = setTimeout(() => {
+            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
+            this.ta.backspace();
+          }, 500);
+        }
+        break;
+      case "Enter": this.ta.insert("\n"); break;
+      case "Space": this.ta.insert(" "); break;
+      case "↑": this.ta.moveCaret("up"); break;
+      case "↓": this.ta.moveCaret("down"); break;
+      case "←": this.ta.moveCaret("left"); break; 
+      case "→": this.ta.moveCaret("right"); break;
+      default: this.ta.insert(key); break;
+    }
+  },
+};
+```
+
+```css
+.window {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+textarea {
+  flex-grow: 1;
+  padding: 6px;
+  border: 2px solid #aaa6;
+  border-radius: 12px;
+  max-height: 160px;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.kb-key {
+  flex-grow: 1;
+  background-color: #f0f0f080;
+  border: 2px solid #999;
+  border-radius: 16px;
+  text-align: center;
+  padding: 6px auto;
+  margin: 2px;
+  font-size: 0.85rem;
+  min-width: 40px;
+}
+
+.kb-key:active {
+  background-color: #0003;
+  border-color: #6663;
+}
+```
+
+</glyphix>
+
+我们首先在组件的 `onReady()` 生命周期函数中通过 `$element` 方法来获取 `textarea` 组件对象，因为接下来需要通过 [`insert()`](#insert)、[`backspace`](#backspace) 和 [`moveCaret`](#movecaret) 方法来编辑内容和移动光标。
+
+在此基础上，我们就可以在 `button` 组件的触摸事件监听中调用 `textarea` 的方法，例如：
+
+```html
+<button on:touchstart="ta.insert('A')">A</button>
+```
+
+由于没有实体键盘，开发者通常需要提供自定义的键盘实现。本示例实现了完整的 QWERTY 键盘布局，支持大小写切换和符号键盘。在每一个键的触摸事件监听函数中调用相应的方法来编辑文本。箭头键通过 [`moveCaret()`](#movecaret) 方法移动光标（上下左右四个方向），换行键通过 [`insert()`](#insert) 插入换行符 `\n`。
+
+### 和 text-field 的区别
+
+`textarea` 和 `text-field` 都是文本输入组件，主要区别如下：
+
+| 特性 | `textarea` | `text-field` |
+|------|-----------|-------------|
+| 文本行数 | 单行或多行 | 单行 |
+| 换行支持 | 支持 `\n` 换行 | 不支持换行 |
+| 光标移动 | 上下移动 | 左右移动 |
+| 内容属性 | `text` | `value` |
+| 密码模式 | 不支持 | 支持 `password` 属性 |
+| 默认 display | 块级元素 | 行内元素 |
+
+
+============================================================
+FILE_PATH: src/original_docs/components/button.md
 
 # button
 
@@ -344,23 +1529,199 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/canvas.md
+FILE_PATH: src/original_docs/components/progress-arc.md
 
-# canvas
+# progress-arc
 
-画布组件，通过使用 JavaScript 中的脚本，可以在 `canvas` 上绘制图形等。
+`progress-arc` 组件用于显示环形进度条，默认为块级元素。
 
-### `context`
+## 属性
 
-**值类型**：画布 API 获取的上下文内容
+### `max` <decl type="number" set />
 
-**操作**：设置
+最大进度值，[`value`](#value) 属性不会大于它。
 
-设置画布要绘制图形的上下文。
+### `min` <decl type="number" get setet />
+
+最小进度值，[`value`](#value) 属性不会小于它。
+
+### `value` <decl type="number" get set listen />
+
+设置进度值。进度的显示比例取决于 `value` 属性在 `min` 到 `max` 区间中的比例，同时显示比例会限制在$0\% \sim 100\%$ 之间。`value` 值是一个整数，如果设置浮点值则只会截取整数部分。
+
+### `busy` <decl type="boolean" get set />
+
+设置 `progress-arc` 组件是否处于忙状态，在忙状态下会显示一个加载动画，而不是显示 `value` 属性的值。下面的示例演示了如何用一个圆形进度条来模拟加载动画：
+
+<glyphix id="components-progress-arc-busy" height="100" width="300" title="模拟加载动画">
+
+``` html
+<progress-arc busy :startAngle="0" :stopAngle="360" />
+```
+
+</glyphix>
+
+在这个例子中，进度条的开始角度和结束角度相差 $360^\circ$，此时通过 `busy` 属性可以显示典型的加载动画效果。
+
+::: tip
+只要进度条为环形就会显示固定的忙动画效果，起始和结束角度并没有影响。
+:::
+
+### `startAngle` <decl type="number" get set />
+
+弧形进度条的起始角度，默认值为 $135$，更多的信息请参考[角度配置](#角度配置)章节。
+
+### `stopAngle` <decl type="number" get set />
+
+弧形进度条的结束角度，默认值为 $405$，更多的信息请参考[角度配置](#角度配置)章节。
+
+## 使用说明
+
+### 角度配置
+
+与线性的 [`progress`](progress.md) 不同，弧形或者环形的进度条需要合理配置 `startAngle` 属性和 `stopAngle` 属性才能正常显示。这两个属性均使用角度制单位，在屏幕坐标系中，$0^\circ$ 指向水平向右的方向，即时钟 $3$ 点钟方向，并沿着顺时针方向增加，反之减小。
+
+`progress-arc` 的显示是根据 `value` 在 $[\texttt{min}, \texttt{max}]$ 中的比例对角度范围进行线性插值。具体而言，用户会看到进度的高亮角度从 `startAngle` 开始，并到 `valueAngle` 结束：
+
+$$
+\begin{aligned}
+  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
+  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
+\end{aligned}
+$$
+
+因此，如果要显示一整圈的环形进度条，需要让起始和结束角度相差 $360^\circ$，即使这两个角度从视觉上来看是相同的。另外，起始角度也可以大于结束角度，这将反转进度的方向。
+
+下面的示例展示了多种角度配置的实际效果，请注意第二个示例展示了反向的进度显示技巧。
+
+<glyphix id="components-progress-arc-angles" height="120" width="720" title="角度配置示例">
+
+``` html
+<div>
+  <p class="progress-label">{{value}}%</p>
+  <stack>
+    <p>default</p>
+    <progress-arc :value="value" />
+  </stack>
+  <stack>
+    <p>405~135</p>
+    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
+  </stack>
+  <stack>
+    <p>-45~225</p>
+    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
+  </stack>
+  <stack>
+    <p>0~360</p>
+    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
+  </stack>
+  <stack>
+    <p>-90~270</p>
+    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
+  </stack>
+</div>
+```
+
+``` js
+export default {
+  data: { value: 0 },
+  onInit() {
+    setInterval(() => {
+      this.value = this.value + 5
+      if (this.value > 100)
+        this.value = 0
+    }, 500)
+  }
+}
+```
+
+``` css
+div {
+  display: flex;
+}
+
+progress-arc {
+  width: 200px;
+  padding: 0 8px 0 8px;
+  stroke-width: 0.5rem;
+}
+
+p {
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+.progress-label {
+  width: 3.5rem;
+}
+```
+
+</glyphix>
+
+## CSS 规范
+
+### 尺寸计算
+
+`progress-arc` 的显示尺寸由它的 `width` 和 `height` 属性决定。`progress-arc` 会占满较短的轴线，且弧形进度条的圆心为元素的中心。默认情况下，`progress-arc` 的尺寸可能和一个字符接近，这会导致非常怪异的显示效果，因此通常要在 CSS 中显式指定宽高，或使用其他合理的布局策略。
+
+::: tip
+最好为 `progress-arc` 组件指定一个合理的宽度和高度，否则它可能无法辨认。至少也应该设置 `width` CSS 属性，该组件的布局策略会自动使用 $1:1$ 宽高比。
+:::
+
+### CSS 属性
+
+可以通过 CSS 来调整 `progress-arc` 组件的外观。
+
+#### `stroke-width`
+
+该属性指定 `progress-arc` 组件的弧形轮廓宽度。值类型为[长度](/framework/render/style-and-layout.md#长度)，不支持百分比单位。
+
+::: tip
+如果你希望 `progress-arc` 组件的绘制宽度和字体尺寸成一定的比例，建议使用 [`rem`](/framework/application/font-config.md#rem-字号单位) 长度单位，如 `0.15rem`。
+:::
+
+#### `color`
+
+设置 `progress-arc` 高亮进度条的颜色，默认情况下会使用系统主题色。
+
+#### `background-color`
+
+设置 `progress-arc` 背景进度条的颜色，默认情况下会根据系统主题配置。
+
+### CSS 伪元素
+
+#### `value`
+
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/checkbox.md
+FILE_PATH: src/original_docs/components/input.md
+
+# input
+
+默认为行内元素，提供可交互的界面，接收用户的输入。
+
+## 属性
+
+### `type` <decl type="'checkbox' | 'radio'" set />
+
+可设置为以上值类型的控件，根据设置的类型决定最终 `input` 组件的实际形态。
+
+### `name` <decl type="string" set />
+
+设置 `input` 组件名称。
+
+### `checked` <decl type="boolean" set />
+
+当前组件的 checked 状态，可触发 checked 伪类，type 为 checkbox 时生效，设置为 `on` 时 checkbox 默认勾选。
+
+### `value` <decl type="string" set />
+
+设置 `input` 组件的值。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/checkbox.md
 
 # checkbox
 
@@ -528,574 +1889,81 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/collapsible-header.md
+FILE_PATH: src/original_docs/components/qrcode.md
 
-# collapsible-header
+# qrcode
 
-`collapsible-header` 组件用于为滚动列表添加一个可以折叠的标题栏。这种效果用于为手表类设备提供一种节约视图区域的交互效果，提升用户体验。
+`qrcode` 组件用于显示 [QR Code](https://en.wikipedia.org/wiki/QR_code) 二维码。该组件可以显示任意文本数据，适合用于显示网址、支付码、登陆扫码链接等信息。
 
-::: warning
-<experimental /> 这是一个实验性组件，不要用本文档中没有示范的方法来使用它。
-:::
+在流式布局中，`qrcode` 组件默认为块级元素（`block`），会单独占据一行显示。
 
 ## 属性
 
-本组件支持[通用属性](/framework/generic/properties.md)，没有专用属性。
+### `value` <decl type="string" get set />
 
-## 使用方法
+设置要显示为二维码的文本数据。`qrcode` 组件会自动根据数据的长度和长度选择合适的版本，目前最高支持版本 $12$。
 
-`collapsible-header` 组件中必须要有两个子组件，否则可能产生非预期的效果。具体示例如下：
+## CSS 说明
 
-```html
-<collapsible-header>
-  <p>这是可折叠的标题</p>
-  <scroll> ... </scroll>
-</collapsible-header>
-```
+要想让二维码容易被扫描，应正确设置 `qrcode` 组件的 CSS 属性，这包括：
+- `color`：二维码的码点颜色，一般设置为黑色（`black` 或者 `#000`）；
+- `background-color`：二维码的背景色通常要是白色（`white` 或者 `#fff`）；
+- `padding` / `margin`：足够的内外边距可以避免二维码和其他元素混淆，增加扫描识别率；
+- `width` / `height`：二维码的尺寸必须足够大以方便拍摄。
 
-其中第一个子元素是一个可折叠的标题，而第二个元素必须是 [`scroll`](/components/scroll.md) 等可滚动的容器。下面是一个具体的例子：
+默认情况下二维码组件的每个码点（module）会占据 $4\rm{px}\times 4\rm{px}$ 范围，这在手表上可能只是一个勉强能被识别的尺寸。但是 flex 等布局策略可能缩小二维码的尺寸，因此建议开发者根据需要手动设置二维码组件的 `width` / `height` 属性并在设备上进行测试。
 
-<glyphix id="components-collapsible-header-1" height="360" width="360" title="可折叠标题栏">
+下面的例子展示了二维码组件的使用方法，请注意 CSS 中为 `qrcode` 组件设置了各种边距，这都是为了保证二维码和其他界面元素有足够的间隔以免干扰扫描。
 
-```html
-<collapsible-header>
-  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
-  <scroll scroll-snap="center" deformation="fisheye">
-    <p for="x in 20" class="item">item {{ x + 1 }}</p>
-  </scroll>
-</collapsible-header>
-```
-
-```js
-import prompt from "@system.prompt";
-
-export default {
-  clickTitle() {
-    prompt.showToast({ message: "title clicked" });
-  }
-}
-```
-
-```css
-.title-bar {
-  margin: 56px auto auto;
-  transparent: true;
-  font-size: 1.5rem;
-}
-
-.item {
-  height: 33.3%;
-  background-color: #ddd;
-  border-radius: 20%;
-  margin: 8px;
-  transparent: true;
-  padding: 12px;
-  text-align: center;
-}
-```
-
-</glyphix>
-
-### 原理说明
-
-`collapsible-header` 接受两个子组件，其中第一个是可折叠的标题栏，第二个必须要是类似 `scroll` 的可滚动组件。`collapsible-header` 会组合这两个组件，并在列表滚动时操纵可折叠的标题栏的显示效果。
-
-可以使用类似流式布局的方法来控制标题栏的位置，例如：
-
-```css
-/* 元素的顶部间距为 48px，左右居中，适用于圆形屏幕。 */
-margin: 48px auto auto;
-/* 元素左侧和顶部间距为 12px，适用于方型屏幕。 */
-margin: 12px auto auto 12px;
-```
-
-根据实际需求将上述样式设置给标题栏元素即可实现特定的对齐效果。还可以使用包含子元素的复杂组件作为标题栏，例如使用一个包含返回按钮和页面标题文本的组件。但要注意，在点击标题栏时，点击事件可以同时发送到滚动列表和标题栏，如果存在冲突，可以通过阻止事件冒泡来解决。
-
-### 注意事项
-
-必须为 `collapsible-header` 按照上述要求提供两个子组件，且不要搞错顺序。另外，由于可折叠的标题栏和底层的滚动列表是堆叠显示的，这可能让列表的第一个元素和标题栏重叠显示。必要时，开发者应考虑某种占位方式来避免重叠，且 `scroll` 的居中[吸附模式](/components/scroll.md#scrollsnap)（`scroll-snap="center"`）也可以避免重叠。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/div.md
-
-# div
-
-`div` 是最基本的容器组件。`div` 支持子组件及布局，但是不支持滚动（内容超出边界会直接裁剪）。如果想要内容滚动，请使用 [scroll](scroll) 组件。
-
-## 注意事项
-
-### 文本显示
-
-`div` 组件不能直接用于显示文本，而是要使用 `p` 等文本组件来显示文本，例如：
-
-```html
-<!-- 错误的写法，不会显示文本 -->
-<div>text content.</div>
-<!-- 正确的写法 -->
-<p>text content.</p>
-```
-
-不过如果 `div` 内有多个子元素，那么可以将文本作为它的子元素：
-
-```html
-<div>
-  first element,
-  <span style="color: #f0f">second element.</span>
-</div>
-```
-
-<Glyphix id="components-div-text-element" height="48" width="360" inline >
-
-```html
-<div>
-  first element,
-  <span style="color: #f0f">second element.</span>
-</div>
-```
-
-</Glyphix>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/drawer-navigation.md
-
-# drawer-navigation
-
-[`drawer`](drawer) 的子组件，用来展示具体的抽屉内容。
-
-## 属性
-
-### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
-
-`direction` 属性用于设置 `drawer-navigation` 的方向，可选值为 `'left'`、`'right'`、`'up'`、`'down'`。
-
-|    值     | 描述                                              |
-| :-------: | ------------------------------------------------ |
-| `'left'`  | 屏幕左边的drawer-navigation，用于响应从左往右滑动的手势。       |
-| `'right'` | 屏幕右边的drawer-navigation，用于相应从右往左滑动的手势。       |
-|  `'up'`   | 屏幕下边的drawer-navigation，用于相应从从下往上滑动的手势。     |
-| `'down'`  | 屏幕上边的drawer-navigation，用于相应从上往下滑动的手势。       |
-
-
-
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/drawer.md
-
-# drawer
-
-抽屉组件，默认隐藏，可以通过滑动的方式展示内容。
-drawer 是基本的抽屉组件。drawer 支持子组件及布局，可以在drawer内设置4个drawer-navigation组件用于显示上下左右四个位置的抽屉。
-
-[`drawer`](drawer)组件滑动速度跟随手势滑动速度，手势滑动速度越快，组件滑动速度越快。
-
-### 示例
-
-下面的例子演示了drawer的功能
-
-<glyphix id="components-drawer" height="360" width="360" >
+<glyphix id="qrcode-1" :height="450" :width="350">
 
 ``` html
- <drawer class="drop-down">
-      <drawer-navigation direction="down" class="drop-down1">
-        <p>dawn panel</p>
-      </drawer-navigation>
-      <drawer-navigation direction="up" class="drop-down1">
-        <p>up panel</p>
-      </drawer-navigation>
-       <drawer-navigation direction="left" class="drop-down1">
-        <p>left panel</p>
-      </drawer-navigation>
-       <drawer-navigation direction="right" class="drop-down1">
-        <p>right panel</p>
-      </drawer-navigation>
-</drawer>
-```
-``` css
-.drop-down {
-    background-color: pink;
-  }
-.drop-down1 {
-    background-color: blue;
-  }
-p {
-  background-color: lightgreen;
-  text-align: center;
-  margin: 10px;
-}
-```
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/image-animator.md
-
-# image-animator
-
-`image-animator` 组件用于播放一组图片序列帧动画，组件默认是行内元素。
-
-<glyphix id="image-animator-1" height="190" width="360" >
-
-```html
-<div class="flex-column">
-  <div class="frame-box">
-    <image-animator :images="frames" :play="play" :duration="100" />
-  </div>
-  <div>
-    <button on:click="play = 'start'">start</button>
-    <button on:click="play = 'pause'">pause</button>
-    <button on:click="play = 'stop'">stop</button>
-  </div>
+<div>
+  <qrcode :value="text"/>
+  <p>{{ text }}</p>
 </div>
 ```
 
-```js
+``` js
 export default {
   data: {
-    play: "stop",
-  },
-  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
-};
+    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
+  }
+}
 ```
 
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.frame-box {
-  border: 2px solid lightgray;
-  border-radius: 8px;
+``` css
+div {
+  background-color: black;
   padding: 8px;
 }
 
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
+qrcode {
+  margin: 16px;
+  padding: 16px;
+  color: black; /* 将二维码前景色设置为黑色 */
+  background-color: white; /* 将二维码背景色设置为白色 */
+  border-radius: 16px;
 }
 
-button:active {
-  opacity: 0.5;
+p {
+  color: white;
+  font-size: 0.75rem;
 }
 ```
 
 </glyphix>
 
-## 属性
-
-### `images` <decl type="string[]" set />
-
-设置序列帧图片集合。`images` 的每个元素都是该帧图片的路径或者 URI。通常，每帧图片的尺寸是一致的。
-
-支持 PNG 或者 JPEG 格式的图片。
-
-如果序列帧不会变化，那么建议将其作为非响应式属性以节省内存：
-
-```js
-export default {
-  // frames 是组件的非响应式属性
-  frames: [
-    "/assets/sprite-1.png",
-    "/assets/sprite-2.png",
-    "/assets/sprite-3.png",
-  ],
-};
-```
-
-这样做的好处是多个组件对象会公用同一个 `frames` 数组对象（响应式属性会拷贝到每一个组件实例）。仅当序列帧确实需要响应式特性时，才应该将其写在 `data` 对象中。
-
-如果序列帧是按顺序编码的，那么可以使用这种技巧来简化序列帧数组的创建：
-
-```js
-export default {
-  // 从 0 开始编号的 4 帧序列帧
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
-  // 或者，从 1 开始编号的 4 帧序列帧
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
-};
-```
-
-在组件模板中将 `frames` 数组传递给 `images` 属性以指定序列帧，从而播放动画：
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-::: note
-`images` 属性现在还不支持快应用的 `ImageFrame` 结构，因此你不能使用 `[{ src: '...' }, ...]` 这样的帧集合定义。
-:::
-
-### `duration` <decl type="number" get set />
-
-指定每一帧的播放时长，单位为毫秒。
-
-### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
-
-设置播放状状态，支持开始、暂停、结束状态。`image-animator` 在初始时处于 `stop` 状态，因此会自动停在 [`images`](#images) 的第一帧位置。
-
-|    值     | 描述                   |
-| :-------: | ---------------------- |
-| `'start'` | 从当前帧开始播放。     |
-| `'pause'` | 暂停播放并显示当前帧。 |
-| `'stop'`  | 停止播放并显示第一帧。 |
-
-如上所示，`play` 只支持 `'start`、`'pause'` 或者 `'stop'` 三种枚举值。但是下面的技巧可以用来自动播放动画：
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-即直接写一个没有值的 `play` 属性，它是等效于 `:play="true"` 的[隐式属性](/framework/component/template.md#隐式属性值)写法。`true` 这种布尔类型总是会转换为默认的 `'start'` 枚举值。这种写法非常适用于需要自动播放序列帧动画的场景。
-
-### `iteration` <decl type="number" set />
-
-设置设置 `images` 中所有序列帧的重复播放次数，当达到次数上限时将自动切换到 `'pause'` 模式。`0` 表示无限次数播放。
-
-## 继承的属性
-
-`image-animator` 具有和 `image` 相同的[继承属性](/components/image.md#继承的属性)行为。
-
-## CSS 说明
-
-`image-animator` 具有和 `image` 相同的 [CSS 行为](/components/image.md#css-说明)。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/image.md
-
-# image
-
-图片组件用于显示图片元素，默认居中对齐。 `image` 组件默认是行内元素。
-
-## 属性
-
-### `src` <decl type="string" get set />
-
-设置图片的 [URI](/framework/application/resource.md)，对于应用包内的资产图片，支持相对路径和绝对路径。`image` 组件支持 PNG 和 JPEG 通用图片格式。
-
 ::: tip
-`image` 组件只支持本地的图片资源，而不像 Web 的 `img` 元素可以直接显示网络图片资源。详情请参考如何在 Glyphix 中[显示网络图片](#显示网络图片)。
+应总是显式设置**高对比度**的二维码组件的码点颜色（`color`）和背景（`background-color`）样式。以免设备的默认样式主题和继承的样式属性偏差导致识别性下降。
+
+同时，请设置足够大的内边距（`padding`），确保容易扫描识别。
 :::
-
-### `noCache` <decl type="boolean" get set />
-
-设置图片是否要进行缓存，默认情况下会使用缓存以优化图片加载速度。在开启 `noCache` 属性时 `image` 组件不会使用缓存，此时更改 [`src`](#src) 属性后总是会从文件中重新加载图片。
-
-图片缓存是一种优化加载速度并减少内存占用的技术，当系统中已经加载了相同 URI 的图片时，开启缓存的 `image` 组件会直接使用该资源。但是从网络中下载的名称固定、内容可能变动的图片文件（如用户头像的 `internal://cache/avatar.png`）通常需要开启 `noCache` 属性才能保证行为正确。 
-
-即便开启了 `noCache` 属性，`image` 组件依然不会检测图片文件内容的更新，此时需要手动更改 [`src`](#src) 属性。考虑到响应式框架会过滤相同的赋值操作，你必须使用这样的技巧：
-``` html
-<!-- 假设这是需要更新显示的图片，no-cache 属性是必须的。 -->
-<image :src="avatarImage" no-cache />
-```
-
-``` js
-const avatarImage = 'internal://cache/avatar.png' // 假设这是从网上下载的图片
-
-export default {
-  data: {
-    avatarImage: avatarImage
-  },
-  // 在头像下载完成后调用这个方法以更新界面
-  onAvatarDownloaded() {
-    this.avatarImage = null // 必须先赋一个新的值
-    this.avatarImage = avatarImage // 重新赋值为正确的 URI
-  }
-}
-```
-在上面的示例中，响应式属性 `this.avatarImage` 首先被更改为 `null`，然后再重新赋值，这样值会发生变化，从而绕过响应式框架的优化机制，并实现图片更新。
-
-
-::: warning
-必须使用此技巧更新固定 URI 的资源，否则显示内容可能不会变化。保险起见，如果从网络中获取的资源路径可能重复，那么也需要使用此技巧确保界面更新。
-
-此外，必须等待图片下载或者文件写入完成后才能更新 `image` 组件的 `src` 属性，否则也无法正常更新界面。
-:::
-
-### `async` <decl type="boolean" get set />
-
-使用异步的方式加载图片资源。这种模式可以保证图片加载不会阻塞 UI 线程，提升界面的流畅性。但是相比于默认的同步加载模式，异步加载中的图片不会显示实际内容，因此不适用于所有界面。
-
-异步加载模式适用于从网络中下载的图片。与应用打包时会自动优化的图片资产不同，网络图片通常是 PNG 或者 JPEG 这类解码缓慢的通用格式。同步解码网络图片会非常卡顿，而且这类场景中通常不需要立即显示图片。
-
-`async` 可以和 [`noCache`](#nocache) 属性一起使用，因为后者也主要用于网络图片：
-``` html
-<image :src="avatarImage" no-cache async />
-```
-
-## 继承的属性
-
-这些属性继承自原生组件的[通用属性](/framework/generic/properties.md)，但是 `image` 组件对这些属性做了特殊处理。
-
-### `opacity` <decl type="number" set />
-
-设置图片的透明度，取值范围为 $[0, 1]$，其中 $0$ 表示完全透明，$1$ 表示完全不透明，默认值为 $1$。
-
-### `transform` <decl type="string" set />
-
-设置图片的变换效果，等效于 CSS 的 [`transform`](/framework/generic/styles.md#transform) 属性。
-
-## CSS 说明
-
-### 不支持的通用属性
-
-相比于其他原生组件，`image` 比较特殊，它不支持 `background-color`、`border` 等通用属性。这一点和 Web 标准也是非常不同的。具体而言，以下 CSS 属性不受支持：
-
-- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
-- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
-
-这意味着不能通过设置 CSS 属性为 `image` 组件添加背景颜色或图片，也不能为其设置边框样式。不过 `image` 组件是支持 [`border-radius`](/framework/generic/styles.md#border-radius) 属性的。
-
-### 特殊属性
-
-`image` 组件支持其他可用于非容器组件的 CSS 属性，但是有几个属性可用于实现特殊的效果。
-
-#### `transform`
-
-设置图片的变换，该 CSS 属性用于 `image` 时和其他元素的 [`transform`](/framework/generic/styles.md#transform) 效果类似，但是不需要设置 [`transparent`](/framework/generic/styles.md#transparent) 属性也可以正常显示。
-
-#### `opacity`
-
-设置图片的透明度，和 [`opacity`](#opacity) 属性效果一样。
-
-#### `border-radius`
-
-设置图片的圆角半径，可以使用此属性为图片添加圆角，使用方法和通用的 [`border-radius`](/framework/generic/styles.md#border-radius) 相同。`image` 组件总是会将圆角应用到图片的四个角上，无论图片的长宽比和 `image` 组件本身的长宽比是否一致。
-
-#### `object-fit`
-
-`image` 组件的 `object-fit` 属性默认值为 `none`，这与 Web 标准（默认为 `fill`）不同。默认情况下，图片不会自动缩放，而是按原始尺寸居中显示，若尺寸超出容器则会被裁剪。这种设计是出于对 MCU 设备特性的考虑：
-- **性能优先**：图片缩放通常需要额外的计算，部分设备甚至通过软件方式实现插值缩放，这会显著降低帧率。
-- **画质一致性**：某些设备上，即使是等比缩小也可能导致明显的模糊或锯齿。默认不缩放可确保像素级渲染效果不失真。
-- **内存受限**：默认缩放可能掩盖资源使用问题，导致无意中加载过大的图像，从而浪费宝贵的存储与内存空间。
-
-建议在设计阶段就提供与显示区域匹配的图片资源，尽量让图像在默认状态下即可正确显示；只有在确有需要时，才应通过显式设置 `object-fit`（如 `contain`）来调整显示效果。
-
-## 使用技巧
-
-### 显示网络图片
-
-#### 头像类场景
-
-本节演示一种需要从网络上加载图片的方法，该方法主要用于用户头像等场合，即图片在本地有固定的存储位置，但是内容可能会变化。由于 Glyphix 运行时的缓存策略，你需要使用本示例中的技巧来确保显示内容更新。
-
-``` html
-<template>
-  <image :src="avatar" no-cache />
-</template>
-```
-
-``` js
-import request from '@system.request'
-
-export default {
-  data: {
-    avatar: null
-  },
-  onInit() {
-    this.downloadAvatar()
-  },
-  async downloadAvatar() {
-    const saveFile = 'internal://files/avatar.png'
-    await request.download({
-      url: 'https://example.com/url/to/avatar.png',
-      filename: saveFile,
-    }).complete
-    // 此处技巧详见 noCache 属性的说明
-    this.avatar = null
-    this.avatar = saveFile
-  }
-}
-```
 
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/input.md
-
-# input
-
-默认为行内元素，提供可交互的界面，接收用户的输入。
-
-## 属性
-
-### `type` <decl type="'checkbox' | 'radio'" set />
-
-可设置为以上值类型的控件，根据设置的类型决定最终 `input` 组件的实际形态。
-
-### `name` <decl type="string" set />
-
-设置 `input` 组件名称。
-
-### `checked` <decl type="boolean" set />
-
-当前组件的 checked 状态，可触发 checked 伪类，type 为 checkbox 时生效，设置为 `on` 时 checkbox 默认勾选。
-
-### `value` <decl type="string" set />
-
-设置 `input` 组件的值。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/label.md
-
-# label
-
-`label` 组件用于展示文本或者标记信息，默认为行内元素。`label` 可以配合以下表单组件显示标记信息：
-- [input](input)
-- [radio](radio)
-- [switch](switch)
-- [checkbox](checkbox)
-
-当 `label` 与支持的表单组件关联后，点击 `label` 组件也会触发表单组件的值更新。
-
-## 属性
-
-### `text` <decl type="string" set get />
-
-标签的文本内容，支持属性语法或者文本子元素语法：
-``` html
-<label text="label text"></label>
-<label>label text</label>
-```
-
-### `target` <decl type="string" set get />
-
-目标组件的 ID。例如：
-```html
-<radio id="red" /><label target="red">red</label>
-```
-点击例子中的 `label` 组件之后也会触发 ID 为 `red` 的 `radio` 组件更新，但是点击 `label` 组件并不会触发目标组件的 `click` 等触摸事件。
-
-考虑到性能问题，只支持和 `label` 组件同级的目标组件（即具有相同的父组件）。
-
-::: warning
-目前不支持更改目标组件。
-:::
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/list-item.md
-
-# list-item
-
-`list` 的子组件，用来展示列表具体 item，支持子组件及布局，但是不支持滚动。
-
-::: tip
-Glyphix 并不提供和快应用一样的 list 容器组件，而是用 [`scroll`](scroll.md) 实现滚动容器。同样的，也不需要使用 `list-item` 组件，请直接使用 [`div`](div.md) 或者其他任何组件作为列表项元素。
-:::
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/mapview.md
+FILE_PATH: src/original_docs/components/mapview.md
 
 # mapview
 
@@ -1440,792 +2308,134 @@ export default {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/marquee.md
+FILE_PATH: src/original_docs/components/collapsible-header.md
 
-# marquee
+# collapsible-header
 
-`marquee` 组件用于显示滚动的文本内容，只支持单行显示。`marquee` 组件不支持包括 `span` 在内的任何子组件。
+`collapsible-header` 组件用于为滚动列表添加一个可以折叠的标题栏。这种效果用于为手表类设备提供一种节约视图区域的交互效果，提升用户体验。
 
-`marquee` 支持通用的 CSS 属性，但是由于实现的原因，现在可能不支持 `text-align` 属性。由于 `marquee` 只显示单行文本，并会在文本内容超长时滚动显示，`max-lines` 等属性也均不起作用。
-
-## 属性
-
-### `text` <decl type="string" get set/>
-
-设置文本内容，和 `p` 组件的 [`text`](p.md#text) 属性用法相同。当文本内容的长度超过 `marquee` 的宽度时，文本会自动滚动显示。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/p.md
-
-# p
-
-文本组件。`p` 默认是块级元素，和 [`span`](span) 不同，`p` 组件在设置为行内元素时也不支持文本跨行，如果需要实现富文本排版应考虑使用 `span` 等组件。
+::: warning
+<experimental /> 这是一个实验性组件，不要用本文档中没有示范的方法来使用它。
+:::
 
 ## 属性
 
-### `text` <decl type="string" get set/>
+本组件支持[通用属性](/framework/generic/properties.md)，没有专用属性。
 
-设置文本内容，支持如下两种写法。
+## 使用方法
 
-``` html
-<p text="Hello Glyphix"></p>
-<p>Hello Glyphix</p>
+`collapsible-header` 组件中必须要有两个子组件，否则可能产生非预期的效果。具体示例如下：
+
+```html
+<collapsible-header>
+  <p>这是可折叠的标题</p>
+  <scroll> ... </scroll>
+</collapsible-header>
 ```
 
-<glyphix id="p" :height="70" inline>
+其中第一个子元素是一个可折叠的标题，而第二个元素必须是 [`scroll`](/components/scroll.md) 等可滚动的容器。下面是一个具体的例子：
 
-``` html
-<div>
-  <p text="Hello Glyphix"></p>
-  <p>Hello Glyphix</p>
-</div>
+<glyphix id="components-collapsible-header-1" height="360" width="360" title="可折叠标题栏">
+
+```html
+<collapsible-header>
+  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
+  <scroll scroll-snap="center" deformation="fisheye">
+    <p for="x in 20" class="item">item {{ x + 1 }}</p>
+  </scroll>
+</collapsible-header>
 ```
 
-</glyphix>
+```js
+import prompt from "@system.prompt";
 
-### `color` <decl type="string" get set/>
-
-设置文本颜色，只支持十六进制的颜色代码，如 `#f00`，`#e8bb80ff` 等。该属性是修改 CSS 内联属性 [`color`](/framework/generic/styles.md#color) 的一个快捷方式。
-
-### `lines` <decl type="number" get set/>
-
-设置文本的最大行数，超过该行数的文本会被截断或者省略。该属性是修改 CSS 内联属性 [`max-lines`](/framework/generic/styles.md#max-lines) 的一个快捷方式。
-
-### `text-align` <decl type="string" set/>
-
-设置文本对齐方式，支持 `left`、`center`、`right` 等值。该属性是修改 CSS 内联属性 [`text-align`](/framework/generic/styles.md#text-align) 的一个快捷方式。
-
-### `font-size` <decl type="string" set/>
-
-设置文本字体大小，支持 `12px`、`1.5em` 等 CSS 字体大小值。该属性是修改 CSS 内联属性 [`font-size`](/framework/generic/styles.md#font-size) 的一个快捷方式。
-
-### `font-weight` <decl type="number" set/>
-
-设置文本字体字重，目前只支持整数值，如 `400`，`600` 等。该属性是修改 CSS 内联属性 [`font-weight`](/framework/generic/styles.md#font-weight) 的一个快捷方式。
-
-## 使用技巧
-
-### 尺寸控制
-
-一般情况下，不要手动设置 `p` 组件的高度，例如
-``` css
-p.my-paragraph {
-  height: 48px;
-  font-size: 32px;
-}
-```
-表面上看，这为 `p` 组件设置了一个大于字体大小的高度，但实际情况是：
-- 对于单行文本，某些字体的实际高度可能超过字体大小，即便 `48px` 的高度也可能出现垂直的裁剪。
-- 对于多行文本，设置固定高度会导致多行文本被裁剪，无法完整显示。
-
-如果你希望控制文本的显示行数，应使用 [`max-lines`](/framework/generic/styles.md#max-lines) 和 [`text-overflow`](/framework/generic/styles.md#text-overflow) 来实现文本的截断和省略，而不是设置固定高度。
-
-### 文字裁剪动画 <version-badge since="0.9"/>
-
-可以使用 [`width`](/framework/generic/styles.md#width) 属性配合 [`transition`](/framework/component/prop-modifier.md#transition-修饰符) 修饰来实现文字裁剪动画。例如：
-
-``` html
-<p :width="state ? 240 : 0"
-   width.transition="{duration: 2.0}">
-  Hello Glyphix!
-</p>
-```
-
-配合 `max-lines: 1` 样式可以实现文字从左到右的裁剪动画。但是这个动画存在一个问题：当宽度不足时，最后一个字符会被直接丢弃而不是被裁剪。目前的绕过方法是将文本内容放在一个子组件中，并对父组件设置宽度动画：
-
-``` html
-<div :width="state ? 240 : 1"
-     width.transition="{duration: 2.0}">
-  <p style="max-lines: 1">Hello Glyphix!</p>
-</div>
-```
-
-<glyphix id="p-width-transition" title="文字裁剪动画" height="120">
-
-``` html
-<div class="container">
-  <p class="animated-text"
-     :width="state ? 240 : 0"
-     width.transition="{duration: 2.0}">
-    Hello Glyphix!
-  </p>
-  <div class="animated-text"
-       :width="state ? 240 : 1"
-       width.transition="{duration: 2.0}">
-    <p>Hello Glyphix!</p>
-  </div>
-</div>
-```
-
-``` js
 export default {
-  data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2500)
+  clickTitle() {
+    prompt.showToast({ message: "title clicked" });
   }
 }
 ```
 
 ```css
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+.title-bar {
+  margin: 56px auto auto;
+  transparent: true;
+  font-size: 1.5rem;
 }
 
-.animated-text {
-  margin: 4px;
-  border: 1px solid #f00;
-}
-
-p {
-  max-lines: 1;
-  text-overflow: clip;
-}
-````
-
-</glyphix>
-
-但是，当使用 `div` 元素作为父组件时，动画会有一个问题：当宽度为 `0` 时，布局尺寸会计算为 `(width: 0, height: 0)`，这会导致该元素无法占据垂直空间，并在动画开始时出现垂直跳动。解决方法是将宽度设置为一个非常小的值（例如 `1px`）而不是 `0`，这样元素就可以占据垂直空间，从而避免跳动问题。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/picker.md
-
-# picker
-
-文本选择器组件。该组件显示一组文本，点击中间的文本项会触发选中事件，而滑动操作可以使所有的文本项滚动显示。
-
-::: warning
-`picker` 组件的功能没有验证过，并且无人维护。
-:::
-
-## 属性
-
-### `range` <decl type="string[]" set />
-
-`range` 属性值中的所有字符串将显示在 `picker` 组件中。用户可以操作 `picker` 组件滚动或者选择这些字符串。
-
-`range` 属性值中字符串的索引方式参考 [`index` 属性](#index)。
-
-### `loop` <decl type="boolean" set />
-
-配置 `picker` 组件是否循环（即无限长）显示。此属性值为 `true` 时开启循环显示，默认为 `false`。
-
-### `value` <decl type="string" listen />
-
-监听当前的选中项文本，滚动操作中选中项变化后会触发此监听。本属性的功能也可以通过 `on:index="handle(rangeData[$event])"` 的方法实现。
-
-### `index` <decl type="Integer" get set listen />
-
-`picker` 组件的选中项索引值。索引的规则是：[`range` 属性](#range) 属性值数组的第一个字符串项目的索引值为 $0$，其他字符串的索引依次加一。设置 `index` 属性可以指定 `picker` 组件的选中项，同时也可以监听该属性的变化来检测滚动操作导致的选中项变化。
-
-### `scroll` <decl type="{ x: number y: number }" get set listen />
-
-通过 `scroll` 属性可以监听滚动操作，同时也可以在代码中操纵 `picker` 组件显示滚动效果。类似于对齐的列表组件，`picker` 的 `scroll` 操作也会对齐到最近的项目。
-
-由于 `picker` 组件只支持垂直模式，所以 `scroll` 属性值的 `x` 字段始终为 `0`。
-
-### `scrolled` <decl type="boolean" read listen />
-
-通过 `scrolled` 属性监听 `picker` 是否处于滚动状态。事件触发的属性值为 `true` 表示 `picker` 正在滚动，否则意味着 `picker` 已经停止滚动。
-
-用户触摸产生的滚动操作和通过 `scroll` 属性来滚动都会触发 `scrolled` 事件。当 `picker` 从滚动状态停止时，`scrolled` 事件的参数值为 `false`。
-
-### `damping` <decl type="number" set />
-
-设置 `picker` 滚动动画的阻尼系数，有效取值范围为 $[0.1, 50]$（不支持的值会自动修改为上下限），默认值为 $1.5$。更大的阻尼系数会使动画停顿得更快，默认的阻尼系数值可以产生距离比较长、持续时间也比较久的惯性效果。
-
-阻尼系数应当设置成常量而不要修改，修改阻尼系数不会影响回弹时的动画。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/progress-arc.md
-
-# progress-arc
-
-`progress-arc` 组件用于显示环形进度条，默认为块级元素。
-
-## 属性
-
-### `max` <decl type="number" set />
-
-最大进度值，[`value`](#value) 属性不会大于它。
-
-### `min` <decl type="number" get setet />
-
-最小进度值，[`value`](#value) 属性不会小于它。
-
-### `value` <decl type="number" get set listen />
-
-设置进度值。进度的显示比例取决于 `value` 属性在 `min` 到 `max` 区间中的比例，同时显示比例会限制在$0\% \sim 100\%$ 之间。`value` 值是一个整数，如果设置浮点值则只会截取整数部分。
-
-### `busy` <decl type="boolean" get set />
-
-设置 `progress-arc` 组件是否处于忙状态，在忙状态下会显示一个加载动画，而不是显示 `value` 属性的值。下面的示例演示了如何用一个圆形进度条来模拟加载动画：
-
-<glyphix id="components-progress-arc-busy" height="100" width="300" title="模拟加载动画">
-
-``` html
-<progress-arc busy :startAngle="0" :stopAngle="360" />
-```
-
-</glyphix>
-
-在这个例子中，进度条的开始角度和结束角度相差 $360^\circ$，此时通过 `busy` 属性可以显示典型的加载动画效果。
-
-::: tip
-只要进度条为环形就会显示固定的忙动画效果，起始和结束角度并没有影响。
-:::
-
-### `startAngle` <decl type="number" get set />
-
-弧形进度条的起始角度，默认值为 $135$，更多的信息请参考[角度配置](#角度配置)章节。
-
-### `stopAngle` <decl type="number" get set />
-
-弧形进度条的结束角度，默认值为 $405$，更多的信息请参考[角度配置](#角度配置)章节。
-
-## 使用说明
-
-### 角度配置
-
-与线性的 [`progress`](progress.md) 不同，弧形或者环形的进度条需要合理配置 `startAngle` 属性和 `stopAngle` 属性才能正常显示。这两个属性均使用角度制单位，在屏幕坐标系中，$0^\circ$ 指向水平向右的方向，即时钟 $3$ 点钟方向，并沿着顺时针方向增加，反之减小。
-
-`progress-arc` 的显示是根据 `value` 在 $[\texttt{min}, \texttt{max}]$ 中的比例对角度范围进行线性插值。具体而言，用户会看到进度的高亮角度从 `startAngle` 开始，并到 `valueAngle` 结束：
-
-$$
-\begin{aligned}
-  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
-  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
-\end{aligned}
-$$
-
-因此，如果要显示一整圈的环形进度条，需要让起始和结束角度相差 $360^\circ$，即使这两个角度从视觉上来看是相同的。另外，起始角度也可以大于结束角度，这将反转进度的方向。
-
-下面的示例展示了多种角度配置的实际效果，请注意第二个示例展示了反向的进度显示技巧。
-
-<glyphix id="components-progress-arc-angles" height="120" width="720" title="角度配置示例">
-
-``` html
-<div>
-  <p class="progress-label">{{value}}%</p>
-  <stack>
-    <p>default</p>
-    <progress-arc :value="value" />
-  </stack>
-  <stack>
-    <p>405~135</p>
-    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
-  </stack>
-  <stack>
-    <p>-45~225</p>
-    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
-  </stack>
-  <stack>
-    <p>0~360</p>
-    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
-  </stack>
-  <stack>
-    <p>-90~270</p>
-    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
-  </stack>
-</div>
-```
-
-``` js
-export default {
-  data: { value: 0 },
-  onInit() {
-    setInterval(() => {
-      this.value = this.value + 5
-      if (this.value > 100)
-        this.value = 0
-    }, 500)
-  }
-}
-```
-
-``` css
-div {
-  display: flex;
-}
-
-progress-arc {
-  width: 200px;
-  padding: 0 8px 0 8px;
-  stroke-width: 0.5rem;
-}
-
-p {
-  text-align: center;
-  font-size: 0.7rem;
-}
-
-.progress-label {
-  width: 3.5rem;
-}
-```
-
-</glyphix>
-
-## CSS 规范
-
-### 尺寸计算
-
-`progress-arc` 的显示尺寸由它的 `width` 和 `height` 属性决定。`progress-arc` 会占满较短的轴线，且弧形进度条的圆心为元素的中心。默认情况下，`progress-arc` 的尺寸可能和一个字符接近，这会导致非常怪异的显示效果，因此通常要在 CSS 中显式指定宽高，或使用其他合理的布局策略。
-
-::: tip
-最好为 `progress-arc` 组件指定一个合理的宽度和高度，否则它可能无法辨认。至少也应该设置 `width` CSS 属性，该组件的布局策略会自动使用 $1:1$ 宽高比。
-:::
-
-### CSS 属性
-
-可以通过 CSS 来调整 `progress-arc` 组件的外观。
-
-#### `stroke-width`
-
-该属性指定 `progress-arc` 组件的弧形轮廓宽度。值类型为[长度](/framework/render/style-and-layout.md#长度)，不支持百分比单位。
-
-::: tip
-如果你希望 `progress-arc` 组件的绘制宽度和字体尺寸成一定的比例，建议使用 [`rem`](/framework/application/font-config.md#rem-字号单位) 长度单位，如 `0.15rem`。
-:::
-
-#### `color`
-
-设置 `progress-arc` 高亮进度条的颜色，默认情况下会使用系统主题色。
-
-#### `background-color`
-
-设置 `progress-arc` 背景进度条的颜色，默认情况下会根据系统主题配置。
-
-### CSS 伪元素
-
-#### `value`
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/progress.md
-
-# progress
-
-`progress` 组件用于显示进度条，默认为块级元素。
-
-## 属性
-
-### `max` <decl type="number" set />
-
-最大进度值，[`value`](#value) 属性不会大于它。
-
-### `min` <decl type="number" set />
-
-最小进度值，[`value`](#value) 属性不会小于它。
-
-### `value` <decl type="number" set get listen />
-
-设置进度值。进度的显示比例取决于 `value` 属性在 `min` 到 `max` 区间中的比例，同时显示比例会限制在$0\% \sim 100\%$ 之间。`value` 值是一个整数，如果设置浮点值则只会截取整数部分。
-
-### `vertical` <decl type="boolean" set />
-
-如果 `vertical` 属性的值为 `true`，`progress` 组件将会垂直显示，否则水平显示。默认值为 `false`。 
-
-## CSS 规范
-
-开发者可以通过 CSS 来调整 `progress` 组件的外观。
-
-### 尺寸计算
-
-`progress` 默认宽高和元素的字体尺寸一样，字体尺寸由 [`font-size`](/framework/generic/styles.md#font-size) 属性设置（也可以继承而来）。通过 [`width`](/framework/generic/styles.md#width) 和 [`height`](/framework/generic/styles.md#height) 属性可以自定义 `progress` 的尺寸。
-
-### CSS 属性
-
-以下 CSS 属性可能会非常有用：
-- [`background-color`](/framework/generic/styles.md#background-color) 可以控制 `progress` 的背景颜色；
-- [`color`](/framework/generic/styles.md#color) 可以控制 `progress` 的进度条颜色；
-- [`border-radius`](/framework/generic/styles.md#border-radius) 可以将 `progress` 设置为圆角边框，例如 `50%` 会产生半圆边框；
-
-其他的 CSS 属性可能也有用，例如可以使用 [`border`](/framework/generic/styles.md#border) 属性设置边框样式。
-
-### CSS 伪元素
-
-#### `value`
-
-该伪元素可以单独定义 `progress` 进度条而不包含背景部分的样式。例如可以分别设置滚动条背景和进度条部分的圆角半径，以实现外边框具有圆形线冒而进度条则是直线帽的效果。
-
-``` css
-progress {
-  border-radius: 50%; /* 滚动条背景圆角 */
-}
-
-progress::value {
-  border-radius: 0; /* 滚动条的进度条没有圆角 */
-}
-```
-
-### CSS 示例
-
-下面的例子演示了一些通过 CSS 来自定义进度条外观的方法。
-
-<glyphix id="components-progress-styles" height="140" width="480" title="进度条样式">
-
-``` html
-<div>
-  <!-- 默认样式 -->
-  <progress :value="40" />
-  <!-- 直头进度条样式 -->
-  <progress class="flat" :value="50" />
-  <progress class="more-style" :value="60" />
-</div>
-```
-
-``` css
-div > * {
+.item {
+  height: 33.3%;
+  background-color: #ddd;
+  border-radius: 20%;
   margin: 8px;
-}
-
-.flat::value {
-  /* value 伪元素的圆角半径设置为 0 即可实现进度条直头效果 */
-  border-radius: 0;
-}
-
-.more-style {
-  /* 自定义圆角半径 */
-  border-radius: 30%;
-  /* 进度条背景色 */
-  background-color: #b3c5d7;
-  /* 进度条前景颜色 */
-  color: #b5179e;
-  /* padding 可以调整进度条前景的边距 */
-  padding: 6px;
-  height: 1.25rem;
+  transparent: true;
+  padding: 12px;
+  text-align: center;
 }
 ```
 
 </glyphix>
 
+### 原理说明
+
+`collapsible-header` 接受两个子组件，其中第一个是可折叠的标题栏，第二个必须要是类似 `scroll` 的可滚动组件。`collapsible-header` 会组合这两个组件，并在列表滚动时操纵可折叠的标题栏的显示效果。
+
+可以使用类似流式布局的方法来控制标题栏的位置，例如：
+
+```css
+/* 元素的顶部间距为 48px，左右居中，适用于圆形屏幕。 */
+margin: 48px auto auto;
+/* 元素左侧和顶部间距为 12px，适用于方型屏幕。 */
+margin: 12px auto auto 12px;
+```
+
+根据实际需求将上述样式设置给标题栏元素即可实现特定的对齐效果。还可以使用包含子元素的复杂组件作为标题栏，例如使用一个包含返回按钮和页面标题文本的组件。但要注意，在点击标题栏时，点击事件可以同时发送到滚动列表和标题栏，如果存在冲突，可以通过阻止事件冒泡来解决。
+
+### 注意事项
+
+必须为 `collapsible-header` 按照上述要求提供两个子组件，且不要搞错顺序。另外，由于可折叠的标题栏和底层的滚动列表是堆叠显示的，这可能让列表的第一个元素和标题栏重叠显示。必要时，开发者应考虑某种占位方式来避免重叠，且 `scroll` 的居中[吸附模式](/components/scroll.md#scrollsnap)（`scroll-snap="center"`）也可以避免重叠。
+
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/pullable.md
+FILE_PATH: src/original_docs/components/label.md
 
-# pullable
+# label
 
-`pullable` 组件用于在滚动列表内添加在顶部下拉和底部上拉时触发增量加载或者刷新交互的功能。`pullable` 组件默认是块级元素。
+`label` 组件用于展示文本或者标记信息，默认为行内元素。`label` 可以配合以下表单组件显示标记信息：
+- [input](input)
+- [radio](radio)
+- [switch](switch)
+- [checkbox](checkbox)
+
+当 `label` 与支持的表单组件关联后，点击 `label` 组件也会触发表单组件的值更新。
+
+## 属性
+
+### `text` <decl type="string" set get />
+
+标签的文本内容，支持属性语法或者文本子元素语法：
+``` html
+<label text="label text"></label>
+<label>label text</label>
+```
+
+### `target` <decl type="string" set get />
+
+目标组件的 ID。例如：
+```html
+<radio id="red" /><label target="red">red</label>
+```
+点击例子中的 `label` 组件之后也会触发 ID 为 `red` 的 `radio` 组件更新，但是点击 `label` 组件并不会触发目标组件的 `click` 等触摸事件。
+
+考虑到性能问题，只支持和 `label` 组件同级的目标组件（即具有相同的父组件）。
 
 ::: warning
-<experimental /> 这是一个实验性组件，`pullable` 的功能并不稳定，并且动效可能不够自然。
-:::
-
-`pullable` 应该是 [`scroll`](scroll.md) 的第一个或者最后一个子组件。当它是第一个子组件时，在 `scroll` 内容的头部继续下拉将会触发 `pulling` 事件；相反，当 `pullable` 是 `scroll` 的最后一个子组件时，在底部上拉会触发 `pulling` 事件。
-
-`pullable` 组件默认处于隐藏状态，只在被上/下拉的时候才会显示。下面的例子演示了 `pullable` 组件的使用方法。
-
-<glyphix id="components-pullable-1" height="360" width="360" title="上/下拉加载更多">
-
-```html
-<scroll scrollbar>
-  <pullable :hold="pulldown" on:pulling="onPulldown">
-    <progress-arc busy start-angle="0" stop-angle="360" />
-    <p>{{pulldown || 'keep pull down...'}}</p>
-  </pullable>
-  <p for="item in items">item ({{item}})</p>
-  <pullable :hold="pullup" on:pulling="onPullup">
-    <progress-arc busy start-angle="0" stop-angle="360" />
-    <p>{{pullup || 'keep pull up...'}}</p>
-  </pullable>
-</scroll>
-```
-
-```js
-export default {
-  data: {
-    pulldown: null,
-    pullup: null,
-    items: []
-  },
-  first: 0,
-  last: 0,
-  onInit() {
-    this.update(0, 10)
-  },
-  update(first, last) {
-    for (let i = this.first; i > first; --i)
-      this.items.unshift(i)
-    for (let i = this.last; i < last; ++i)
-      this.items.push(i)
-    this.first = first
-    this.last = last
-  },
-  onPulldown(event) {
-    this.pulldown = event ? 'please release' : 'updating...'
-    if (!event) {
-      setTimeout(() => {
-        this.update(this.first - 5, this.last)
-        this.pulldown = null
-      }, 1000)
-    }
-  },
-  onPullup(event) {
-    this.pullup = event ? 'please release' : 'updating...'
-    if (!event) {
-      setTimeout(() => {
-        this.update(this.first, this.last + 5)
-        this.pullup = null
-      }, 1000)
-    }
-  }
-}
-```
-
-```css
-scroll {
-  display: flex;
-  flex-direction: column;
-}
-
-scroll > p {
-  background-color: #ddd;
-  border-radius: 32px;
-  margin: 12px;
-  padding: 32px;
-  text-align: center;
-}
-
-pullable {
-  display: flex;
-  justify-content: center;
-  margin: 32px;
-}
-
-pullable > progress-arc {
-  stroke-width: 0.25rem;
-  margin-right: 16px;
-}
-```
-
-</glyphix>
-
-详细的用法请参考[使用说明](#使用说明)。
-
-## 属性
-
-### `hold` <decl type="bool" get set />
-
-默认情况下，`pullable` 仅仅在顶部下拉或底部上拉时可见，但是当 `hold` 属性为 `true` 时，`pullable` 组件将保持显示状态。该属性通常在 [`pulling`](#pulling) 事件导致了内容更新时设置，并在内容更新完成后取消。
-
-### `pulling` <decl type="bool" get listen />
-
-当 `pullable` 在完全被拉出时会触发 `pulling` 事件，其事件值的含义为：
-- `true`：在下拉/上拉达到 `pullable` 的完全拉出触发距离时触发此事件；
-- `false`：在达到上述完全拉出条件后，用户松手时触发此事件。
-
-下面的示例展示了 `pulling` 事件值的触发时机。你可以尝试缓慢地从列表顶部下拉，并注意触发 `pulling` 事件时的 toast 弹窗信息。
-
-<glyphix id="components-pullable-pulling" height="360" width="360" title="pulling 事件">
-
-```html
-<scroll scrollbar>
-  <pullable :hold="refresh" on:pulling="onPulling">
-    <p>pulling...</p>
-  </pullable>
-  <p for="item in 10">item {{item}}</p>
-</scroll>
-```
-
-```js
-import prompt from '@system.prompt'
-
-export default {
-  data: {
-    refresh: false
-  },
-  onPulling(event) {
-    prompt.showToast({
-      message: `pulling: ${event ? 'trigged' : 'release'}`
-    })
-    if (!event) {
-      this.refresh = true
-      setTimeout(() => this.refresh = false, 1000)
-    }
-  }
-}
-```
-
-```css
-scroll {
-  display: flex;
-  flex-direction: column;
-}
-
-scroll > p {
-  background-color: #ddd;
-  border-radius: 32px;
-  margin: 12px;
-  padding: 32px;
-  text-align: center;
-}
-
-pullable {
-  text-align: center;
-  margin: 32px;
-}
-```
-
-</glyphix>
-
-## 使用说明
-
-### 组件位置
-
-`pullable` 组件必须是垂直 `scroll` 的第一个或者最后一个子元素。它会根据位置自动决定操作模式：当是第一个子元素是检测用户从列表顶部下拉的操作，反之亦然。
-
-对于只需要下拉刷新的列表来说，以下用法就可以了：
-```html
-<scroll>
-  <pullable :hold="refresh" on:pulling="onPulling">
-    <p>pulling...</p>
-  </pullable>
-  <div for="item in items">
-    ...
-  </div>
-</scroll>
-```
-
-JavaScript 代码中可以监听 `pulling` 事件，并控制 `refresh` 属性：
-``` js
-export default {
-  data: {
-    refresh: false
-  },
-  onPulling(hold) {
-    if (!hold) { // 用户松手时 hold 为 false
-      this.refresh = true // 表示正在刷新
-      // 本示例中用一个定时器模拟加载操作，并在 1s 后停止加载
-      setTimeout(() => this.refresh = false, 1000)
-    }
-  }
-}
-```
-
-具体的效果请参考 [`pulling`](#pulling) 事件文档的示例。
-
-### 提示内容控制
-
-`pullable` 组件内部可以容纳各种组件来显示提示内容。如本文当前面的示例那样，你可以将加载动画和提示文本结合起来。此外，`pulling` 事件的值可以用于控制提示内容，通常建议使用这样的状态处理方式：
-1. 为每个 `pullable` 组件设置一个响应式属性（例如 `refresh`），默认值为 `null`，`refresh` 属性还用于控制 `pullable` 的 [`hold`](#hold) 属性。
-2. 处于初始状态时（即 `refresh` 为假），`pullable` 的提示内容应该提醒用户“继续拉拽以进行更新”。
-3. 当用户下拉时，会触发 `pulling` 事件，根据其事件值采取 4 或 5 步骤。
-4. `pulling` 为 `true` 时，应该提示用户“松手以开始刷新”。
-5. `pulling` 为 `false` 时表示用户已经松手，此时应该将 `refresh` 置为 `true` 并开始刷新内容。并应该提醒用户“正在刷新中”。
-6. 内容刷新完成后，重新将 `refresh` 置为 `false`，回到初始状态。
-
-你也可以参考本文档的第一个示例，它同时实现了在列表头部下拉和尾部上拉的继续加载功能。该示例使用了一个技巧，仅使用一个响应式属性来控制 `pullable` 的所有状态。
-
-该技巧将 `refresh` 响应式属性的初始值设置为 `null`（类似于 `false`），并使用这样的模板代码：
-``` html
-<pullable :hold="refresh" on:pulling="onPulling">
-  <p>{{refresh || '继续下拉'}}</p>
-</pullable>
-```
-当 `refresh` 没有设置时，一旦 `pullable` 被拉出来就会显示默认的“继续下拉”提示内容。然后，`onPulling` 事件回调函数应该这样编写：
-``` js
-export default {
-  async onPulling(event) {
-    this.refresh = event ? '请松手' : '更新中'
-    if (!event) { // 松手时触发刷新操作
-        await runRefreshJobs()
-        this.refresh = null // 刷新完成后重置状态
-    }
-  }
-}
-```
-
-### 限制
-
-目前 `pullable` 组件存在一些限制。除了必须在垂直的 `scroll` 组件中使用外，你还需要保证列表元素的数量超出 `scroll` 可视区域的尺寸，否则可能会出现问题。此外，`pullable` 的交互效果可能也比较生硬。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/qrcode.md
-
-# qrcode
-
-`qrcode` 组件用于显示 [QR Code](https://en.wikipedia.org/wiki/QR_code) 二维码。该组件可以显示任意文本数据，适合用于显示网址、支付码、登陆扫码链接等信息。
-
-在流式布局中，`qrcode` 组件默认为块级元素（`block`），会单独占据一行显示。
-
-## 属性
-
-### `value` <decl type="string" get set />
-
-设置要显示为二维码的文本数据。`qrcode` 组件会自动根据数据的长度和长度选择合适的版本，目前最高支持版本 $12$。
-
-## CSS 说明
-
-要想让二维码容易被扫描，应正确设置 `qrcode` 组件的 CSS 属性，这包括：
-- `color`：二维码的码点颜色，一般设置为黑色（`black` 或者 `#000`）；
-- `background-color`：二维码的背景色通常要是白色（`white` 或者 `#fff`）；
-- `padding` / `margin`：足够的内外边距可以避免二维码和其他元素混淆，增加扫描识别率；
-- `width` / `height`：二维码的尺寸必须足够大以方便拍摄。
-
-默认情况下二维码组件的每个码点（module）会占据 $4\rm{px}\times 4\rm{px}$ 范围，这在手表上可能只是一个勉强能被识别的尺寸。但是 flex 等布局策略可能缩小二维码的尺寸，因此建议开发者根据需要手动设置二维码组件的 `width` / `height` 属性并在设备上进行测试。
-
-下面的例子展示了二维码组件的使用方法，请注意 CSS 中为 `qrcode` 组件设置了各种边距，这都是为了保证二维码和其他界面元素有足够的间隔以免干扰扫描。
-
-<glyphix id="qrcode-1" :height="450" :width="350">
-
-``` html
-<div>
-  <qrcode :value="text"/>
-  <p>{{ text }}</p>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
-  }
-}
-```
-
-``` css
-div {
-  background-color: black;
-  padding: 8px;
-}
-
-qrcode {
-  margin: 16px;
-  padding: 16px;
-  color: black; /* 将二维码前景色设置为黑色 */
-  background-color: white; /* 将二维码背景色设置为白色 */
-  border-radius: 16px;
-}
-
-p {
-  color: white;
-  font-size: 0.75rem;
-}
-```
-
-</glyphix>
-
-::: tip
-应总是显式设置**高对比度**的二维码组件的码点颜色（`color`）和背景（`background-color`）样式。以免设备的默认样式主题和继承的样式属性偏差导致识别性下降。
-
-同时，请设置足够大的内边距（`padding`），确保容易扫描识别。
+目前不支持更改目标组件。
 :::
 
 
-
 ============================================================
-FILE_PATH: src/original_docs/src/components/radio.md
+FILE_PATH: src/original_docs/components/radio.md
 
 # radio
 
@@ -2335,39 +2545,71 @@ label {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/README.md
+FILE_PATH: src/original_docs/components/stack.md
 
-# 原生组件
+# stack
+
+`stack` 堆叠布局组件。在堆叠布局中，每个子组件的尺寸和位置和 `stack` 组件相同，并且按照先后顺序依次堆叠显示。下面的例子展示了两个在 `stack` 组件内重叠显示的文本元素。
+
+<glyphix id="components-stack-layout" height="100" width="200" title="堆叠布局">
+
+``` html
+<stack>
+  <p class="text1">Text 1</p>
+  <p class="text2">Text 2</p>
+</stack>
+```
+
+``` css
+* {
+  text-align: center;
+}
+
+.text1 {
+  font-size: 64px;
+  color: #fff;
+}
+
+.text2 {
+  font-size: 48px;
+  color: #f008;
+}
+
+stack {
+  background-color: gray;
+}
+```
+
+</glyphix>
+
+::: tip
+`stack` 组件总是使用堆叠显示的布局策略，无法通过 `display` 等 CSS 属性更改为其他布局（如 flex 布局或流式布局）。
+:::
+
+## 布局行为
+
+`stack` 组件具有固定的堆叠布局策略。其尺寸由两种约束决定：
+1. `stack` 的尺寸首先由 [`width`](../framework/generic/styles.md#width) 或 [`height`](../framework/generic/styles.md#width) 等尺寸 CSS 属性指定；
+2. 父级元素的布局可能会直接决定 `stack` 的布局，如 flex 布局中的 `align-items: stretch`、`flex: 1` 等属性；
+3. 否则 `stack` 组件的尺寸由子元素的最大宽度和最大高度决定。
+
+一旦确定了 `stack` 的尺寸，那么它的所有子元素都会具有相同的外框尺寸（即子元素加上 `border` 和 `margin` 后的尺寸）。这有时会导致困扰，例如通过 `stack` 将一张图片做为背景，而上层的元素尺寸过大会导致这张图片可能铺不满。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/scroll-bar.md
+FILE_PATH: src/original_docs/components/list-item.md
 
-# scroll-bar
+# list-item
 
-滚动条组件。该组件可以在滚动内容较多时显示滚动条，用户可以通过滚动条来控制内容的滚动。
+`list` 的子组件，用来展示列表具体 item，支持子组件及布局，但是不支持滚动。
 
-## 属性
-
-### `value` <decl type="number" set get listen />
-
-滚动条的当前值，该值是 `min` 和 `max` 之间的一个值，默认值为 $0$。
-
-### `min` <decl type="number" set />
-
-滚动条的最小值，该值应该不大于 `max`。默认值为 $0$。
-
-### `max` <decl type="number" set />
-
-滚动条的最大值，该值应该不小于 `min`。默认值为 $100$。
-
-### `pagestep` <decl type="number" set />
-
-滚动条的滚动步长，即每次滚动的距离。默认值为 $10$。
+::: tip
+Glyphix 并不提供和快应用一样的 list 容器组件，而是用 [`scroll`](scroll.md) 实现滚动容器。同样的，也不需要使用 `list-item` 组件，请直接使用 [`div`](div.md) 或者其他任何组件作为列表项元素。
+:::
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/scroll.md
+FILE_PATH: src/original_docs/components/scroll.md
 
 # scroll
 
@@ -3040,78 +3282,307 @@ HTML 的 `div` 没有直接对应于 `scroll` 在 `overflow: clip` 时的行为�
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/slider-arc.md
+FILE_PATH: src/original_docs/components/text-field.md
 
-# slider-arc
+# text-field
 
-弧形滑动选择器，默认是块级元素，暂不支持样式修改。
+用于输入单行文本内容的组件，默认为行内元素。和手机或 PC 上的类似 GUI 元素不同，`text-field` 目前不响应键盘等输入设备，也不会弹出输入法界面，因此你必须手动编辑其内容。`text-field` 支持通过触摸手势操作光标（如点击和滚动）。
+
+`text-field` 适合作为单行文本输入的底层组件，并根据你的需求自己实现软键盘（如密码九宫格，甚至是语音输入），详情请参考[示例](#基本示例)。
 
 ## 属性
 
-继承 [slider](slider) 组件的属性
+### `value` <decl type="string" set get listen />
 
-### `arc-center` <decl type="{ x: number, y: number }" set />
+`value` 属性是一个字符串，它是 `text-field` 当前编辑的内容。读取或者监听这个值可以获取输入的文本，也可以设置该属性。
 
-设置圆弧圆心的位置。
+通常会将 `value` 双向绑定到特定的响应式属性，如：
 
-### `start-angle` <decl type="number" set />
+```html
+<text-field ::value="inputText" />
+```
 
-设置圆弧开始角度，默认值：$-90$。
+### `placeholder` <decl type="string" set get />
 
-### `progress-angle` <decl type="number" set />
+当 `text-field` 的内容为空时，可以通过 `placeholder` 向用户提供一个简短的提示，如“请输入文本”等短语。
 
-设置圆弧最大转动角度，默认值：$360$，一周圆弧。
+`placeholder` 在输入文本为空时自动显示，因此通常只需一个固定的内容，如：
 
-### `arc-width` <decl type="number" set />
+```html
+<text-field ::value="inputText" placeholder="type here" />
+```
 
-设置圆弧宽度。
+### `password` <decl type="boolean" set get />
 
-### `arc-radius` <decl type="number" set />
+当该属性被设置时，`text-area` 将使用“密码模式”，即每个字符会被替换为“•”（[Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm)）。你可以随时关闭或者打开 `password` 属性，以实现显示、隐藏密码状态的切换。
 
-设置圆弧半径。
+在新版本中 <version-badge since="0.9" />，密码模式会延时遮盖输入的字符，用户可以在短时间内看到刚输入的字符，之后才会被替换为“•”。旧版本则会立即遮盖输入字符。
+
+### `insert` <decl type="(text: string): void" method />
+
+在光标处插入一段内容为 `text` 的文本，光标会自动移动到插入的文本之后。调用该函数会触发 `value` 监听事件。
+
+### `backspace` <decl type="(): void" method />
+
+删除光标处的字符，光标会自动向前移动。调用该函数会触发 `value` 监听事件。
+
+## 使用说明
+
+### 基本示例
+
+以下示例展示了 `text-field` 的基本用法。你可以点击键盘按钮来输入数字。点击“×”按钮来删除光标处的内容，点击“A/*”则会在密码模式和普通文本输入模式之间切换。密码模式下，输入的内容会以 `•` 隐藏。
+
+<glyphix id="components-text-field-1" width="410" height="160">
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <!-- 一个简单的矩阵数字键盘 -->
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
+</div>
+```
+
+```js
+export default {
+  data: {
+    inputText: "",
+    password: false,
+  },
+  keyboard: [
+    ['1', '2', '3', '4', '5'],
+    ['6', '7', '8', '9', '0'],
+  ],
+  textField: null,
+  onReady() {
+    // 获取 TextField 组件对象，方便调用 insert() 和 backspace() 方法。
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  text-align: center;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+本示例中 `text-field` 的文本是居中显示的，这是通过 `text-align` 实现的：
+```css
+text-field {
+  text-align: center;
+}
+```
+
+我们首先在组件的 `onReady()` 生命周期函数中通过 `$element` 方法来获取 `text-field` 组件对象，因为接下来需要通过 [`insert()`](#insert) 和 [`backspace`](#backspace) 方法来编辑内容。
+
+在此基础上，我们就可以直接在 `button` 组件的 `click` 事件监听中调用 `text-field` 的方法，例如：
+```html
+<button on:click="textField.backspace()">×</button>
+```
+
+由于没有实体键盘，开发者通常需要提供自定义的键盘实现。处于教学的目的，本示例仅实现了 2 行 5 列的数字键盘。并要在每一个键的 `click` 事件监听函数中将键值插入到 `text-field` 中：
+```html
+<div class="flex-row" for="rows in keyboard">
+  <button class="flex-1" for="key in rows"
+          on:click="textField.insert(key)">
+    {{key}}
+  </button>
+</div>
+```
+
+本示例还演示了切换密码模式的标准方法。
+
+### 内容验证和格式化
+
+你可以通过将 `text-field` 的 [`value`](#value) 属性双向绑定到一个计算属性上来实现对输入内容的验证和格式化。下面的示例展示了这种方法，该示例最多只允许你输入 9 位数字（不能输入字母等），并会在每三位数之间添加“`,`” 分隔。
+
+<glyphix id="components-text-field-validator" title="内容验证器" width="410" height="200">
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
+</div>
+```
+
+```js
+export default {
+  data: {
+    password: false,
+    rawText: "",
+  },
+  computed: {
+    inputText: {
+      get() { return this.rawText },
+      set(text) {
+        if (text.length < 12 && /^[\d,]*$/.test(text)) {
+          this.rawText = text.replace(/[^\d]/g, '')
+                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+      },
+    },
+  },
+  keyboard: [
+    ["1", "2", "3", "4", "5"],
+    ["6", "7", "8", "9", "0"],
+    ["A", "B", "C", "D", "E"],
+  ],
+  textField: null,
+  onReady() {
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+内容验证和格式化是通过双向绑定和计算属性来实现的。对于 `text-field` 组件节点
+```html
+<text-field id="text-field"
+            ::value="inputText"
+            :password="password"
+            placeholder="type here" />
+```
+来说，`value` 属性被双向绑定到了 `inputText`，后者其实是一个计算属性。它的 `set()` 方法会检查输入内容是否符合规范（最多 11 个字符，且只允许数字和逗号），然后通过正则表达式来过滤数字，并按照每三位数字之间加逗号进行格式化：
+```js
+function set(text) {
+  if (text.length < 12 && /^[\d,]*$/.test(text)) {
+    this.rawText = text.replace(/[^\d]/g, '')
+                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+}
+```
+如果输入的内容不符合要求，那么 `set()` 方法会忽略输入值，双向绑定机制会使得 `text-field` 的内容和 `inputText` 的属性值（通过 `get()` 方法获取）保持一致。因此你会发现无法输入字母按键。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/slider.md
+FILE_PATH: src/original_docs/components/progress.md
 
-# slider
+# progress
 
-滑动选择器，默认为块级元素。
+`progress` 组件用于显示进度条，默认为块级元素。
 
 ## 属性
 
-### `value` <decl type="number" get set listen />
+### `max` <decl type="number" set />
 
-当前值，默认值：$10$。
-
-设置 `value` 属性时，将会改变组件的当前值。可以通过 `on` 指令监听当前值的改变，每次当前值改变都会被触发。
+最大进度值，[`value`](#value) 属性不会大于它。
 
 ### `min` <decl type="number" set />
 
-最小值，默认值：$0$。
+最小进度值，[`value`](#value) 属性不会小于它。
 
-### `max` <decl type="number" set />
+### `value` <decl type="number" set get listen />
 
-最大值，默认值：$100$。
+设置进度值。进度的显示比例取决于 `value` 属性在 `min` 到 `max` 区间中的比例，同时显示比例会限制在$0\% \sim 100\%$ 之间。`value` 值是一个整数，如果设置浮点值则只会截取整数部分。
 
 ### `vertical` <decl type="boolean" set />
 
-如果 `vertical` 属性的值为 `true`，`slider` 组件将会垂直显示，否则水平显示。默认值为 `false`。 
+如果 `vertical` 属性的值为 `true`，`progress` 组件将会垂直显示，否则水平显示。默认值为 `false`。 
 
 ## CSS 规范
 
-开发者可以通过 CSS 来调整 `slider` 组件的外观。
+开发者可以通过 CSS 来调整 `progress` 组件的外观。
 
 ### 尺寸计算
 
-`slider` 默认宽高和元素的字体尺寸一样，字体尺寸由 [`font-size`](/framework/generic/styles.md#font-size) 属性设置（也可以继承而来）。通过 [`width`](/framework/generic/styles.md#width) 和 [`height`](/framework/generic/styles.md#height) 属性可以自定义 `progress` 的尺寸。
+`progress` 默认宽高和元素的字体尺寸一样，字体尺寸由 [`font-size`](/framework/generic/styles.md#font-size) 属性设置（也可以继承而来）。通过 [`width`](/framework/generic/styles.md#width) 和 [`height`](/framework/generic/styles.md#height) 属性可以自定义 `progress` 的尺寸。
 
 ### CSS 属性
 
 以下 CSS 属性可能会非常有用：
-- [`background-color`](/framework/generic/styles.md#background-color) 可以控制 `slider` 的背景颜色；
-- [`color`](/framework/generic/styles.md#color) 可以控制 `slider` 的进度条颜色；
-- [`border-radius`](/framework/generic/styles.md#border-radius) 可以将 `slider` 设置为圆角边框，例如 `50%` 会产生半圆边框；
+- [`background-color`](/framework/generic/styles.md#background-color) 可以控制 `progress` 的背景颜色；
+- [`color`](/framework/generic/styles.md#color) 可以控制 `progress` 的进度条颜色；
+- [`border-radius`](/framework/generic/styles.md#border-radius) 可以将 `progress` 设置为圆角边框，例如 `50%` 会产生半圆边框；
 
 其他的 CSS 属性可能也有用，例如可以使用 [`border`](/framework/generic/styles.md#border) 属性设置边框样式。
 
@@ -3119,59 +3590,37 @@ FILE_PATH: src/original_docs/src/components/slider.md
 
 #### `value`
 
-该伪元素可以单独定义 `slider` 进度条而不包含背景部分的样式。例如可以分别设置滚动条背景和进度条部分的圆角半径，以实现外边框具有圆形线冒而进度条则是直线帽的效果。
+该伪元素可以单独定义 `progress` 进度条而不包含背景部分的样式。例如可以分别设置滚动条背景和进度条部分的圆角半径，以实现外边框具有圆形线冒而进度条则是直线帽的效果。
 
 ``` css
-slider {
+progress {
   border-radius: 50%; /* 滚动条背景圆角 */
 }
 
-slider::value {
+progress::value {
   border-radius: 0; /* 滚动条的进度条没有圆角 */
 }
 ```
 
-#### `thumb` <experimental/>
-
-`thumb` 伪元素用于定义 `slider` 滑块的样式。默认情况下 `slider` 不包含手柄，要想显示手柄必须指定 `thumb` 元素的宽度和高度：
-``` css
-slider::thumb {
-  width: 150%;
-  height: 150%;
-  border-radius: 50%;
-}
-```
-百分比单位的 `width` 和 `height` 是相对于元素本身的尺寸计算的，水平 `slider` 的滑块宽高根据元素 CSS 的 `height` 计算百分比，而垂直 `slider` 的手柄宽高根据元素 CSS 的 `width` 属性计算百分比。例如元素 CSS 为
-``` css
-slider {
-  width: 200px;
-  height: 24px;
-}
-```
-此时上面的 `slider::thumb` 对应的滑块宽度和高度都是 $24\rm{px} \times 150\% = 36\rm{px}$。而手柄的圆角半径百分比尺寸则是根据手柄自己的尺寸来计算的，本例子中 `50%` 的 `thumb` 伪元素圆角半径计算值为 $36\rm{px} \times 50\%=18\rm{px}$。
-
-`thumb` 伪元素支持 `border` CSS 属性，不过边框不会超出 `thumb` 伪元素的尺寸。
-
 ### CSS 示例
 
 下面的例子演示了一些通过 CSS 来自定义进度条外观的方法。
-<glyphix id="components-slider-styles" height="180" width="480" title="Slider 样式">
+
+<glyphix id="components-progress-styles" height="140" width="480" title="进度条样式">
 
 ``` html
 <div>
   <!-- 默认样式 -->
-  <slider ::value="value" />
+  <progress :value="40" />
   <!-- 直头进度条样式 -->
-  <slider class="flat" ::value="value" />
-  <slider class="more-style" ::value="value" />
-  <p>value: {{value}}</p>
+  <progress class="flat" :value="50" />
+  <progress class="more-style" :value="60" />
 </div>
 ```
 
 ``` css
 div > * {
   margin: 8px;
-  padding: 6px;
 }
 
 .flat::value {
@@ -3182,108 +3631,66 @@ div > * {
 .more-style {
   /* 自定义圆角半径 */
   border-radius: 30%;
-  /* slider 背景色 */
+  /* 进度条背景色 */
   background-color: #b3c5d7;
-  /* slider 前景颜色 */
+  /* 进度条前景颜色 */
   color: #b5179e;
-  /* padding 可以调整 slider 前景的边距 */
+  /* padding 可以调整进度条前景的边距 */
   padding: 6px;
-  height: 1rem;
-}
-
-/* 定义滚动条滑块样式 */
-.more-style::thumb {
-  width: 300%; /* 宽高比 2:1 的胶囊形滑块 */
-  height: 150%;
-  background-color: white;
-  border: 4px solid #f3722c; /* 滑块边框 */
-  border-radius: 50%;
+  height: 1.25rem;
 }
 ```
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/components/a.md
+
+# a
+
+锚点组件，默认为行内元素，用于跳转到指定的页面。
+
+## 属性
+
+### `href` <decl type="string" get set />
+
+指定需要跳转的[页面名称](/framework/application/manifest.md#pages)或者 URI 字符串。
+
+``` html
+<a href="page1">跳转到 page1 页面</a>
+``` 
+
+与 Web 中的 `<a>` 标签不同，`a` 组件只支持页面跳转而不支持超链接跳转。
+
+`href` 属性还支持形如 `PageName?key=value` 的 [URI](/framework/application/resource.md#uri) 字符串，即由页面名称（作为 path 字段）和 query 字段构成的 URI。该 URI 的 query 字段会被解析为页面的跳转参数。如点击这个 `<a>` 元素时：
+
+``` html
+<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+```
+
+等效于调用以下 [`router.push()`](/api/system-router.md#push) 方法：
 
 ``` js
-export default {
-  data: { value: 50 }
-}
+router.push({
+  uri: 'page1',
+  params: {text: 'test-text', message: 'hello'}
+})
 ```
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/span.md
-
-# span
-
-`span` 也是一种文本组件。和 [`p` 组件](p)不同，`span` 组件默认是行内元素并且可以跨行，[`label` ](label) 组件和 [`a`](a) 组件也有类似的效果。文本跨行是指元素可以跨越多行进行布局，而不是占据一整个“盒子”。
-
-`span` 组件可以用于实现[富文本排版](/framework/render/rich-text.md#富文本显示)。
-
-<glyphix id="span" :height="36">
-
-``` html
-<div>
-  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
-</div>
-```
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/stack.md
-
-# stack
-
-`stack` 堆叠布局组件。在堆叠布局中，每个子组件的尺寸和位置和 `stack` 组件相同，并且按照先后顺序依次堆叠显示。下面的例子展示了两个在 `stack` 组件内重叠显示的文本元素。
-
-<glyphix id="components-stack-layout" height="100" width="200" title="堆叠布局">
-
-``` html
-<stack>
-  <p class="text1">Text 1</p>
-  <p class="text2">Text 2</p>
-</stack>
-```
-
-``` css
-* {
-  text-align: center;
-}
-
-.text1 {
-  font-size: 64px;
-  color: #fff;
-}
-
-.text2 {
-  font-size: 48px;
-  color: #f008;
-}
-
-stack {
-  background-color: gray;
-}
-```
-
-</glyphix>
 
 ::: tip
-`stack` 组件总是使用堆叠显示的布局策略，无法通过 `display` 等 CSS 属性更改为其他布局（如 flex 布局或流式布局）。
+请注意，URI 中 query 字段的值只会被解析为字符串类型，因此 `page1?size=100` 中的 `100` 会被解析为字符串 `'100'`，而不是数字 `100`。如果需要传递特定类型的参数，请使用 [`router`](/api/system-router.md) API。
 :::
-
-## 布局行为
-
-`stack` 组件具有固定的堆叠布局策略。其尺寸由两种约束决定：
-1. `stack` 的尺寸首先由 [`width`](../framework/generic/styles.md#width) 或 [`height`](../framework/generic/styles.md#width) 等尺寸 CSS 属性指定；
-2. 父级元素的布局可能会直接决定 `stack` 的布局，如 flex 布局中的 `align-items: stretch`、`flex: 1` 等属性；
-3. 否则 `stack` 组件的尺寸由子元素的最大宽度和最大高度决定。
-
-一旦确定了 `stack` 的尺寸，那么它的所有子元素都会具有相同的外框尺寸（即子元素加上 `border` 和 `margin` 后的尺寸）。这有时会导致困扰，例如通过 `stack` 将一张图片做为背景，而上层的元素尺寸过大会导致这张图片可能铺不满。
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/swiper.md
+FILE_PATH: src/original_docs/components/README.md
+
+# 原生组件
+
+
+============================================================
+FILE_PATH: src/original_docs/components/swiper.md
 
 # swiper
 
@@ -3651,1262 +4058,274 @@ swiper {
 
 
 ============================================================
-FILE_PATH: src/original_docs/src/components/switch.md
+FILE_PATH: src/original_docs/components/pullable.md
 
-# switch
+# pullable
 
-开关选择组件，默认为行内元素。用于表示开/关两种状态，并允许用户在两种状态之间切换。`switch` 的功能和 `checkbox` 类似，但是交互效果和意图不同，即分别表达开关和复选。
-
-<glyphix id="components-switch" height="30">
-
-``` html
-<div>
-  <switch ::value="enabled" />
-  <span>switch state: {{ enabled ? 'on' : 'off' }}</span>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    enabled: false
-  }
-}
-```
-</glyphix>
-
-::: note
-`switch` 组件的样式通常如示例中所示，但也可能因设备而异。尤其需要注意的是，不同设备上的 `switch` 宽度可能是有差异的，开发者应该预留合适的布局余量。
-:::
-
-## 属性
-
-### `value` <decl type="boolean" set get listen/>
-
-表示 `switch` 的状态，值为 `true` 时，`switch` 处于开启状态，否则处于关闭状态。当不指定 `value` 属性时，`switch` 组件默认是关闭的。
-
-### `checked` <decl type="boolean" set get/>
-
-这是快应用兼容属性，通常更推荐使用 [`value`](#value)
-
-### `change` <decl type="{ checked: boolean }" get listen/>
-
-这是快应用兼容属性，通常更推荐使用 [`value`](#value)
-
-## CSS 行为
-
-`switch` 组件的整体风格由系统决定，不受开发者控制，正如 [Fluent 2](https://fluent2.microsoft.design/components/web/react/switch/usage) 和 [Material 3](https://m3.material.io/components/switch/overview) 的风格差异那样。Glyphix 允许在 CSS 中定制 `switch` 的颜色，并且可以调整 `switch` 的大小。
-
-### CSS 属性
-
-#### `color`
-
-设置 `switch` 组件的滑块颜色，与一般的 CSS [`color`](/framework/generic/styles.md#color) 不同，`switch` 的 `color` 属性不支持继承，因此你必须将它定义在当前 `switch` 组件上。
-
-<glyphix id="components-switch-color" height="36" title="siwtch 滑块颜色">
-
-``` html
-<div>
-  red color: <switch class="red"/>,
-  not inherited: <switch/>
-</div>
-```
-
-``` css
-div {
-  color: red; /* 注意 switch 不会继承 color 属性 */
-}
-
-.red {
-  color: red; /* 必须在 switch 组件的样式上定义 color */
-}
-```
-</glyphix>
-
-#### `background-color`
-
-控制 `switch` 组件的背景颜色，详见 [`active`](#active) 伪类的文档。 
-
-#### `font-size`
-
-可以通过 [`font-size`](/framework/generic/styles.md#font-size) CSS 属性来调整 `switch` 的大小，使其行内（inline）的文字尺寸配合协调。下面的示例演示了 `font-size` 与 `switch` 大小的关系：
-
-<glyphix id="components-switch-size" height="100" title="font-size 与 siwtch 大小">
-
-``` html
-<div>
-  <p class="title">
-    title text: <switch/> (1.25rem)
-  </p>
-  <p>
-    content text: <switch/> (1rem)
-  </p>
-</div>
-```
-
-``` css
-div {
-  line-height: 1.8rem;
-}
-
-.title {
-  color: #415a77; /* 注意 switch 不会继承 color 属性 */
-  font-size: 1.25rem;
-}
-```
-</glyphix>
+`pullable` 组件用于在滚动列表内添加在顶部下拉和底部上拉时触发增量加载或者刷新交互的功能。`pullable` 组件默认是块级元素。
 
 ::: warning
-`switch` 的显示大小并不受 `width` 和 `height` 等属性的控制，而是总是由 `font-size` 决定。因此请不要手动指定 `width` 等尺寸属性，以免显示异常。
+<experimental /> 这是一个实验性组件，`pullable` 的功能并不稳定，并且动效可能不够自然。
 :::
 
-### CSS 伪类
+`pullable` 应该是 [`scroll`](scroll.md) 的第一个或者最后一个子组件。当它是第一个子组件时，在 `scroll` 内容的头部继续下拉将会触发 `pulling` 事件；相反，当 `pullable` 是 `scroll` 的最后一个子组件时，在底部上拉会触发 `pulling` 事件。
 
-#### `active`
+`pullable` 组件默认处于隐藏状态，只在被上/下拉的时候才会显示。下面的例子演示了 `pullable` 组件的使用方法。
 
-`active` 伪类用于定义 `switch` 处于打开状态的样式。如下面的示例所示，它通常和常规样式规则一起配置：
-
-<glyphix id="components-switch-colors" height="36" title="siwtch 滑块颜色设置">
-
-``` html
-<div>
-  color switch: <switch/>
-</div>
-```
-
-``` css
-/* switch 关闭状态下的样式 */
-switch {
-  color: #415a77;
-  background-color: #bde0fe;
-}
-
-/* switch 打开状态下的样式 */
-switch:active {
-  color: #fefae0;
-  background-color: #ffafcc;
-}
-```
-</glyphix>
-
-本示例通过 `color` 和 `background-color` CSS 属性来控制 `switch` 切换时的颜色样式。`switch` 组件在 `active` 伪类激活的状态下也只会响应这两个 CSS 属性的配置。
-
-::: tip
-请同时定义普通状态和 `active` 状态下的 `color` 和 `background-color` 属性，否则 `switch` 切换时不会有相应的颜色转变。
-:::
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/text-field.md
-
-# text-field
-
-用于输入单行文本内容的组件，默认为行内元素。和手机或 PC 上的类似 GUI 元素不同，`text-field` 目前不响应键盘等输入设备，也不会弹出输入法界面，因此你必须手动编辑其内容。`text-field` 支持通过触摸手势操作光标（如点击和滚动）。
-
-`text-field` 适合作为单行文本输入的底层组件，并根据你的需求自己实现软键盘（如密码九宫格，甚至是语音输入），详情请参考[示例](#基本示例)。
-
-## 属性
-
-### `value` <decl type="string" set get listen />
-
-`value` 属性是一个字符串，它是 `text-field` 当前编辑的内容。读取或者监听这个值可以获取输入的文本，也可以设置该属性。
-
-通常会将 `value` 双向绑定到特定的响应式属性，如：
+<glyphix id="components-pullable-1" height="360" width="360" title="上/下拉加载更多">
 
 ```html
-<text-field ::value="inputText" />
-```
-
-### `placeholder` <decl type="string" set get />
-
-当 `text-field` 的内容为空时，可以通过 `placeholder` 向用户提供一个简短的提示，如“请输入文本”等短语。
-
-`placeholder` 在输入文本为空时自动显示，因此通常只需一个固定的内容，如：
-
-```html
-<text-field ::value="inputText" placeholder="type here" />
-```
-
-### `password` <decl type="boolean" set get />
-
-当该属性被设置时，`text-area` 将使用“密码模式”，即每个字符会被替换为“•”（[Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm)）。你可以随时关闭或者打开 `password` 属性，以实现显示、隐藏密码状态的切换。
-
-在新版本中 <version-badge since="0.9" />，密码模式会延时遮盖输入的字符，用户可以在短时间内看到刚输入的字符，之后才会被替换为“•”。旧版本则会立即遮盖输入字符。
-
-### `insert` <decl type="(text: string): void" method />
-
-在光标处插入一段内容为 `text` 的文本，光标会自动移动到插入的文本之后。调用该函数会触发 `value` 监听事件。
-
-### `backspace` <decl type="(): void" method />
-
-删除光标处的字符，光标会自动向前移动。调用该函数会触发 `value` 监听事件。
-
-## 使用说明
-
-### 基本示例
-
-以下示例展示了 `text-field` 的基本用法。你可以点击键盘按钮来输入数字。点击“×”按钮来删除光标处的内容，点击“A/*”则会在密码模式和普通文本输入模式之间切换。密码模式下，输入的内容会以 `•` 隐藏。
-
-<glyphix id="components-text-field-1" width="410" height="160">
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <!-- 一个简单的矩阵数字键盘 -->
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
+<scroll scrollbar>
+  <pullable :hold="pulldown" on:pulling="onPulldown">
+    <progress-arc busy start-angle="0" stop-angle="360" />
+    <p>{{pulldown || 'keep pull down...'}}</p>
+  </pullable>
+  <p for="item in items">item ({{item}})</p>
+  <pullable :hold="pullup" on:pulling="onPullup">
+    <progress-arc busy start-angle="0" stop-angle="360" />
+    <p>{{pullup || 'keep pull up...'}}</p>
+  </pullable>
+</scroll>
 ```
 
 ```js
 export default {
   data: {
-    inputText: "",
-    password: false,
+    pulldown: null,
+    pullup: null,
+    items: []
   },
-  keyboard: [
-    ['1', '2', '3', '4', '5'],
-    ['6', '7', '8', '9', '0'],
-  ],
-  textField: null,
-  onReady() {
-    // 获取 TextField 组件对象，方便调用 insert() 和 backspace() 方法。
-    this.textField = this.$element("text-field")
-  },
-}
-```
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  text-align: center;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-本示例中 `text-field` 的文本是居中显示的，这是通过 `text-align` 实现的：
-```css
-text-field {
-  text-align: center;
-}
-```
-
-我们首先在组件的 `onReady()` 生命周期函数中通过 `$element` 方法来获取 `text-field` 组件对象，因为接下来需要通过 [`insert()`](#insert) 和 [`backspace`](#backspace) 方法来编辑内容。
-
-在此基础上，我们就可以直接在 `button` 组件的 `click` 事件监听中调用 `text-field` 的方法，例如：
-```html
-<button on:click="textField.backspace()">×</button>
-```
-
-由于没有实体键盘，开发者通常需要提供自定义的键盘实现。处于教学的目的，本示例仅实现了 2 行 5 列的数字键盘。并要在每一个键的 `click` 事件监听函数中将键值插入到 `text-field` 中：
-```html
-<div class="flex-row" for="rows in keyboard">
-  <button class="flex-1" for="key in rows"
-          on:click="textField.insert(key)">
-    {{key}}
-  </button>
-</div>
-```
-
-本示例还演示了切换密码模式的标准方法。
-
-### 内容验证和格式化
-
-你可以通过将 `text-field` 的 [`value`](#value) 属性双向绑定到一个计算属性上来实现对输入内容的验证和格式化。下面的示例展示了这种方法，该示例最多只允许你输入 9 位数字（不能输入字母等），并会在每三位数之间添加“`,`” 分隔。
-
-<glyphix id="components-text-field-validator" title="内容验证器" width="410" height="200">
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
-```
-
-```js
-export default {
-  data: {
-    password: false,
-    rawText: "",
-  },
-  computed: {
-    inputText: {
-      get() { return this.rawText },
-      set(text) {
-        if (text.length < 12 && /^[\d,]*$/.test(text)) {
-          this.rawText = text.replace(/[^\d]/g, '')
-                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        }
-      },
-    },
-  },
-  keyboard: [
-    ["1", "2", "3", "4", "5"],
-    ["6", "7", "8", "9", "0"],
-    ["A", "B", "C", "D", "E"],
-  ],
-  textField: null,
-  onReady() {
-    this.textField = this.$element("text-field")
-  },
-}
-```
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-内容验证和格式化是通过双向绑定和计算属性来实现的。对于 `text-field` 组件节点
-```html
-<text-field id="text-field"
-            ::value="inputText"
-            :password="password"
-            placeholder="type here" />
-```
-来说，`value` 属性被双向绑定到了 `inputText`，后者其实是一个计算属性。它的 `set()` 方法会检查输入内容是否符合规范（最多 11 个字符，且只允许数字和逗号），然后通过正则表达式来过滤数字，并按照每三位数字之间加逗号进行格式化：
-```js
-function set(text) {
-  if (text.length < 12 && /^[\d,]*$/.test(text)) {
-    this.rawText = text.replace(/[^\d]/g, '')
-                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  }
-}
-```
-如果输入的内容不符合要求，那么 `set()` 方法会忽略输入值，双向绑定机制会使得 `text-field` 的内容和 `inputText` 的属性值（通过 `get()` 方法获取）保持一致。因此你会发现无法输入字母按键。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/text.md
-
-# text
-
-文本组件，`text` 组件和 [`p` 组件](p)除了组件名称之外完全相同。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/components/textarea.md
-
-# textarea
-
-`textarea` <experimental/><version-badge since="0.9" /> 是一个多行文本输入组件，默认显示为块级元素。和手机或 PC 上的类似 GUI 元素不同，`textarea` 目前不响应键盘等输入设备，也不会弹出输入法界面，因此你必须手动编辑其内容。`textarea` 支持通过触摸手势操作光标（如点击和滚动），并提供了上下左右移动光标的方法。
-
-`textarea` 适合作为多行文本输入的底层组件，并根据你的需求自己实现软键盘和光标控制，详情请参考[示例](#基本示例)。
-
-::: important 兼容性
-`textarea` 是一个实验性的扩展组件，目前仅在 Glyphix 0.9 及以上版本可用，并且仅部分设备支持该组件。
-:::
-
-## 属性
-
-### `text` <decl type="string" get set listen />
-
-`text` 属性是一个字符串，它是 `textarea` 当前编辑的文本内容。读取或者监听这个值可以获取输入的文本，也可以设置该属性。
-
-通常会将 `text` 双向绑定到特定的响应式属性，也可以通过元素内部的内容来设置文本，如：
-
-```html
-<textarea ::text="inputText" />
-```
-
-或者
-
-```html
-<textarea @text="onTextChanged">{{ inputText }}</textarea>
-```
-
-:::tip
-`textarea` 的 `text` 属性与 [`text-field`](text-field.md) 的 [`value`](text-field.md#value) 属性功能类似。
-:::
-
-### `placeholder` <decl type="string" set get />
-
-当 `textarea` 的内容为空时，可以通过 `placeholder` 向用户提供一个简短的提示，如“请输入文本”等短语。
-
-`placeholder` 在输入文本为空时自动显示，因此通常只需一个固定的内容，如：
-
-```html
-<textarea ::text="inputText" placeholder="type here" />
-```
-
-### `insert` <decl type="(text: string): void" method />
-
-在光标处插入一段内容为 `text` 的文本，光标会自动移动到插入的文本之后。调用该函数会触发 `text` 监听事件。
-
-### `backspace` <decl type="(): void" method />
-
-删除光标处的字符，光标会自动向前移动。调用该函数会触发 `text` 监听事件。
-
-### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
-
-将光标向指定方向移动一个位置。`direction` 参数可选值为 `'up'`、`'down'`、`'left'`、`'right'`，分别对应上下左右四个方向。
-
-## 使用说明
-
-### 基本示例
-
-以下示例展示了 `textarea` 的基本用法。用户可以直接在文本框中输入多行文本，也可以使用下方的虚拟键盘来编辑内容：点击字母/符号键插入字符；"`×`" 键删除光标处的内容；"`Aa`" 键切换大小写；"`1#`" 键切换至符号键盘；"`Enter`" 键插入换行符；箭头键移动光标。
-
-<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea 基本示例">
-
-```html
-  <div class="window">
-    <textarea
-      id="textarea"
-      :placeholder="placeholder"
-      @text="onTextChanged"
-    >
-      {{ text }}
-    </textarea>
-    <div class="keyboard">
-      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
-        <button
-          class="kb-key"
-          for="key in row.keys"
-          :width="key.width ? key.width : null"
-          on:touchstart="onKeyEvent(key, 'down')"
-          on:touchend="onKeyEvent(key, 'up')"
-          on:touchcancel="onKeyEvent(key, 'up')"
-        >
-          {{ key.code ? key.code : key }}
-        </button>
-      </div>
-    </div>
-  </div>
-```
-
-```js
-const keyboardQwert = [
-  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
-  {
-    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboardQwertUpper = [
-  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
-  {
-    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboard123 = [
-  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
-  {
-    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-export default {
-  data: {
-    placeholder: "Enter your text here...",
-    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
-    keyboard: keyboardQwert,
-  },
-  keyboardType: "qwerty",
-
-  ta: null,
-  onReady() {
-    this.ta = this.$element("textarea");
-  },
-
-  onTextChanged() {
-    console.log("You have edited the text");
-  },
-  toggleCase() {
-    if (this.keyboardType == "qwerty") {
-      this.keyboard = keyboardQwertUpper;
-      this.keyboardType = "qwertyUpper";
-    } else if (this.keyboardType == "qwertyUpper") {
-      this.keyboard = keyboardQwert;
-      this.keyboardType = "qwerty";
-    }
-  },
-  keyboardRowStyle(row) {
-    if (row.margin)
-      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
-    return "";
-  },
-  backspaceTimer: null,
-  onKeyEvent(key, event) {
-    if (event !== "down") {
-      clearInterval(this.backspaceTimer);
-      this.backspaceTimer = null;
-      return; // skip if the key is released
-    }
-
-    if (key.code) key = key.code;
-    switch (key) {
-      case "Aa": this.toggleCase(); break;
-      case "1#":
-        this.keyboard = keyboard123;
-        this.keyboardType = "123";
-        break;
-      case "abc":
-        this.keyboard = keyboardQwert;
-        this.keyboardType = "qwerty";
-        break;
-      case "×":
-        this.ta.backspace();
-        if (event == "down") {
-          this.backspaceTimer = setTimeout(() => {
-            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
-            this.ta.backspace();
-          }, 500);
-        }
-        break;
-      case "Enter": this.ta.insert("\n"); break;
-      case "Space": this.ta.insert(" "); break;
-      case "↑": this.ta.moveCaret("up"); break;
-      case "↓": this.ta.moveCaret("down"); break;
-      case "←": this.ta.moveCaret("left"); break; 
-      case "→": this.ta.moveCaret("right"); break;
-      default: this.ta.insert(key); break;
-    }
-  },
-};
-```
-
-```css
-.window {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-textarea {
-  flex-grow: 1;
-  padding: 6px;
-  border: 2px solid #aaa6;
-  border-radius: 12px;
-  max-height: 160px;
-}
-
-.keyboard {
-  display: flex;
-  flex-direction: column;
-}
-
-.kb-row {
-  display: flex;
-  flex-direction: row;
-}
-
-.kb-key {
-  flex-grow: 1;
-  background-color: #f0f0f080;
-  border: 2px solid #999;
-  border-radius: 16px;
-  text-align: center;
-  padding: 6px auto;
-  margin: 2px;
-  font-size: 0.85rem;
-  min-width: 40px;
-}
-
-.kb-key:active {
-  background-color: #0003;
-  border-color: #6663;
-}
-```
-
-</glyphix>
-
-我们首先在组件的 `onReady()` 生命周期函数中通过 `$element` 方法来获取 `textarea` 组件对象，因为接下来需要通过 [`insert()`](#insert)、[`backspace`](#backspace) 和 [`moveCaret`](#movecaret) 方法来编辑内容和移动光标。
-
-在此基础上，我们就可以在 `button` 组件的触摸事件监听中调用 `textarea` 的方法，例如：
-
-```html
-<button on:touchstart="ta.insert('A')">A</button>
-```
-
-由于没有实体键盘，开发者通常需要提供自定义的键盘实现。本示例实现了完整的 QWERTY 键盘布局，支持大小写切换和符号键盘。在每一个键的触摸事件监听函数中调用相应的方法来编辑文本。箭头键通过 [`moveCaret()`](#movecaret) 方法移动光标（上下左右四个方向），换行键通过 [`insert()`](#insert) 插入换行符 `\n`。
-
-### 和 text-field 的区别
-
-`textarea` 和 `text-field` 都是文本输入组件，主要区别如下：
-
-| 特性 | `textarea` | `text-field` |
-|------|-----------|-------------|
-| 文本行数 | 单行或多行 | 单行 |
-| 换行支持 | 支持 `\n` 换行 | 不支持换行 |
-| 光标移动 | 上下移动 | 左右移动 |
-| 内容属性 | `text` | `value` |
-| 密码模式 | 不支持 | 支持 `password` 属性 |
-| 默认 display | 块级元素 | 行内元素 |
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/async.md
-
-# 异步操作
-
-在 JavaScript 脚本中引入异步操作的目的主要是将耗时的工作放到后台执行，避免 JavaScript 线程阻塞，放到后台处理的工作主要是 IO 密集型操作。Glyphix 提供一个基本的 JavaScript 异步框架供开发者使用，该框架只对异步工作流做必要的抽象，因此不会引入额外的开销。
-
-## 适用场景
-
-异步工作流模型适用场景
-
-- 由 JavaScript 代码发起请求，原生异步处理线程处理后返回结果；
-- 由 JavaScript 代码发起请求，原生异步处理线程处理后定时上报消息；
-  - JavaScript 代码可主动要求撤销/取消请求。
-
-## 数据请求模式
-
-在数据请求模式中，JavaScript 代码调用 C++ API 创建请求，并在异步线程中执行操作后将结果返回给 JavaScript 代码。在这个过程中数据会通过异步队列进行传输，`async::ResultSession` 模板类提供了该模式的通用操作框架。
-
-### 场景说明
-
-以下场景是典型的数据请求模式：
-
-- **文件读写**：JavaScript 发起调用时需要指定文件的路径，读写的文件偏移位置、数据长度或要写入的数据；请求发送到异步线程执行时会进行真正的文件读写操作，并在操作完成后通知或将结果返回到 JavaScript 代码。
-- **网络请求**：和文件读写类似，JavaScript 发起调用时要制定请求参数，然后在后台线程处理并返回结果。
-
-数据请求模式的场景具有以下特点：
-- 请求返回的结果是单次的，因此可能多次触发的传感器或者定时器监听不适用这种模式；
-- 请求总是会有结果：如果请求成功则返回结果，否则返回错误信息，结果的返回也是异步的；
-- 请求一旦发起无法撤销。
-
-### 实例：电量值获取
-
-#### JavaScript API
-
-假设要实现一个获取电池电量的异步 JavaScript 函数：
-``` ts
-getLevel(): Promise<number> // Promise 风格 API
-getLevel(options: { // 回调风格 API
-    success: (level: number) => void,
-    fail: (code: number, msg: string) => void // 电池电量读取实际上不会 fail
-}): void
-```
-使用 `getLevel()` 函数异步地获取电池电量，该函数提供两种 API 风格：`Promise` 风格和回调风格。这两种风格的代码如下：
-``` js
-async function printBatteryLevel() {
-    const level = await getLevel() // 异步获取电量值
-    console.log(`battery level: ${level}%`)
-}
-printBatteryLevel() // 打印电量值，控制台输出示例:
-// battery level: 59%
-
-// 下面是回调风格的代码，不建议使用：
-getLevel({
-    success(level) { console.log(`battery level: ${level}%`) }
-})
-```
-
-#### C++ 原生接口导出
-
-JavaScript 中的 `getLevel()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会发起一个获取电池电量的异步请求，并在得到结果后通过回调函数或者 `Promise` 将结果值返回给 JavaScript 代码。实现 `getLevel()` 的 C++ 函数如下：
-``` cpp
-static JsValue getLevel(const JsCallContext &ctx) {
-    typedef async::ResultSession<BatteryGetLevel> Session;
-    Session *session = new Session; // 创建 Session 对象
-    session->request(ctx.argc() ? ctx.arg(0) : JsValue());
-    return session->promise();
-}
-```
-
-模板类 `async::ResultSession` （下文省略 `async` 命名空间）实现了异步数据请求所需的框架，每个异步数据请求都包含下列步骤：
-1. 创建一个 `ResultSession` 对象
-2. 调用 `ResultSession::request()` 方法发起请求
-3. 使用 `ResultSession::promise()` 将 `Promise` 对象返回到 JavaScript。
-
-这行代码
-``` cpp
-session->request(ctx.argc() ? ctx.arg(0) : JsValue());
-```
-除了发起请求外，我们还将 JavaScript 调用方传入的第 $0$ 个参数传递给 `ResultSession::request()` 方法，`ResultSession` 会自动根据该参数是否存在 `success` / `fail` 等回调函数选择回调和 `Promise` 风格。如果是 `Promise` 风格，那么
-``` cpp
-return session->promise();
-```
-会返回一个 `Promise` 对象用于获取异步请求的结果，否则会返回 `undefined` 并由回调函数来处理结果。
-
-#### `ResultSession` 模板类
-
-`ResultSession` 模板类的声明如下：
-``` cpp
-template<class T, class H = ResultHandler> class ResultSession;
-```
-模板参数 `T` 是一个类，它实现具体的异步操作，本示例会实现一个 `BatteryGetLevel` 类来实现电池电量的异步获取。模板参数 `H` 决定怎样处理异步请求的结果，默认的 `ResultHandler` 会自动选择回调或者 `Promise` 风格，开发者一般不需要修改。
-
-#### `BatteryGetLevel` 类
-
-`BatteryGetLevel` 类的定义如下：
-``` cpp
-struct BatteryGetLevel {
-    async::Result<int> resolve() const {
-        return battery_read_level(); // 获取电池电量
-    }
-    // errorMessage() 用于将错误码翻译成文本。不过电量读取不会出错，可以随意实现。
-    static const char *errorMessage(Status) {
-        return "get battery level failed";
-    }
-};
-```
-可以看到，`BatteryGetLevel` 有两个成员函数。`resolve()` 函数用于在异步线程中执行具体的操作。`resolve()` 函数的返回值必须是一个 `async::Result<T>` 类型，在本例中则是 `async::Result<int>`。
-
-`resolve()` 函数的返回值 `async::Result<T>` 的模板参数 `T` 类型和 JavaScript API 的回调函数参数或 `Promise` 数据的类型是一致的，例如本例中 `int` 对应到 JavaScript API 为
-``` ts
-// C++ 的 BatteryGetLevel::resolve() 函数返回值类型
-// async::Result<int> 对应 JavaScript 的 Promise<number>
-getLevel(): Promise<number>
-```
-
-换言之，如果 `resolve()` 返回 `async::Result<String>` 值，那么对应到 JavaScript 中会返回 `Promise<string>`，对于回调函数来说则是 `{ success(value: string): void }`。关于 C++ 和 JavaScript 数据类型的转换细节请参考[数据类型转换](#数据类型转换)。
-
-### 实例：文件读取
-
-#### JavaScript API
-
-假设要实现一个文件读取的异步 JavaScript 函数：
-``` ts
-readfile(url:string): Promise<string> // Promise 风格 API
-readFile(option: {   // 回调风格API
-  uri: string,
-  success?: (data: string) => void,
-  fail?: (code: number, msg: string) => void,
-}): void
-```
-该函数会异步读取文件的内容并通过 `Promise` 对象返回，返回值是文件内容是。实际的 JavaScript 代码是这样的；
-``` js
-async function printReadFile() {
-    const data = await readFile("file.txt") // 异步获取电量值
-    console.log('文件读取成功：', data)
-}
-
-printReadFile() // 以字符串的形式打印文件内容，控制台输出示例:
-// 文件读取成功：hello
-
-// 下面是回调风格的代码
-readFile({
-    url: "file.txt", 
-    success: (data: string) => {  
-        console.log('文件读取成功：', data);  
-    }
-})
-```
-
-#### C++ 原生接口导出
-
-JavaScript 中的 `readFile()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会发起一个读取文件的异步请求，并在得到结果后通过回调函数或者 `Promise` 将结果值返回给 JavaScript 代码。实现 `readFile()` 的 C++ 函数如下：
-``` cpp
-JsValue readFile(const JsCallContext &ctx) {
-    typedef async::ResultSession<ReadFileRequest> Session;
-    if (ctx.argc() > 0 && ctx.arg(0).isObject()) { 
-        Session *session = new Session;
-        // 将JavaScript 函数参数的 url 字段转换为 C++ String 
-        session->client().url = ctx.arg(0)["url"].toString(); 
-        session->request(ctx.argc() ? ctx.arg(0) : JsValue());
-        return JsValue();
-    }
-}
-```
-使用的模板类解释参考 [resultsession-模板类](#resultsession-模板类) 和代码解释参考 电量值获取的 [c-原生接口导出](#c-原生接口导出)。
-
-#### readFile类
-
-`ReadFileRequest` 类的定义如下：
-``` cpp
-struct ReadFileRequest {
-    String url; // 待读取文件的 url。
-    Result<String> resolve() {
-        ByteArray array = File::read(url); // 通过 url 读取文件内容
-        return String(array.charData(), array.size());
-    }
-    // errorMessage() 用于将错误码翻译成文本
-    const char *errorMessage(Status) { return "read file error"; }
-};
-```
-可以看到，`ReadFileRequest` 有两个成员函数。`resolve()` 函数用于在异步线程中执行具体的操作。`resolve()` 函数的返回值必须是一个 `async::Result<T>` 类型，在本例中则是 `async::Result<String>`。需要注意的是 `resolve()` 函数中不能处理 JavaScript 中的数据类型，url 是在 `readFile()` 函数中转换成 C++ 的 String 类型才发起的异步请求，不能在 `resolve()` 函数中处理类似的数据转换。
-
-## 监听模式
-
-在监听模式中，JavaScript 代码调用了 C++ API 创建请求，对多次的异步请求例如传感器数据的监听，在数据发生改变时会执行异步事件将结果返回给 JavaScript，`async::ListenSession` 和 `async::Signal` 模板类提供了该模式的通用操作框架。
-
-### 场景说明
-
-以下场景是典型的监听模式：
-
-- **各种传感器的监听**：由 JavaScript 发起调用，调用监听对应传感器的 C++ API，需要指定回调函数，当传感器读取数据发送改变时，通过异步线程将会将新数据返回到 JavaScript 代码中，作为回调函数的形参。
-- **周期性定时任务**：JavaScript 发起调用时需要设置定时任务的时间，任务超时后的回调函数，是否为周期性；当发送请求后每一次定时任务超时后，异步线程会将结果返回到 JavaScript 中，触发 JavaScript 设置的回调函数。
-
-监听模式的场景具有以下特点：
-- 启动监听后，支持多次的异步请求，因此可能不适用单次对文件读写和网络状态请求的异步事件；
-- 启动监听后，不用时必须要取消监听，不然会造成内存泄漏。
-
-### 实例：监听电池电量值
-
-#### JavaScript API
-
-假如要实现一个监听电池电量的异步 JavaScript 函数：
-``` ts
-subscribe(callback: (Level: number) => void): number // 监听电池电量值
-unsubscribe(subscribeID: number): void // 取消监听
-```
-
-使用 `subscribe()` 函数异步地监听电池电量值和 `unsubscribe()` 函数取消监听，使用实例如下：
-``` js
-// 启动监听，返回一个 id 用来取消监听
-let id = subscribe(level => {
-  // 若电池电量值发生改变，就会触发监听的回调函数，控制台打印示例：
-  // now battery level: 59
-  console.log(`now battery level: ${level}%`)
-})
-
-unsubscribe(id); // 取消监听
-``` 
-
-#### C++ 监听接口导出
-
-JavaScript 中的 `subscribe()` 函数实际上是由 C++ 实现的，JavaScript 代码调用这个函数时会监听电池电量值，每当电量值改变后都会发起一个异步请求，通过回调函数将结果值返回给 JavaScript 代码。实现 `subscribe()` 的 C++ 函数如下：
-``` cpp
-async::Signal<int> Level; // 创建一个全局的对象 Level
-
-level(45); // Level 数值改变，发送异步请求
-
-static JsValue subscribe(const JsCallContext &ctx) {
-    Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc())  // 检查是否传入的参数
-        return applet->bindObject(Level.connect(ctx.arg(0)));
-    return JsValue();
-}
-```
-必须要创建了一个全局的对象 `Level`，使用到的模板类 `sync::Signal`（下文省略 `async` 命名空间）实现了监听请求的框架，监听请求包含下列步骤：
-1. 在监听之前，必须创建一个全局 `Siganal` 类的对象；
-2. 使用`Signal::connect()` 方法将 JavaScript 传入的第一个参数和 `Level` 关联起来；
-3. 调用 `Applet::bindObject` 绑定 `Level` 对象；当 `Level` 的状态发生改变时，调用回调函数将结果返回 JavaScript 代码。
-
-这行代码
-```cpp
-level(45);
-```
-`Level` 数值变 $45$ ,触发监听机制将会发起一个异步请求，变化后的值作为回调函数的形参，最后将结果返回给 JavaScript 代码。
-
-#### C++ 取消监听接口导出
-
-JavaScript 中的 `unsubscribe()` 函数也是由 C++ 实现的，JavaScript 代码调用这个函数时取消监听。避免不使用监听时造成的内存泄漏。实现 `unsubscribe()` 的 C++ 函数如下：
-``` cpp
-static JsValue unsubscribe(const JsCallContext &ctx) {
-    Applet *applet = Applet::current(&ctx.vm());
-    if (applet && ctx.argc() >= 1 && ctx.arg(0).isNumber()) // 检查传递的参数是否正确
-        delete applet->unbindObject<async::Slot>(ctx.arg(0).toInt());   
-    return JsValue();
-}
-```
-取消监听请求需要调用 `Applet::unbindObject` 解除绑定，需要传入 `subscribe()` 函数的返回 ID 来确定解绑的对象。
-
-#### `Signal` 模板类
-
-``` cpp
-template<class T, class H = ListenHandler> class Signal;
-```
-模板参数 T 是一个类，它实现具体的异步操作，本示例展示一个 `int` 类型来实现电池电量的监听。模板参数 H 决定怎样处理异步请求的结果，默认的 ResultHandler 会自动选择回调或者 Promise 风格，开发者一般不需要修改。
-
-## 数据类型转换
-
-在 `ResultSession` 或者 `ListenSession` 中，异步操作的数据必须要转换成 `JsValue` 对象才能在 JavaScript 代码中使用。例如 [BatteryGetLevel](#batterygetlevel-类) 中定义了
-``` cpp
-async::Result<int> BatteryGetLevel::resolve() const;
-```
-函数，这个函数声明意味着电池电量请求的返回数据类型是 `int`，该数据类型是可以转换成 `JsValue` 的，事实上以下类型都可以转换为 `JsValue`：
-- `bool`：转换为 `boolean` 类型；
-- `int`：转换为 `number` 类型；
-- `float` 、`double`：转换为 `number` 类型；
-- `String`：转换为 `string` 类型。
-
-::: warning
-不支持 C 风格字符串。它会转换换成 `boolean` 类型。
-:::
-
-转换的时机是自动的，无需开发者介入。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/blur-overlay.md
-
-# 模糊覆盖菜单
-
-## 效果展示
-
-本教程展示将背景模糊之后展示遮盖层菜单的开发技巧。下面的示例展示了这种交互效果（点击右下角的 “...” 按钮会显示遮挡界面）。
-
-<glyphix id="cookbook-blur-overlay" width="410" height="502" title="模糊覆盖层" inline>
-
-</glyphix>
-
-本教程的主要目的是展示如何用 Glyphix 实现带有模糊的界面。
-
-## 实现方法
-
-### 文字阴影
-
-示例中的文字 “Hokkaido sika deer” 阴影可以通过叠加一层模糊文本来实现：
-``` html
-<stack class="wallpaper-title">
-  <p class="shadow">Hokkaido sika deer</p>
-  <p>Hokkaido sika deer</p>
-</stack>
-```
-将两段相同的文本放置在一个 [`stack`](/components/stack.md) 组件内，并将底层文本作为阴影。这是通过底层文本的 `shadow` CSS 类实现的：
-``` css
-.shadow {
-  color: #0008;
-  /* 为背景文本添加模糊，以呈现阴影效果 */
-  filter: blur(8px);
-  /* 必须使用 transparent 标记元素是透明的 */
-  transparent: true;
-}
-```
-将背景文本的颜色设置为半透明的灰色，并通过模糊过滤器（[`filter: blur(8px)`](/framework/generic/styles.md#filter)）属性将 `<p>` 文本组件作为阴影。请注意前景的文字颜色不应该透明，否则可能和 `.shadow` 层叠加。
-
-### 自定义字体
-
-文本 “Hokkaido sika deer” 通过自定义字体来呈现，在 Glyphix 中可以使用和 Web 一样的方法来引入自定义字体：
-``` css
-@font-face {
-  font-family: 'Playwrite Australia SA';
-  src: url('/assets/PlaywriteAUSA-Regular.ttf');
-}
-
-.wallpaper-title {
-  font-family: 'Playwrite Australia SA', 'sans-serif';
-  color: #ffffff;
-  margin-top: 25%;
-}
-```
-如你所见，可以在 CSS 通过 [`@font-face`](/framework/generic/styles.md#font-face-规则) 块来声明一个字体，并在元素的 [`font-family`](/framework/generic/styles.md#font-family) 属性中引用。
-
-### 背景层模糊
-
-由于目前通过 [`router` API](/api/system-router.md) 弹出的页面不支持半透明背景，因此不能使用页面来实现弹出菜单。但可以使用这种技巧来模拟弹出的“页面”：
-``` html
-<stack class="window" :disabled="popups">
-  <image class="wallpaper" src="/assets/images/sika-deer.jpg" />
-  ...
-</stack>
-<div class="overlay" if="popups">
-  ...
-</div>
-```
-你需要在页面中添加两层元素（本例中是 `stack.window` 和 `div.overlay`）,并通过一个条件（如 `popups`）来控制。具体来说：
-- `popups` 控制底层元素的 `disabled` 属性，因此当 `popups` 为真时，底层元素不会响应手势等输入；
-- `popups` 同时还控制顶层元素的渲染，当它为真时顶层元素会显示出来。
-
-在遮挡层弹出时，[`disabled`](/framework/generic/properties.md#disabled) 属性还提供了模糊底层元素的机会：
-``` css
-.window:disabled {
-  filter: blur(40px);
-}
-```
-当元素被设置了 `disabled` 属时，底层元素的 `:disabled` 伪元素也会激活，因此上面 CSS 的模糊效果会起作用。
-
-::: tip
-由于 Glyphix 不支持浏览器的 [`backrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) 属性，所以不能直接通过 `div.overlay` 的 CSS 规则来实现背景模糊，而是要用本示例的技巧。
-:::
-
-## 性能风险
-
-由于模糊效果是计算密集的，开发者需要特别注意它的性能负担。我们建议仅在静态界面中使用模糊效果，最好还要为需要模糊的元素添加 [`quiescent`](/framework/generic/properties.md#quiescent) 属性。
-
-如果可能的话，应该在物理设备上测试带有模糊的界面是否满足性能预期。
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/clangd-lsp.md
-
-# Clangd 配置
-
-在用交叉编译工具链开发固件时，如果使用 arm-none-eabi-gcc 工具链，并且使用 CMake 等构建系统时，可以配置 Clangd 语言服务器以提升开发体验。具体而言你将得到这些好处：
-- 基于实际项目结构准确地跳转到声明或者定义；
-- 查看 API 文档（使用 `/**`、`//!` 等 Doxygen 格式的注释写的文档注释）；
-- 支持 `.clange-format` 定义的的代码格式化规则；
-- 无需编译，实时的静态检查或者错误检查；
-- 输入时的代码提示和补全；
-- 查找用法，代码重构等。
-
-## 准备工作
-
-首先要使用一种支持 LSP（语言服务器协议）的编辑器，如 Visual Studio Code，然后安装 clangd 及相关插件。如果需要手动安装 clangd，那么可以下载 [LLVM](https://github.com/llvm/llvm-project/releases) 的合适版本，或者使用操作系统的包管理器进行安装。
-
-在安装必要的插件之后，clangd 可能不需要任何配置就可以在简单的主机项目中使用，但是在复杂的交叉编译环境中还需要进一步配置。
-
-## 交叉编译环境配置
-
-### CMake 选项
-
-如果使用 CMake 作为构建系统，那么要打开 `CMAKE_EXPORT_COMPILE_COMMANDS` 选项，你可以通过命令行参数做到：
-``` bash
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # CMake 配置阶段的命令行参数
-```
-如果不方便使用命令行参数，也可以在任意一个 `CMakeLists.txt` 文件中定义这个变量：
-``` cmake
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-```
-然后在使用 CMake 配置或者构建项目时会在输出目录生成一个 `compile_commands.json` 文件，这个文件将会供 clangd 使用。
-
-### Clangd 配置
-
-在配置好 CMake 并生成 `compile_commands.json` 之后，clangd 可能可以部分工作，但是很可能遇到如下问题：
-- `compile_commands.json` 处在很深的目录层级，clangd 找不到它；
-- clangd 找不到适用于交叉编译环境的标准头文件，如 `stdint.h` 等。
-
-要解决这几个问题，首先要在项目的根目录（也就是编辑器所打开的目录，通常是 `.git` 文件夹所在的目录）创建一个 `.clangd` 文件，它是一个 YAML 文件，并填写内容如下：
-``` yaml
-CompileFlags:
-  CompilationDatabase: "包含 compile_commands.json 的目录的相对路径"
-  Add: 
-    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
-  Remove:
-    - -fno-reorder-functions
-```
-请根据实际情况修改文件路径。然后在 clangd 的启动参数中添加以下命令行选项：
-``` bash
---query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # 路径根据实际情况填写
-```
-然后重启语言 clangd 应该就可以正常工作了。
-
-vscode 可以在项目的 `.vscode/settings.json` 中通过 `clangd.arguments` 来添加参数：
-``` json
-{
-  "clangd.arguments": [
-    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
-  ]
-}
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/game-2048.md
-
-# 2048 游戏
-
-## 效果展示
-
-提示：在“2048 游戏”中使用鼠标上下左右快速滑动来操作。
-
-<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
-
-</glyphix>
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/layout-tricks.md
-
-# 布局技巧
-
-## 限制元素宽度
-
-你可以使用 `margin` 属性来限制元素的宽度。
-
-<glyphix id="cookbook-margin-layout-1" width="360" height="100">
-
-```html
-<div>
-  <div class="limit">
-    <p>{{text}}</p>
-  </div>
-</div>
-```
-
-```css
-div {
-  background-color: lightgreen;
-}
-
-.limit {
-  border: 1px solid red;
-  margin: 0 150px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-p {
-  border: 1px solid gray;
-  margin: 2px;
-}
-```
-
-```js
-export default {
-  data: { text: 'A' },
+  first: 0,
+  last: 0,
   onInit() {
-    let index = 1
-    setInterval(() => {
-      this.text += String.fromCharCode(index++ + 0x41)
-      if (index > 26) {
-        this.text = 'A'
-        index = 1
-      }
-    }, 200)
-  }
-}
-```
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/README.md
-
-# 实用指南
-
-
-
-
-============================================================
-FILE_PATH: src/original_docs/src/cookbook/swiper-indicator.md
-
-# Swiper 页面指示器
-
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
-
-``` html
-<stack>
-  <swiper ::index="index">
-    <p for="i in panels">Panel {{i + 1}}</p>
-  </swiper>
-  <div class="indicator">
-    <image for="x in indicator" :src="x" />
-  </div>
-</stack>
-```
-
-``` js
-export default {
-  data: {
-    panels: 5,
-    index: 2
+    this.update(0, 10)
   },
-  computed: {
-    indicator() {
-      let result = []
-      for (let i = 0; i < this.panels; i++) {
-        let suffix = i == this.index ? '1' : '0'
-        result.push(`/assets/images/ind-${suffix}.png`)
-      }
-      return result
+  update(first, last) {
+    for (let i = this.first; i > first; --i)
+      this.items.unshift(i)
+    for (let i = this.last; i < last; ++i)
+      this.items.push(i)
+    this.first = first
+    this.last = last
+  },
+  onPulldown(event) {
+    this.pulldown = event ? 'please release' : 'updating...'
+    if (!event) {
+      setTimeout(() => {
+        this.update(this.first - 5, this.last)
+        this.pulldown = null
+      }, 1000)
+    }
+  },
+  onPullup(event) {
+    this.pullup = event ? 'please release' : 'updating...'
+    if (!event) {
+      setTimeout(() => {
+        this.update(this.first, this.last + 5)
+        this.pullup = null
+      }, 1000)
     }
   }
 }
 ```
 
-``` css
-swiper > p {
-  background-color: #888;
-  margin: 32px;
+```css
+scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+scroll > p {
+  background-color: #ddd;
   border-radius: 32px;
+  margin: 12px;
+  padding: 32px;
   text-align: center;
 }
 
-.indicator {
+pullable {
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  margin: 32px;
 }
 
-.indicator > * {
-  margin: 0 4px 56px 4px;
+pullable > progress-arc {
+  stroke-width: 0.25rem;
+  margin-right: 16px;
 }
 ```
 
-</Glyphix>
+</glyphix>
+
+详细的用法请参考[使用说明](#使用说明)。
+
+## 属性
+
+### `hold` <decl type="bool" get set />
+
+默认情况下，`pullable` 仅仅在顶部下拉或底部上拉时可见，但是当 `hold` 属性为 `true` 时，`pullable` 组件将保持显示状态。该属性通常在 [`pulling`](#pulling) 事件导致了内容更新时设置，并在内容更新完成后取消。
+
+### `pulling` <decl type="bool" get listen />
+
+当 `pullable` 在完全被拉出时会触发 `pulling` 事件，其事件值的含义为：
+- `true`：在下拉/上拉达到 `pullable` 的完全拉出触发距离时触发此事件；
+- `false`：在达到上述完全拉出条件后，用户松手时触发此事件。
+
+下面的示例展示了 `pulling` 事件值的触发时机。你可以尝试缓慢地从列表顶部下拉，并注意触发 `pulling` 事件时的 toast 弹窗信息。
+
+<glyphix id="components-pullable-pulling" height="360" width="360" title="pulling 事件">
+
+```html
+<scroll scrollbar>
+  <pullable :hold="refresh" on:pulling="onPulling">
+    <p>pulling...</p>
+  </pullable>
+  <p for="item in 10">item {{item}}</p>
+</scroll>
+```
+
+```js
+import prompt from '@system.prompt'
+
+export default {
+  data: {
+    refresh: false
+  },
+  onPulling(event) {
+    prompt.showToast({
+      message: `pulling: ${event ? 'trigged' : 'release'}`
+    })
+    if (!event) {
+      this.refresh = true
+      setTimeout(() => this.refresh = false, 1000)
+    }
+  }
+}
+```
+
+```css
+scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+scroll > p {
+  background-color: #ddd;
+  border-radius: 32px;
+  margin: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+pullable {
+  text-align: center;
+  margin: 32px;
+}
+```
+
+</glyphix>
+
+## 使用说明
+
+### 组件位置
+
+`pullable` 组件必须是垂直 `scroll` 的第一个或者最后一个子元素。它会根据位置自动决定操作模式：当是第一个子元素是检测用户从列表顶部下拉的操作，反之亦然。
+
+对于只需要下拉刷新的列表来说，以下用法就可以了：
+```html
+<scroll>
+  <pullable :hold="refresh" on:pulling="onPulling">
+    <p>pulling...</p>
+  </pullable>
+  <div for="item in items">
+    ...
+  </div>
+</scroll>
+```
+
+JavaScript 代码中可以监听 `pulling` 事件，并控制 `refresh` 属性：
+``` js
+export default {
+  data: {
+    refresh: false
+  },
+  onPulling(hold) {
+    if (!hold) { // 用户松手时 hold 为 false
+      this.refresh = true // 表示正在刷新
+      // 本示例中用一个定时器模拟加载操作，并在 1s 后停止加载
+      setTimeout(() => this.refresh = false, 1000)
+    }
+  }
+}
+```
+
+具体的效果请参考 [`pulling`](#pulling) 事件文档的示例。
+
+### 提示内容控制
+
+`pullable` 组件内部可以容纳各种组件来显示提示内容。如本文当前面的示例那样，你可以将加载动画和提示文本结合起来。此外，`pulling` 事件的值可以用于控制提示内容，通常建议使用这样的状态处理方式：
+1. 为每个 `pullable` 组件设置一个响应式属性（例如 `refresh`），默认值为 `null`，`refresh` 属性还用于控制 `pullable` 的 [`hold`](#hold) 属性。
+2. 处于初始状态时（即 `refresh` 为假），`pullable` 的提示内容应该提醒用户“继续拉拽以进行更新”。
+3. 当用户下拉时，会触发 `pulling` 事件，根据其事件值采取 4 或 5 步骤。
+4. `pulling` 为 `true` 时，应该提示用户“松手以开始刷新”。
+5. `pulling` 为 `false` 时表示用户已经松手，此时应该将 `refresh` 置为 `true` 并开始刷新内容。并应该提醒用户“正在刷新中”。
+6. 内容刷新完成后，重新将 `refresh` 置为 `false`，回到初始状态。
+
+你也可以参考本文档的第一个示例，它同时实现了在列表头部下拉和尾部上拉的继续加载功能。该示例使用了一个技巧，仅使用一个响应式属性来控制 `pullable` 的所有状态。
+
+该技巧将 `refresh` 响应式属性的初始值设置为 `null`（类似于 `false`），并使用这样的模板代码：
+``` html
+<pullable :hold="refresh" on:pulling="onPulling">
+  <p>{{refresh || '继续下拉'}}</p>
+</pullable>
+```
+当 `refresh` 没有设置时，一旦 `pullable` 被拉出来就会显示默认的“继续下拉”提示内容。然后，`onPulling` 事件回调函数应该这样编写：
+``` js
+export default {
+  async onPulling(event) {
+    this.refresh = event ? '请松手' : '更新中'
+    if (!event) { // 松手时触发刷新操作
+        await runRefreshJobs()
+        this.refresh = null // 刷新完成后重置状态
+    }
+  }
+}
+```
+
+### 限制
+
+目前 `pullable` 组件存在一些限制。除了必须在垂直的 `scroll` 组件中使用外，你还需要保证列表元素的数量超出 `scroll` 可视区域的尺寸，否则可能会出现问题。此外，`pullable` 的交互效果可能也比较生硬。
+
+
+============================================================
+FILE_PATH: src/original_docs/components/slider-arc.md
+
+# slider-arc
+
+弧形滑动选择器，默认是块级元素，暂不支持样式修改。
+
+## 属性
+
+继承 [slider](slider) 组件的属性
+
+### `arc-center` <decl type="{ x: number, y: number }" set />
+
+设置圆弧圆心的位置。
+
+### `start-angle` <decl type="number" set />
+
+设置圆弧开始角度，默认值：$-90$。
+
+### `progress-angle` <decl type="number" set />
+
+设置圆弧最大转动角度，默认值：$360$，一周圆弧。
+
+### `arc-width` <decl type="number" set />
+
+设置圆弧宽度。
+
+### `arc-radius` <decl type="number" set />
+
+设置圆弧半径。
 
 
