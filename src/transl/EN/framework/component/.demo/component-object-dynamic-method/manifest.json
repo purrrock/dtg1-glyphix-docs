@@ -1,0 +1,18 @@
+{
+  "package": "com.example.app",
+  "name": "Example App",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "features": [],
+  "config": {
+    "designWidth": 300
+  },
+  "router": {
+    "entry": "main",
+    "pages": {
+      "main": {
+        "component": "index"
+      }
+    }
+  }
+}
