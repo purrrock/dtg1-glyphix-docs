@@ -1,0 +1,19 @@
+<import src="grids.ux" />
+
+<template>
+  <div class="window">
+    <grids />
+  </div>
+</template>
+
+<style>
+  .window {}
+</style>
+
+<script>
+  export default {
+    data: {
+      text: "Hello, World!"
+    }
+  }
+</script>

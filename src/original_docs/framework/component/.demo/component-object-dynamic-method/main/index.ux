@@ -1,0 +1,14 @@
+<import src="timer.ux" />
+
+<template>
+  <scroll>
+    <timer for="4" />
+  </scroll>
+</template>
+
+<style>
+scroll {
+  display: flex;
+  flex-direction: column;
+}
+</style>

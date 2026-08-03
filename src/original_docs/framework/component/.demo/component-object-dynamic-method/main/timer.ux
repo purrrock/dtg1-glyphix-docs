@@ -1,0 +1,45 @@
+<template>
+  <div>
+    <text>timeout: {{ counter }}</text>
+    <button on:click="stopTimer">Stop</button>
+  </div>
+</template>
+
+<script>
+  export default {
+    data: {
+      counter: 0,
+    },
+    stopTimer: null,
+    onInit() {
+      let timer = setInterval(() => {
+        this.counter++
+      }, 1000)
+      this.stopTimer = () => {
+        clearInterval(timer)
+        this.stopTimer = null
+      }
+    }
+  }
+</script>
+
+<style>
+  div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4px;
+  }
+
+  button {
+    border: 2px solid gray;
+    border-radius: 16px;
+    padding: 2px 8px;
+    text-align: center;
+    height: 100%;
+  }
+
+  button:active {
+    background-color: lightgray;
+  }
+</style>
