@@ -2,6 +2,630 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
+FILE_PATH: src/transl/EN/tutorials/nodejs.md
+
+---
+icon: nodejs
+---
+# Node.js Package Manager
+
+In addition to being used independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm or yarn. The prerequisite is to install the `glyphix` package:
+
+::: code-tabs
+@tab npm
+```bash
+npm install -D glyphix
+```
+
+@tab pnpm
+```bash
+pnpm i -D glyphix
+
+@tab yarn
+```bash
+yarn add -D glyphix
+```
+:::
+
+Otherwise, you may encounter an error like this when executing `gx build`:
+```bash
+$ gx build
+fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
+```
+
+The main benefits of using the JavaScript package manager in the development of Glyphix applications are as follows:
+- Use TypeScript instead of JavaScript as the development language to provide type safety and a better development experience
+- Use JavaScript libraries in the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
+- Use tools such as ESLint and Prettier to improve code quality and development efficiency
+- Facilitates team collaboration and project maintenance
+
+::: warning
+Currently, only common JavaScript or TypeScript dependencies are managed through the package manager, and Glyphix components cannot be reused. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that rely on the DOM, Node.js-specific APIs, or are too bulky.
+:::
+
+::: tip
+If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly use a command like `gx build` to package it, otherwise you need to add `scripts` configuration in `package.json`.
+:::
+
+## Project configuration
+
+### `package.json` configuration
+
+When using the Node.js package manager, it is recommended to add the necessary scripts and configuration in `package.json`:
+
+```json
+{
+  "name": "my-glyphix-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "gx build",
+    "emu": "gx emu",
+    "clean": "gx clean"
+  },
+  "devDependencies": {
+    "glyphix": "^1.0.41",
+    "typescript": "^5.8.3"
+  }
+}
+```
+
+### `tsconfig.json` configuration
+
+If using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "baseUrl": "./",
+    "paths": {
+      "/*": ["src/*"],
+      "/assets": ["src/assets/*"]
+    },
+    "types": ["glyphix", "node"],
+    "allowImportingTsExtensions": true,
+    "checkJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.ux"]
+}
+```
+
+::: info
+The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code prompts.
+:::
+
+## `glyphix.config.js` configuration
+
+It is recommended to create a `glyphix.config.js` file in the project root directory (`src/` or the directory where `package.json` is located) to customize packaging options:
+```js
+module.exports = {
+  minify: false, // Turn off code compression to facilitate debugging and obtain source code line numbers
+};
+```
+If you use TypeScript, you can create a `glyphix.config.ts` file instead.
+
+::: tip
+Be sure to create this file and configure `minify: false`, otherwise the packaged code will be compressed and obfuscated, resulting in the inability to correspond to the source code line number during debugging.
+:::
+
+## Using TypeScript
+
+The Glyphix framework offers experimental TypeScript support, allowing you to take advantage of type safety and modern JavaScript syntax in app development.
+
+### Basic component example
+
+Here's an example of a component written in TypeScript:
+
+```html
+<template>
+  <p on:click="onClick">{{count}}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from "glyphix"
+
+export default defineComponent({
+  data: {
+    count: 0
+  },
+  onClick() {
+    this.count++
+  }
+})
+</script>
+```
+
+Compared with the default JavaScript component script, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to mark the language type as TypeScript.
+2. Import the `defineComponent` function from the `glyphix` module.
+3. The component object to be exported should be used as a parameter of `defineComponent`, and the return value of this function should be exported.
+
+After using TypeScript, the `defineComponent` function will make code hints and type checking in the IDE more accurate.
+
+### `app.ts`
+
+Rename `app.js` to `app.ts` to use the TypeScript application entry file, which will be processed automatically by the packaging tool.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/name-spec.md
+
+---
+icon: code-tags-check
+---
+# Component naming convention
+
+This document describes the mandatory naming conventions and recommended naming styles for component frameworks. Among them, the mandatory naming convention has mandatory requirements. If not followed, the effect may not meet the expectations. Using the recommended naming convention ensures maximum compatibility.
+
+## Template naming convention
+
+Tag names in templates must be kebab-case or PascalCase:
+``` html
+<Button></Button>
+<button></button>
+<scroll-area></scroll-area>
+<ScrollArea></ScrollArea>
+```
+
+Attribute names must be dash or camelCase nomenclature:
+``` html
+<component prop-name="expr"></component>
+<component propName="expr"></component>
+```
+
+It is recommended to use the dash nomenclature that complies with web standards.
+
+## JavaScript code naming convention
+
+
+Component names in JavaScript code must be Pascal naming, while the corresponding dash names are used in templates.
+
+Component property names in JavaScript code must be camelCase:
+``` js
+export default {
+  data: {
+    propName: 0 // The attribute name in the template is prop-name
+  }
+}
+```
+These attribute names will be automatically converted into corresponding dash names in the template code.
+
+## File name naming convention
+
+The UX file must use the same name as the component, which is Pascal naming. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute should be named using Pascal naming or a dash:
+``` html
+<import src="path/to/UxFile" name="UxFile"/>
+<import src="path/to/UxFile" name="ux-file"/>
+```
+In fact, the naming requirements of the `name` attribute are consistent with the tag names in the template.
+
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/qa.md
+
+---
+icon: help-circle-outline
+---
+# FAQ
+
+## Packaging tools
+
+### Project build issues
+
+#### `Lisp Error: thread killed` error report
+
+The specific phenomenon is that an error message similar to the following appears:
+
+``` log
+[ 47%] Process image src/assets/images/frame1.png
+error: Lisp Error: thread killed
+```
+
+This problem is due to a previous build error, which caused the image conversion build operation being executed to be cancelled. You only need to fix the `fatal` error reporting build operation to resume without special processing.
+
+### Emulator
+
+#### Simulator default language
+
+The default language of the simulator is `zh-CN`. Therefore, if you add the [Internationalization](/framework/component/i18n.md) configuration, the `zh-CN.json` translation file will be used by default. To run the simulator with the `gx` command you can use the `-l` or `--language` option to specify the language:
+``` shell
+gx emu -l en-US # Use American English
+```
+You can also change the language dynamically while the emulator is running using the inspector debugging tool.
+
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/quick-orientation.md
+
+---
+title: Quick View: From Web to Glyphix
+icon: compass
+---
+
+# Development Quick Tour: From Web to Glyphix
+
+This document is designed for developers familiar with web front-ends (specifically Vue.js). We will skip the basic grammar teaching and go directly to the core mechanism of the Glyphix framework to help you quickly establish a correct mental model.
+
+## Core concepts and operating environment
+
+Glyphix is ​​an application framework that runs on MCU (microcontroller) devices. Although it is developed using HTML/CSS/JS, it is not a browser. This framework is used to develop complete applications instead of refreshable pages. Each application runs in an independent sandbox container.
+
+There are several core differences you need to understand:
+- **No DOM**: The bottom layer is directly rendered by the C++ native engine, and there is no DOM tree.
+- **No Web API**: Browser APIs such as `window`, `document`, `localStorage`, etc. are not supported. System capabilities (network, storage, sensors) are provided through `@system.*` modules.
+- **JS Engine**: Uses a lightweight JS engine (supports ES6 standard), but is extremely memory-constrained.
+
+### Resource limits
+
+Resource limitations are the biggest difference with web development. MCU devices typically have only a few MB of RAM. This means don't use network requests to load very large JSON data, or directly [`fetch`](../api/system-fetch.md) an image. Please keep the following points in mind:
+- You can use the [`@system.request`](../api/system-request.md) module to download resources as files, and `fetch` will load the response into memory.
+- Image resources are usually stored in the application package, and the size matches the screen resolution as much as possible.
+- **Background Freeze**: After the application enters the background (`onHide`), it will usually be suspended or destroyed by the system within tens of seconds. Please note the save status.
+
+### Equipment form
+
+Glyphix apps typically run on small-screen devices such as smartwatches. Watch screen sizes are usually around 1.5 to 2 inches, with a typical resolution of 466×466 pixels, but round and rectangular screens exist. Lower-end devices may have lower pixel density, but the dimensions will be essentially similar. Such devices often use touch screens for interaction, which may support physical buttons or knobs, and the system handles most interaction details transparently.
+
+Simulators are usually used for development and debugging, because the real machine deployment and debugging process is still fragmented and takes a long time.
+
+### Typical project structure
+
+This is our recommended project file structure, which is also the standard structure of quick applications:
+```bash
+src/
+├─ manifest.json # Application manifest: configuration permissions, registration page routing
+├─ app.js # Application entry: global life cycle (onCreate, onDestroy)
+├─ pages/ # Page directory
+│ └─ Main/
+│ └─ index.ux # Page component
+└─ assets/ # public resources
+  └─ icon.png
+```
+You can introduce the [Node.js](nodejs.md) tool chain to manage dependencies as needed. The directory structure can also be adjusted as needed, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must be fixed at this location.
+
+## UI Development
+
+Glyphix uses the [`.ux`](../framework/component/README.md) single-file component (similar to Vue SFC), which is similar in style to the Vue Options API, but there are significant differences.
+
+### Flexbox layout first
+
+The web defaults to a flow layout (Flow Layout), and the Glyphix page defaults to a stacked layout: if you put two divs on the page, they will overlap instead of being arranged one above the other. This is because this framework supports the use of multiple root nodes in `<template>`, for example:
+```html
+<template>
+  <image class="background" src="/assets/bg.png" />
+  <div class="content"> ... </div>
+</template>
+```
+The default stacked layout is usually very suitable for this scenario.
+
+Although containers such as `div` use fluid layout by default, it is recommended to use Flexbox for layout control. Most containers should explicitly declare `display: flex`, combined with `flex-direction` to control the arrangement of child elements.
+
+Considering that device screen sizes vary greatly, please pay special attention to the use of length units:
+- Use `px` units in smaller sizes, which are logical pixels and automatically scale based on screen density.
+- Fonts should always use `rem` units, which are baselined by the device manufacturer and more consistent with system UX specifications.
+- You can use percentage (`%`) units to implement responsive layout, but there are currently many limitations and defects, so please pay attention to debugging.
+
+Since the screen is too small, you may specifically need the [`scroll`](../components/scroll.md) component to implement the scroll area. Unlike the web, the `div` container itself does not support scrolling and cannot be controlled using the `overflow` property.
+
+### Template syntax differences
+
+Although it looks like a Vue template, please note the following differences:
+- Commands without `v-` prefix: such as `<div if="show">` or `<div for="item in items">`
+- Event binding can be done with `on` or `@`, such as: `<p on:click="handler">`
+- Text components such as `<p>` must be used: `<text>Hello</text>` can be displayed normally, but `<div>Hello</div>` will not render anything.
+- Supports using `model:prop="state"` or `::prop="state"` [two-way binding](../framework/commands/model.md) for any component attribute, as long as an event with the same name as the attribute is triggered.
+
+### Style restrictions
+
+CSS support is a subset:
+- Supports classes (`.class`), IDs (`#id`), tags (`div`) and descendants (`.a .b`). **Not supported** Complex relationship selectors such as `~`, `+`, `>`, etc.
+- **Effect limitations**: Gradient, shadow and other effects are not supported. `transition` animation is not supported yet.
+- **Performance Limitation**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none` and is recommended to be left as default.
+- Currently there is no support for dynamic `class` binding, nor for CSS variables.
+
+## Components and Logic
+
+### Script model
+
+Component scripts are very close to the Vue Options API, and the following demonstration points out the main differences:
+```js
+export default {
+  // Data model (Data), no need to declare attributes, data attributes are automatically exported as attributes
+  data: {
+    count: 0, // Modifying this.count will automatically trigger a view update
+  },
+  timer: null, // Non-responsive fields are defined directly on the component instance, or they do not need to be declared.
+  // life cycle
+  onInit() {}, // The data has been initialized and network requests can be initiated.
+  onReady() {}, // The interface has been rendered
+  onDestroy() {}, // Be sure to clean up the timer and subscribe to events here
+
+//Methods, defined directly in the component object
+  handleTap() {
+    this.count++
+    // Trigger custom events to the parent component
+    this.$emit('change', { value: this.count })
+  }
+}
+```
+The fields in the `data` object are responsive properties, which currently only support JSON-compatible types (`Date`, `Map`, `Set`, etc. are not supported). If responsive updates are not required, it is recommended to define the field on the component instance (`this`).
+
+::: tip
+Do not use the `methods` object to wrap methods, just define them directly in the component object. There is no need to use `props` to define properties, fields in the `data` object are automatically exported as properties.
+
+Nor can you use DOM APIs such as `document.getElementById` to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get the element instance with the specified ID.
+:::
+
+### Pages and routing
+
+A Glyphix application consists of multiple pages, which are navigated through routes. All pages need to be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field in `manifest.json`. Page components are similar to normal components, but support `onShow` and `onHide` lifecycle hooks.
+
+Use the `system.router` system module to jump:
+```js
+import router from '@system.router'
+
+// Jump and pass parameters
+router.push({ uri: 'pages/Detail', params: { id: 123 } })
+```
+::: tip
+Don't use other routing libraries, and don't pretend to be developing a single page application (SPA). Otherwise, existing functions such as transition effects and page stack management will not be available.
+:::
+
+### TypeScript support
+
+If you use Node.js scaffolding to create a project, you can use TypeScript in the project for development after installing dependencies such as `glyphix` and `typescript` using npm, pnpm, etc.
+
+For `.ux` single-file components, you can enable TypeScript support by adding the `lang="ts"` attribute on the `<script>` tag. For example:
+```html
+<script lang="ts">
+import { defineComponent } from 'glyphix'
+
+export default defineComponent({
+  data() {
+    count: 0: number
+  },
+  increment() { this.count++ },
+})
+</script>
+```
+
+## System capability integration
+
+Don't try to use the browser API, use Glyphix [standard library](../api/README.md).
+
+### Quick check of commonly used modules
+
+| Function | Glyphix module | Description |
+| :--- | :--- | :--- |
+| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle asynchronous callbacks or Promise |
+| **Pop-up** | [`@system.prompt`](../api/system-prompt.md) | Provide Toast and Dialog |
+| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronize local storage, directly read and write objects instead of strings |
+| **Routing** | [`@system.router`](../api/system-router.md) | Management page stack |
+| **Log** | `console.log` | Output to debugging terminal, same as browser |
+
+### Asynchronous programming mode
+
+System APIs usually support asynchronous callback and Promise styles. It is recommended to use `async/await` to keep the code clean.
+
+```js
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+
+export default {
+  onReady() { this.loadData() },
+  async loadData() {
+    try {
+      const response = await fetch.fetch({
+        url: 'https://api.example.com/data',
+        method: 'GET', //default is GET
+        responseType: 'json', // This does not require manual JSON.parse parsing
+      })
+
+if (response.data.code === 200)
+        this.data = response.data.data
+    } catch (err) {
+      prompt.showToast({ message: 'Network Error' })
+    }
+  }
+}
+```
+
+## Build and run
+
+Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to start the emulator, or use `gx build` to build the application package. If you use Node.js scaffolding, you can also use the `gx` command directly.
+
+Please refer to the [Quick Start](getting-started.md) tutorial for detailed steps.
+
+## Comprehensive example
+
+The following is a complete component example that demonstrates the combined use of layout, data binding, event handling, and system APIs. You can view this example directly in your browser by clicking the `>` button to see the full code.
+
+<glyphix id="quick-orientation-example" title="Counter component example" height="240">
+
+```html
+<!-- It is recommended to use Flex layout for the root container, operations are not allowed during loading -->
+<div class="container" :disabled="loading">
+  <text class="title">Hello, {{ name }}</text>
+
+<div class="card">
+    <text class="count">{{ count }}</text>
+    <text class="btn" value="+1" on:click="increment">Add</text>
+  </div>
+</div>
+
+<!-- Use the stacking layout of the page to overlay the loading status prompt -->
+<text if="loading" class="loading">Loading...</text>
+```
+
+```css
+.container {
+  /* Page components do not need to set width and height, they are always full */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  /* Note that the page background is generally not set, this is just a demonstration */
+  background-color: #f5f5f5;
+  border-radius: 16px;
+  padding: 10%; /* percentage margin */
+}
+
+.title {
+  font-size: 1.25rem; /* The font uses rem units */
+  color: #333333;
+  align-self: center;
+}
+
+.card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 16px;
+}
+
+.count {
+  font-size: 1.5rem;
+  color: #007aff;
+  min-width: 80px;
+}
+
+.btn {
+  width: 120px;
+  background-color: #007aff;
+  color: #ffffff;
+  border-radius: 50%; /* round button */
+  text-align: center;
+}
+
+.loading {
+  color: #3d3d3d;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* Fade style for disabled state */
+*:disabled {
+  opacity: 0.5;
+}
+```
+
+```js
+import prompt from '@system.prompt'
+
+export default {
+  // component data
+  data: {
+    name: 'Glyphix',
+    count: 0,
+    loading: false
+  },
+  // Life cycle: component initialization completed
+  onInit() {
+    console.log('Component initialized')
+    this.simulateFetch()
+  },
+  //method definition
+  increment() {
+    this.count++
+    if (this.count % 5 === 0) {
+      prompt.showToast({
+        message: `Count reached ${this.count}!`
+      })
+    }
+  },
+  async simulateFetch() {
+    this.loading = true
+    // Simulate an asynchronous operation, which produces a loading state
+    setTimeout(() => {
+      this.loading = false
+      this.name = 'Developer'
+    }, 1000)
+  }
+}
+```
+
+</glyphix>
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/README.md
+
+---
+title: Glyphix 应用开发教程
+index: false
+icon: routes
+category:
+  - Guide
+---
+
+## What is Glyphix
+
+Glyphix is ​​an efficient, lightweight application development framework for MCU (microcontroller) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components and publish applications to various smart devices (such as smart watches).
+
+For more information, please refer to the [Framework](/framework/README.md) chapter.
+
+### Web-like framework
+
+Unlike traditional MCU firmware development, Glyphix is ​​closer to a framework based on a web technology stack. App developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You don’t need to master the complete web development technology stack, such as browser DOM, standard HTML tags, and complex build tool chains. But if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), it will be easy to get started with Glyphix.
+
+::: tip
+To be clear, Glyphix is not a “low-code” platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, mastering a solid JavaScript foundation and a good front-end way of thinking will help you fully realize the potential of Glyphix.
+:::
+
+### Declarative UI framework
+
+Traditional interface development is usually imperative: functions need to be called step by step to create controls, update state, and refresh the interface. This method is very flexible, but the business and interface logic are highly coupled. As the application scale expands, the code will quickly become complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.
+
+Glyphix adopts the declarative UI paradigm. Developers only need to describe "what the interface should look like", and the framework will automatically complete rendering and updates based on changes in data and state. This approach greatly reduces the complexity of interface logic and state management, and allows developers to focus on function and interaction design instead of maintaining the UI hierarchy and refresh process.
+
+### Application container
+
+Glyphix is ​​not just a UI framework, it also provides functions such as application life cycle management, permission isolation and system API. Applications run in an independent container and are isolated from each other to ensure system stability and security.
+
+Please read the [Quick Start](getting-started.md) tutorial to get started with Glyphix application development immediately.
+
+## Other questions
+
+### Need to be familiar with MCU and embedded development?
+
+Application developers generally do not need specific knowledge of MCUs and embedded development. But you should have some understanding of the device's resource limitations. For example, the memory capacity of MCUs is usually only a few MB, and there are also limits on the memory for running JavaScript code. This means that there may be an inability to request very large JSON data from the network, or to encode the entire image as Base64 and obtain it through a GET request.
+
+These limitations, which are completely different from web development, are indeed caused by the limited resources of the MCU device, but this is not included in the typical MCU body of knowledge.
+
+Intuitively, it's best to confirm that the app experience is good enough by running the app on the device. You can run it multiple times on a real device at different stages of development to ensure the best experience.
+
+### Should C/C++ be used for application development?
+
+Glyphix application development is done entirely using HTML, CSS, and JavaScript, so there is no need to use C/C++ languages.
+
+### How can embedded developers get started with Glyphix application development?
+
+Embedded developers can use this tutorial [Quick Start](getting-started.md) to gradually understand the core concepts of Glyphix. The framework uses a componentization and data binding mechanism similar to the Vue Options API, which will be a little different for readers who are used to imperative GUIs such as [LVGL](https://lvgl.io/) and Qt widgets. However, Glyphix's declarative design can also bring a more intuitive interface control experience.
+
+Developers do not need to fully master HTML, CSS and JavaScript, but familiarity with the basic syntax of JavaScript (such as variables, conditional judgments, function calls, etc.) will help understand Glyphix's rendering logic and event processing. You can familiarize yourself with these contents through sample code and practical operations in tutorials and documents to speed up the development process.
+
+### Do you want to pay attention to application performance optimization?
+
+Our framework has been deeply optimized for the resource constraints of embedded systems and can adapt well to a variety of hardware environments. Most applications can run smoothly and stably enough under default settings, so there is usually no need to spend extra time on performance optimization.
+
+If there is a need for in-depth understanding of specific optimization solutions in the future, we will provide special performance optimization documents to help developers further improve the operating efficiency of applications.
+
+### Is there a difference between the Glyphix environment and the browser?
+
+Yes, there are significant differences between the Glyphix environment and the browser. Glyphix does not have the DOM structure in the browser, nor does it provide objects such as `window` and `document`. Instead, it directly and uniquely provides a set of declarative interfaces through which developers can develop components and interact with interfaces. This design simplifies the development process and is more suitable for embedded environments.
+
+============================================================
 FILE_PATH: src/transl/EN/tutorials/component-basic.md
 
 ---
@@ -481,772 +1105,6 @@ In the following tutorials we will introduce the component update mechanism in d
 Now you can start developing your own Glyphix applications! Start writing code from the default project template and run the emulator using the `gx emu` command. Other chapters in this document will introduce how to use Glyphix's built-in mechanisms, APIs, and components to build interfaces, and how to implement application interaction logic.
 
 ============================================================
-FILE_PATH: src/transl/EN/tutorials/name-spec.md
-
----
-icon: code-tags-check
----
-# Component naming convention
-
-This document describes the mandatory naming conventions and recommended naming styles for component frameworks. Among them, the mandatory naming convention has mandatory requirements. If not followed, the effect may not meet the expectations. Using the recommended naming convention ensures maximum compatibility.
-
-## Template naming convention
-
-Tag names in templates must be kebab-case or PascalCase:
-``` html
-<Button></Button>
-<button></button>
-<scroll-area></scroll-area>
-<ScrollArea></ScrollArea>
-```
-
-Attribute names must be dash or camelCase nomenclature:
-``` html
-<component prop-name="expr"></component>
-<component propName="expr"></component>
-```
-
-It is recommended to use the dash nomenclature that complies with web standards.
-
-## JavaScript code naming convention
-
-
-Component names in JavaScript code must be Pascal naming, while the corresponding dash names are used in templates.
-
-Component property names in JavaScript code must be camelCase:
-``` js
-export default {
-  data: {
-    propName: 0 // The attribute name in the template is prop-name
-  }
-}
-```
-These attribute names will be automatically converted into corresponding dash names in the template code.
-
-## File name naming convention
-
-The UX file must use the same name as the component, which is Pascal naming. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute should be named using Pascal naming or a dash:
-``` html
-<import src="path/to/UxFile" name="UxFile"/>
-<import src="path/to/UxFile" name="ux-file"/>
-```
-In fact, the naming requirements of the `name` attribute are consistent with the tag names in the template.
-
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/nodejs.md
-
----
-icon: nodejs
----
-# Node.js Package Manager
-
-In addition to being used independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm or yarn. The prerequisite is to install the `glyphix` package:
-
-::: code-tabs
-@tab npm
-```bash
-npm install -D glyphix
-```
-
-@tab pnpm
-```bash
-pnpm i -D glyphix
-
-@tab yarn
-```bash
-yarn add -D glyphix
-```
-:::
-
-Otherwise, you may encounter an error like this when executing `gx build`:
-```bash
-$ gx build
-fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
-```
-
-The main benefits of using the JavaScript package manager in the development of Glyphix applications are as follows:
-- Use TypeScript instead of JavaScript as the development language to provide type safety and a better development experience
-- Use JavaScript libraries in the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.)
-- Use tools such as ESLint and Prettier to improve code quality and development efficiency
-- Facilitates team collaboration and project maintenance
-
-::: warning
-Currently, only common JavaScript or TypeScript dependencies are managed through the package manager, and Glyphix components cannot be reused. When choosing third-party libraries, make sure they are suitable for embedded environments and avoid libraries that rely on the DOM, Node.js-specific APIs, or are too bulky.
-:::
-
-::: tip
-If [Glyphix.js](glyphix.js/README.md) devtools is installed globally, you can directly use a command like `gx build` to package it, otherwise you need to add `scripts` configuration in `package.json`.
-:::
-
-## Project configuration
-
-### `package.json` configuration
-
-When using the Node.js package manager, it is recommended to add the necessary scripts and configuration in `package.json`:
-
-```json
-{
-  "name": "my-glyphix-app",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "gx build",
-    "emu": "gx emu",
-    "clean": "gx clean"
-  },
-  "devDependencies": {
-    "glyphix": "^1.0.41",
-    "typescript": "^5.8.3"
-  }
-}
-```
-
-### `tsconfig.json` configuration
-
-If using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2021",
-    "module": "commonjs",
-    "baseUrl": "./",
-    "paths": {
-      "/*": ["src/*"],
-      "/assets": ["src/assets/*"]
-    },
-    "types": ["glyphix", "node"],
-    "allowImportingTsExtensions": true,
-    "checkJs": true,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true
-  },
-  "include": ["src/**/*.ts", "src/**/*.ux"]
-}
-```
-
-::: info
-The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code prompts.
-:::
-
-## `glyphix.config.js` configuration
-
-It is recommended to create a `glyphix.config.js` file in the project root directory (`src/` or the directory where `package.json` is located) to customize packaging options:
-```js
-module.exports = {
-  minify: false, // Turn off code compression to facilitate debugging and obtain source code line numbers
-};
-```
-If you use TypeScript, you can create a `glyphix.config.ts` file instead.
-
-::: tip
-Be sure to create this file and configure `minify: false`, otherwise the packaged code will be compressed and obfuscated, resulting in the inability to correspond to the source code line number during debugging.
-:::
-
-## Using TypeScript
-
-The Glyphix framework offers experimental TypeScript support, allowing you to take advantage of type safety and modern JavaScript syntax in app development.
-
-### Basic component example
-
-Here's an example of a component written in TypeScript:
-
-```html
-<template>
-  <p on:click="onClick">{{count}}</p>
-</template>
-
-<script lang="ts">
-import { defineComponent } from "glyphix"
-
-export default defineComponent({
-  data: {
-    count: 0
-  },
-  onClick() {
-    this.count++
-  }
-})
-</script>
-```
-
-Compared with the default JavaScript component script, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to mark the language type as TypeScript.
-2. Import the `defineComponent` function from the `glyphix` module.
-3. The component object to be exported should be used as a parameter of `defineComponent`, and the return value of this function should be exported.
-
-After using TypeScript, the `defineComponent` function will make code hints and type checking in the IDE more accurate.
-
-### `app.ts`
-
-Rename `app.js` to `app.ts` to use the TypeScript application entry file, which will be processed automatically by the packaging tool.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/qa.md
-
----
-icon: help-circle-outline
----
-# FAQ
-
-## Packaging tools
-
-### Project build issues
-
-#### `Lisp Error: thread killed` error report
-
-The specific phenomenon is that an error message similar to the following appears:
-
-``` log
-[ 47%] Process image src/assets/images/frame1.png
-error: Lisp Error: thread killed
-```
-
-This problem is due to a previous build error, which caused the image conversion build operation being executed to be cancelled. You only need to fix the `fatal` error reporting build operation to resume without special processing.
-
-### Emulator
-
-#### Simulator default language
-
-The default language of the simulator is `zh-CN`. Therefore, if you add the [Internationalization](/framework/component/i18n.md) configuration, the `zh-CN.json` translation file will be used by default. To run the simulator with the `gx` command you can use the `-l` or `--language` option to specify the language:
-``` shell
-gx emu -l en-US # Use American English
-```
-You can also change the language dynamically while the emulator is running using the inspector debugging tool.
-
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/quick-orientation.md
-
----
-title: Quick View: From Web to Glyphix
-icon: compass
----
-
-# Development Quick Tour: From Web to Glyphix
-
-This document is designed for developers familiar with web front-ends (specifically Vue.js). We will skip the basic grammar teaching and go directly to the core mechanism of the Glyphix framework to help you quickly establish a correct mental model.
-
-## Core concepts and operating environment
-
-Glyphix is ​​an application framework that runs on MCU (microcontroller) devices. Although it is developed using HTML/CSS/JS, it is not a browser. This framework is used to develop complete applications instead of refreshable pages. Each application runs in an independent sandbox container.
-
-There are several core differences you need to understand:
-- **No DOM**: The bottom layer is directly rendered by the C++ native engine, and there is no DOM tree.
-- **No Web API**: Browser APIs such as `window`, `document`, `localStorage`, etc. are not supported. System capabilities (network, storage, sensors) are provided through `@system.*` modules.
-- **JS Engine**: Uses a lightweight JS engine (supports ES6 standard), but is extremely memory-constrained.
-
-### Resource limits
-
-Resource limitations are the biggest difference with web development. MCU devices typically have only a few MB of RAM. This means don't use network requests to load very large JSON data, or directly [`fetch`](../api/system-fetch.md) an image. Please keep the following points in mind:
-- You can use the [`@system.request`](../api/system-request.md) module to download resources as files, and `fetch` will load the response into memory.
-- Image resources are usually stored in the application package, and the size matches the screen resolution as much as possible.
-- **Background Freeze**: After the application enters the background (`onHide`), it will usually be suspended or destroyed by the system within tens of seconds. Please note the save status.
-
-### Equipment form
-
-Glyphix apps typically run on small-screen devices such as smartwatches. Watch screen sizes are usually around 1.5 to 2 inches, with a typical resolution of 466×466 pixels, but round and rectangular screens exist. Lower-end devices may have lower pixel density, but the dimensions will be essentially similar. Such devices often use touch screens for interaction, which may support physical buttons or knobs, and the system handles most interaction details transparently.
-
-Simulators are usually used for development and debugging, because the real machine deployment and debugging process is still fragmented and takes a long time.
-
-### Typical project structure
-
-This is our recommended project file structure, which is also the standard structure of quick applications:
-```bash
-src/
-├─ manifest.json # Application manifest: configuration permissions, registration page routing
-├─ app.js # Application entry: global life cycle (onCreate, onDestroy)
-├─ pages/ # Page directory
-│ └─ Main/
-│ └─ index.ux # Page component
-└─ assets/ # public resources
-  └─ icon.png
-```
-You can introduce the [Node.js](nodejs.md) tool chain to manage dependencies as needed. The directory structure can also be adjusted as needed, but [`src/manifest.json`](/framework/application/manifest.md) and `src/app.js` must be fixed at this location.
-
-## UI Development
-
-Glyphix uses the [`.ux`](../framework/component/README.md) single-file component (similar to Vue SFC), which is similar in style to the Vue Options API, but there are significant differences.
-
-### Flexbox layout first
-
-The web defaults to a flow layout (Flow Layout), and the Glyphix page defaults to a stacked layout: if you put two divs on the page, they will overlap instead of being arranged one above the other. This is because this framework supports the use of multiple root nodes in `<template>`, for example:
-```html
-<template>
-  <image class="background" src="/assets/bg.png" />
-  <div class="content"> ... </div>
-</template>
-```
-The default stacked layout is usually very suitable for this scenario.
-
-Although containers such as `div` use fluid layout by default, it is recommended to use Flexbox for layout control. Most containers should explicitly declare `display: flex`, combined with `flex-direction` to control the arrangement of child elements.
-
-Considering that device screen sizes vary greatly, please pay special attention to the use of length units:
-- Use `px` units in smaller sizes, which are logical pixels and automatically scale based on screen density.
-- Fonts should always use `rem` units, which are baselined by the device manufacturer and more consistent with system UX specifications.
-- You can use percentage (`%`) units to implement responsive layout, but there are currently many limitations and defects, so please pay attention to debugging.
-
-Since the screen is too small, you may specifically need the [`scroll`](../components/scroll.md) component to implement the scroll area. Unlike the web, the `div` container itself does not support scrolling and cannot be controlled using the `overflow` property.
-
-### Template syntax differences
-
-Although it looks like a Vue template, please note the following differences:
-- Commands without `v-` prefix: such as `<div if="show">` or `<div for="item in items">`
-- Event binding can be done with `on` or `@`, such as: `<p on:click="handler">`
-- Text components such as `<p>` must be used: `<text>Hello</text>` can be displayed normally, but `<div>Hello</div>` will not render anything.
-- Supports using `model:prop="state"` or `::prop="state"` [two-way binding](../framework/commands/model.md) for any component attribute, as long as an event with the same name as the attribute is triggered.
-
-### Style restrictions
-
-CSS support is a subset:
-- Supports classes (`.class`), IDs (`#id`), tags (`div`) and descendants (`.a .b`). **Not supported** Complex relationship selectors such as `~`, `+`, `>`, etc.
-- **Effect limitations**: Gradient, shadow and other effects are not supported. `transition` animation is not supported yet.
-- **Performance Limitation**: Avoid using `transform` to move or align elements. `object-fit` defaults to `none` and is recommended to be left as default.
-- Currently there is no support for dynamic `class` binding, nor for CSS variables.
-
-## Components and Logic
-
-### Script model
-
-Component scripts are very close to the Vue Options API, and the following demonstration points out the main differences:
-```js
-export default {
-  // Data model (Data), no need to declare attributes, data attributes are automatically exported as attributes
-  data: {
-    count: 0, // Modifying this.count will automatically trigger a view update
-  },
-  timer: null, // Non-responsive fields are defined directly on the component instance, or they do not need to be declared.
-  // life cycle
-  onInit() {}, // The data has been initialized and network requests can be initiated.
-  onReady() {}, // The interface has been rendered
-  onDestroy() {}, // Be sure to clean up the timer and subscribe to events here
-
-//Methods, defined directly in the component object
-  handleTap() {
-    this.count++
-    // Trigger custom events to the parent component
-    this.$emit('change', { value: this.count })
-  }
-}
-```
-The fields in the `data` object are responsive properties, which currently only support JSON-compatible types (`Date`, `Map`, `Set`, etc. are not supported). If responsive updates are not required, it is recommended to define the field on the component instance (`this`).
-
-::: tip
-Do not use the `methods` object to wrap methods, just define them directly in the component object. There is no need to use `props` to define properties, fields in the `data` object are automatically exported as properties.
-
-Nor can you use DOM APIs such as `document.getElementById` to find elements. You can use the [`this.$element()`](../framework/component/component-apis.md#element) method to get the element instance with the specified ID.
-:::
-
-### Pages and routing
-
-A Glyphix application consists of multiple pages, which are navigated through routes. All pages need to be statically registered in the [`router.pages`](../framework/application/manifest.md#pages) field in `manifest.json`. Page components are similar to normal components, but support `onShow` and `onHide` lifecycle hooks.
-
-Use the `system.router` system module to jump:
-```js
-import router from '@system.router'
-
-// Jump and pass parameters
-router.push({ uri: 'pages/Detail', params: { id: 123 } })
-```
-::: tip
-Don't use other routing libraries, and don't pretend to be developing a single page application (SPA). Otherwise, existing functions such as transition effects and page stack management will not be available.
-:::
-
-### TypeScript support
-
-If you use Node.js scaffolding to create a project, you can use TypeScript in the project for development after installing dependencies such as `glyphix` and `typescript` using npm, pnpm, etc.
-
-For `.ux` single-file components, you can enable TypeScript support by adding the `lang="ts"` attribute on the `<script>` tag. For example:
-```html
-<script lang="ts">
-import { defineComponent } from 'glyphix'
-
-export default defineComponent({
-  data() {
-    count: 0: number
-  },
-  increment() { this.count++ },
-})
-</script>
-```
-
-## System capability integration
-
-Don't try to use the browser API, use Glyphix [standard library](../api/README.md).
-
-### Quick check of commonly used modules
-
-| Function | Glyphix module | Description |
-| :--- | :--- | :--- |
-| **Network** | [`@system.fetch`](../api/system-fetch.md) | Must handle asynchronous callbacks or Promise |
-| **Pop-up** | [`@system.prompt`](../api/system-prompt.md) | Provide Toast and Dialog |
-| **Storage** | [`@system.storage`](../api/system-storage.md) | Synchronize local storage, directly read and write objects instead of strings |
-| **Routing** | [`@system.router`](../api/system-router.md) | Management page stack |
-| **Log** | `console.log` | Output to debugging terminal, same as browser |
-
-### Asynchronous programming mode
-
-System APIs usually support asynchronous callback and Promise styles. It is recommended to use `async/await` to keep the code clean.
-
-```js
-import fetch from '@system.fetch'
-import prompt from '@system.prompt'
-
-export default {
-  onReady() { this.loadData() },
-  async loadData() {
-    try {
-      const response = await fetch.fetch({
-        url: 'https://api.example.com/data',
-        method: 'GET', //default is GET
-        responseType: 'json', // This does not require manual JSON.parse parsing
-      })
-
-if (response.data.code === 200)
-        this.data = response.data.data
-    } catch (err) {
-      prompt.showToast({ message: 'Network Error' })
-    }
-  }
-}
-```
-
-## Build and run
-
-Use the [`gx emu`](../tutorials/glyphix.js/README.md) command to start the emulator, or use `gx build` to build the application package. If you use Node.js scaffolding, you can also use the `gx` command directly.
-
-Please refer to the [Quick Start](getting-started.md) tutorial for detailed steps.
-
-## Comprehensive example
-
-The following is a complete component example that demonstrates the combined use of layout, data binding, event handling, and system APIs. You can view this example directly in your browser by clicking the `>` button to see the full code.
-
-<glyphix id="quick-orientation-example" title="Counter component example" height="240">
-
-```html
-<!-- It is recommended to use Flex layout for the root container, operations are not allowed during loading -->
-<div class="container" :disabled="loading">
-  <text class="title">Hello, {{ name }}</text>
-
-<div class="card">
-    <text class="count">{{ count }}</text>
-    <text class="btn" value="+1" on:click="increment">Add</text>
-  </div>
-</div>
-
-<!-- Use the stacking layout of the page to overlay the loading status prompt -->
-<text if="loading" class="loading">Loading...</text>
-```
-
-```css
-.container {
-  /* Page components do not need to set width and height, they are always full */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  /* Note that the page background is generally not set, this is just a demonstration */
-  background-color: #f5f5f5;
-  border-radius: 16px;
-  padding: 10%; /* percentage margin */
-}
-
-.title {
-  font-size: 1.25rem; /* The font uses rem units */
-  color: #333333;
-  align-self: center;
-}
-
-.card {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 16px;
-}
-
-.count {
-  font-size: 1.5rem;
-  color: #007aff;
-  min-width: 80px;
-}
-
-.btn {
-  width: 120px;
-  background-color: #007aff;
-  color: #ffffff;
-  border-radius: 50%; /* round button */
-  text-align: center;
-}
-
-.loading {
-  color: #3d3d3d;
-  font-size: 0.8rem;
-  text-align: center;
-}
-
-/* Fade style for disabled state */
-*:disabled {
-  opacity: 0.5;
-}
-```
-
-```js
-import prompt from '@system.prompt'
-
-export default {
-  // component data
-  data: {
-    name: 'Glyphix',
-    count: 0,
-    loading: false
-  },
-  // Life cycle: component initialization completed
-  onInit() {
-    console.log('Component initialized')
-    this.simulateFetch()
-  },
-  //method definition
-  increment() {
-    this.count++
-    if (this.count % 5 === 0) {
-      prompt.showToast({
-        message: `Count reached ${this.count}!`
-      })
-    }
-  },
-  async simulateFetch() {
-    this.loading = true
-    // Simulate an asynchronous operation, which produces a loading state
-    setTimeout(() => {
-      this.loading = false
-      this.name = 'Developer'
-    }, 1000)
-  }
-}
-```
-
-</glyphix>
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/README.md
-
----
-title: Glyphix 应用开发教程
-index: false
-icon: routes
-category:
-  - Guide
----
-
-## What is Glyphix
-
-Glyphix is ​​an efficient, lightweight application development framework for MCU (microcontroller) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components and publish applications to various smart devices (such as smart watches).
-
-For more information, please refer to the [Framework](/framework/README.md) chapter.
-
-### Web-like framework
-
-Unlike traditional MCU firmware development, Glyphix is ​​closer to a framework based on a web technology stack. App developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You don’t need to master the complete web development technology stack, such as browser DOM, standard HTML tags, and complex build tool chains. But if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), it will be easy to get started with Glyphix.
-
-::: tip
-To be clear, Glyphix is not a “low-code” platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, mastering a solid JavaScript foundation and a good front-end way of thinking will help you fully realize the potential of Glyphix.
-:::
-
-### Declarative UI framework
-
-Traditional interface development is usually imperative: functions need to be called step by step to create controls, update state, and refresh the interface. This method is very flexible, but the business and interface logic are highly coupled. As the application scale expands, the code will quickly become complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.
-
-Glyphix adopts the declarative UI paradigm. Developers only need to describe "what the interface should look like", and the framework will automatically complete rendering and updates based on changes in data and state. This approach greatly reduces the complexity of interface logic and state management, and allows developers to focus on function and interaction design instead of maintaining the UI hierarchy and refresh process.
-
-### Application container
-
-Glyphix is ​​not just a UI framework, it also provides functions such as application life cycle management, permission isolation and system API. Applications run in an independent container and are isolated from each other to ensure system stability and security.
-
-Please read the [Quick Start](getting-started.md) tutorial to get started with Glyphix application development immediately.
-
-## Other questions
-
-### Need to be familiar with MCU and embedded development?
-
-Application developers generally do not need specific knowledge of MCUs and embedded development. But you should have some understanding of the device's resource limitations. For example, the memory capacity of MCUs is usually only a few MB, and there are also limits on the memory for running JavaScript code. This means that there may be an inability to request very large JSON data from the network, or to encode the entire image as Base64 and obtain it through a GET request.
-
-These limitations, which are completely different from web development, are indeed caused by the limited resources of the MCU device, but this is not included in the typical MCU body of knowledge.
-
-Intuitively, it's best to confirm that the app experience is good enough by running the app on the device. You can run it multiple times on a real device at different stages of development to ensure the best experience.
-
-### Should C/C++ be used for application development?
-
-Glyphix application development is done entirely using HTML, CSS, and JavaScript, so there is no need to use C/C++ languages.
-
-### How can embedded developers get started with Glyphix application development?
-
-Embedded developers can use this tutorial [Quick Start](getting-started.md) to gradually understand the core concepts of Glyphix. The framework uses a componentization and data binding mechanism similar to the Vue Options API, which will be a little different for readers who are used to imperative GUIs such as [LVGL](https://lvgl.io/) and Qt widgets. However, Glyphix's declarative design can also bring a more intuitive interface control experience.
-
-Developers do not need to fully master HTML, CSS and JavaScript, but familiarity with the basic syntax of JavaScript (such as variables, conditional judgments, function calls, etc.) will help understand Glyphix's rendering logic and event processing. You can familiarize yourself with these contents through sample code and practical operations in tutorials and documents to speed up the development process.
-
-### Do you want to pay attention to application performance optimization?
-
-Our framework has been deeply optimized for the resource constraints of embedded systems and can adapt well to a variety of hardware environments. Most applications can run smoothly and stably enough under default settings, so there is usually no need to spend extra time on performance optimization.
-
-If there is a need for in-depth understanding of specific optimization solutions in the future, we will provide special performance optimization documents to help developers further improve the operating efficiency of applications.
-
-### Is there a difference between the Glyphix environment and the browser?
-
-Yes, there are significant differences between the Glyphix environment and the browser. Glyphix does not have the DOM structure in the browser, nor does it provide objects such as `window` and `document`. Instead, it directly and uniquely provides a set of declarative interfaces through which developers can develop components and interact with interfaces. This design simplifies the development process and is more suitable for embedded environments.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
-
----
-icon: console-line
----
-# Command line options
-
-To be migrated.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/glyphix.js/emulator.md
-
----
-icon: watch-import-variant
----
-# Simulator and debugging
-
-To run the emulator, you need to switch to the root directory of your project on the command line and run the `gx emu` subcommand to start the emulator. The Glyphix simulator has a highly consistent environment with the real device runtime, so you can use the simulator to develop and debug most interfaces and functions without the need to frequently install applications on the real device.
-
-::: tip
-Due to the limitations of the current [`glyphix`](https://www.npmjs.com/package/glyphix) npm package, please be sure to configure [`glyphix.config.js`](/doc_en/nodejs.md#glyphix-config-js-configuration), otherwise the source code line number of the error message cannot be seen when executing `gx emu`.
-:::
-
-## `gx emu` subcommand
-
-Run the emulator using the last build target device configuration. This command needs to be executed in the root directory of the Glyphix project. It automatically builds the project and creates the resource files required by the emulator, so there is no need to perform `gx build` first.
-
-#### Command options
-
-- `-d --device=NAME`: Specify the simulated device name, the default is `default` (resolution is $410 \times 502\rm px$).
-- `-e --emulator-exe=CMD`: Specify the executable file of the emulator, the default is `glyphix-emu`. Usually no modification is required.
-- `-l --language=NAME`: Specify the language environment of the simulator, the default is `zh-CN` (Simplified Chinese). The list of supported languages ​​can be viewed through the `gx list language` command.
-- `--target=URI`: Set the package name or deeplink when the emulator is started, such as `app://com.example.app/SomePage?query=value` or `com.example.app`.
-- `-i --inspector`: Enables the inspector when running the simulator. The inspector is a web page that can debug interface elements in the simulator in the browser.
-- `-m --mobile-network`: (not yet implemented) Enable the mobile SDK's network proxy only in the emulator, without direct access to the network.
-- `-w --watch`: Monitor the project directory when running the simulator, and automatically rebuild and refresh the simulator interface when the source files change.
-- `-r --real-scale`: Display the emulator window using real size instead of scaling the display to the device resolution. This option is recommended for HiDPI screens.
-- `-t --top`: Keep the emulator window on top.
-- `-p --profiling`: Enable profiling mode. Due to the large differences in emulator and device performance, this option is generally not very useful.
-
-## Startup mode
-
-By default, `gx emu` will start the emulator with the device configuration it was last built with. You can also adjust the emulator's startup behavior through command options.
-
-### Specify device model
-
-Use the `-d` or `--device` option to specify the device model you wish to emulate, for example:
-```bash
-gx emu -d generic-watch-466x466
-```
-Will start the emulator for the device `generic-watch-466x466`. You can view the list of installed devices using the `gx list device` command.
-
-If this option is not specified, the last device specified will be used. The `default` device will be used when starting the emulator for the first time or after `gx clean`.
-
-### Deeplink startup
-
-By default, the simulator will launch the application of the current project, or launch an application menu interface. But when debugging the [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle function, you may want to launch the application through a deeplink to ensure that `onRoute()` receives specific parameters. Deeplinks can be specified using the `--target` option, for example:
-```bash
-gx emu --target app://com.example.app/SomePage?query=value
-```
-This will start the application with the package name `com.example.app`, and the path and query fields of the Deeplink URI will be passed to the `onRoute()` function of the application.
-
-### Analog device size
-
-By default, the simulator uses the actual pixel resolution of the device, which causes the display size on the computer to be larger than the actual screen size of the device and makes it difficult for developers to confirm that UI elements (including design drafts) are sized optimally on the device. The `-r` or `--real-scale` option can simulate real device dimensions:
-```bash
-gx emu -r
-```
-When using this option, you don't need to install the app on the device to confirm the actual size of the UI. However, considering that the DPI of most watches exceeds 300, a 1080p display will cause the interface to be too blurry when using real-scale mode. It is recommended to use this option on HiDPI displays (such as 4K displays, or Retina screens on macOS).
-
-::: tip
-When using real-scale mode, you should specify the target device you wish to emulate via the `--device` option. It is worth noting that due to different DPI, two devices with the same resolution may have different screen sizes, so the display sizes in real-scale mode will also be different.
-:::
-
-### Automatic refresh
-
-The `-w` or `--watch` option can monitor the project directory when running the simulator and automatically rebuild and restart the application when the source files change. It is usually recommended to use it with the `--top` option, for example:
-```bash
-gx emu -wt
-```
-This keeps the simulator window on top and automatically restarts the application after modifying the source file. This is very useful for development and debugging: switch directly from the code editor to the simulator, no need to manually restart the simulator, and no need to switch windows frequently.
-
-::: tip
-Currently, hot update pages are not supported. Instead, the entire application is restarted after modifying the source file. If you want faster debugging, you can adjust [`manifest.router.entry`](/framework/application/manifest.md#entry) to the page under development, so that you will go directly to the page every time you restart the application.
-:::
-
-## Connect to mobile phone
-
-You can connect to the emulator through the [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android mobile application to facilitate debugging functions related to the real device and mobile phone interconnection.
-
-### Preparation
-
-You need to install the Glyphix Debug app on your phone and make sure your phone and computer are on the same LAN, such as connected to the same Wi-Fi. After starting the simulator and opening the Glyphix Debug application, click the "Socket Connection" button. The application will display a connection interface. You can select the searched simulator IP address, or manually enter the computer IP and simulator port to connect.
-
-The emulator listens to network port 7768 by default. If the port is occupied (usually multiple emulators are started), the next available port is automatically selected and the actual port number used is printed when starting. For example:
-```bash
-$ gx emu
-[simulator.socket] MAS TCP server bind port 7768 successful
-```
-
-::: tip
-Once the emulator port is occupied and a non-7768 port number is selected, the Glyphix Debug application will not be able to automatically search for the emulator and must manually enter the correct IP address and port number to connect.
-:::
-
-It is strongly recommended that the simulator turns on the mobile network proxy mode in the next section to avoid using the computer network and mobile network at the same time. Otherwise, it may interfere with the normal work of [`@system.interconnect`](/api/system-interconnect.md) and other dependent mobile phone interconnection APIs.
-
-### Mobile network proxy
-
-Use the `-m` or `--mobile-network` option to enable only the network proxy function of the mobile SDK, which is similar to the network environment of a real device. When using this option, the emulator does not automatically launch the target application, but displays an application list interface.
-
-Before manually launching the app, you should connect to the emulator via "Socket Network" via the Glyphix Debug mobile app and then click on the target app. Otherwise the application will not be able to access the network.
-
-::: tip
-When using `-m` mobile network proxy, you can simulate network interruption by killing the mobile debugging application and reconnecting the emulator. Otherwise the simulator will automatically switch to the computer network.
-:::
-
-### Common connection issues
-
-If you cannot connect to the emulator through the Glyphix Debug app, please check whether the computer and mobile phone are connected to the same LAN, and the emulator program and port are not blocked by firewall rules. If you are connected to a public network, you may not be able to connect due to a firewall or network isolation.
-
-If you use VPN or proxy software, please ensure that the traffic within the LAN is not proxied, otherwise you will not be able to connect.
-
-## Other operations
-
-### Clear application data
-
-You can use [`gx clean`](README.md#gx-clean) to clear the application data when the emulator is running. Then when you start the emulator, it will start from the state of first installation.
-
-### Combine command options
-
-You can combine multiple options together, for example:
-```bash
-gx emu -rwt -d default-watch-466x466
-```
-Equivalent to using separately
-```bash
-gx emu -r -w -t -d devault-watch-466x466
-gx emu --real-scale --watch --top --device default-watch-466x466
-```
-It is recommended to install an auto-completion script as described in [`gx completion`](#gx-completion) to select device names and command options in the terminal.
-
-============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/image-forge.md
 
 ---
@@ -1452,6 +1310,148 @@ Since the image conversion script is a complete programming language rather than
 3. Targets such as `preview` are processed in a similar manner, but please note that when converting the output format to PNG, you also need to recognize that the command exits abnormally and continue trying with subsequent commands.
 
 All in all, it is similar to the idea of ​​​​a shell script, using the abnormal exit code of the command to control the process.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
+
+---
+icon: console-line
+---
+# Command line options
+
+To be migrated.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/glyphix.js/emulator.md
+
+---
+icon: watch-import-variant
+---
+# Simulator and debugging
+
+To run the emulator, you need to switch to the root directory of your project on the command line and run the `gx emu` subcommand to start the emulator. The Glyphix simulator has a highly consistent environment with the real device runtime, so you can use the simulator to develop and debug most interfaces and functions without the need to frequently install applications on the real device.
+
+::: tip
+Due to the limitations of the current [`glyphix`](https://www.npmjs.com/package/glyphix) npm package, please be sure to configure [`glyphix.config.js`](/doc_en/nodejs.md#glyphix-config-js-configuration), otherwise the source code line number of the error message cannot be seen when executing `gx emu`.
+:::
+
+## `gx emu` subcommand
+
+Run the emulator using the last build target device configuration. This command needs to be executed in the root directory of the Glyphix project. It automatically builds the project and creates the resource files required by the emulator, so there is no need to perform `gx build` first.
+
+#### Command options
+
+- `-d --device=NAME`: Specify the simulated device name, the default is `default` (resolution is $410 \times 502\rm px$).
+- `-e --emulator-exe=CMD`: Specify the executable file of the emulator, the default is `glyphix-emu`. Usually no modification is required.
+- `-l --language=NAME`: Specify the language environment of the simulator, the default is `zh-CN` (Simplified Chinese). The list of supported languages ​​can be viewed through the `gx list language` command.
+- `--target=URI`: Set the package name or deeplink when the emulator is started, such as `app://com.example.app/SomePage?query=value` or `com.example.app`.
+- `-i --inspector`: Enables the inspector when running the simulator. The inspector is a web page that can debug interface elements in the simulator in the browser.
+- `-m --mobile-network`: (not yet implemented) Enable the mobile SDK's network proxy only in the emulator, without direct access to the network.
+- `-w --watch`: Monitor the project directory when running the simulator, and automatically rebuild and refresh the simulator interface when the source files change.
+- `-r --real-scale`: Display the emulator window using real size instead of scaling the display to the device resolution. This option is recommended for HiDPI screens.
+- `-t --top`: Keep the emulator window on top.
+- `-p --profiling`: Enable profiling mode. Due to the large differences in emulator and device performance, this option is generally not very useful.
+
+## Startup mode
+
+By default, `gx emu` will start the emulator with the device configuration it was last built with. You can also adjust the emulator's startup behavior through command options.
+
+### Specify device model
+
+Use the `-d` or `--device` option to specify the device model you wish to emulate, for example:
+```bash
+gx emu -d generic-watch-466x466
+```
+Will start the emulator for the device `generic-watch-466x466`. You can view the list of installed devices using the `gx list device` command.
+
+If this option is not specified, the last device specified will be used. The `default` device will be used when starting the emulator for the first time or after `gx clean`.
+
+### Deeplink startup
+
+By default, the simulator will launch the application of the current project, or launch an application menu interface. But when debugging the [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle function, you may want to launch the application through a deeplink to ensure that `onRoute()` receives specific parameters. Deeplinks can be specified using the `--target` option, for example:
+```bash
+gx emu --target app://com.example.app/SomePage?query=value
+```
+This will start the application with the package name `com.example.app`, and the path and query fields of the Deeplink URI will be passed to the `onRoute()` function of the application.
+
+### Analog device size
+
+By default, the simulator uses the actual pixel resolution of the device, which causes the display size on the computer to be larger than the actual screen size of the device and makes it difficult for developers to confirm that UI elements (including design drafts) are sized optimally on the device. The `-r` or `--real-scale` option can simulate real device dimensions:
+```bash
+gx emu -r
+```
+When using this option, you don't need to install the app on the device to confirm the actual size of the UI. However, considering that the DPI of most watches exceeds 300, a 1080p display will cause the interface to be too blurry when using real-scale mode. It is recommended to use this option on HiDPI displays (such as 4K displays, or Retina screens on macOS).
+
+::: tip
+When using real-scale mode, you should specify the target device you wish to emulate via the `--device` option. It is worth noting that due to different DPI, two devices with the same resolution may have different screen sizes, so the display sizes in real-scale mode will also be different.
+:::
+
+### Automatic refresh
+
+The `-w` or `--watch` option can monitor the project directory when running the simulator and automatically rebuild and restart the application when the source files change. It is usually recommended to use it with the `--top` option, for example:
+```bash
+gx emu -wt
+```
+This keeps the simulator window on top and automatically restarts the application after modifying the source file. This is very useful for development and debugging: switch directly from the code editor to the simulator, no need to manually restart the simulator, and no need to switch windows frequently.
+
+::: tip
+Currently, hot update pages are not supported. Instead, the entire application is restarted after modifying the source file. If you want faster debugging, you can adjust [`manifest.router.entry`](/framework/application/manifest.md#entry) to the page under development, so that you will go directly to the page every time you restart the application.
+:::
+
+## Connect to mobile phone
+
+You can connect to the emulator through the [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android mobile application to facilitate debugging functions related to the real device and mobile phone interconnection.
+
+### Preparation
+
+You need to install the Glyphix Debug app on your phone and make sure your phone and computer are on the same LAN, such as connected to the same Wi-Fi. After starting the simulator and opening the Glyphix Debug application, click the "Socket Connection" button. The application will display a connection interface. You can select the searched simulator IP address, or manually enter the computer IP and simulator port to connect.
+
+The emulator listens to network port 7768 by default. If the port is occupied (usually multiple emulators are started), the next available port is automatically selected and the actual port number used is printed when starting. For example:
+```bash
+$ gx emu
+[simulator.socket] MAS TCP server bind port 7768 successful
+```
+
+::: tip
+Once the emulator port is occupied and a non-7768 port number is selected, the Glyphix Debug application will not be able to automatically search for the emulator and must manually enter the correct IP address and port number to connect.
+:::
+
+It is strongly recommended that the simulator turns on the mobile network proxy mode in the next section to avoid using the computer network and mobile network at the same time. Otherwise, it may interfere with the normal work of [`@system.interconnect`](/api/system-interconnect.md) and other dependent mobile phone interconnection APIs.
+
+### Mobile network proxy
+
+Use the `-m` or `--mobile-network` option to enable only the network proxy function of the mobile SDK, which is similar to the network environment of a real device. When using this option, the emulator does not automatically launch the target application, but displays an application list interface.
+
+Before manually launching the app, you should connect to the emulator via "Socket Network" via the Glyphix Debug mobile app and then click on the target app. Otherwise the application will not be able to access the network.
+
+::: tip
+When using `-m` mobile network proxy, you can simulate network interruption by killing the mobile debugging application and reconnecting the emulator. Otherwise the simulator will automatically switch to the computer network.
+:::
+
+### Common connection issues
+
+If you cannot connect to the emulator through the Glyphix Debug app, please check whether the computer and mobile phone are connected to the same LAN, and the emulator program and port are not blocked by firewall rules. If you are connected to a public network, you may not be able to connect due to a firewall or network isolation.
+
+If you use VPN or proxy software, please ensure that the traffic within the LAN is not proxied, otherwise you will not be able to connect.
+
+## Other operations
+
+### Clear application data
+
+You can use [`gx clean`](README.md#gx-clean) to clear the application data when the emulator is running. Then when you start the emulator, it will start from the state of first installation.
+
+### Combine command options
+
+You can combine multiple options together, for example:
+```bash
+gx emu -rwt -d default-watch-466x466
+```
+Equivalent to using separately
+```bash
+gx emu -r -w -t -d devault-watch-466x466
+gx emu --real-scale --watch --top --device default-watch-466x466
+```
+It is recommended to install an auto-completion script as described in [`gx completion`](#gx-completion) to select device names and command options in the terminal.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/README.md
@@ -1839,6 +1839,152 @@ emulator: glyphix-emu
 ```
 
 ============================================================
+FILE_PATH: src/transl/EN/cookbook/layout-tricks.md
+
+# Layout tips
+
+
+## Limit element width
+
+
+You can use the `margin` attribute to limit the width of an element.
+
+
+<glyphix id="cookbook-margin-layout-1" width="360" height="100">
+
+
+
+```html
+<div>
+  <div class="limit">
+    <p>{{text}}</p>
+  </div>
+</div>
+```
+
+
+```css
+div {
+  background-color: lightgreen;
+}
+
+.limit {
+  border: 1px solid red;
+  margin: 0 150px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+p {
+  border: 1px solid gray;
+  margin: 2px;
+}
+```
+
+
+```js
+export default {
+  data: { text: 'A' },
+  onInit() {
+    let index = 1
+    setInterval(() => {
+      this.text += String.fromCharCode(index++ + 0x41)
+      if (index > 26) {
+        this.text = 'A'
+        index = 1
+      }
+    }, 200)
+  }
+}
+```
+
+
+</glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
+
+# Swiper page indicator
+
+
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
+
+
+``` html
+<stack>
+  <swiper ::index="index">
+    <p for="i in panels">Panel {{i + 1}}</p>
+  </swiper>
+  <div class="indicator">
+    <image for="x in indicator" :src="x" />
+  </div>
+</stack>
+```
+
+
+``` js
+export default {
+  data: {
+    panels: 5,
+    index: 2
+  },
+  computed: {
+    indicator() {
+      let result = []
+      for (let i = 0; i < this.panels; i++) {
+        let suffix = i == this.index ? '1' : '0'
+        result.push(`/assets/images/ind-${suffix}.png`)
+      }
+      return result
+    }
+  }
+}
+```
+
+
+``` css
+swiper > p {
+  background-color: #888;
+  margin: 32px;
+  border-radius: 32px;
+  text-align: center;
+}
+
+.indicator {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.indicator > * {
+  margin: 0 4px 56px 4px;
+}
+```
+
+
+</Glyphix>
+
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/game-2048.md
+
+# 2048 game
+
+
+## Effect display
+
+
+Tip: Use the mouse to quickly slide up, down, left, and right to operate in "2048 Game".
+
+
+<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
+
+
+</glyphix>
+
+
+============================================================
 FILE_PATH: src/transl/EN/cookbook/async.md
 
 # Asynchronous operations
@@ -2176,6 +2322,84 @@ C-style strings are not supported. It will be converted to type `boolean`.
 The timing of the conversion is automatic and does not require developer intervention.
 
 ============================================================
+FILE_PATH: src/transl/EN/cookbook/clangd-lsp.md
+
+# Clangd configuration
+
+
+When developing firmware with a cross-compilation tool chain, if you use the arm-none-eabi-gcc tool chain, and when using a build system such as CMake, you can configure the Clangd language server to improve the development experience. Specifically you will get these benefits:
+- Accurately jump to declaration or definition based on actual project structure;
+- View the API documentation (documentation comments written using `/**`, `//!` and other Doxygen format comments);
+- Support code formatting rules defined by `.clange-format`;
+- No compilation required, real-time static checking or error checking;
+- Code prompts and completion during input;
+- Find usage, code refactoring, and more.
+
+
+## Preparation
+
+
+Start by using an editor that supports LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and related plugins. If you need to install clangd manually, you can download the appropriate version of [LLVM](https://github.com/llvm/llvm-project/releases) or install it using your operating system's package manager.
+
+
+After installing the necessary plugins, clangd may be able to be used in simple host projects without any configuration, but further configuration will be required in complex cross-compilation environments.
+
+
+## Cross-compilation environment configuration
+
+
+### CMake options
+
+
+If using CMake as your build system, then to turn on the `CMAKE_EXPORT_COMPILE_COMMANDS` option you can do this via the command line argument:
+``` bash
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # CMake 配置阶段的命令行参数
+```
+If it is not convenient to use command line parameters, you can also define this variable in any `CMakeLists.txt` file:
+``` cmake
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+```
+Then when using CMake to configure or build the project, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
+
+
+### Clangd configuration
+
+
+After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you may encounter the following problems:
+- `compile_commands.json` is located very deep in the directory hierarchy and clangd cannot find it;
+- clangd cannot find standard header files suitable for cross-compilation environments, such as `stdint.h` etc.
+
+
+To solve these problems, first create a `.clangd` file in the root directory of the project (that is, the directory opened by the editor, usually the directory where the `.git` folder is located). It is a YAML file and fill in the following content:
+``` yaml
+CompileFlags:
+  CompilationDatabase: "Relative path to the directory containing compile_commands.json"
+  Add:
+    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
+  Remove:
+    - -fno-reorder-functions
+```
+Please modify the file path according to the actual situation. Then add the following command line options to clangd's startup arguments:
+``` bash
+--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # 路径根据实际情况填写
+```
+Then restart the language clangd and it should work normally.
+
+
+vscode can add parameters through `clangd.arguments` in `.vscode/settings.json` of the project:
+``` json
+{
+  "clangd.arguments": [
+    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
+  ]
+}
+```
+
+============================================================
 FILE_PATH: src/transl/EN/cookbook/blur-overlay.md
 
 # blur overlay menu
@@ -2285,232 +2509,8 @@ Because the blur effect is computationally intensive, developers need to pay spe
 If possible, the interface with obfuscation should be tested on a physical device to see if it meets performance expectations.
 
 ============================================================
-FILE_PATH: src/transl/EN/cookbook/clangd-lsp.md
-
-# Clangd configuration
-
-
-When developing firmware with a cross-compilation tool chain, if you use the arm-none-eabi-gcc tool chain, and when using a build system such as CMake, you can configure the Clangd language server to improve the development experience. Specifically you will get these benefits:
-- Accurately jump to declaration or definition based on actual project structure;
-- View the API documentation (documentation comments written using `/**`, `//!` and other Doxygen format comments);
-- Support code formatting rules defined by `.clange-format`;
-- No compilation required, real-time static checking or error checking;
-- Code prompts and completion during input;
-- Find usage, code refactoring, and more.
-
-
-## Preparation
-
-
-Start by using an editor that supports LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and related plugins. If you need to install clangd manually, you can download the appropriate version of [LLVM](https://github.com/llvm/llvm-project/releases) or install it using your operating system's package manager.
-
-
-After installing the necessary plugins, clangd may be able to be used in simple host projects without any configuration, but further configuration will be required in complex cross-compilation environments.
-
-
-## Cross-compilation environment configuration
-
-
-### CMake options
-
-
-If using CMake as your build system, then to turn on the `CMAKE_EXPORT_COMPILE_COMMANDS` option you can do this via the command line argument:
-``` bash
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # CMake 配置阶段的命令行参数
-```
-If it is not convenient to use command line parameters, you can also define this variable in any `CMakeLists.txt` file:
-``` cmake
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-```
-Then when using CMake to configure or build the project, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
-
-
-### Clangd configuration
-
-
-After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you may encounter the following problems:
-- `compile_commands.json` is located very deep in the directory hierarchy and clangd cannot find it;
-- clangd cannot find standard header files suitable for cross-compilation environments, such as `stdint.h` etc.
-
-
-To solve these problems, first create a `.clangd` file in the root directory of the project (that is, the directory opened by the editor, usually the directory where the `.git` folder is located). It is a YAML file and fill in the following content:
-``` yaml
-CompileFlags:
-  CompilationDatabase: "Relative path to the directory containing compile_commands.json"
-  Add:
-    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
-  Remove:
-    - -fno-reorder-functions
-```
-Please modify the file path according to the actual situation. Then add the following command line options to clangd's startup arguments:
-``` bash
---query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # 路径根据实际情况填写
-```
-Then restart the language clangd and it should work normally.
-
-
-vscode can add parameters through `clangd.arguments` in `.vscode/settings.json` of the project:
-``` json
-{
-  "clangd.arguments": [
-    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
-  ]
-}
-```
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/game-2048.md
-
-# 2048 game
-
-
-## Effect display
-
-
-Tip: Use the mouse to quickly slide up, down, left, and right to operate in "2048 Game".
-
-
-<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
-
-
-</glyphix>
-
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/layout-tricks.md
-
-# Layout tips
-
-
-## Limit element width
-
-
-You can use the `margin` attribute to limit the width of an element.
-
-
-<glyphix id="cookbook-margin-layout-1" width="360" height="100">
-
-
-
-```html
-<div>
-  <div class="limit">
-    <p>{{text}}</p>
-  </div>
-</div>
-```
-
-
-```css
-div {
-  background-color: lightgreen;
-}
-
-.limit {
-  border: 1px solid red;
-  margin: 0 150px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-p {
-  border: 1px solid gray;
-  margin: 2px;
-}
-```
-
-
-```js
-export default {
-  data: { text: 'A' },
-  onInit() {
-    let index = 1
-    setInterval(() => {
-      this.text += String.fromCharCode(index++ + 0x41)
-      if (index > 26) {
-        this.text = 'A'
-        index = 1
-      }
-    }, 200)
-  }
-}
-```
-
-
-</glyphix>
-
-
-============================================================
 FILE_PATH: src/transl/EN/cookbook/README.md
 
 # Practical guide
-
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
-
-# Swiper page indicator
-
-
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
-
-
-``` html
-<stack>
-  <swiper ::index="index">
-    <p for="i in panels">Panel {{i + 1}}</p>
-  </swiper>
-  <div class="indicator">
-    <image for="x in indicator" :src="x" />
-  </div>
-</stack>
-```
-
-
-``` js
-export default {
-  data: {
-    panels: 5,
-    index: 2
-  },
-  computed: {
-    indicator() {
-      let result = []
-      for (let i = 0; i < this.panels; i++) {
-        let suffix = i == this.index ? '1' : '0'
-        result.push(`/assets/images/ind-${suffix}.png`)
-      }
-      return result
-    }
-  }
-}
-```
-
-
-``` css
-swiper > p {
-  background-color: #888;
-  margin: 32px;
-  border-radius: 32px;
-  text-align: center;
-}
-
-.indicator {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.indicator > * {
-  margin: 0 4px 56px 4px;
-}
-```
-
-
-</Glyphix>
 
 
