@@ -18,8 +18,9 @@ if not API_KEY:
     sys.exit(1)
 
 client = genai.Client(api_key=API_KEY)
-MODEL_ID = "gemini-3.5-flash-lite"
-
+# MODEL_ID = "gemini-3.5-flash-lite"
+# MODEL_ID = "gemini-flash-latest"
+MODEL_ID = "gemini-pro-latest"
 SYSTEM_PROMPTS = {
     "EN": "You are a technical documentation translator. Translate the following Markdown text from Chinese to English. Preserve all Markdown formatting, code blocks, URLs, and tables exactly as they are. Do not translate code variables or API function names.",
     "RU": "Ты профессиональный технический переводчик. Переведи следующий Markdown текст с китайского на русский язык. Сохрани всё форматирование Markdown, блоки кода, ссылки и таблицы. Не переводи названия переменных, функций API и системные пути."
