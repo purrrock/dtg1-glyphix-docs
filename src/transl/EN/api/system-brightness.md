@@ -22,11 +22,11 @@ Gets the screen brightness mode.
 
 ### `setMode` <decl type="(mode: number): void" method />
 
-Sets the screen brightness mode. When `number` is set to `0`, it is standard mode; when `number` is set to `1`, it is automatic mode.
+Sets the screen brightness mode. When `number` is set to `0`, it is standard mode; when `number` is set to $1$, it is automatic mode.
 
 ### `setKeepScreenOn` <decl type="(mode: Boolean): void" method />
 
-Sets whether to keep the screen on. When `mode` is set to `true`, the screen stays on; when `mode` is set to `false`, the screen is no longer kept on.
+Sets whether to keep the screen on. When `mode` is set to `true`, the screen stays on; when `mode` is set to `false`, the screen-on state is canceled.
 
 ### `wakeScreenOn`
 <decl method><pre>
@@ -36,6 +36,6 @@ Sets whether to keep the screen on. When `mode` is set to `true`, the screen sta
 }): void
 </pre></decl>
 
-Turns the screen on or off. The fields of the `options` parameter are as follows:
-- `screenOn`: Whether to turn on the screen
-- `timeout`: Automatic screen-off time, leaving it blank means no time limit
+Turns the screen on or off. The functions of the fields in the `options` parameter are as follows:
+- `screenOn`: Whether to turn on the screen.
+- `timeout`: Automatic screen-off time. If left blank, there is no time limit.

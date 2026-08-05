@@ -1,6 +1,6 @@
 # Styles and Layout
 
-The styling system of Glyphix is similar to CSS in Web technologies. Typically, CSS is defined directly within the `<style>` tag of a UX file.
+The styling system in Glyphix is similar to CSS in web technologies. Typically, CSS is defined directly inside the `<style>` tag of a UX file.
 
 ## Writing CSS
 
@@ -28,20 +28,20 @@ Glyphix also provides limited support for inline styles, which are written direc
 The value of an inline style is a string, and you can update the styles by changing this string. [CSS properties](/framework/generic/styles.md) that support being used in inline styles are tagged with <badge type="info" text="Inline" />.
 
 ::: warning
-Inline styles in the current version are relatively inefficient and should only be used as a solution for updating component styles via JS logic. Heavy usage may cause performance issues. In general, you should define CSS rules within the `<style>` tag.
+Inline styles in the current version are relatively inefficient and should only be used as a solution for updating component styles via JS logic. Heavy usage may cause performance issues. In general, you should use CSS rules defined within the `<style>` tag.
 :::
 
 ## Style Selectors
 
-Currently, the style framework supports the following selectors:
+Currently, the styling framework supports the following selectors:
 
 - Class selector
 - Type selector
 - ID selector
-- Pseudo-classes (rarely used)
-- Pseudo-elements (rarely used)
-- Descendant and direct child selectors, such as `div > .title` or `div .title`
-- Compound selectors, such as `#id.class` or `div.class`
+- Pseudo-class (rarely used)
+- Pseudo-element (rarely used)
+- Descendant selector and direct descendant selector, such as `div > .title` or `div .title`
+- Compound selector, such as `#id.class` or `div.class`
 
 ### Class Selector
 
@@ -62,7 +62,7 @@ This will match the following two style definitions:
 }
 ```
 
-### Combined Selectors
+### Grouping Selectors
 
 You can use `,` to specify multiple selectors for a rule-set:
 ``` css
@@ -75,7 +75,7 @@ You can use `,` to specify multiple selectors for a rule-set:
 
 ### Inherited Properties
 
-Certain CSS properties can be inherited by child elements from their parent element. Taking `font-size` as an example:
+Certain CSS properties can be inherited from parent elements down to child elements. Taking `font-size` as an example:
 ``` html
 <div>
   <p>Text</p>
@@ -87,7 +87,7 @@ div {
   font-size: 1.25rem;
 }
 ```
-Even though no `font-size` attribute is set on the `<p>` element, it will still display at a font size of `1.25rem`. This is because the `<p>` element inherits the font size setting from its parent `<div>`. In other words, once an inheritable style property is set on a container, all child elements will also inherit that property setting. However, note that the priority of the CSS property inheritance mechanism is very low, and inherited values are only used when the element has no explicitly specified style property. Suppose the following CSS is applied to the example above:
+Even though the `font-size` property is not explicitly set on the `<p>` element, it will still display with a font size of `1.25rem`. This is because the `<p>` element inherits the font size setting from its parent `<div>`. In other words, once an inheritable style property is set on a container, all child elements will also inherit that property setting. However, note that the priority of the CSS property inheritance mechanism is very low, and inherited values are only used when the element has no specified style property of its own. Suppose the following CSS is applied to the example above:
 ``` css
 * {
   font-size: 1rem;
@@ -96,11 +96,11 @@ div {
   font-size: 1.25rem;
 }
 ```
-Due to the presence of the `*` rule style block, the font size of the `<p>` element will now be `1rem` instead of using the inherited value.
+Due to the presence of the `*` rule style block, the `<p>` element's font size will now be `1rem` instead of using the inherited value.
 
 In the [CSS Properties](/framework/generic/styles.md) documentation, properties that support inheritance are tagged with <badge type="info" text="Inherited" />.
 
-### Reactivity Support
+### Reactive Support
 
 Currently, neither the `class` attribute nor the `id` attribute supports reactivity. Therefore:
 ``` html
@@ -121,15 +121,15 @@ Color values support RGB or RGBA color codes starting with the `#` character. Va
 - `#RRGGBB[AA]`, for example, `#102000`, `#00ff0080`
 - `#RGB[A]`, for example, `#0f0`, `#ff08`
 
-If a color code does not contain an alpha channel, the value of that channel defaults to `ff` (for `#RRGGBB` format) or `f` (for `#RGB` format). Each digit in a color code is a hexadecimal number, using characters `0-9`, `A-F`, and `a-f`. `#RGB[A]` is a shorthand method for `#RRGGBB[AA]` codes; for example, the color `#0f38` is identical to `#00ff3388`.
+If a color code does not contain an alpha channel, its value defaults to `ff` (for `#RRGGBB` format) or `f` (for `#RGB` format). Each digit in a color code is a hexadecimal number, with available characters being `0-9`, `A-F`, and `a-f`. `#RGB[A]` is a shorthand method for `#RRGGBB[AA]` codes; for example, the color `#0f38` is identical to `#00ff3388`.
 
 ### Color Functions
 
-Currently, defining color values using `rgb()` and `rgba()` functions is supported within CSS blocks. HSL color formats are not supported.
+Currently, CSS blocks support defining color values using the `rgb()` and `rgba()` functions. HSL color formats are not supported.
 
 ### Standard Color Names
 
-Web standard color names can be used within CSS blocks, for example:
+You can use standard web color names within CSS blocks, for example:
 ``` css
 color: brown;
 color: lightgray;
@@ -145,34 +145,34 @@ Inline styles only support color codes starting with `#`, for example:
 
 ## Lengths
 
-The general format for length values is `<value><unit>`, where `value` is the numeric length and `unit` is the length unit, such as `15px`. There should be no space between `value` and `unit`.
+The general format for length values is `<value><unit>`, where `value` is the numeric value of the length, and `unit` is the length unit, such as `15px`. There should be no space between `value` and `unit`.
 
 A special length value `auto` is also supported. This length value has no specific numerical value or unit, and its actual rendered length is determined by the specific scenario and rules.
 
 The following length units are available:
 
-- `px`: Pixels as the unit of length
-- `pt`: Points as the unit of length, where one point is $1/72$ of an inch
+- `px`: Pixels as the length unit
+- `pt`: Points as the length unit, where one point is $1/72$ of an inch
 - `%`: Percentage length unit; the specific value varies in conversion relation depending on the property and layout
-- [`rem`](/framework/application/font-config.md#rem-字号单位): A length unit relative to the system default font size; for example, `1rem` equals the size of the system default font, and $1.5\rm rem$ is $1.5$ times that size.
+- [`rem`](/framework/application/font-config.md#rem-字号单位): Length unit relative to the system default font size, for example, `1rem` equals the size of the system default font, and $1.5\rm rem$ is $1.5$ times the former.
 
-Here, `pt` is an absolute length unit (e.g., `72pt` corresponds to $1''$ or $25.4\rm mm$), which is device-independent. On the other hand, `px` is device-dependent, though it does not directly correspond to physical pixels. For conversion relations, please refer to the description of the [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) field. Percentage length units are typically calculated relative to the dimensions of the parent element or the element itself; for example, percentage values for CSS properties like `width` and `margin` are calculated based on the parent element's dimensions, whereas `border-radius` is calculated based on the element's own dimensions.
+Among them, `pt` is an absolute length unit—for example, `72pt` corresponds to $1''$ (inch) or $25.4\rm mm$—which is device-independent. On the other hand, `px` is device-dependent, though it does not directly correspond to physical pixels; please refer to the [`manifest.config.designWidth`](/framework/application/manifest.md#designwidth) field description for conversion relations. Percentage length units are usually calculated relative to the dimensions of the parent element or the element itself; for example, percentage values for CSS properties like `width` and `margin` are calculated based on the parent element's dimensions, while `border-radius` is calculated based on the element's own dimensions.
 
-The `rem` unit is specifically used for font sizes (i.e., the `font-size` property) as a simple cross-device font consistency solution. For more details, please refer to the [`rem` Font Size Unit](/framework/application/font-config.md#rem-字号单位).
+The `rem` unit is specifically used for font sizes (i.e., the `font-size` property), serving as a simple cross-device font consistency solution. For more details, please refer to the [`rem` Font Size Unit](/framework/application/font-config.md#rem-字号单位).
 
 ## Layout
 
-The layout framework can automatically arrange elements based on interface content and screen geometric information, eliminating the need for developers to manually specify element positions and sizes. The layout framework is a powerful mechanism that allows interfaces to adapt to devices of varying resolutions or sizes, and handles dynamic content as well. Most native Glyphix components support two automatic layout modes: flow layout and flexbox layout, while also supporting manual layout. Certain native components have mandatory special layouts; for example, the child elements of the [`swiper`](/components/swiper.md) component are always as large as the viewport, while the [`stack`](/components/stack.md) component is designed entirely to provide a stacking layout.
+The layout framework can automatically arrange elements based on interface content and screen geometry information, eliminating the need for developers to manually specify element positions and sizes. The layout framework is a powerful mechanism that allows interfaces to adapt to devices of varying resolutions or sizes, while also handling dynamic content. Most native Glyphix components support two automatic layout modes: flow layout and flexbox layout, while also supporting manual layout. Certain native components have enforced special layouts; for example, the children of the [`swiper`](/components/swiper.md) component are always as large as the viewport, whereas the [`stack`](/components/stack.md) component is designed entirely to provide a stacking layout.
 
-The concepts of flow layout and flexbox layout originate from Web standards, but have been adapted for low-performance devices.
+The concepts of flow layout and flexbox layout originate from web standards, but have been adjusted for low-performance devices.
 
 ## Media Queries
 
-In CSS, [media queries](media-query.md) are primarily used to control CSS styles based on specific device or media types via [`@media` rules](media-query.md#css-media-规则). For specific details regarding media queries, please refer to the related [documentation](media-query.md).
+In CSS, [media queries](media-query.md) are primarily used via [`@media` rules](media-query.md#css-media-规则) to control CSS styles based on specific device or media types. For specific details regarding media queries, please refer to the relevant [documentation](media-query.md).
 
 ## Less Extensions
 
-If you want to use [less](https://lesscss.org/) as your CSS preprocessor, you must first install the `less` package using a [package manager](/tutorials/nodejs.md):
+If you want to use [less](https://lesscss.org/) as your CSS preprocessor, you must first install the `less` package via a [package manager](/tutorials/nodejs.md):
 
 ::: code-tabs
 @tab npm
@@ -183,6 +183,7 @@ npm install -D less
 @tab pnpm
 ```bash
 pnpm i -D less
+```
 
 @tab yarn
 ```bash
@@ -191,10 +192,10 @@ yarn add -D less
 :::
 
 ::: tip
-A globally installed `less` (such as `npm install -g less`) will not be recognized by the Glyphix build tool, so you must install the `less` package within your project using the method above.
+Globally installed `less` (such as `npm install -g less`) will not be recognized by the Glyphix bundling tool, so you must install the `less` package within your project using the method above.
 :::
 
-You can then use the `lang="less"` attribute in the `<style>` tag of a UX file to specify the style type:
+You can then use the `lang="less"` attribute in the `<style>` tag of your UX file to specify the style type:
 
 ``` html
 <style lang="less">

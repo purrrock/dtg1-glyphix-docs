@@ -6,21 +6,21 @@ The button component is an inline element by default and can trigger correspondi
 
 ### `checkable`  <decl type="boolean" set />
 
-When set to `true`, it means a single touch only responds to one state change, i.e., transitioning from the pressed state to the released state, or from the released state to the pressed state. Additionally, the listening value for the `press` state is `true` when pressed and `false` when released.
+When set to `true`, it means a single touch only responds to one state change, i.e., from pressed to released, or from released to pressed. In this case, the listening value for the `press` state is `true` when pressed and `false` when released.
 
 ### `toggleable` <decl type="boolean" set />
 
-When set to `true`, it indicates that the `press` listening value can be changed, with `true` for pressed and `false` for released.
+When set to `true`, it means the `press` listening value can be changed, being `true` when pressed and `false` when released.
 
 ### `press` <decl type="boolean" get set listen />
 
-When setting the `press` property, the state of the component can be changed. You can also listen to the component's state using the `on` directive. By default, upon completing a touch, the callback parameter is `true`. You can use it with the `checkable` and `toggleable` properties to get different listening values and states.
+When setting the `press` property, the component's state can be changed. You can also listen to the component's state via the `on` directive. By default, upon completing a touch, the callback parameter is `true`. You can use it with the `checkable` and `toggleable` properties to get different listening values and states.
 
 ## Limitations
 
 ### `click` Event Invalidation
 
-When not using the `button` component, you typically listen for click events on any native component via the [`click`](/framework/generic/properties.md#click) property. However, this method generally does not work for `button`. For example, consider the following code:
+When not using the `button` component, you typically listen for click events on any native component via the [`click`](/framework/generic/properties.md#click) property. However, this method is generally not suitable for `button`. For example, consider the following code:
 ```html
 <button on:click="onOuterClick">
   <p on:click="onInnerClick">inner</p>
@@ -81,15 +81,15 @@ export default {
 
 </glyphix>
 
-You might expect that clicking the `"inner"` text would trigger the `onInnerClick` method and prevent `onOuterClick`. However, you will find that this is not the case (it is best to open the browser console to view the logs): the `onInnerClick` method is not triggered at all, and only the outer `button` component responds to the click, meaning:
+You might expect that clicking the `"inner"` text would trigger the `onInnerClick` method and prevent `onOuterClick`. But you will find this is not the case (it is best to open the browser console to view the logs): the `onInnerClick` method is not triggered at all, and only the outer `button` component responds to the click, meaning:
 - When clicking the `inner` text, the `inner click` log does not appear, only the `outer click` log;
-- The interaction for when the `button` is pressed is triggered (opacity is reduced).
+- The `button`'s pressed interaction is triggered (opacity decreases).
 
-This is just like clicking the outer `outer text`. The reason for this behavior is that the `button` component takes priority in responding to the entire lifecycle of the press gesture (from pressing down to releasing), while the `click` event is triggered upon release. This means that regardless of whether the inner element's `click` event handler stops propagation or not, this behavior cannot be changed.
+This is just like clicking the outer `outer text`. The reason for this is that the `button` component takes precedence in responding to the entire lifecycle of the press gesture (from pressing down to releasing), while the `click` event is triggered upon release. This means that regardless of whether the inner element's `click` event handler prevents bubbling, it cannot change this behavior.
 
 #### Solution
 
-To resolve this issue, you should listen to the `press` event of the outer `button` and the `touchstart` event of the inner element:
+To solve this problem, you should listen to the `press` event of the outer `button` and the `touchstart` event of the inner element:
 
 ```html
 <button on:press="onOuterClick">
@@ -151,15 +151,15 @@ export default {
 
 </glyphix>
 
-Try the example above, and you will find that clicking the `inner` text only triggers the `onInnerClick` method, `onOuterClick` will not be triggered, and the `button` will not render the pressed state effect.
+Try the example above, and you will find that clicking the `inner` text only triggers the `onInnerClick` method, while `onOuterClick` is not triggered, and the `button` does not render the pressed effect either.
 
 ::: tip
-The `press` event is also typically triggered upon release, but it requires that the button's press event has never been prevented. Therefore, stopping the propagation of the inner element's `touchstart` event can prevent the outer button's `press` event from being triggered.
+The `press` event is also typically triggered upon release, but it requires that the button's press event has never been prevented. Therefore, the inner element's `touchstart` event, which stops propagation, can prevent the outer button's `press` event from being triggered.
 :::
 
 #### Alternative Trigger Timing
 
-The limitation of this method is that the inner element's `touchstart` event is triggered upon pressing down. You can alternatively use the `touchend` event to trigger the action, but you must retain the propagation-stopping functionality of the `touchstart` event. This ensures that the outer button's `press` event is not triggered when pressing down.
+The limitation of this method is that the inner element's `touchstart` event is triggered upon pressing down. You can alternatively use the `touchend` event for triggering, but you must keep the event propagation-stopping functionality on the `touchstart` event. This ensures that the outer button's `press` event is not triggered when pressing down.
 
 ```html
 <button on:press="onOuterClick">
@@ -219,4 +219,4 @@ export default {
 
 </glyphix>
 
-Open the browser console and click the `inner` text again. You will find that the `onInnerClick` log is only printed upon release, and it still successfully prevents the outer `button` from responding to the gesture.
+Open the browser console and click the `inner` text again. You will find that the `onInnerClick` log is only printed upon release, and it successfully prevents the outer `button` from responding to the gesture as well.

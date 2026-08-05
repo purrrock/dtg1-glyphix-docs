@@ -6,14 +6,14 @@ You can think of an application as a standalone program like a mobile app: they 
 
 ## Runtime
 
-The runtime is a native system integrated into the device firmware. It provides a standard application execution environment and manages all system resources required by the application. This section introduces the various responsibilities of the runtime and its behavioral standards.
+The runtime is a native system integrated into the device firmware. It provides a standard application runtime environment and manages all system resources required by the application. This section introduces the various responsibilities of the runtime and its behavioral standards.
 
 ### Launching Applications
 
-The runtime can launch an application via native or JavaScript interfaces. Each application has an independent execution environment, which means that:
+The runtime can launch an application via native or JavaScript APIs. Each application has an independent runtime environment, which means:
 - Applications run in independent JavaScript execution environments without interfering with each other.
 - Each application has independent resource access, including page structures, file resources, data storage, and various other resources.
-- No low-level privileges: An application's execution environment is decoupled from the underlying system, and therefore it cannot bypass the runtime to access low-level resources.
+- No low-level privileges: The application's runtime environment is unrelated to the underlying system and therefore cannot bypass the runtime to access low-level resources.
 
 However, certain resources are globally unique, such as the visible area of the screen and public file directories. As user operations occur, some applications will enter the **foreground** interactive state, while others will switch to the background.
 
@@ -23,17 +23,17 @@ The interface of a Glyphix application is primarily provided by **pages**. There
 
 ### Memory Resource Management
 
-The runtime system centrally manages memory and various system resources—both within individual applications and across multiple applications—to optimize overhead and prevent leaks:
-- Postpone loading operations for images, text, and other resources to reduce interface loading latency.
-- Cache and optimize page and component files to accelerate hot-loading performance.
-- Maintain resource and underlying file mappings to achieve device-agnostic I/O and resource access.
-- Optimize memory footprint to avoid exhausting MCU memory.
+The runtime system uniformly manages memory and various system resources for individual applications and across multiple applications, thereby optimizing overhead and avoiding leaks:
+- Postponing loading operations for resources such as images and text to reduce interface loading latency.
+- Caching and optimizing page and component files to accelerate hot-loading performance.
+- Maintaining resource and low-level file mappings to achieve device-agnostic I/O and resource access.
+- Optimizing memory footprint to avoid exhausting MCU memory.
 
-### Resource Recycling
+### Resource Reclamation
 
-When an application exits, the runtime reclaims all resources, releasing system usage back to the level before the application was launched. This is a system-level mechanism that cannot be controlled at the application level, which also means that:
-- Pending Promise objects will not be settled when an application exits, so asynchronous operations may never return a result. Please make sure to handle necessary cleanup in the application's [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) lifecycle function.
-- The underlying system may kill the application at any time and has full operational permissions. It is impossible to absolutely keep an application alive at the application level, nor can you assume the device's application scheduling policy.
+When an application exits, the runtime reclaims all resources, releasing system consumption back to the level before the application was launched. This is a system-level mechanism that cannot be controlled at the application level, which also means:
+- Applications will not fulfill pending Promise objects upon exit, so asynchronous operations may never yield a result. Please note that necessary handling should be done in the application's [`onDestroy`](/framework/component/life-cycle.md#ondestroy-1) lifecycle function.
+- The underlying system may kill the application at any time and has complete operational permissions. Absolute persistence cannot be guaranteed at the application level, nor can you assume the device's application scheduling policy.
 
 ### Standard APIs
 
@@ -41,29 +41,29 @@ The runtime provides a set of standard [APIs](/api/README.md) that abstract diff
 
 ### Background Management
 
-The application framework supports running applications in the background. This allows users to return to interfaces like the application list and then return to the current application without restarting it. Applications running in the background are subject to certain restrictions, such as:
-- Background applications cannot navigate between pages; APIs like [`router.push()`](/api/system-router.md#push) will directly hang/suspend.
-- Background applications may automatically return to the main page (i.e., the bottommost page), just as if the user manually returned.
-- Most applications can only stay in the background briefly and will be killed by the system in about half a minute to free up resources.
+The application framework supports running applications in the background, which allows users to return to interfaces like the app list and then return to the current application without restarting it. Background-running applications are subject to certain limitations, such as:
+- Background applications cannot navigate pages; APIs such as [`router.push()`](/api/system-router.md#push) will be directly suspended.
+- Background applications may automatically return to the main page (i.e., the bottommost page), just like a user returning manually.
+- Most applications can only remain in the background briefly and will be killed by the system in about half a minute to release resources.
 - Applications performing specific tasks such as audio playback can continue running in the background.
 
 ::: tip
-If your application needs to play audio in the background (such as a podcast app), make sure to start the audio playback task in the main page or an interface-agnostic script, rather than playing it deep within sub-pages. Otherwise, when the background application returns to the main page, audio playback may be interrupted and lose background residency.
+If your application needs to play audio in the background (such as a podcast app), please ensure that you start the audio playback task on the main page or in an interface-agnostic script, rather than playing it on deep pages. Otherwise, when the background application returns to the main page, audio playback may be interrupted and lose background residency.
 :::
 
-The application background mechanism involves a series of lifecycle management details; see [Application Lifecycle](../component/life-cycle.md) for details.
+The application background mechanism involves a series of lifecycle management; for details, see [Application Lifecycle](../component/life-cycle.md).
 
 ## Pages
 
-An application is divided into multiple pages, similar to HTML pages: each page implements a specific type of interaction logic, and multiple pages can navigate to each other.
+Applications are divided into multiple pages, similar to HTML pages: each page implements a category of interaction logic, and users can navigate between multiple pages.
 
-A page is an interface element that fills the entire screen, so only one page can be displayed on the device at a time. To support this, the application framework provides a page stack mechanism: each application can open several pages at runtime, and these pages are maintained in a stack manner, displaying only the topmost page at any time. Since the page stack is a stack, it supports `push` and `pop` operations. Through these two operations, new pages can be pushed onto the application's page stack, or the top page can be closed. In addition, the application framework also extends several practical page operations.
+A page is an interface element that fills the entire screen, so only one page can be displayed on the device at a time. To support this, the application framework provides a page stack mechanism: each application can open several pages at runtime, which are maintained in a stack manner, displaying only the top-most page at any given time. Because the page stack is a stack, it supports `push` and `pop` operations, through which new pages can be pushed into the application's page stack or the top page can be closed. In addition, the application framework extends several practical page operations.
 
 Most pages reside in the application's page stack. When the application is in the foreground (i.e., it is the currently displayed application), the page at the top of the page stack is displayed, while all pages of background applications are hidden. The page stacks of different applications are completely independent.
 
-A page consists of a **page component** and several child components. All pages must be declared in [`manifest.json`](manifest.md#router) before they can be used. Intra-application pages use the [`system.router`](/api/system-router.md) API for navigation and switching, which includes a routing mechanism and a data transfer method between pages.
+A page consists of a **page component** and several sub-components. All pages must be declared in [`manifest.json`](manifest.md#router) before they can be used. Pages within the application navigate and switch via the [`system.router`](/api/system-router.md) API, which includes a routing mechanism and a data transfer method between pages.
 
-Pages use a stacked layout by default, just like the [`stack`](/components/stack.md) component. Therefore, using a template like this within a page component:
+Pages use a stack layout by default, just like the [`stack`](/components/stack.md) component. Therefore, using a template like this within a page component:
 ``` html
 <scroll>
   <p>background</p>
@@ -81,7 +81,7 @@ has the same effect as placing it inside a `stack` component:
 </stack>
 ```
 
-You can observe this stacking effect using the interactive demo below. You can use your mouse or trackpad to scroll the "Background" text and observe the stacking layer effect.
+You can observe this stacking effect using the interactive demo below. You can use your mouse or touchpad to scroll the "Background" text and observe the stacking layer effect.
 
 <glyphix id="application-page-component" height="200" width="300" title="Page Component Stacking Effect">
 
@@ -110,4 +110,4 @@ scroll>p {
 
 ## Components
 
-See [Component Framework](/framework/component/README.md) for details.
+For details, see [Component Framework](/framework/component/README.md).

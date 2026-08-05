@@ -1,9 +1,9 @@
-# Low Energy Bluetooth Module
+# Bluetooth Low Energy Module
 
 This module provides Bluetooth capabilities based on Bluetooth Low Energy (BLE) technology, supporting BLE scanning initiation as well as connections and data transmission based on the Generic Attribute Profile (GATT) (currently, only creating a `GattClient` is supported; creating a `GattServer` is not yet supported).
 
 ::: warning
-Most APIs in `@system.bluetooth.ble` are [Promise asynchronous operations](#Promise异步操作), which are fundamentally different from synchronous IO access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
+Most APIs in `@system.bluetooth.ble` are [Promise-based asynchronous operations](#Promise异步操作), which are fundamentally different from synchronous I/O access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
 :::
 
 ## Importing the Module
@@ -15,10 +15,10 @@ import ble from '@system.bluetooth.ble'
 ## Permissions
 
 ::: tip
-Applications using this module need to declare the permission: `watch.permission.BLUETOOTH`
+Using this module requires declaring the following permission in the application: `watch.permission.BLUETOOTH`
 :::
 
-## ble Interface Definition
+## BLE Interface Definitions
 
 ### `ResultCode`
 
@@ -39,7 +39,7 @@ Result enumeration returned in Promises
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Starts scanning, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Starts scanning using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of starting a scan:
 ```ts
@@ -65,7 +65,7 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Stops scanning, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Stops scanning using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of stopping a scan:
 ```ts
@@ -88,18 +88,18 @@ export default {
 
 ### `ScanResult`
 
-This object is used to represent the reported scan results. Its type signature is as follows:
+This object is used to represent the reported scan results, with the following type signature:
 
 ```ts
 /**
- * Scan result object definition
+ * Definition of the scan result object
  */
 type ScanResult = {
     deviceId: string; // Device ID (e.g., "AA:BB:CC:DD:EE:FF")
     rssi: number; // Signal strength in dBm
-    data: ArrayBuffer; // Advertisement packet raw data
+    data: ArrayBuffer; // Raw advertising packet data
     deviceName: string; // Device name (if available)
-    connectable: boolean; // Whether connectable, true means connectable
+    connectable: boolean; // Whether connectable, true indicates connectable
 }
 ```
 
@@ -108,10 +108,10 @@ type ScanResult = {
 (): Promise&lt;Array&lt;ScanResult&gt;&gt;
 </pre></decl>
 
-Queries scan results, using a Promise asynchronous callback. This interface asynchronously returns an array containing [`ScanResult`](#scanresult) objects (i.e., `Array<`[`ScanResult`](#scanresult)`>`).
+Queries scan results using a Promise-based asynchronous callback. This interface asynchronously returns an array containing [`ScanResult`](#scanresult) objects (i.e., `Array<`[`ScanResult`](#scanresult)`>`).
 
 ::: warning
-Since the underlying Bluetooth adapter is a singleton, multiple applications may operate Bluetooth devices simultaneously. This can lead to a situation where: App A starts scanning for a period of time, and then App B starts scanning again. In this case, the scan results listened to by App B will be incomplete. To handle this scenario, it is recommended that all applications query the current scan results immediately after starting a scan.
+Since the underlying Bluetooth adapter is a singleton, multiple applications may operate Bluetooth devices simultaneously. This can lead to a scenario where: App A starts scanning for a period of time, and then App B starts scanning again. In this case, the scan results monitored by App B will be incomplete. To handle this situation, it is recommended that all applications immediately query the current scan results after starting a scan.
 :::
 
 Here is an example of querying scan results after starting a scan:
@@ -139,7 +139,7 @@ export default {
 ### `subscribeScanStatus`
 <decl type="(callback: Callback<{ scan: boolean }> => void): number" method/>
 
-Subscribes to scan status changes, using a Callback asynchronous callback. When the scan status changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+Subscribes to scan status changes using a Callback-based asynchronous callback. When the scan status changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - `scan`: Current scan status. `true` indicates scanning is in progress, `false` indicates scanning has stopped.
@@ -186,10 +186,10 @@ export default {
 ### `subscribeBLEDeviceFind`
 <decl type="(callback: Callback<ScanResult> => void): number" method/>
 
-Subscribes to scan result reporting events, using a Callback asynchronous callback. Whenever a new device is scanned, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+Subscribes to scan result reporting events using a Callback-based asynchronous callback. Whenever a new device is scanned, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 ::: tip
-Scan results are reported in incremental mode, meaning one device is reported as soon as it is discovered. After listening to this event, users need to store the scan results themselves.
+Scan results are reported in an incremental mode—each discovered device is reported as it is found. After listening to this event, users need to store the scan results themselves.
 :::
 
 Description of callback function parameter fields:
@@ -238,7 +238,7 @@ export default {
 
 ### `GattClientDevice`
 
-This object is used to represent the Client object in the GATT protocol. Its type signature is as follows:
+This object is used to represent the Client object in the GATT protocol, with the following type signature:
 
 ```ts
 /**
@@ -270,10 +270,10 @@ type GattClientDevice = {
 
 ### `createGattClientDevice` <decl type="(deviceId: string): GattClientDevice" method />
 
-Creates a [`GattClientDevice`](#gattclientdevice) instance representing the client side in a GATT connection. This interface synchronously returns a [`GattClientDevice`](#gattclientdevice) instance.
+Creates a [`GattClientDevice`](#gattclientdevice) instance, representing the client side in a GATT connection. This interface synchronously returns a [`GattClientDevice`](#gattclientdevice) instance.
 
  - Through this instance, you can operate client-side behaviors, such as calling [`connect`](#connect) to initiate a connection to the peer device, and calling [`getServices`](#getservices) to retrieve all service capabilities supported by the peer device.
- - The `deviceId` (device address) required to create this instance represents the server-side device address. You can obtain the server-side device address via the [`startBLEScan`](#startblescan) interface, and you must ensure that the server-side device's BLE advertisement is connectable.
+ - The `deviceId` (device address) required to create this instance represents the server-side device address. You can obtain the server-side device address via the [`startBLEScan`](#startblescan) interface, and you must ensure that the server-side device's BLE advertising is connectable.
 
 Here is an example of creating a [`GattClientDevice`](#gattclientdevice) instance:
 ```ts
@@ -290,16 +290,16 @@ export default {
 }
 ```
 
-## GattClientDevice Interface Definition
+## GattClientDevice Interface Definitions
 
 ### `connect`
 <decl method><pre>
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client actively initiates a GATT protocol connection with the server Bluetooth device, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client actively initiates a GATT protocol connection with the server Bluetooth device, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
- - Before using the methods of this class, you need to construct an instance of this class via the [`createGattClientDevice`](#creategattclientdevice) method.
+ - Before using the methods of this class, you must construct an instance of this class via the [`createGattClientDevice`](#creategattclientdevice) method.
  - By creating different instances of this class, you can manage multiple GATT connections.
 
 Here is an example of initiating a GATT protocol connection:
@@ -331,7 +331,7 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client actively disconnects the GATT protocol connection with the server Bluetooth device, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client actively disconnects the GATT protocol connection with the server Bluetooth device, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of disconnecting a GATT protocol connection:
 ```ts
@@ -376,16 +376,16 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Closes the client instance, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Closes the client-side instance using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 ### `getDeviceName`
 <decl method><pre>
 (): Promise&lt;string&gt;
 </pre></decl>
 
-The client retrieves the name of the remote BLE device, using a Promise asynchronous callback. This interface asynchronously returns a device name of type `<string>`.
+The client retrieves the name of the remote BLE device using a Promise-based asynchronous callback. This interface asynchronously returns a device name of type `<string>`.
 
-Here is an example of retrieving the device name after a successful GATT connection:
+Here is an example of getting the device name after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -409,17 +409,17 @@ export default {
 
 ### `GattService`
 
-This object is used to represent the GATT service structure. Its type signature is as follows:
+This object is used to represent the GATT service structure, with the following type signature:
 
 ```ts
 /**
- * GATT service structure definition, which can contain multiple BLECharacteristic values and other dependent services.
+ * Definition of the GATT service structure, which can contain multiple BLECharacteristics and other dependent services.
  */
 type GattService = {
-    serviceUuid: string; // Service UUID, identifying a GATT service. Example: 00001888-0000-1000-8000-00805f9b34fb.
-    isPrimary: boolean; // Whether it is a primary service. true means primary service, false means secondary service.
+    serviceUuid: string; // Service UUID, identifying a GATT service. For example: 00001888-0000-1000-8000-00805f9b34fb.
+    isPrimary: boolean; // Whether it is a primary service. true indicates a primary service, false indicates a secondary service.
     characteristics: Array<BLECharacteristic>; // List of characteristics contained in the current service.
-    includeServices: Array<GattService>; // Other services depended upon by the current service.
+    includeServices: Array<GattService>; // Other services depended on by the current service.
 }
 ```
 
@@ -428,9 +428,9 @@ type GattService = {
 (): Promise&lt;Array&lt;GattService&gt;&gt;
 </pre></decl>
 
-The client retrieves all services of the BLE device (service discovery), using a Promise asynchronous callback. This interface asynchronously returns an array of type `Array<`[`GattService`](#gattservice)`>` containing all services.
+The client retrieves all services of the BLE device (service discovery) using a Promise-based asynchronous callback. This interface asynchronously returns an array of type `Array<`[`GattService`](#gattservice)`>` containing all services.
 
-Here is an example of retrieving all services of the device after a successful GATT connection:
+Here is an example of getting all services of the device after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -454,31 +454,31 @@ export default {
 
 ### `GattProperties`
 
-This object is used to represent the properties supported by a GATT characteristic. Its type signature is as follows:
+This object is used to represent the properties supported by a GATT characteristic, with the following type signature:
 
 ```ts
 /**
  * Describes the properties supported by a GATT characteristic. Determines how the characteristic content and descriptors are used and accessed.
  */
 type GattProperties = {
-    write: boolean; // Whether the characteristic supports write operations. true means supported, and a response from the peer device is required when written; false means not supported.
-    writeNoResponse: boolean; // Whether the characteristic supports write operations. true means supported, and no response from the peer device is required when written; false means not supported.
-    read: boolean; // Whether the characteristic supports read operations. true means supported, false means not supported.
-    notify: boolean; // Whether the characteristic supports actively notifying the peer device of its content. true means supported, and the peer device does not need to reply with a confirmation; false means not supported.
-    indicate: boolean; // Whether the characteristic supports indicating its content to the peer device. true means supported, and the peer device needs to reply with a confirmation; false means not supported.
-    broadcast: boolean; // Whether the characteristic supports being sent by the server as broadcast content. true means supported, and the server can carry the characteristic content in the advertisement packet as ServiceData; false means not supported.
-    authenticatedSignedWrite: boolean; // Whether the characteristic supports authenticated signed write operations, replacing encryption with signature verification of the written content. true means supported, false means not supported.
-    extendedProperties: boolean; // Whether the characteristic has extended properties. true means extended properties exist, false means they do not.
+    write: boolean; // Whether this characteristic supports write operations. true indicates support, and the peer device needs to send a response when written; false indicates no support.
+    writeNoResponse: boolean; // Whether this characteristic supports write operations. true indicates support, and no response is needed from the peer device when written; false indicates no support.
+    read: boolean; // Whether this characteristic supports read operations. true indicates support, false indicates no support.
+    notify: boolean; // Whether this characteristic supports actively notifying the peer device of its content. true indicates support, and the peer device does not need to send an acknowledgment; false indicates no support.
+    indicate: boolean; // Whether this characteristic supports indicating its content to the peer device. true indicates support, and the peer device needs to send an acknowledgment; false indicates no support.
+    broadcast: boolean; // Whether this characteristic supports being sent by the server as advertising data. true indicates support, and the server can carry the characteristic content as ServiceData in the advertising packet; false indicates no support.
+    authenticatedSignedWrite: boolean; // Whether this characteristic supports signed write operations, replacing the encryption process with signature verification of the written content. true indicates support, false indicates no support.
+    extendedProperties: boolean; // Whether the characteristic has extended properties. true indicates extended properties exist, false indicates they do not.
 }
 ```
 
 ### `BLECharacteristic`
 
-This object is used to represent a GATT characteristic. Its type signature is as follows:
+This object is used to represent a GATT characteristic, with the following type signature:
 
 ```ts
 /**
- * GATT characteristic type definition, the core data unit of the GattService
+ * GATT characteristic type definition, which is the core data unit of the GattService
  */
 type BLECharacteristic = {
     serviceUuid: string; // Service UUID to which the characteristic belongs, e.g., 00001888-0000-1000-8000-00805f9b34fb
@@ -486,7 +486,7 @@ type BLECharacteristic = {
     characteristicValue: ArrayBuffer; // Data content of the characteristic, used when reading/writing data
     descriptors: Array<BLEDescriptor>; // List of descriptors contained in the characteristic
     properties: GattProperties; // Properties supported by the characteristic
-    characteristicValueHandle: number; // Unique identifier handle of the characteristic. When the server BLE device provides multiple characteristics with the same UUID, this handle can be used to distinguish between them
+    characteristicValueHandle: number; // Unique identification handle of the characteristic. When the server BLE device provides multiple characteristics with the same UUID, this handle can be used to distinguish between them
 }
 ```
 
@@ -495,7 +495,7 @@ type BLECharacteristic = {
 (characteristic: BLECharacteristic): Promise&lt;BLECharacteristic&gt;
 </pre></decl>
 
-The client reads data from a specified server characteristic, using a Promise asynchronous callback. This interface asynchronously returns an object of type [`BLECharacteristic`](#blecharacteristic).
+The client reads data from a specified server characteristic using a Promise-based asynchronous callback. This interface asynchronously returns an object of type [`BLECharacteristic`](#blecharacteristic).
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be read.
 
@@ -509,7 +509,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async read() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -528,7 +528,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to read only the first characteristic of the first service; modify as needed if reading other characteristics
+            // For testing, we only try to read the first characteristic of the first service. Modify as needed to read other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Read the specified characteristic
@@ -547,18 +547,18 @@ export default {
 
 Characteristic write type enumeration
 
-- `1`: After writing to the characteristic, the peer Bluetooth device is required to reply with a confirmation.
-- `2`: After writing to the characteristic, the peer Bluetooth device is not required to reply.
+- `1`: After writing to the characteristic, the peer Bluetooth device needs to send an acknowledgment response.
+- `2`: After writing to the characteristic, the peer Bluetooth device does not need to respond.
 
 ### `writeCharacteristicValue`
 <decl method><pre>
 (characteristic: BLECharacteristic, writeType: GattWriteType): Promise&lt;number&gt;
 </pre></decl>
 
-The client writes data to a specified server characteristic, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client writes data to a specified server characteristic using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be written.
- - This interface requires passing a [`GattWriteType`](#gattwritetype) enumeration value to indicate the data write mode.
+ - This interface requires passing a [`GattWriteType`](#gattwritetype) enumeration value to indicate the data writing mode.
 
 Here is an example of writing data to a specified characteristic after a successful GATT connection:
 ```ts
@@ -579,7 +579,7 @@ export default {
     },
 
     async write() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -598,12 +598,12 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Write to the specified characteristic
         if (this.gattClient && this.characteristic) {
-            // Generate an ArrayBuffer of the specified length carrying random numbers
+            // Generate an ArrayBuffer of the specified length containing random numbers
             let value = this.randomArrayBuffer(15)
             this.characteristic.characteristicValue = value
             await this.gattClient.writeCharacteristicValue(this.characteristic, 1).then((result) => {
@@ -622,18 +622,18 @@ export default {
 
 ### `BLEDescriptor`
 
-This object represents a GATT descriptor, and its type is defined as follows:
+This object represents a GATT descriptor, with the following type definition:
 
 ```ts
 /**
- * GATT descriptor type definition, a data unit of the BLECharacteristic, used to describe additional information and properties of the characteristic
+ * GATT descriptor type definition, which is a data unit of the BLECharacteristic, used to describe additional information and properties of the characteristic
  */
 type BLEDescriptor = {
     serviceUuid: string; // Service UUID to which the characteristic belongs, e.g., 00001888-0000-1000-8000-00805f9b34fb
     characteristicUuid: string; // Characteristic UUID, e.g., 00002a11-0000-1000-8000-00805f9b34fb
     descriptorUuid: string; // Descriptor UUID, e.g., 00002902-0000-1000-8000-00805f9b34fb
     descriptorValue: ArrayBuffer; // Data content of the descriptor, used when reading/writing data
-    descriptorHandle: number; // Unique identifier handle of the descriptor. When the server BLE device provides multiple descriptors with the same UUID, this handle can be used to distinguish between them.
+    descriptorHandle: number; // Unique identification handle of the descriptor. When the server BLE device provides multiple descriptors with the same UUID, this handle can be used to distinguish between them.
 }
 ```
 
@@ -642,7 +642,7 @@ type BLEDescriptor = {
 (descriptor: BLEDescriptor): Promise&lt;BLEDescriptor&gt;
 </pre></decl>
 
-The client reads data from a specified server descriptor, using a Promise asynchronous callback. This interface asynchronously returns an object of type [`BLEDescriptor`](#bledescriptor).
+The client reads data from a specified server descriptor using a Promise-based asynchronous callback. This interface asynchronously returns an object of type [`BLEDescriptor`](#bledescriptor).
 
  - This interface requires passing an object of type [`BLEDescriptor`](#bledescriptor) to indicate which descriptor needs to be read.
 
@@ -656,7 +656,7 @@ export default {
     gattClient: null,
     descriptor: null,
     async read() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -676,8 +676,8 @@ export default {
         });
         console.dir("gatt client found:" + JSON.stringify(this.services))
         if (this.services.length > 0) {
-            // Test tries to read only the first descriptor of the first characteristic of the first service; modify as needed if reading other descriptors.
-            // Note that not all characteristics have descriptors. You can adjust this yourself to select a service with descriptors and read/write permissions for testing.
+            // For testing, we only try to read the first descriptor of the first characteristic of the first service. Modify as needed.
+            // Note that not all characteristics have descriptors. You can adjust this to select services that have descriptors and read/write permissions for testing.
             this.descriptor = this.services[0].characteristics[0].descriptors[0];
         }
         // 4. Read the specified descriptor
@@ -697,7 +697,7 @@ export default {
 (descriptor: BLEDescriptor): Promise&lt;number&gt;
 </pre></decl>
 
-The client writes data to a specified server descriptor, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client writes data to a specified server descriptor using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLEDescriptor`](#bledescriptor) to indicate which descriptor needs to be written.
 
@@ -720,7 +720,7 @@ export default {
     },
 
     async write() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -740,8 +740,8 @@ export default {
         });
         console.dir("gatt client found:" + JSON.stringify(this.services))
         if (this.services.length > 0) {
-            // Test tries to operate only on the first descriptor of the first characteristic of the first service; modify as needed if operating on other descriptors.
-            // Note that not all characteristics have descriptors. You can adjust this yourself to select a service with descriptors and read/write permissions for testing.
+            // For testing, we only try to operate on the first descriptor of the first characteristic of the first service. Modify as needed.
+            // Note that not all characteristics have descriptors. Adjust accordingly to test services with descriptors and read/write permissions.
             this.descriptor = this.services[0].characteristics[0].descriptors[0];
         }
         // 4. Write to the specified descriptor
@@ -767,9 +767,9 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client retrieves the Received Signal Strength Indication (RSSI) of the GATT connection link, using a Promise asynchronous callback. This interface asynchronously returns a signal strength of type `<string>` in units of dBm.
+The client retrieves the Received Signal Strength Indication (RSSI) of the GATT connection link using a Promise-based asynchronous callback. This interface asynchronously returns a signal strength of type `<string>` `<number>`, unit: dBm.
 
-Here is an example of retrieving the device signal strength after a successful GATT connection:
+Here is an example of getting the device signal strength after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -778,7 +778,7 @@ export default {
     },
     gattClient: null,
     async rssi() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         if (this.gattClient) {
             await this.gattClient.getRssiValue().then((rssi) => {
@@ -794,9 +794,9 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client retrieves the MTU (Maximum Transmission Unit) size of the GATT connection link, using a Promise asynchronous callback. This interface asynchronously returns a length of type `<number>` in units of bytes.
+The client retrieves the MTU (Maximum Transmission Unit) size of the GATT connection link using a Promise-based asynchronous callback. This interface asynchronously returns a length of type `<number>`, unit: bytes.
 
-Here is an example of retrieving the GATT connection link MTU (Maximum Transmission Unit) size after a successful GATT connection:
+Here is an example of getting the GATT connection link MTU size after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -805,7 +805,7 @@ export default {
     },
     gattClient: null,
     async mtu() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         if (this.gattClient) {
             await this.gattClient.getBLEMtuSize().then((mtu) => {
@@ -821,14 +821,14 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client negotiates the MTU (Maximum Transmission Unit) size with the server, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client negotiates the MTU (Maximum Transmission Unit) size with the server using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 ### `setCharacteristicChangeNotification`
 <decl method><pre>
 (characteristic: BLECharacteristic, enable: boolean): Promise&lt;number&gt;
 </pre></decl>
 
-The client enables or disables the capability to receive server characteristic value change notifications, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client enables or disables the capability to receive server characteristic value change notifications, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be operated on.
  - This interface requires passing a boolean value to indicate whether to enable or disable the content change notification capability (`true` to enable, `false` to disable).
@@ -843,7 +843,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async notify() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -862,7 +862,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Operate on the specified characteristic
@@ -871,7 +871,7 @@ export default {
                 if (result === 0) {
                     console.log('set characteristic Notification success')
                 } else {
-                    console.log('This characteristic does not allow enabling notifications, ResultCode:' + result);
+                    console.log('This characteristic does not allow setting notification, ResultCode:' + result);
                 }
             }).catch((error) => {
                 console.error('set characteristic Notification error: ' + JSON.stringify(error))
@@ -886,7 +886,7 @@ export default {
 (characteristic: BLECharacteristic, enable: boolean): Promise&lt;number&gt;
 </pre></decl>
 
-The client enables or disables the capability to receive server characteristic value change indications, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client enables or disables the capability to receive server characteristic value change indications, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be operated on.
  - This interface requires passing a boolean value to indicate whether to enable or disable the content change indication capability (`true` to enable, `false` to disable).
@@ -901,7 +901,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async indication() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -920,7 +920,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Write to the specified characteristic
@@ -929,7 +929,7 @@ export default {
                 if (result === 0) {
                     console.log('set characteristic Indication success')
                 } else {
-                    console.log('This characteristic does not allow enabling indications, ResultCode:' + result);
+                    console.log('This characteristic does not allow setting indication, ResultCode:' + result);
                 }
             }).catch((error) => {
                 console.error('set characteristic Indication error:' + JSON.stringify(error))
@@ -944,7 +944,7 @@ export default {
 (callback: Callback(characteristic: BLECharacteristic) => void): number
 </pre></decl>
 
-The client subscribes to server characteristic change events. When a characteristic changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to server characteristic change events. When a characteristic changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - [`BLECharacteristic`](#blecharacteristic): The characteristic object that changed.
@@ -959,7 +959,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -998,7 +998,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -1040,7 +1040,7 @@ GATT link disconnection reason enumeration
 
 ### `BLEConnectionChangeState`
 
-This object is used to represent the Bluetooth connection state. Its type signature is as follows:
+This object is used to represent the Bluetooth connection state, with the following type signature:
 
 ```ts
 /**
@@ -1058,12 +1058,12 @@ type BLEConnectionChangeState = {
 (callback: Callback(connectionChangeState: BLEConnectionChangeState) => void): number
 </pre></decl>
 
-The client subscribes to GATT protocol connection state change events. When the connection state changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to GATT protocol connection state change events. When the connection state changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - [`BLEConnectionChangeState`](#bleconnectionchangestate): Connection state.
 
-Here is an example of subscribing to connection state changes after a successful GATT connection:
+Here is an example of subscribing to the connection state after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -1073,7 +1073,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -1100,7 +1100,7 @@ export default {
 
 The client unsubscribes from GATT protocol connection state change events. The `subscribeId` parameter is the subscription ID returned by the [`subscribeBLEConnectionStateChange`](#subscribebleconnectionstatechange) method.
 
-Here is an example of unsubscribing from connection state changes:
+Here is an example of unsubscribing from the connection state:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -1110,7 +1110,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -1140,7 +1140,7 @@ export default {
 (callback: Callback(mtu: number) => void): number
 </pre></decl>
 
-The client subscribes to MTU (Maximum Transmission Unit) size change events. When the MTU changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to MTU (Maximum Transmission Unit) size change events. When the MTU changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - `mtu`: MTU (Maximum Transmission Unit) size.
@@ -1155,7 +1155,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Subscribe to MTU changes
         this.listener = this.gattClient.subscribeBLEMtuChange((mtu) => {
@@ -1182,7 +1182,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Subscribe to MTU changes
         this.listener = this.gattClient.subscribeBLEMtuChange((mtu) => {

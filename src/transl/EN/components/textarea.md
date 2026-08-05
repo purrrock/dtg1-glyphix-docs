@@ -1,40 +1,40 @@
 # textarea
 
-`textarea` <experimental/><version-badge since="0.9" /> is a multi-line text input component, which defaults to displaying as a block-level element. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up an input method editor (IME) interface, so you must manually edit its content. `textarea` supports operating the caret via touch gestures (such as clicking and scrolling) and provides methods to move the caret up, down, left, and right.
+`textarea` <experimental/><version-badge since="0.9" /> is a multi-line text input component, which defaults to displaying as a block-level element. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up an input method editor (IME) interface; therefore, you must manually edit its content. `textarea` supports operating the cursor via touch gestures (such as tapping and scrolling) and provides methods to move the cursor up, down, left, and right.
 
-`textarea` is suitable as the underlying component for multi-line text input, allowing you to implement your own soft keyboard and caret control according to your needs. For details, please refer to the [Example](#basic-example).
+`textarea` is suitable as a low-level component for multi-line text input, allowing you to implement your own soft keyboard and cursor control according to your needs. For details, please refer to the [Example](#basic-example).
 
 ::: important Compatibility
-`textarea` is an experimental extended component, currently available only in Glyphix version 0.9 and above, and is supported on only some devices.
+`textarea` is an experimental extended component currently available only in Glyphix version 0.9 and above, and is supported on only some devices.
 :::
 
-## Properties
+## Attributes
 
 ### `text` <decl type="string" get set listen />
 
-The `text` property is a string representing the currently edited text content of the `textarea`. Reading or listening to this value retrieves the input text, and this property can also be set.
+The `text` attribute is a string representing the currently edited text content of the `textarea`. Reading or listening to this value retrieves the input text, and this attribute can also be set.
 
-Usually, `text` is two-way bound to a specific reactive property, or the text can be set via the content inside the element, such as:
+Typically, `text` is two-way bound to a specific reactive property, or text can be set using the content inside the element, such as:
 
 ```html
 <textarea ::text="inputText" />
 ```
 
-Or:
+Or
 
 ```html
 <textarea @text="onTextChanged">{{ inputText }}</textarea>
 ```
 
 :::tip
-The `text` property of `textarea` is functionally similar to the [`value`](text-field.md#value) property of [`text-field`](text-field.md).
+The `text` attribute of `textarea` functions similarly to the [`value`](text-field.md#value) attribute of [`text-field`](text-field.md).
 :::
 
 ### `placeholder` <decl type="string" set get />
 
-When the content of `textarea` is empty, `placeholder` can be used to provide a short hint to the user, such as phrases like "Please enter text".
+When the content of the `textarea` is empty, `placeholder` can be used to provide a brief prompt to the user, such as phrases like "Please enter text".
 
-`placeholder` automatically displays when the input text is empty, so it usually only requires fixed content, such as:
+`placeholder` automatically appears when the input text is empty, so it usually only requires fixed content, such as:
 
 ```html
 <textarea ::text="inputText" placeholder="type here" />
@@ -42,21 +42,21 @@ When the content of `textarea` is empty, `placeholder` can be used to provide a 
 
 ### `insert` <decl type="(text: string): void" method />
 
-Inserts a piece of text with the content `text` at the current caret position, and the caret automatically moves after the inserted text. Calling this function triggers a `text` listening event.
+Inserts a piece of text with the content `text` at the cursor position, and the cursor automatically moves after the inserted text. Calling this function triggers a `text` listening event.
 
 ### `backspace` <decl type="(): void" method />
 
-Deletes the character at the current caret position, and the caret automatically moves forward. Calling this function triggers a `text` listening event.
+Deletes the character at the cursor position, and the cursor automatically moves forward. Calling this function triggers a `text` listening event.
 
 ### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
 
-Moves the caret one position in the specified direction. The optional values for the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, corresponding to the four directions: up, down, left, and right.
+Moves the cursor one position in the specified direction. Valid values for the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, corresponding to the four directions: up, down, left, and right.
 
 ## Usage Instructions
 
 ### Basic Example
 
-The following example demonstrates the basic usage of `textarea`. Users can directly input multi-line text in the text box or use the virtual keyboard below to edit the content: tap letter/symbol keys to characters; the "`×`" key deletes content at the caret; the "`Aa`" key toggles case; the "`1#`" key switches to the symbol keyboard; the "`Enter`" key inserts a newline character; arrow keys move the caret.
+The following example demonstrates the basic usage of `textarea`. Users can input multi-line text directly in the text box, or use the virtual keyboard below to edit the content: tap letter/symbol keys to insert characters; the "`×`" key deletes content at the cursor position; the "`Aa`" key toggles letter case; the "`1#`" key switches to the symbol keyboard; the "`Enter`" key inserts a newline character; and arrow keys move the cursor.
 
 <glyphix id="components-textarea-basic" width="560" height="360" title="Textarea Basic Example">
 
@@ -233,25 +233,25 @@ textarea {
 
 </glyphix>
 
-We first obtain the `textarea` component object via the `$element` method in the component's `onReady()` lifecycle function, because we subsequently need to edit content and move the caret using the [`insert()`](#insert), [`backspace`](#backspace), and [`moveCaret`](#movecaret) methods.
+We first obtain the `textarea` component object via the `$element` method in the component's `onReady()` lifecycle function, because we subsequently need to edit content and move the cursor using the [`insert()`](#insert), [`backspace`](#backspace), and [`moveCaret`](#movecaret) methods.
 
-Based on this, we can call the methods of `textarea` within the touch event listener of the `button` component, for example:
+Building on this, we can call the methods of `textarea` within the touch event listeners of the `button` component, for example:
 
 ```html
 <button on:touchstart="ta.insert('A')">A</button>
 ```
 
-Since there is no physical keyboard, developers typically need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout, supporting case toggling and a symbol keyboard. Call the corresponding methods in each key's touch event listener function to edit the text. The arrow keys move the caret via the [`moveCaret()`](#movecaret) method (in four directions: up, down, left, and right), and the newline key inserts a newline character `\n` via [`insert()`](#insert).
+Since there is no physical keyboard, developers typically need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout supporting case switching and a symbol keyboard. The corresponding methods are called in the touch event listener function of each key to edit the text. The arrow keys move the cursor using the [`moveCaret()`](#movecaret) method (in the four directions: up, down, left, and right), and the newline key inserts a newline character `\n` via [`insert()`](#insert).
 
 ### Differences from text-field
 
 Both `textarea` and `text-field` are text input components. The main differences are as follows:
 
 | Feature | `textarea` | `text-field` |
-|---------|-----------|-------------|
+|------|-----------|-------------|
 | Text lines | Single or multi-line | Single line |
 | Newline support | Supports `\n` newlines | Does not support newlines |
-| Caret movement | Up and down | Left and right |
+| Cursor movement | Up and down | Left and right |
 | Content property | `text` | `value` |
-| Password mode | Not supported | Supports `password` property |
+| Password mode | Not supported | Supports `password` attribute |
 | Default display | Block-level element | Inline element |

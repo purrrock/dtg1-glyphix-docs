@@ -16,7 +16,7 @@ import test from '@system.test'
 
 The `system.test` module is an end-to-end testing framework that allows you to programmatically simulate user operations and check whether the UI behavior matches expectations.
 
-Here is a simple example of code that simulates user operations:
+Here is a simple piece of code simulating user operations:
 ``` js
 await test.getByClass('play-button').click()
 await test.getByClass('more-button').click()
@@ -27,7 +27,7 @@ await test.getHasText('下载列表').click()
 await test.getByTag('Scroll').scroll(0, -200, 0.3)
 await test.getHasText(/[a-z]/).click()
 ```
-This code automatically waits for elements in the UI to be rendered, brings occluded elements into the visible area via scrolling gestures, and then performs gestures such as clicking or scrolling on them.
+This code automatically waits for elements in the UI to be rendered, brings obscured elements into the visible area via scrolling gestures, and then performs gestures such as clicking or scrolling on them.
 
 ## API
 
@@ -41,7 +41,7 @@ Asynchronously delays for a specified time, used to wait for certain operations 
 
 ### Locators
 
-Locators find elements (native components) from the top-level page of the application, such as by element tag or ID. For more information about locators, please refer to the [`Locator` Object](#locator-object).
+Locators find elements (native components) from the top-level page of the application, such as finding them by element tag or id. For further introduction to locators, please refer to the [`Locator` Object](#locator-object).
 
 #### `getByTag` <decl method type="(tag: string): Locator" />
 
@@ -58,36 +58,36 @@ Locates elements by the `id` attribute.
 #### `getHasText` <decl method type="(text: RegExp | string): <Locator>" />
 
 Locates elements based on whether their `text` attribute matches the `text` parameter. The `text` parameter is a regular expression, for example:
-- `/hello/` tests whether the `text` attribute value of the element contains the substring `'hello'`;
-- `/^hello/` tests whether the `text` attribute value of the element starts with `'hello'`;
-- `/^hello$/` tests whether the `text` attribute value of the element is `'hello'`.
+- `/hello/` tests whether the value of the element's `text` attribute contains the substring `'hello'`;
+- `/^hello/` tests whether the value of the element's `text` attribute starts with `'hello'`;
+- `/^hello$/` tests whether the value of the element's `text` attribute is `'hello'`.
 
-The matching rules for the `text` parameter are the same as [`RegExp.test()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test).
+The matching rules for the `text` parameter are the same as [`RegExp.test()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test).
 
 ### `Locator` Object
 
-`Locator` objects are returned by locator APIs and can be used for further operations. All locator operations attempt to automatically wait for the element to appear and bring it into the visible area.
+`Locator` objects are returned by locator APIs and can be used for further operations. All locator operations attempt to automatically wait for elements to appear and scroll them into the viewable area.
 
 #### `click` <decl method type="(): Promise<void>" />
 
-Simulates a click gesture at the element's position after the element exists and has been scrolled into the visible area.
+Simulates a click gesture at the element's position after it exists and has been scrolled into the viewable area.
 
 #### `scroll` <decl method type="(dx: number, dy: number, duration?: number): Promise<void>" />
 
-Simulates a scroll gesture at the element's position after the element exists and has been scrolled into the visible area. `dx` and `dy` are the $(x, y)$ scroll offsets in pixels; the optional `duration` is the duration of the gesture in seconds, with a default value of $0.5 \rm s$.
+Simulates a scroll gesture at the element's position after it exists and has been scrolled into the viewable area. `dx` and `dy` are the $(x, y)$ scroll offsets in pixels; the optional `duration` is the duration of the gesture in seconds, with a default value of $0.5 \rm s$.
 
-This method waits for the element's `scrolled` property to become `false` before resolving the Promise object returned. Therefore, for components such as `scroll` and `swiper`, the `scroll()` method will trigger the next operation only after the inertia animation of these components has stopped.
+This method waits for the element's `scrolled` property to become `false` before resolving the Promise object returned. Therefore, for components like `scroll` and `swiper`, the `scroll()` method will trigger the next step only after the inertial animation of these components has stopped.
 
 #### `wait` <decl method type="(): Promise<void>" />
 
-Waits for the element to exist and be scrolled into the visible area, without simulating any gestures or other operations.
+Waits for the element to exist and be scrolled into the viewable area, without simulating any gestures or other operations.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-path.md
 
 # Path Operations
 
-This module provides interfaces for path operations, including path concatenation, splitting, and normalization.
+This module provides interfaces for path operations, including path joining, splitting, and normalization.
 
 ## Import Module
 
@@ -107,7 +107,7 @@ path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
 
 #### `path.dirname` <decl type="(path:string): string" method />
 
-Returns the directory name portion of the `path` (opposite of `basename()`, which discards the file name portion). For example:
+Returns the directory name portion of the `path` (unlike `basename()`, this discards the file name portion). For example:
 ``` js
 path.dirname('/foo/bar/baz') // '/foo/bar'
 ```
@@ -132,7 +132,7 @@ path.isAbsolute('.');        // false
 
 #### `path.join` <decl type="(...paths: string[]): string" method />
 
-Concatenates multiple paths together and normalizes the result. For example:
+Joins and normalizes multiple paths. For example:
 ``` js
 path.join('/foo', 'bar', 'baz/asdf', 'quux', '..') // '/foo/bar/baz/asdf'
 ```
@@ -186,23 +186,23 @@ Sets a scheduled task. The fields of the `options` parameter are defined as foll
   - 1: Hardware time. Modifying the system time can trigger `triggerMethod`.
   - 2: Real elapsed time. Time is calculated even in sleep mode.
 - `timeout`:
-  - If `type` is 1, this is the timestamp of the first execution time, which is the number of milliseconds from 1970/01/01 00:00:00 GMT to the current time.
+  - If `type` is 1, this is the timestamp for the first execution, i.e., the number of milliseconds from 1970/01/01 00:00:00 GMT to the current time.
   - If `type` is 2, this is the interval between the current time and the first execution time, in milliseconds.
-- `triggerMethod`: The method name defined in `app.js`, which is called by the background when the timeout is reached and the app is awakened.
-- `interval`: The interval for periodic execution, in milliseconds. If not passed, it will not execute repeatedly.
+- `triggerMethod`: The method name defined in `app.js`, which is called when the timeout is reached and the app is awakened by the background.
+- `interval`: The interval for periodic execution in milliseconds. If not passed, it will not execute repeatedly.
 - `params`: Task parameters.
 
 ::: tip
-Although the precision of `timeout` and `interval` is in milliseconds, the timing is accurate to the second. The first execution time and the periodic execution interval cannot be less than 60 seconds, otherwise the interface will throw an exception.
+Although the precision of `timeout` and `interval` is in milliseconds, the timing is accurate to the second. The first execution time and the periodic execution interval cannot be less than 60 seconds; otherwise, the interface will throw an exception.
 :::
 
-The return value is the task ID used to cancel the task. A return value of `-1` indicates that creation failed.
+The return value is the task ID used for canceling the task. A return value of `-1` indicates that the creation failed.
 
 ``` js
 let id = schedule.scheduleJob({
   type: 1,
   timeout: new Date('2025-03-14T23:00:00').getTime(),  // Timestamp of the first execution time
-  interval: 60000,     // Periodic execution interval cannot be less than 60 seconds
+  interval: 60000,     // The periodic execution interval must not be less than 60 seconds
   triggerMethod: 'scheduleFunc',
   params: {
     food: 'apple',
@@ -228,7 +228,7 @@ schedule.cancel(id)
 ============================================================
 FILE_PATH: src/transl/EN/api/system-launch.md
 
-# App Launch
+# Application Launch
 
 ## Import Module
 
@@ -236,7 +236,7 @@ FILE_PATH: src/transl/EN/api/system-launch.md
 import launch from '@system.launch'
 ```
 
-## API Definition
+## Interface Definitions
 
 ### `launch` <decl type="(app: string): Promise<bool>" method/>
 
@@ -248,7 +248,7 @@ Switches the application to the background. `app` is the ID of a launched applic
 
 ### `exit` <decl type="(app?: string): Promise<void>" method />
 
-Exits an application. The `app` parameter is the ID of a launched application. If no parameter is specified, the current application is exited.
+Exits an application. The `app` parameter is the ID of a launched application. If no parameter is specified, the current application will be exited.
 
 ### `getRunning` <decl type="(): string[]" method />
 
@@ -278,33 +278,33 @@ import prompt from '@system.prompt'
 
 Displays a toast pop-up. A toast is a text pop-up placed at the top layer of the interface. Only one toast instance is displayed in the interface at a time; when there are multiple toast contents, they will be queued and displayed sequentially.
 
-Description of `options` parameter fields:
+Description of the `options` parameter fields:
 - `message`: The text to be displayed.
-- `duration`: The display duration of the toast in milliseconds (ms). The toast will automatically hide after reaching this timeout.
-- `important`: Whether it is an important toast. The default is `false`. If set to `true`, the application is allowed to pop up this toast while in the background.
+- `duration`: The duration for which the toast is displayed, in milliseconds (ms). The toast will automatically hide after the timeout duration is reached.
+- `important`: Whether it is an important toast, defaulting to `false`. If set to `true`, the application is allowed to pop up the toast while running in the background.
 
-The display style of the toast (font, color, etc.) is determined by the firmware and cannot be modified within the application. There is also a limit on the display duration of the toast, which ranges from $200$ to $5000$ milliseconds.
+The display style of the toast (font, color, etc.) is determined by the firmware and cannot be modified within the application. There is also a limit on the display duration of the toast, ranging from $200$ to $5000$ milliseconds.
 
 #### `showPopup` <decl type="(options: { uri: string, params?: Object }): Promise<any>" method />
 
-Displays a floating page pop-up. Description of `options` parameter fields:
-- `uri`: The name of the target page, which needs to be registered in `router` of `manifest.json`.
+Displays a floating page pop-up. Description of the `options` parameter fields:
+- `uri`: The name of the target page, which needs to be registered in `router` within `manifest.json`.
 - `params`: Data to be passed during navigation. The properties of the `params` parameter will replace the `data` property values of the target page.
 
-A floating page is a system-level pop-up (similar to a toast or dialog box), but it is a fully functional page with the highest level of customizability. Unlike general pages, a floating page is displayed in the system's floating page stack rather than the application's own page stack. Therefore, APIs such as `router.back()` in the [page routing](api/system-router) mechanism cannot operate on floating pages. To close a floating page, you can use the [`router.close()`](system-router.md#close) method.
+A floating page is a system-level pop-up (similar to a toast or a dialog box), but it is a fully functional page with the highest level of customizability. Unlike regular pages, floating pages are displayed in the system's floating page stack rather than the application's own page stack. Therefore, APIs such as `router.back()` in the [page routing](api/system-router) mechanism cannot operate on floating pages. To close a floating page, you can use the [`router.close()`](system-router.md#close) method.
 
-The display hierarchy of a pop-up is higher than that of the application, so floating pages will be displayed above all application pages. All applications share the same floating page stack, and the display hierarchy of floating pages is determined by their pop-up order, meaning that earlier popped-up pages are located at the top. The display hierarchy of a floating page is the same as that of a dialog box, and lower than that of a toast.
+The display hierarchy of a pop-up is higher than that of the application, so floating pages will be displayed above all application pages. All applications share the same floating page stack, and floating pages determine their display hierarchy based on the order in which they are popped up, meaning that pages popped up earlier are located at the top. The display hierarchy of floating pages is the same as that of dialog boxes, and lower than toasts.
 
-Just like `router.push()`, `showPopup()` also returns a Promise object, which will be fulfilled and return a custom result after the floating page exits. For details, please refer to [`router.push()`](system-router.md#push) and [`router.close()`](system-router.md#close).
+Like `router.push()`, `showPopup()` also returns a Promise object, which is fulfilled after the floating page exits and returns a custom result. For details, please refer to [`router.push()`](system-router.md#push) and [`router.close()`](system-router.md#close).
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-exchange.md
 
-# Exchange Data
+# Exchanging Data
 
-The data exchange module `system.exchange` is used to store shared data across applications. This data is not persistently stored and will be lost once the device is powered off. Data stored in `system.exchange` can be accessed across all applications, so this module can be used to store some application configuration information, but is not suitable for storing sensitive data.
+The data exchange module `system.exchange` is used to store shared data across applications. This data is not persistently stored and will be lost once the device is powered off. Data stored in `system.exchange` can be accessed across all applications, making this module suitable for storing application configuration information, but not for sensitive data.
 
-`system.exchange` stores data in the form of key-value pairs, where the key must be a string, and the value is a JSON value (or a JavaScript value that can be serialized to JSON).
+`system.exchange` stores data in the form of key-value pairs, where the key must be a string and the value is a JSON value (or a JavaScript value that can be serialized to JSON).
 
 ## Import Module
 
@@ -324,19 +324,19 @@ This method accepts a key `key` and a value `value` as parameters and adds this 
 
 ### `delete` <decl type="(key: string): boolean" method />
 
-Deletes the key-value pair corresponding to the key `key` from the storage. Returns `true` if the key-value pair exists and is successfully deleted.
+Deletes the key-value pair corresponding to the key `key` in the storage. Returns `true` if the key-value pair exists and is successfully deleted.
 
 ### `watch` <decl type="(key: string, callback: (value: any) => void): number" method />
 
-Listens for changes to the data value of the key `key` in the storage, and calls the `callback` function when the value changes. The parameter `value` of the callback function is the new data value. The `watch()` method returns a `watcher ID`, which can be used in the [`unwatch()`](#unwatch) method to stop listening.
+Listens for changes to the data value of the key `key` in the storage, and invokes the `callback` function when the value changes. The parameter `value` of the callback function is the new data value. The `watch()` method returns a `watcher ID`, which can be used with the [`unwatch()`](#unwatch) method to remove the listener.
 
 ::: tip
-When listening is no longer needed, the [`unwatch()`](#unwatch) method should be used to stop listening, otherwise it may cause a memory leak.
+When listening is no longer needed, the [`unwatch()`](#unwatch) method should be used to remove the listener, otherwise, a memory leak may occur.
 :::
 
 ### `unwatch` <decl type="(watcherID: number): void" method />
 
-Cancels a listener for the key in the storage. The parameter `watcherID` is the `watcher ID` returned when the listener was created by the [`watch()`](#watch) method.
+Cancels a listener for a key in the storage. The parameter `watcherID` is the `watcher ID` returned when the listener was created by the [`watch()`](#watch) method.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-interconnect.md
@@ -349,7 +349,7 @@ FILE_PATH: src/transl/EN/api/system-interconnect.md
 import interconnect from '@system.interconnect'
 ```
 
-## Interface Definitions
+## Interface Definition
 
 ### `instance` <decl type="(options: {package: string, fingerprint: string}): Connect" method/>
 
@@ -363,7 +363,7 @@ const connect = interconnect.instance({
 ```
 
 - package: The package name of the mobile application.
-- fingerprint: Fingerprint information, which must be consistent with the fingerprint information passed when creating the connection in the mobile application.
+- fingerprint: Fingerprint information, which must match the fingerprint information passed when creating the connection in the mobile application.
 
 ## `Connect` Interface
 
@@ -434,7 +434,7 @@ FILE_PATH: src/transl/EN/api/system-device.md
 import device from '@system.device'
 ```
 
-Developers need to declare the application's access permission to `watch.permission.DEVICE_INFO` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare access to the `watch.permission.DEVICE_INFO` permission for the application in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ## Interface Definition
 
@@ -455,7 +455,7 @@ Developers need to declare the application's access permission to `watch.permiss
 }>
 </pre></decl>
 
-Gets the basic information of the device. The meanings of the property fields in the returned object are:
+Gets basic device information. The meanings of the properties in the returned object are as follows:
 - `brand`: Device brand name.
 - `manufacturer`: Device manufacturer.
 - `model`: Device model.
@@ -479,7 +479,7 @@ Gets the basic information of the device. The meanings of the property fields in
 }>
 </pre></decl>
 
-Batch gets device identification information. The `types` parameter specifies the categories of information to be obtained, which is an Array object consisting of elements `'device'`, `'mac'`, `'user'`, or `'advertising'`. Depending on the values in `types`, the meanings of the property fields in the returned object are:
+Gets device identification information in batches. The `types` parameter specifies the categories of information to retrieve, which is an Array object consisting of elements `'device'`, `'mac'`, `'user'`, or `'advertising'`. Depending on the values in `types`, the meanings of the properties in the returned object are as follows:
 - `type`: .
 - `device`: Unique device identifier, present only when `types` contains the `'device'` element.
 - `mac`: Device MAC address, present only when `types` contains the `'mac'` element.
@@ -528,7 +528,7 @@ The screen shape of the device. The values mean the following:
 
 Gets the memory profile property of the device. This property is the JavaScript API version of the [`memory-profile`](/framework/render/media-query.md#memory-profile) media query property. For details, please refer to the documentation of media query properties.
 
-Unlike the `memory-profile` media query property, the value of the `memoryProfile` property is an integer with a fixed unit of $\rm KiB$.
+Unlike the `memory-profile` media query property, the value of the `memoryProfile` property is an integer, with a fixed unit of $\rm KiB$.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-devtools.md
@@ -574,35 +574,34 @@ Developers need to declare the application's access permission to `watch.permiss
 }): Promise&lt;Location>
 </pre></decl>
 
-Obtain the latitude and longitude of the current location once, returning an asynchronous [Location](#location) object.
+Obtains the current latitude and longitude once, returning an asynchronous [Location](#location) object.
 
-`options` Parameter Description
-- `mode`: Declares the positioning accuracy. `fine` represents precise positioning, and `coarse` represents rough positioning. The default value is `coarse`.
-- `timeout`: Positioning timeout in `ms`, with a default value of 30000.
+`options` Parameter Description:
+- `mode`: Declares the positioning accuracy. `fine` represents high-accuracy positioning, and `coarse` represents approximate positioning. The default value is `coarse`.
+- `timeout`: Positioning timeout in `ms`. The default value is `30000`.
 
 ### `subscribe` <decl type="(callback: (location: Location) => void): number" method/>
 
-Listen for location changes. The `location` parameter of the `callback` is the current [Location](#location) information. The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to stop listening.
+Listens for location changes. The `location` parameter of the `callback` is the current [location information](#location). The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to stop listening.
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
-Cancel listening for location changes.
+Cancels listening for location changes.
 
 ## Type Definitions
 
 ### `Location`
 
-Used to represent the location information data obtained from positioning.
+Used to represent the location information data obtained by positioning.
 
 ```ts
-ts
 type Location = {
   code: number; // Positioning status code, indicating whether the current location information is valid
   msg: string; // Positioning error message
   data: {
     // Location information data
-    longitude: number; // Latitude value
-    latitude: number; // Longitude value
+    longitude: number; // Longitude value
+    latitude: number; // Latitude value
     coordType: string; // Coordinate system type, such as 'WGS84', 'GCJ02', etc.
   };
 };
@@ -610,11 +609,11 @@ type Location = {
 
 The positioning status codes for the `code` field are as follows:
 
-- `200`: Current location information is valid;
-- `1002`: Currently not connected to the mobile phone's Bluetooth network;
-- `1300`: The mobile phone cannot obtain positioning services;
-- `1301`: Positioning services are not enabled on the mobile phone;
-- `1302`: Location permission is not granted to the mobile application;
+- `200`: Current location information is valid.
+- `1002`: Currently not connected to the phone's Bluetooth network.
+- `1300`: The phone cannot obtain positioning services.
+- `1301`: Positioning services are not enabled on the phone.
+- `1302`: Location permission has not been granted to the mobile app.
 - `1399`: Unknown error.
 
 ============================================================
@@ -622,7 +621,7 @@ FILE_PATH: src/transl/EN/api/system-compass.md
 
 # Compass
 
-The `@system.compass` module provides the ability to access the device's compass sensor, allowing you to obtain the device's orientation relative to the Earth's magnetic North Pole.
+The `@system.compass` module provides the ability to access the device's compass sensor, allowing you to obtain the device's directional information relative to the Earth's magnetic North Pole.
 
 ## Import Module
 
@@ -630,22 +629,22 @@ The `@system.compass` module provides the ability to access the device's compass
 import compass from '@system.compass'
 ```
 
-## Interface Definitions
+## Interface Definition
 
 ### `subscribe` <decl type="(callback: (data: Value) => void): number" method/>
 
 Subscribes to compass data changes. When the device orientation changes, the callback function is automatically invoked. The `callback` function receives compass data of type [`Value`](#value).
 
-Returns a subscription ID used for unsubscribing.
+Returns a subscription ID used to unsubscribe.
 
 ### `unsubscribe` <decl type="(subscribeId: number): void" method/>
 
-Unsubscribes from compass data. The `subscribeId` parameter is the subscription ID returned by the [`subscribe()`](#subscribe) method.
+Unsubscribes from compass data. The parameter `subscribeId` is the subscription ID returned by the [`subscribe()`](#subscribe) method.
 
-This method should be called to cancel the `subscribe()` subscription when the page or component is destroyed:
+This method should be called when the page or component is destroyed to cancel the subscription made by `subscribe()`:
 ``` js
 const subscribeId = compass.subscribe((data) => {
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy: ${data.accuracy}`)
 })
 
@@ -668,20 +667,20 @@ Example:
 ``` js
 // Using Promise
 compass.getValue().then((data) => {
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy level: ${data.accuracy}`)
 })
 
 // Using async/await
 async function getCompassData() {
   const data = await compass.getValue()
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy level: ${data.accuracy}`)
 }
 ```
 
 ::: note
-Due to implementation limitations, this method does not support callback-style calls (such as `{ success: (data) => {...} }`); please use Promise or async/await instead.
+Due to implementation limitations, this method does not support callback-style calls (such as `{ success: (data) => {...} }`). Please use Promises or async/await.
 :::
 
 ## Type Definitions
@@ -695,7 +694,7 @@ type Value = {
   accuracy: number   // Compass accuracy level
 }
 ```
-Property descriptions:
+Property description:
 - `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic North Pole, with a value range of $[0,2\pi]$, where:
   - `0`: Due North
   - `Math.PI / 2` (approx. 1.57): Due East
@@ -706,7 +705,7 @@ Property descriptions:
   - `2`: Medium accuracy
   - `1`: Low accuracy
   - `0`: Unreliable (reason unknown)
-  - `-1`: Unreliable (sensor disconnected)
+  - `-1`: Unreliable (sensor lost connection)
 
 Example:
 ``` js
@@ -750,48 +749,48 @@ import router from '@system.router'
 
 ### `push` <decl type="(options: {uri: string, params?: Object}): Promise<any>" method />
 
-Navigates to a specified page within the application. Description of `options` parameter properties:
+Navigates to a specified page within the app. Property descriptions for the `options` parameter:
 - `uri`: The name of the target page, which must be configured in `manifest.json`;
-- `params`: Data to be passed during navigation. The properties of the `params` parameter will replace the `data` property value of the target page.
+- `params`: Data to be passed during navigation. The properties of the `params` parameter will overwrite the `data` property value of the target page.
 
-`push()` returns a Promise object, which is fulfilled after the target page is closed and returns a custom result. For example:
+`push()` returns a Promise object, which is resolved after the target page is closed and returns a custom result. For example:
 ```js
 const result = await router.push({ uri: 'PageName' })
 console.log("the page 'PageName' was closed with the result:", result)
 ```
-Here, `result` is the page return value specified by the [`close()`](#close) method, which you can obtain using the method above.
+Here, `result` is the page return value specified by the [`close()`](#close) method, which you can retrieve using the method above.
 
 ::: warning
-The return time of a page typically depends on user actions, so `await router.push()` may wait for a long time. If you do not need to get the return value of the page, it is not recommended to use `await` to wait for the page return.
+The return time of a page typically depends on user actions, so `await router.push()` may wait for a long time. If you do not need to obtain the return value of the page, using `await` to wait for the page return is not recommended.
 :::
 
-When the page is in the `singleTask` launch mode, navigating to an already opened page is similar to [`back('<page-name>')`](#back). See [`launchMode`](/framework/application/manifest.md#launchmode) <version-badge since="0.8" />.
+When the page is in the `singleTask` launch mode, navigating to an already opened page is similar to [`back('<page-name>')`](#back); see [`launchMode`](/framework/application/manifest.md#launchmode) <version-badge since="0.8" />.
 
 ### `replace` <decl type="(options: {uri: string, params?: Object}): Promise<boolean>" method />
 
-Navigates to a specified page within the application and closes the current page. Description of `options` parameter properties:
+Navigates to a specified page within the app and closes the current page. Property descriptions for the `options` parameter:
 - `uri`: The name of the target page, which must be configured in `manifest.json`;
-- `params`: Data to be passed during navigation. The properties of the `params` parameter will replace the `data` property value of the target page.
+- `params`: Data to be passed during navigation. The properties of the `params` parameter will overwrite the `data` property value of the target page.
 
 Like [`push()`](#push) and [`back()`](#back), calling `replace()` always plays the standard page transition animation. Even if `replace()` is called **immediately** in the code, as long as the current page has entered the rendering stage, the user may still briefly see a single frame of the current page before entering the target page. Therefore, `replace()` is more suitable for scenarios where "the current page itself is part of the user flow," rather than as a means for "silent redirection" or "completely hiding the entry page."
 
-If the current page was popped via the [`push()`](#push) method, calling `replace()` will replace the current page, which causes the Promise object returned by [`push()`](#push) to be fulfilled.
+If the current page was popped via the [`push()`](#push) method, calling `replace()` will replace the current page, causing the Promise returned by [`push()`](#push) to resolve.
 
 ::: tip
-Do not use the [`push()`](#push) method to navigate to a new page and immediately [`close()`](#close) the current page to achieve page replacement, as this will interrupt the interaction animation and may even cause screen flickering. Always use the `replace()` method to replace pages to ensure a smooth page transition experience.
+Do not use the [`push()`](#push) method to navigate to a new page and immediately [`close()`](#close) the current page to achieve page replacement; this will interrupt the interaction animation and may even cause screen flickering. Always use the `replace()` method to replace pages to ensure a smooth page transition experience.
 
-In addition, if you want a certain entry page (such as the `router.entry` page configured in `manifest.json`, a privacy check page used only for dispatching, etc.) to **not be displayed at all** in certain scenarios, do not call `replace()` inside that page in an attempt to "jump away immediately." Such requirements should be handled by [replacing the default page](#replacing-the-default-page), directly pushing (`push()`) the actual first screen page early in the application startup phase (such as `onCreate()` / `onRoute()`).
+In addition, if you want an entry page (such as the `router.entry` page configured in `manifest.json`, a privacy check page used solely for dispatching, etc.) to **not be displayed at all** in certain scenarios, do not call `replace()` inside that page in an attempt to "jump away immediately." Such requirements should be handled by [Replacing Default Pages](#replacing-default-pages), directly pushing (`push()`) the actual first screen page early in the app startup phase (such as in `onCreate()` / `onRoute()`).
 :::
 
-`replace()` is commonly used in scenarios such as [splash screen navigation](#splash-screen-navigation).
+`replace()` is commonly used in scenarios such as [Splash Screen Navigation](#splash-screen-navigation).
 
-When the page is in the `singleTask` launch mode, navigating to an already opened page is similar to [`back('<page-name>')`](#back). See [`launchMode`](/framework/application/manifest.md#launchmode) <version-badge since="0.8" />.
+When the page is in the `singleTask` launch mode, navigating to an already opened page is similar to [`back('<page-name>')`](#back); see [`launchMode`](/framework/application/manifest.md#launchmode) <version-badge since="0.8" />.
 
 ### `back` <decl type="(name?: string): Promise<boolean>" method />
 
-Returns to the page named `name`. If `name` is empty or omitted, `router.back()` returns to the previous page.
+Returns to the page named `name`. If `name` is empty or not passed, `router.back()` returns to the previous page.
 
-Calling the `back()` method causes the Promise returned by the [`push()`](#push) method of the relevant page to be fulfilled.
+Calling the `back()` method causes the Promise returned by the [`push()`](#push) method of the relevant page to resolve.
 
 ### `close` <decl type="(page: Component, result?: any): Promise<void>" method />
 
@@ -800,9 +799,9 @@ Closes the specified page. `page` is the view-model object of a page. For exampl
 router.close(this.$page)
 ```
 
-The `router.close()` method can close any page within the application. If the target page is at the top of the page stack, `router.close()` is equivalent to `router.back()`. `router.close()` can also correctly close floating pages.
+The `router.close()` method can close any page within the app. If the target page is at the top of the page stack, `router.close()` is equivalent to `router.back()`. `router.close()` can also correctly close floating pages.
 
-The optional parameter `result` is used to specify the return value of the page, which is the result when the Promise returned by [`router.push()`](#push) or [`prompt.showPopup()`](system-prompt.md#showpopup) that popped the page is fulfilled. Considering that there are many ways to exit a page (such as user swiping, the `router.back()` method, etc.), you can explicitly call the `close()` method in the [`onDestroy()`](/framework/component/life-cycle.md#ondestroy) lifecycle hook of the page component to ensure the page return value is passed:
+The optional `result` parameter is used to specify the return value of the page, which is the result when the Promise returned by [`router.push()`](#push) or [`prompt.showPopup()`](system-prompt.md#showpopup) that popped the page resolves. Considering that there are various ways to exit a page (such as user swiping, the `router.back()` method, etc.), you can explicitly call the `close()` method in the page component's [`onDestroy()`](/framework/component/life-cycle.md#ondestroy) lifecycle hook to ensure the page return value is passed:
 ```js
 import router from '@system.router'
 
@@ -811,7 +810,7 @@ export default {
   onDestroy() {
     router.close(this.$page, this.pageResult)
   },
-  // Assume a certain method sets the page return value
+  // Suppose a method sets the page return value
   someMethod() {
     this.pageResult = { message: 'some page result' }
   },
@@ -819,32 +818,32 @@ export default {
 ```
 
 ::: tip
-If `router.close()` is called multiple times on a page before `onDestroy()` returns **with the `result` parameter passed**, only the last call will take effect as the return value of the page. This is why it is recommended to return values via the `close()` method in the `onDestroy()` lifecycle hook.
+If `router.close()` is called multiple times for a page **with the `result` parameter passed** before `onDestroy()` returns, only the last call will take effect as the page's return value. This is why it is recommended to return values via the `close()` method within the `onDestroy()` lifecycle hook.
 :::
 
 ### `clear` <decl type="(): Promise<void>" method />
 
-Clears all underlying pages, leaving only the top-level page. Calling the `clear()` method does not play page transition animations. The Promise object returned by this method is fulfilled after all underlying pages are exited.
+Clears all underlying pages, keeping only the top-level page. Calling the `clear()` method does not play page transition animations. The Promise returned by this method is resolved after all underlying pages are exited.
 
 ### `getPages` <decl type="(): Component[]" method />
 
-Gets the page components of all pages in the current application page stack.
+Gets the page components of all pages in the current app's page stack.
 
 ### `getLength` <decl type="(): number" method />
 
-Gets the number of pages in the current application page stack.
+Gets the number of pages in the current app's page stack.
 
 ### `getPagesName` <decl type="(): String[]" method />
 
-Gets the names of all pages in the current application page stack.
+Gets the names of all pages in the current app's page stack.
 
 ### `getPage` <decl type="(index: number): Component | undefined" method />
 
-Gets the page component specified by `index` in the current application. `index` is the index of the page (i.e., its position in the page stack). Returns `undefined` if the searched page does not exist.
+Gets the page component specified by `index` in the current app. `index` is the index of the page (i.e., its position in the page stack). Returns `undefined` if the searched page does not exist.
 
 ### `getIndex` <decl type="(component: Component): number | undefined" />
 
-Gets the page index specified by the page component `component` in the current application. Returns `undefined` if the searched page does not exist.
+Gets the page index specified by the page component `component` in the current app. Returns `undefined` if the searched page does not exist.
 
 ### `queryPage` <decl type="(name: string): Component[]" />
 
@@ -856,13 +855,13 @@ Gets the indices of all pages named `name` in the page stack. The order of the p
 
 ## Development Notes
 
-### Repeated Page Pushing
+### Repeatedly Pushing Pages
 
-Incorrect use of the `router.push()` method may lead to repeatedly pushing the same page. Consider such an element:
+Incorrect use of the `router.push()` method may result in repeatedly pushing the same page. Consider the following element:
 ``` html
 <p on:click="onClick">Click Me!</p>
 ```
-There is no issue when the component's `onClick()` event callback method simply pushes a new page:
+When the component's `onClick()` event callback method simply pushes a new page, there are no issues:
 ``` js
 export default{
   onClick() {
@@ -884,7 +883,7 @@ export default{
   }
 }
 ```
-If the user clicks the "Click Me!" button multiple times during the asynchronous operation (the timer in the example), the page will be pushed repeatedly. You can try the following demo to verify it:
+If the user clicks the "Click Me!" button multiple times during the asynchronous operation (the timer in the example), the page will be pushed repeatedly. You can try the following demo to verify this:
 
 <glyphix id="api-router-push-repeat-1" height="100" inline>
 
@@ -925,32 +924,32 @@ export default {
 
 </glyphix>
 
-First, click the "Click Me!" button rapidly multiple times within one second. This will cause the Cover Page to be pushed repeatedly, and you can observe the number of repeated pushes through the counter displayed on that page.
+First, quickly click the "Click Me!" button multiple times within one second. This will cause Cover Page to be pushed repeatedly, and you can observe the number of repeated pushes through the counter displayed on that page.
 
-Next, click the Cover Page or swipe right to return to the previous page. At this point, you will find that no matter how fast or continuously you click, the pages always return one by one without duplicate operations, because gestures are not responded to during transition animations.
+Next, click the Cover Page or swipe right to return to the previous page. You will find that no matter how fast or continuously you click, the pages always return one by one without repeated operations, because gestures are not responded to during transition animations.
 
 #### Avoiding Asynchronous Operations
 
-If you need to navigate pages within the callback function of a gesture operation (such as a click gesture), asynchronous operations should be avoided, as this not only easily leads to repeated page pushing, but also increases gesture response latency. In particular, note that the latency of certain asynchronous operations is uncontrollable, such as checking online status in a poor network environment, which may take a long time.
+When navigating pages within the callback function of a gesture operation (such as a click gesture), asynchronous operations should be avoided, as this not only easily leads to repeatedly pushing pages, but also increases gesture response latency. In particular, note that the latency of certain asynchronous operations is uncontrollable, such as checking online status in a poor network environment, which may take a long time.
 
-Therefore, in scenarios where page navigation needs to be triggered by a click, it is best to move potential network accesses to the new page and present a busy state via loading animations.
+Therefore, in scenarios where page navigation needs to be triggered by a click, it is best to transfer any potential network access to the new page and present a busy state via a loading animation.
 
-#### Workarounds
+#### Mitigation Methods
 
-If asynchronous operations must be performed before a gesture-triggered page navigation, be sure to use a specific flag to prevent repeated page navigation. Taking the `onClick()` callback above as an example:
+If asynchronous operations must be performed before a gesture-triggered page navigation, be sure to use a specific flag to avoid repeatedly jumping pages. Taking the previous `onClick()` callback as an example:
 ``` js
 export default {
   async onClick() {
-    // Add an isClicked flag to skip duplicate operations; does not need to be a reactive property
+    // Add an isClicked flag to skip duplicate operations; it does not need to be a reactive property
     if (this.isClicked)
       return
-    // Mark isClicked before executing gesture response logic
+    // Mark isClicked before executing the gesture response logic
     this.isClicked = true
     await new Promise((resolve, reject) => {
       setTimeout(resolve, 1000)
     })
     router.push({ uri: 'CoverPage' })
-    // Clear isClicked after executing gesture response logic
+    // Clear isClicked after executing the gesture response logic
     this.isClicked = false
   }
 }
@@ -1000,15 +999,15 @@ export default {
 
 </glyphix>
 
-This example also confirms that asynchronous operations indeed increase page navigation latency—users cannot see any return during the one-second wait for the timer to time out!
+This example also confirms that asynchronous operations do increase page navigation latency—users cannot see any response during the one-second wait for the timer to time out!
 
-### Replacing the Default Page
+### Replacing Default Pages
 
-Developers may not want the application to enter the [`router.entry`](/framework/application/manifest.md#entry) page of `manifest.json` upon startup. A typical scenario is when starting the application via a deeplink, where it should navigate to a specific page based on specific request parameters instead of entering the entry page.
+Developers may not want the app to enter the [`router.entry`](/framework/application/manifest.md#entry) page of `manifest.json` upon startup. A typical scenario is when launching the app via a deeplink, where it should navigate to a specific page based on specific request parameters rather than entering the entry page.
 
-In addition to deeplinks, applications during cold startup often need to select different first screens based on local state, such as deciding whether to enter the login page or home page based on the login state, or entering the privacy page or functional home page based on the locally stored privacy agreement consent flag. If one of these pages is directly configured as `router.entry` and then [`router.replace()`](#replace) is used inside that page to navigate, unwanted pages will be briefly displayed in certain scenarios, looking like the page "flashed."
+In addition to deeplinks, apps often need to select different first screens based on local state during cold starts, such as deciding whether to enter the login page or home page based on login status, or entering the privacy page or functional home page based on a locally stored privacy agreement consent flag. If one of these pages is directly configured as `router.entry` and then [`router.replace()`](#replace) is called inside that page to navigate, unwanted pages will be briefly displayed in certain situations, making it look like the page "flashes."
 
-To solve this, you only need to push (`router.push()`) the page you actually want to display before the [`onShow()`](/framework/component/life-cycle.md#onshow-1) lifecycle hook is called during the application startup phase. Typically, local state checks and home page navigation can be completed in the [`onCreate()`](/framework/component/life-cycle.md#oncreate) or [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle hooks of the application. For example, synchronously read the stored privacy agreement state in `onCreate()` of `app.ux`/`app.js`, and then directly navigate to the privacy page or home page:
+To avoid this, you simply need to push (`router.push()`) the page you actually want to display before the [`onShow()`](/framework/component/life-cycle.md#onshow-1) lifecycle hook is called during the app startup phase. Local state checks and home page navigation can usually be completed in the app's [`onCreate()`](/framework/component/life-cycle.md#oncreate) or [`onRoute()`](/framework/component/life-cycle.md#onroute) lifecycle hooks. For example, synchronously reading the stored privacy agreement status in `onCreate()` of `app.ux`/`app.js`, and then directly navigating to the privacy page or home page:
 ```js
 // app.js
 import router from '@system.router'
@@ -1017,20 +1016,20 @@ import storage from '@system.storage'
 export default {
   onCreate() {
     const agreed = storage.get('privacyAgreed')
-    if (agreed) // User has agreed to the privacy policy, enter the functional home page directly
+    if (agreed) // User has agreed to the privacy agreement, directly enter the functional home page
       router.push({ uri: 'MainPage' })
-    else // User has not yet agreed to the privacy policy, display the privacy page on the first screen
+    else // User has not yet agreed to the privacy agreement, display the privacy page as the first screen
       router.push({ uri: 'PrivacyPage' })
   }
 }
 ```
-Once the developer manually navigates pages early in the application startup, the actual **first screen page** displayed to the user for this startup is the target page pushed via `router.push()`. `router.entry` in `manifest.json` is used only as an internal entry and will not flash briefly on the interface.
+Once the developer manually navigates pages early in the app startup, the actual **first-screen page** displayed to the user during this startup is the target page pushed via `router.push()`. The `router.entry` in `manifest.json` is used only as an internal entry and will not flash briefly on the interface.
 
 ### Splash Screen Navigation
 
-Many applications display a splash logo page when first entered, and then navigate to the actual functional home page. A typical routing structure is: `router.entry` points to the logo page, and the logo page navigates to the home page via [`router.replace()`](#replace) upon initialization. Thus, after the application starts, the user first sees a brief splash screen, followed by the animation transitioning from the splash page to the home page, and the splash page is removed from the page stack after navigation.
+Many apps display a splash logo page when first entered, and then navigate to the actual functional home page. A typical routing structure is: `router.entry` points to the logo page, and the logo page navigates to the home page via [`router.replace()`](#replace) upon initialization. This way, after the app starts, the user first sees a brief splash screen, followed by the animation transitioning from the splash page to the home page, and the splash page is removed from the page stack after navigation.
 ``` js
-// Assuming this is the index.ux script of the logo page
+// Assuming this is the index.ux script for the logo page
 export default {
   onInit() {
     // Navigate after a delay on the splash logo page
@@ -1040,12 +1039,12 @@ export default {
   },
 }
 ```
-Under this structure, the logo page itself is part of the product design, so users briefly seeing the logo and then transitioning to the home page is expected behavior. Note that `replace()` can only ensure that the transition animation from the logo page to the home page is smooth; the first frame of the logo page will still appear on the screen and cannot be skipped "silently."
+Under this structure, the logo page itself is part of the product design, so users briefly seeing the logo and then transitioning to the home page is expected behavior. Note that `replace()` can only ensure a smooth transition animation from the logo page to the home page; the first frame of the logo page will still appear on the screen and cannot be "silently" skipped.
 
-If the application is not designed with a separate logo or splash page, but still adopts the "entry page + `replace()` navigation" approach—such as configuring the privacy agreement page as `router.entry` and switching to the home page via `replace()` inside it—the user will see that entry page "flash" when cold-starting the application, and then switch to `MainPage` via a transition animation.
+If the app does not design a separate logo or splash page, but still adopts the approach of "entry page + `replace()` navigation"—for example, configuring the privacy agreement page as `router.entry` and switching to the home page via `replace()` inside it—the user will see that entry page "flash" when cold-starting the app, and then switch to `MainPage` via a transition animation.
 
 ::: tip
-This phenomenon is determined by the routing mechanism itself. If you do not want users to observe "page switching," you should prioritize incorporating the approach in the [Replacing the Default Page](#replacing-the-default-page) section, directly selecting the final first screen via `router.push()` during the application startup phase, rather than replacing itself inside the entry page using `replace()`.
+This phenomenon is determined by the routing mechanism itself. If you do not want users to observe "page switching," you should prioritize the approach in the [Replacing Default Pages](#replacing-default-pages) section, directly selecting the final first screen via `router.push()` during the app startup phase, rather than replacing itself using `replace()` inside the entry page.
 :::
 
 ============================================================
@@ -1063,11 +1062,11 @@ import app from '@system.app'
 
 ### `getInfo` <decl type="(): Manifest" method/>
 
-Gets the context information of the current application and returns a [`Manifest` object](./system-package.md#manifest-object), which contains basic application information such as package name and version number.
+Gets the context information of the current application and returns a [`Manifest` object](./system-package.md#manifest-object), which contains basic application information such as the package name and version number.
 
 ### `terminate` <decl type="(): void" method version="0.8"/>
 
-Terminates the execution of the current application. After calling this method, the application will be closed, and the user needs to restart it to continue use.
+Terminates the running of the current application. After calling this method, the application will be closed, and the user needs to restart the application to continue using it.
 
 ::: note Compatibility Risk
 This API is not supported on all platforms. You can temporarily use the [`launch.exit()`](./system-launch.md#exit) method as an alternative.
@@ -1075,7 +1074,7 @@ This API is not supported on all platforms. You can temporarily use the [`launch
 
 ### `loadLibrary` <decl type="(name: string): object | undefined" method/>
 
-Loads a Library Loader registered by native implementation by name, and returns the corresponding library object. If the library with the specified name is not registered, `undefined` is returned.
+Loads a Library Loader registered by a native implementation by name and returns the corresponding library object. If the library with the specified name is not registered, `undefined` is returned.
 
 Typically, it is recommended to mount the library object onto the APP object:
 ```js
@@ -1086,7 +1085,7 @@ export default {
   customLib: app.loadLibrary('custom-library'),
   onCreate() {
     if (!this.customLib) {
-      // Handle library loading failure, e.g., fall back to script implementation
+      // Handle the case where library loading fails, e.g., fall back to a script implementation
       this.customLib = someStubImplementation();
     } else {
       // Use the library object normally
@@ -1097,22 +1096,22 @@ export default {
 ```
 In this way, components can directly use `this.$app.customLib` to access the library object.
 
-`loadLibrary()` is suitable for accessing non-standard system functions. Applications can check whether the return value is `undefined` to determine whether the current platform supports the library, thereby degrading to a scripted stub implementation in a general simulator environment without relying on the simulator's special handling of specific module paths.
+`loadLibrary()` is suitable for accessing non-standard system features. Applications can check whether the return value is `undefined` to determine whether the current platform supports the library, thereby downgrading to a script stub implementation in a general simulator environment without relying on the simulator's special handling of specific module paths.
 
-If the application needs to support both standard Quick App APIs and system-customized features, it can decide whether to fall back based on the return result of `loadLibrary()`.
+If the application needs to support both standard Quick App APIs and system-customized features simultaneously, it can decide whether to fall back based on the return result of `loadLibrary()`.
 
 ### `keepForeground` <decl type="(options: { enable: boolean }): void" method/>
 
-Sets whether the application should stay in the foreground. If the `enable` property in the `options` parameter is `true`, the application will attempt to stay in the foreground.
+Sets whether the application should stay in the foreground. If the `enable` property in the `options` parameter is `true`, the application will attempt to remain in the foreground.
 
-Using this method requires declaring the permission for `watch.permission.FOREGROUND_SERVICE` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Using this method requires declaring the application's permission for `watch.permission.FOREGROUND_SERVICE` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
-This method is only a hint for system behavior rather than a mandatory guarantee. The application may still be switched to the background due to user operations or other high-priority policies. When using this method to keep the application in the foreground, the device can still enter low-power mode:
+This method is merely a hint for system behavior and is not mandatory. The application may still be switched to the background due to user operations or other high-priority policies. When using this method to keep the application in the foreground, the device can still enter low-power mode:
 
-- If the AOD (Always on Display) mode is enabled, the UI refresh rate will be reduced.
-- Otherwise, the screen will turn off after a period of time, but the application will still keep running in the foreground.
+- If AOD (Always on Display) mode is enabled, the UI refresh rate will be reduced.
+- Otherwise, the screen will turn off after a period of time, but the application will still run in the foreground.
 
-After the device enters low-power mode (including turning off the screen), foreground applications will still be scheduled and executed at a lower frequency instead of going completely to sleep. Therefore, this can be used for navigation or fitness applications.
+After the device enters low-power mode (including turning off the screen), the foreground application will still be scheduled and executed at a lower frequency rather than completely sleeping. Therefore, it can be used for navigation or fitness applications.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-file.md
@@ -1122,9 +1121,9 @@ FILE_PATH: src/transl/EN/api/system-file.md
 This module provides Promise-style file system operation APIs. Compared to the callback style, the Promise style avoids callback hell and reduces code complexity.
 
 ::: warning
-Since callback-style file APIs are extremely prone to pitfalls in timing, concurrency, and error handling, it is strongly recommended to use the [Promise/`await` API](./README.md#quickapp-asynchronous-interfaces). For detailed suggestions, please refer to [Common Pitfalls and Recommendations](#common-pitfalls-and-recommendations).
+Since callback-style file APIs are extremely prone to pitfalls in terms of timing, concurrency, and error handling, it is strongly recommended to use the [Promise/`await` API](./README.md#quickapp-asynchronous-interfaces). For detailed suggestions, please refer to [Common Pitfalls and Recommendations](#common-pitfalls-and-recommendations).
 
-The APIs in `@system.file` are all [asynchronous file operations](#asynchronous-file-operations), which are fundamentally different from synchronous I/O access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
+All APIs in `@system.file` are [asynchronous file operations](#asynchronous-file-operations), which are fundamentally different from synchronous I/O access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
 :::
 
 ## Importing the Module
@@ -1137,8 +1136,8 @@ import file from '@system.file'
 
 ### Error Codes
 
-The meanings of the returned error codes are:
-- `202`: Invalid parameter;
+The returned error codes mean:
+- `202`: Parameter error;
 - `300`: I/O operation failed;
 - `400`: Insufficient permissions;
 
@@ -1151,7 +1150,7 @@ The meanings of the returned error codes are:
 }): Promise&lt;string>
 </pre></decl>
 
-Reads the contents of a text file. Description of `params` fields:
+Reads the content of a text file. Description of `params` fields:
 - `uri`: The URI of the file to be read.
 
 ### `writeText`
@@ -1165,8 +1164,8 @@ Reads the contents of a text file. Description of `params` fields:
 
 Writes text to a file. If the file does not exist, a new file will be created. This function also automatically creates parent directories. `params` fields:
 - `uri`: The URI of the file to be written.
-- `text`: The text content to be written to the file.
-- `append`: If `true`, the data is appended to the end of the file; if `false`, it overwrites the original content. Defaults to `false`.
+- `text`: The text content to write to the file.
+- `append`: If `true`, data is appended to the end of the file; if `false`, it overwrites the original content. Default is `false`.
 
 ### `read`
 <decl method><pre>
@@ -1179,8 +1178,8 @@ Writes text to a file. If the file does not exist, a new file will be created. T
 
 Reads file contents into an `ArrayBuffer` object. `params` fields:
 - `uri`: The URI of the file to be read.
-- `position`: The offset position for reading the file, defaulting to $0$.
-- `length`: The number of bytes expected to be read. If not specified, it reads to the end of the file.
+- `position`: The offset of the file reading position, defaulting to $0$.
+- `length`: The expected number of bytes to read. If not specified, it reads to the end of the file.
 
 ### `write`
 <decl method><pre>
@@ -1197,8 +1196,8 @@ Writes byte data from an `ArrayBuffer` into a file. If the file does not exist, 
 Description of `params` fields:
 - `uri`: The URI of the file to be written.
 - `data`: The data to be written.
-- `position`: The offset position for writing to the file, defaulting to $0$.
-- `append`: If `true`, appends the data to the end of the file and ignores the `position` parameter.
+- `position`: The offset of the file writing position, defaulting to $0$.
+- `append`: If `true`, data is appended to the end of the file and the `position` parameter is ignored.
 
 ### `copy`
 <decl method><pre>
@@ -1208,7 +1207,7 @@ Description of `params` fields:
 }): Promise&lt;void>
 </pre></decl>
 
-Copies a source file to a specified location, automatically creating the target directory. `params` fields:
+Copies the source file to the specified location and automatically creates the target directory. `params` fields:
 - `srcUri`: The URI of the source file.
 - `dstUri`: The URI of the target file.
 
@@ -1220,7 +1219,7 @@ Copies a source file to a specified location, automatically creating the target 
 }): Promise&lt;void>
 </pre></decl>
 
-Renames a file or directory, automatically creating the target directory. `params` fields:
+Renames a file or directory and automatically creates the target directory. `params` fields:
 - `oldUri`: The URI of the file or directory before renaming.
 - `newUri`: The URI after renaming.
 
@@ -1231,10 +1230,10 @@ Renames a file or directory, automatically creating the target directory. `param
 }): Promise&lt;Array>
 </pre></decl>
 
-Lists all items (files or directories) under a specified directory. `params` fields:
-- `uri`: The URI of the directory to list. Files within the application resource package do not support listing.
+Lists all items (files or directories) under the specified directory. `params` fields:
+- `uri`: The URI of the directory to list. Listing files inside the application resource package is not supported.
 
-The parameter of the `Promise` is an array containing file information, structured like this:
+The parameter of the `Promise` is an array containing file information, formatted as follows:
 ``` js
 [
   {
@@ -1247,7 +1246,7 @@ The parameter of the `Promise` is an array containing file information, structur
 ```
 
 ::: tip
-You cannot list files inside the application resource package. Therefore, usages that directly use [paths](/framework/application/resource.md#uri-and-paths), such as `await file.list({ uri: "/assets/images" })`, are invalid. In fact, various [`internal`](/framework/application/resource.md#internal) URI schemes should be used instead.
+You cannot list files within the application resource package, so direct usages of paths such as `await file.list({ uri: "/assets/images" })` are invalid. In fact, you should use various [`internal`](/framework/application/resource.md#internal) URI schemes.
 :::
 
 ### `access`
@@ -1270,7 +1269,7 @@ Checks whether a file exists. `params` fields:
 
 Creates a directory. `params` fields:
 - `uri`: The URI of the directory to be created.
-- `recursive`: Whether to create recursively (if the parent directory does not exist, create the parent directory first). Defaults to `false`.
+- `recursive`: Whether to create recursively (create parent directories first if they do not exist), defaulting to `false`.
 
 ### `remove`
 <decl method><pre>
@@ -1282,7 +1281,7 @@ Creates a directory. `params` fields:
 
 Deletes a directory or file. `params` fields:
 - `uri`: The URI of the directory to be deleted.
-- `recursive`: Whether to delete recursively. Defaults to `false`. When non-recursive, it can only delete files or empty directories.
+- `recursive`: Whether to delete recursively, defaulting to `false`. When not recursive, it can only delete files or empty directories.
 
 ### `stat`
 <decl method><pre>
@@ -1291,7 +1290,7 @@ Deletes a directory or file. `params` fields:
 }): Promise&lt;{size: number}>
 </pre></decl>
 
-Gets the attribute information of a file. The fields of the `options` parameter are described as follows:
+Gets the attribute information of a file. The fields of `options` are described below:
 - `uri`: The URI of the file whose attributes are to be retrieved.
 
 `stat()` asynchronously returns an object containing the following file attributes:
@@ -1299,53 +1298,53 @@ Gets the attribute information of a file. The fields of the `options` parameter 
 
 ## Common Pitfalls and Recommendations
 
-The following examples are based on typical problems of the "callback-style" approach, demonstrating why they easily fail or become hard to maintain in file I/O, and providing equivalent rewrites using Promise/`await`.
+The following examples are based on typical problems of "callback-style" code, demonstrating why they easily fail or become difficult to maintain in file I/O, and providing equivalent rewrites using Promise/`await`.
 
 ### Asynchronous File Operations
 
-All APIs in the `@system.file` module are **asynchronous operations**. This means that when you call a file operation function, it will **return immediately** without waiting for the actual I/O operation to complete. File read and write operations are performed in the background, and you will be notified of the result via a Promise once the operation completes.
+All APIs in the `@system.file` module are **asynchronous operations**. This means that when you call a file operation function, it will **return immediately** without waiting for the actual I/O operation to complete. File read and write operations take place in the background, and you will be notified of the result via a Promise once the operation completes.
 
-::: danger Must-Read for Beginners
-If you are not familiar with asynchronous programming, please carefully read this section. **Ignoring the return value of an asynchronous operation** or **failing to wait for the Promise to complete** will lead to serious program errors. These errors may not manifest in the simulator, but on real devices, they will cause data loss or program errors.
+::: danger Must Read for Beginners
+If you are not familiar with asynchronous programming, please read this section carefully. **Ignoring the return value of an asynchronous operation** or **not waiting for the Promise to complete** will lead to severe program bugs. These bugs may not manifest in the simulator, but they will cause data loss or program errors on real devices.
 :::
 
 #### What is an Asynchronous Operation?
 
-In synchronous programming, code executes sequentially, and each line of code finishes executing before the next one starts:
+In synchronous programming, code executes sequentially, and each line of code waits for the previous one to finish before executing:
 
 ```js
-// Synchronous code example (pseudocode, the file API does not provide synchronous versions): blocks and waits for file reading
+// Synchronous code example (pseudo-code, the file API does not provide synchronous versions): blocks and waits for file reading
 const text = file.readTextSync({ uri: 'internal://files/data.txt' });
 console.log(text); // Will definitely output the file content
-console.log('Read completed');
+console.log('Read complete');
 ```
 
-However, in asynchronous programming, I/O operations do not block code execution. When you call an asynchronous function, it immediately returns a Promise object, while the actual file operation takes place in the background:
+However, in asynchronous programming, I/O operations do not block code execution. When you call an asynchronous function, it immediately returns a Promise object while the actual file operation runs in the background:
 
 ```js
 // Error: Ignoring the Promise, not waiting for the operation to complete (returns immediately)
 file.readText({ uri: 'internal://files/data.txt' });
-console.log('This line of code executes immediately, at which point the file may not have finished reading yet!');
+console.log('This line of code executes immediately, at which point the file may not have been fully read yet!');
 
 // Correct: Using await to wait for the operation to complete
 const text = await file.readText({ uri: 'internal://files/data.txt' });
-console.log(text); // At this point the file has been read and can be safely used
-console.log('Read completed');
+console.log(text); // At this point the file has been read, and it is safe to use
+console.log('Read complete');
 ```
 
 #### Why Must You Use `await`?
 
-Failing to use `await` to wait for asynchronous operations to complete leads to the following serious problems.
+Failing to use `await` to wait for asynchronous operations to complete leads to the following severe issues.
 
 Data being used before it is ready:
 ```js
-// Error example: Ignoring the return value
+// Incorrect example: Ignoring the return value
 function loadConfig() {
   let config = null;
   file.readText({ uri: 'internal://files/config.json' })
     .then(text => config = JSON.parse(text)); // This callback function will execute at some point in the future
-  // Here config is still null because file reading is not finished yet!
-  console.log(config.theme); // Error: Trying to access null.theme, will crash
+  // config is still null here because file reading is not finished yet!
+  console.log(config.theme); // Error: Trying to access null.theme will crash
   return config; // Returns null
 }
 
@@ -1358,24 +1357,24 @@ async function loadConfig() {
 }
 ```
 
-Disordered operation sequences:
+Confused operation order:
 ```js
-// Error example: Not waiting for the write to complete
+// Incorrect example: Not waiting for the write to complete
 async function saveAndLoad() {
-  // Writes new data, but does not wait for completion
+  // Write new data, but do not wait for completion
   file.writeText({ uri: 'internal://files/score.txt', text: '100' });
   
-  // Reads immediately; at this point, the write may not be finished, and old data might be read!
+  // Read immediately; at this point the write might not be finished, and you might read old data!
   const score = await file.readText({ uri: 'internal://files/score.txt' });
-  console.log(score); // May output the old value instead of '100'
+  console.log(score); // Might output an old value instead of '100'
 }
 
-// Correct example: Waiting for the write to complete before reading
+// Correct example: Wait for the write to complete before reading
 async function saveAndLoad() {
   // Use await to wait for the write to finish
   await file.writeText({ uri: 'internal://files/score.txt', text: '100' });
   
-  // Now read, ensuring the newly written data is retrieved
+  // Now read, ensuring you get the freshly written data
   const score = await file.readText({ uri: 'internal://files/score.txt' });
   console.log(score); // Outputs '100'
 }
@@ -1384,19 +1383,19 @@ async function saveAndLoad() {
 Race conditions and data corruption:
 
 ```js
-// Error example: Multiple concurrent writes to the same file
+// Incorrect example: Concurrent writes to the same file multiple times
 async function appendLog(message) {
   const log = await file.readText({ uri: 'internal://files/log.txt' });
-  // Continuing execution without using await to wait for the write to complete
+  // Proceed without using await to wait for the write to complete
   file.writeText({ uri: 'internal://files/log.txt', text: log + message + '\n' });
 }
 
-// Concurrent calls: not awaiting appendLog
+// Concurrent calls: without awaiting appendLog
 appendLog('Event A'); // Read -> Write A
 appendLog('Event B'); // Read -> Write B
-// Result: Both reads may fetch the exact same old content, and the later write will overwrite the earlier one, causing 'Event A' to be lost.
+// Result: Both reads might read the same old content, and the later write will overwrite the earlier one, causing 'Event A' to be lost
 
-// Correct example: Waiting for each write to complete
+// Correct example: Wait for each write to complete
 async function appendLog(message) {
   const log = await file.readText({ uri: 'internal://files/log.txt' });
   await file.writeText({ uri: 'internal://files/log.txt', text: log + message + '\n' });
@@ -1405,25 +1404,25 @@ async function appendLog(message) {
 // Sequential calls
 await appendLog('Event A'); // Complete Read -> Write -> Finish
 await appendLog('Event B'); // Complete Read -> Write -> Finish
-// Result: Both events are correctly recorded.
+// Result: Both events are correctly recorded
 ```
 
 #### Simulator Pitfalls
 
 ::: warning The Simulator Cannot Expose All Asynchronous Issues
-In the development simulator, due to the extremely fast I/O speed of the computer, file operations complete almost instantaneously. Therefore, even if code does not correctly use `await`, it may still appear to "work normally" in the simulator.
+In development simulators, due to the computer's extremely fast I/O speed, file operations complete almost instantaneously. Therefore, even if code does not correctly use `await`, it may appear to "work properly" in the simulator.
 :::
 
 File system I/O on real embedded devices has the following limitations:
-- Flash storage read and write speeds are relatively slow;
-- File system caching capability is weak, and reading/writing files typically accesses the storage medium directly;
+- Flash storage read and write speeds are slower;
+- File system caching capabilities are weak, and reading/writing files usually accesses storage media directly;
 - System resources are limited, and I/O operations are queued and delayed.
 
-Code that fails to use `await` will **almost certainly fail** on real devices! Do not ignore asynchronous programming standards just because testing passes in the simulator.
+Code without `await` **will almost certainly fail** on real devices! Do not ignore asynchronous programming practices just because tests pass in the simulator.
 
 #### Rules for Correctly Using `async/await`
 
-1. Any function that calls a file API should be declared as `async`:
+1. Any function that calls file APIs should be declared as `async`:
    ```js
    async function saveData(data) {
      await file.writeText({ uri: 'internal://files/data.txt', text: data });
@@ -1490,7 +1489,7 @@ class ConfigManager {
   }
 
   async update(changes) {
-    // Complete read -> modify -> save workflow
+    // Complete read -> modify -> save flow
     const config = await this.load();
     Object.assign(config, changes);
     await this.save(config);
@@ -1509,7 +1508,7 @@ async function main() {
   console.log('Theme updated');
 }
 
-// Note: main is also asynchronous and needs to be called correctly
+// Note: main itself is also asynchronous and needs to be called correctly
 main().catch(err => {
   console.error('Program execution error:', err);
 });
@@ -1519,17 +1518,17 @@ main().catch(err => {
 
 - All `@system.file` APIs are asynchronous and must use `await` to wait for completion.
 - Failing to use `await` leads to severe issues such as unprepared data, out-of-order operations, lost errors, and data corruption.
-- Passing tests in the simulator does not mean the code is correct; I/O is slower on real devices, which will expose the problems.
-- Using `async/await` + `try/catch` is the correct and most concise writing style.
+- Passing simulator tests does not mean the code is correct; I/O is slower on real devices and issues will surface.
+- Using `async/await` + `try/catch` is the correct and cleanest approach.
 - Never ignore the return value of a Promise.
 
 ### Callback Pitfalls
 
-#### Callback Order Illusion and Race Condition Overwrites
+#### Callback Order Illusion and Race Condition Overwriting
 
-This scenario involves a sequence of operations where a set of files is read, modified, and written. This is problematic code using callback parameters to trigger callback style:
+This scenario involves a sequence of read-modify-write operations on a set of files. Here is problematic code using callback parameters:
 ```js
-// Expected to increment a counter file by 1, but two concurrent calls might overwrite each other
+// Expected to increment a counter file by +1, but two concurrent calls might overwrite each other
 function increment(uri, done) {
   file.readText({
     uri,
@@ -1548,7 +1547,7 @@ function increment(uri, done) {
   });
 }
 
-// Create counter file first, then trigger two increments concurrently
+// Create counter file first, then trigger two concurrent +1 increments
 file.writeText({
   uri: 'internal://files/counter',
   text: '0',
@@ -1559,36 +1558,36 @@ file.writeText({
   }
 })
 ```
-After running this script, you may only see two `read 0, write 1` logs, and the final `counter` file content will be `1` instead of the expected `2`. The failure mechanism is: both reads fetch the same old value, and the later write overwrites the earlier one, resulting in the result only incrementing by 1.
+After running this script, you may only see two `read 0, write 1` logs, and the final `counter` file content will be `1` instead of the expected `2`. The failure mechanism is: both reads fetch the exact same old value, and the later write overwrites the earlier one, resulting in a single +1 increment.
 
 ::: note
-The script above looks extremely complex and makes it hard to correctly pass the `done` callback function, which easily induces incorrect implementations. In fact, when rewritten using `async/await`, the code becomes very concise and easy to understand.
+The script above looks extremely complex and makes it hard to correctly pass the `done` callback function, easily leading to incorrect implementations. In fact, when rewritten using `async/await`, the code becomes very concise and easy to understand.
 :::
 
-A complex technique is to use mutual exclusion + serialization techniques, which can completely preserve the original concurrent `increment` semantics and ensure the atomicity of the entire read file + increment counter operation:
+A complex technique is to use mutual exclusion + serialization, which completely preserves the original concurrent `increment` semantics while guaranteeing atomicity for the entire read-file + increment operation:
 ```js
 // Key-based mutual exclusion execution using Promise chains
 const lock = new Map();
 
 /**
- * Serially executes asynchronous tasks for the same key. This is a utility function.
+ * Serially execute asynchronous tasks for the same key. This is a utility function.
  * @param {string} key
  * @param {() => Promise<any>} fn
  * @returns {Promise<any>} Returns the result of fn
  */
 function withLock(key, fn) {
-  // Get the previous "tail" for this key (or an already resolved Promise if none)
+  // Get the previous "tail" for this key (or a resolved Promise if none)
   const prev = lock.get(key) || Promise.resolve();
   // Even if prev fails, we must continue the subsequent queue, so .catch(() => {}) first
   const p = prev.catch(() => {}).then(async () => {
     try {
-      return await fn(); // The actual task only runs when it's its turn
+      return await fn(); // The actual task only runs when its turn comes
     } finally {
-      // If we are still the current tail, it means no new tasks have come in, so we can clean up
+      // If we are still the current tail, it means no new tasks came in, so we can clean up
       if (lock.get(key) === p) lock.delete(key);
     }
   });
-  lock.set(key, p); // Hang the new tail on
+  lock.set(key, p); // Hang the new tail
   return p;
 }
 
@@ -1605,14 +1604,14 @@ file.writeText({
   uri: 'internal://files/counter',
   text: '0'
 }).then(() => {
-  // Trigger two increments concurrently without any synchronization
+  // Trigger two increments concurrently, again without any synchronization
   increment('internal://files/counter');
   increment('internal://files/counter');
 });
 ```
-After running this script, the `counter` file content will definitely be `2`, and the log sequence will definitely be `read 0, write 1` → `read 1, write 2`.
+After running this script, the `counter` file content will definitely be `2`, and the log order will strictly be `read 0, write 1` → `read 1, write 2`.
 
-However, such code looks quite complex. The simplest approach is to call `await increment()` directly (manifesting as `await` propagation):
+However, such code looks quite complex. The simplest approach is to directly call `await increment()` (which manifests as `await` propagation):
 ```js
 async function increment(uri) {
   const n = Number(await file.readText({ uri })) || 0;
@@ -1624,15 +1623,15 @@ file.writeText({
   uri: 'internal://files/counter',
   text: '0'
 }).then(async () => {
-  // Use await to wait for increment to ensure order
+  // Use await to wait for increment, ensuring order
   await increment('internal://files/counter');
   await increment('internal://files/counter');
 })
 ```
 
-#### Callback Nesting Levels and Resource Leaks
+#### Callback Nesting and Resource Leaks
 
-The following example shows resource leaks and logic errors caused by multi-level nesting and too many branches in callback-style code:
+The following example demonstrates resource leaks and logic errors caused by multi-level nesting and too many branches in callback-style code:
 
 ```js
 function exportReport(uri, cb) {
@@ -1649,10 +1648,10 @@ function exportReport(uri, cb) {
           uri: `${uri}.bak`,
           text: out,
           complete() {
-            // Some branches forget stopBusyIndicator() or cb()
+            // Some branch forgets stopBusyIndicator() or cb()
           }
         });
-        // This is also wrong because writeText() is asynchronous and may not have completed yet
+        // This is also wrong, because writeText() is asynchronous and may not have completed yet
         stopBusyIndicator();
         cb && cb(null);
       });
@@ -1665,9 +1664,9 @@ function exportReport(uri, cb) {
 }
 ```
 
-Due to overly deep callback nesting levels, `stopBusyIndicator()` and `cb()` are easily omitted or misused:
-- Omitting cleanup logic, causing the "busy indicator" to never stop, or the caller to never receive a callback;
-- Calling cleanup logic prematurely, causing the caller to mistakenly believe the write has completed.
+Due to deep callback nesting levels, `stopBusyIndicator()` and `cb()` are prone to being missed or misused:
+- Omitting cleanup logic causes the "busy indicator" to never stop, or the caller never receives a callback;
+- Prematurely calling cleanup logic makes the caller think the write has already completed.
 
 Recommended writing style (structured cleanup):
 
@@ -1679,14 +1678,14 @@ async function exportReport(uri) {
     const out = await transform(t);
     await file.writeText({ uri: `${uri}.bak`, text: out });
   } finally {
-    stopBusyIndicator(); // Always called after file I/O completes (or throws an exception)
+    stopBusyIndicator(); // Always called after file I/O completes (or throws an error)
   }
 }
 ```
 
-#### Mixing `await` and Callbacks Causing Style Switching (`await` Invalidation)
+#### Mixing `await` and Callbacks Leading to Style Switching (`await` Becomes Ineffective)
 
-No callback handler function returns a Promise object, rendering `await` invalid:
+Callback handler functions do not return Promise objects, rendering `await` ineffective:
 
 ```js
 // Because the complete callback is passed, this call enables callback style and does not return a Promise
@@ -1695,7 +1694,7 @@ await file.writeText({
   text: 'x',
   complete() {}, // Do not pass success/fail/complete parameter fields
 });
-// The line above will not truly wait for the write to complete, and subsequent code may execute prematurely
+// The line above will not truly wait for the write to finish, and subsequent code may execute prematurely
 ```
 
 Recommended writing style:
@@ -1726,11 +1725,11 @@ export async function updateConfig(uri, patch) {
 }
 ```
 
-The key points are making sequential timing explicit via `await`; using `try/catch` to ensure errors are perceived and re-thrown. If errors are completely ignored, the runtime will record exception logs and interrupt the entire call chain.
+The key points are using `await` to clarify sequential timing and using `try/catch` to ensure errors are noticed and propagated. If errors are completely unhandled, the runtime will log exception anomalies and interrupt the entire call chain.
 
 #### Avoiding TOCTTOU (Time-of-Check to Time-of-Use Race Conditions)
 
-Do not call `access()` followed by `write*()` while relying on the state between them to remain unchanged. For example, code like this:
+Do not call `access()` followed by `write*()` while relying on the state between them remaining unchanged. For example, code like this:
 
 ```js
 file.access({
@@ -1752,26 +1751,26 @@ file.access({
 });
 ```
 
-The recommended approach is to attempt writing directly, and the runtime will automatically create the parent directories:
+The recommended approach is to attempt writing directly; the runtime will automatically create parent directories:
 ```js
 async function safeWriteText(uri, text) {
   try {
     await file.writeText({ uri, text });
   } catch (e) {
-    // Errors should be handled here, and there is no need for mkdir before writing files
+    // Errors should be handled here, and there is no need to mkdir before writing files
   }
 }
 ```
 
-#### Half-Writes and Crash Interruptions
+#### Partial Writes and Crash Interruptions
 
-On MCU devices, system exceptions usually result in a direct reset, and the application does not continue executing in a "half-crashed" state. Even if the application is killed, file write operations that have already been submitted will not be interrupted (though they might not execute at all), so there is generally no need to worry about "half-written files":
+On MCU devices, system exceptions usually trigger a direct reset, and applications do not continue executing in a "semi-crashed" state. Even if an application is killed, file write operations that have already been committed will not be interrupted (though they might not execute at all), so there is usually no need to worry about "half-written files":
 ```js
 // Direct overwrite write; power interruption / system crash may leave a half-written file
 file.writeText({ uri: '/data/config.json', text: bigJson });
 ```
 
-For critical configuration file updates, you can use the "temporary file + same-directory rename" pattern to reinforce stability:
+For critical configuration file updates, you can use the "temporary file + same-directory rename" pattern to enhance stability:
 ```js
 async function atomicWriteText(uri, text) {
   const tmp = `${uri}.tmp`;
@@ -1799,35 +1798,35 @@ Listens for changes in network status. The `status` parameter of the `callback` 
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
-Cancels network status listening. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
+Cancels the network status listener. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
 
 ### `getType` <decl type="(): Promise<NetworkState>" method/>
 
-Gets the current network status and returns a [`NetworkState`](#networkstate) value.
+Gets the current network status, returning a [`NetworkState`](#networkstate) value.
 
 ## Type Definitions
 
 ### `NetworkState`
 
-This object is used to represent the current network status, with the following type signature:
+This object represents the current network status. The type signature is as follows:
 
 ```ts
 type NetworkState = {
   device: string; // The name of the network device
   type: string; // The type of the network device
   linkUp: boolean; // Whether the network device is turned on
-  online: boolean; // Whether the device is online (whether the internet can be accessed)
+  online: boolean; // Whether the device is online (whether the internet is accessible)
 };
 ```
 
-Typically, the `online` property of `NetworkState` can be used to check whether the device has internet access.
+Typically, you can use the `online` property of `NetworkState` to check whether the device has internet access.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-internal.md
 
-# Internal Interfaces
+# Internal APIs
 
-The `system.internal` module provides internal interfaces for system use. This module can only be used in the launcher application.
+The `system.internal` module provides internal interfaces for system use. This module can only be used within the launcher application.
 
 ## Import Module
 
@@ -1839,17 +1838,17 @@ import internal from '@system.internal'
 
 ### `globalComponent` <decl type="(name: string, uri: string): void" method />
 
-Registers a [global component](/framework/component/README.md#全局组件), which can be imported in all applications. The `name` parameter is the name of the global component, and the `uri` parameter is the relative path or URI of the global component UX file to the current source file. For example:
+Registers a [global component](/framework/component/README.md#全局组件), which can be imported in all applications. The `name` parameter is the name of the global component, and `uri` is the path or URI of the global component UX file relative to the current source file. For example:
 ``` js
 internal.globalComponent('TopBar', '/global/TopBar.ux')
 ```
-Afterwards, the global component `TopBar` can be referenced in all applications using `<import name="TopBar" />`.
+Afterwards, the global component `TopBar` can be referenced in any application using `<import name="TopBar" />`.
 
 It is best to execute the `globalComponent()` method during the execution phase of the launcher application's `app.js`, so that global component information can be registered before any interface is loaded.
 
 ### `setDefaultKeyHandler` <decl type="(handler: (event: KeyEvent) => void): void" method />
 
-Registers the system's default key handler. The `handler` parameter is a callback function. The prototype of the `KeyEvent` type is:
+Registers the system's default key handler, where the `handler` parameter is a callback function. The prototype of the `KeyEvent` type is:
 ``` ts
 interface KeyEvent  {
   type: 'keydown' | 'keyup', // Type of the key event
@@ -1905,11 +1904,11 @@ import calendar from '@system.calendar'
 
 ### `getLunar` <decl method type="(date: Date): LunarDate" />
 
-Obtains the lunar date information for a given `Date` object, and returns a lunar date description of type [`LunarDate`](#lunardate).
+Obtains the lunar date information for a `Date` object, returning a lunar date description of type [`LunarDate`](#lunardate).
 
 ### `getLunar` <decl method type="(year: number, month: number, day: number): LunarDate" />
 
-Obtains the lunar information corresponding to the specified Gregorian year, month, and day, and returns a lunar date description of type [`LunarDate`](#lunardate). The parameters are defined as follows:
+Obtains the lunar information corresponding to the specified Gregorian year, month, and day, returning a lunar date description of type [`LunarDate`](#lunardate). The parameters are defined as follows:
 - `year`: Full year number, for example, `2024`;
 - `month`: Month number, starting from `0`, where December is numbered $11$;
 - `day`: Day number, starting from `1`.
@@ -1926,9 +1925,9 @@ type LunarDate = {
 }
 ```
 
-- `month`: Name of the lunar month, for example, `'正月'`, `'二月'`.
-- `day`: Name of the lunar day, for example, `'初一'`, `'十五'`.
-- `festival`: Name of the festival. If there is no festival, this property is undefined.
+- `month`: The name of the lunar month, for example, `'正月'` (First Month), `'二月'` (Second Month).
+- `day`: The name of the lunar day, for example, `'初一'` (First Day), `'十五'` (Fifteenth Day).
+- `festival`: The name of the festival. If there is no festival, this property is undefined.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-fetch.md
@@ -1963,40 +1962,40 @@ import fetch from '@system.fetch'
 Initiates an asynchronous network data request. The fields of the `options` parameter are described as follows:
 - `url`: The URL of the website to access.
 - `method`: Supports `'GET'`, `'POST'`, and `'PUT'`, with `'GET'` as the default.
-- `header`: An object containing HTTP request header information, with keys and values as strings. Typical HTTP header fields can be `Authorization`, `Content-Type`, etc.
+- `header`: An object containing HTTP request header information, with keys and values as strings. Typical HTTP header fields include `Authorization`, `Content-Type`, etc.
 - `params`: Request parameters, all properties of which will be appended to the URL part of the request.
-- `data`: The body content in an HTTP POST request.
-- `responseType`: The response data type in the HTTP request, defaulting to `'text'`, with the following possible values:
+- `data`: The body content of an HTTP POST request.
+- `responseType`: The response data type in the HTTP request. The default is `'text'`, and it can take the following values:
   - `'text'`: The response returns text data, meaning the `data` property of the returned data is of type `string`.
-  - `'json'`: The response returns JSON data, and the returned `data` property parses this JSON data into the corresponding JavaScript value.
+  - `'json'`: The response returns JSON data, and the returned `data` property will parse this JSON data into the corresponding JavaScript value.
   - `arraybuffer`: The response returns binary data, meaning the returned data is stored using an `ArrayBuffer` object.
-- `timeout`: The timeout period for the request response in milliseconds, with a default value of $6000 \rm ms$.
+- `timeout`: The timeout duration for the request response in milliseconds, with a default value of $6000 \rm ms$.
 
 #### `data` Parameter
 
-`data` is the request body, used only in POST requests. It typically comes in three types: a string, an `ArrayBuffer` object, or a JSON object. When `data` is a string or an `ArrayBuffer` object, the request body will be text or binary data respectively. When the body is a JSON object, it will be serialized into text format. The serialization format is determined by the `Content-Type` field of the request method (`method` parameter):
+`data` is the request body, used only in POST requests. It typically comes in three types: a string, an `ArrayBuffer` object, or a JSON object. When `data` is a string or an `ArrayBuffer` object, the request body will be text or binary data respectively. When the body is a JSON object, it will be serialized into text form. The serialization format is determined by the `Content-Type` field of the request method (`method` parameter):
 - When `Content-Type` is `application/json`, the `data` parameter object is serialized into a JSON string and used as the request body;
 - In other cases, the `data` parameter object is serialized into the `application/x-www-form-urlencoded` format.
 
 ::: warning
-Many HTTP APIs use JSON format for POST request bodies. Please ensure that the request header's `Content-Type` is correctly set to `application/json`. For details, please refer to this [example](#post-request-json-body).
+Many HTTP APIs use JSON-formatted POST request bodies. Please ensure that the request header's `Content-Type` is correctly set to `application/json`. For details, please refer to this [example](#post-request-json-body).
 :::
 
 #### Return Value
 
-Returns a `Promise` object. After the request completes, the properties of the fulfilled value are as follows:
+Returns a `Promise` object. Upon fulfillment of the request, the properties of the resolved value are as follows:
 - [`code`](#code-response-code) is the server response code. A successful request typically has a response code of `200`.
-- `header` is the server response header.
+- `header` is the server response headers.
 - `data` is the return value of the requested data, and its specific content is determined by the `options.responseType` parameter.
 
 When the request fails, the returned `Promise` object is rejected.
 
-## Instructions
+## Instructions for Use
 
 ### `code` Response Code
 
 The meanings of the response codes returned by the server are:
-- `200`: Indicates a successful request;
+- `200`: Indicates the request was successful;
 - `1002`: Parameter validation error;
 - `1005`: Incomplete input parameters;
 - `5000`: Request failed, response error;
@@ -2017,7 +2016,7 @@ This is a basic GET request example:
 ``` js
 const res = await fetch.fetch({
   url: 'http://www.rt-thread.com/service/rt-thread.txt',
-  method: 'GET', // Since GET is the default mode, method is optional here
+  method: 'GET', // Since the default mode is GET, method is optional here
   responseType: 'text'
 })
 console.log(`the status code of the response: ${res.code}`)
@@ -2042,6 +2041,7 @@ console.log(`the data of the response: ${res.data}`)
 
 ### POST Request (JSON Body)
 
+
 ============================================================
 FILE_PATH: src/transl/EN/api/system-request.md
 
@@ -2065,18 +2065,18 @@ import request from '@system.request'
 }): DownloadTask
 </pre></decl>
 
-Downloads a file via the HTTP/HTTPS protocol. The fields of the `options` parameter are described as follows:
+Download files via the HTTP/HTTPS protocol. The fields of the `options` parameter are described as follows:
 - `url`: The URL of the website to access;
-- `header`: An object containing HTTP request header information, with keys and values as strings. Typical HTTP header fields can be `Authorization`, `Content-Type`, etc.;
-- `filename`: The URI for storing the downloaded file, e.g., `internal://files/download.txt`;
-- `callback`: The download progress callback function. This function will be called multiple times during the download, where `progress` is the download progress value ranging from $[0, 100]$.
+- `header`: An object containing HTTP request header information, with both keys and values as strings. Typical HTTP header fields can be `Authorization`, `Content-Type`, etc.;
+- `filename`: The URI to store the downloaded file, for example: `internal://files/download.txt`;
+- `callback`: The download progress callback function, which will be called multiple times during the download process. `progress` is the download progress value, ranging from $[0, 100]$.
 
 The `download()` method returns a [`DownloadTask`](#downloadtask) object, which can be used to wait for the download to complete or to control the download task.
 
 ::: warning
-Please do not use the download progress reaching $100\%$ in the `callback` function as the trigger condition for operations after the download is complete. For details, please refer to [Waiting for Download Completion](#waiting-for-download-completion).
+Please do not use a download progress of $100\%$ in the `callback` function as the trigger condition for operations after the download is complete. For details, please refer to [Waiting for Download Completion](#waiting-for-download-completion).
 
-The current implementation does not automatically resolve the `filename` parameter property based on the `url`, so please make sure to fill in `filename`.
+The current implementation does not automatically parse the `filename` parameter property based on the `url`, so please be sure to specify `filename`.
 :::
 
 ## Types
@@ -2092,13 +2092,13 @@ interface DownloadTask {
 }
 ```
 
-The `complete` property is a `Promise` object that can be used to wait for the download to complete. The `cancel()` method is used to cancel an ongoing download task. If the download has already completed, the `cancel()` method has no effect.
+The `complete` property is a `Promise` object that can be used to wait for the download to complete. The `cancel()` method is used to cancel an ongoing download task. If the download is already complete, the `cancel()` method has no effect.
 
 #### Waiting for Download Completion
 
-Use `DownloadTask.complete` to wait for the download to complete. When this `Promise` is fulfilled, it guarantees that the file has been completely written, making it safe to proceed to the next step. In contrast, the download progress reaching $100\%$ in `callback` does not mean the file writing is complete; it is only suitable for requirements such as UI progress display.
+Use `DownloadTask.complete` to wait for the download to complete. When this `Promise` is fulfilled, it guarantees that the file has finished writing, making it safe to proceed with the next steps. In contrast, reaching $100\%$ download progress in the `callback` does not mean the file writing is complete; it is only suitable for requirements such as UI progress display.
 
-In practical use, considering that downloads may fail, it is recommended to use a `try...catch` statement to handle download errors. The example below demonstrates the usage.
+In practical use, considering that downloads may fail, it is recommended to use a `try...catch` statement to handle download errors. The following example demonstrates the usage.
 
 ## Examples
 
@@ -2111,7 +2111,7 @@ request.download({
 })
 ```
 
-You can use the `complete` property of the return value of `download()` to wait for the download to complete:
+You can use the `complete` property of the return value of the `download()` method to wait for the download to complete:
 ``` js
 try {
   await request.download({
@@ -2124,7 +2124,7 @@ try {
 }
 ```
 
-The `try...catch` block here is used to catch exceptions caused by download failures. This exception is actually the error thrown when `DownloadTask.complete` is rejected, so `await` must be used with the `complete` property, otherwise the exception cannot be caught.
+The `try...catch` block here is used to catch exceptions when the download fails. This exception is actually the error thrown when `DownloadTask.complete` is rejected, so you must use `await` to wait for the `complete` property, otherwise the exception cannot be caught.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-package.md
@@ -2133,7 +2133,7 @@ FILE_PATH: src/transl/EN/api/system-package.md
 
 This module provides resource package installation and uninstallation functions.
 
-## Importing the Module
+## Import Module
 
 ``` js
 import pkg from '@system.package'
@@ -2141,21 +2141,21 @@ import pkg from '@system.package'
 
 Since `package` is a JavaScript keyword and cannot be used as a variable name, we can export the `"@system.package"` module to the `pkg` variable.
 
-## Interface Definitions
+## Interface Definition
 
 ### `install` <decl function type="(options: { src: string }): Promise<void>" />
 
 Installs an application or watch face package from the file system. The `src` property of the `options` parameter is the URI of the resource package file to be installed.
 
-If the resource package is an application resource package, it can be launched using [`launch()`](system-launch.md#launch-launch-app) after installation with `pkg.install({ src: 'package-uri' })`, and the contents within the package can be accessed using the [`app`](/framework/application/resource.md#app) URI protocol.
+If the resource package is an application resource package, it can be launched via [`launch()`](system-launch.md#launch-launch-app) after being installed using `pkg.install({ src: 'package-uri' })`, and the contents within the package can be accessed using the [`app`](/framework/application/resource.md#app) URI scheme.
 
-`src` is the URI of the resource package file to be installed. The installed package must be a valid application or watch face package, meaning it must have a [`manifest.json`](/framework/application/manifest.md) file. The package name after installation is determined by [`manifest.package`](/framework/application/manifest.md#package).
+`src` is the URI of the resource package file to be installed. The installed package must be a valid application or watch face package, meaning it must contain a [`manifest.json`](/framework/application/manifest.md) file. The package name after installation is determined by [`manifest.package`](/framework/application/manifest.md#package).
 
-After installation, resources within the package can be accessed using the [`prc`](/framework/application/resource.md#prc) protocol, and application resource packages can also be accessed using the `app` protocol.
+After installation, resources within the resource package can be accessed using the [`prc`](/framework/application/resource.md#prc) scheme, and application resource packages can also be accessed using the `app` scheme.
 
 If the package to be installed already exists, an upgrade operation will be performed. If the application being upgraded is currently running, it will be exited first, and can be launched again later by calling [`launch()`](system-launch.md#launch-launch-app).
 
-The installed package can be deleted using the [`remove()`](#remove) API.
+The installed package can be deleted by the [`remove()`](#remove) API.
 
 ### `remove`<decl type="(options: { package: string }): Promise<void>" function />
 
@@ -2164,12 +2164,12 @@ Deletes the resource package installed by [`install()`](#install). The `package`
 Related resources should be closed before deleting the resource package, such as destroying related components and closing related pages. The `remove()` function will automatically close the application corresponding to the resource package (if it is an application resource package).
 
 ::: warning
-You must use `remove()` instead of directly using file system APIs to delete the resource package, because the latter will not clear the resource cache and cannot correctly delete the installation information.
+You must use `remove()` instead of directly using the file system API to delete the resource package, because the latter will not clear the resource cache and cannot correctly delete the installation information.
 :::
 
 ### `getInfo` <decl type="(query?: string | Query): Manifest | undefined" method/>
 
-Gets the manifest information of an application package. The optional parameter `query` can be a package name string or a more complex `Query` object:
+Gets the manifest information of the application package. The optional parameter `query` can be a package name string or a more complex `Query` object:
 ``` ts
 type Query = {
   package: string,                 // Package name to query
@@ -2189,24 +2189,24 @@ type Query = {
   versionCode: number,  // Version code
   icon?: string,        // Application image path, this field only exists for application packages
   dial?: {              // Optional field: watch face information, only present in watch face packages
-    component: string,  // Path to the watch face component
-    preview: string     // Path to the watch face preview image
+    component: string,  // Path of the watch face component
+    preview: string     // Path of the watch face preview image
   },
-  widgets?: {           // Optional field: widget and gadget information
-    name: string,       // Widget/gadget name
-    component: string,  // Widget/gadget path
-    preview: string     // Widget/gadget preview image path
+  widgets?: {           // Optional field: widget and small widget information
+    name: string,       // Widget/small widget name
+    component: string,  // Widget/small widget path
+    preview: string     // Widget/small widget preview image path
   }[]
 }
 ```
-The `dial` and `widgets` fields of the `Manifest` object are optional, and their presence is determined by the contents of `Query.options`. For example:
+The `dial` and `widgets` fields of the `Manifest` object are optional fields, and their existence is determined by the contents of `Query.options`. For example:
 ``` js
 pkg.getInfo({
   package: 'com.example.app',
   options: ['dial', 'widgets']
 })
 ```
-will cause the resulting `Manifest` to include the `dial` and `widgets` fields (although application packages never include the `dial` field).
+will make the resulting `Manifest` contain the `dial` and `widgets` fields (however, application packages never contain the `dial` field).
 
 When the `query` parameter is a string, it is equivalent to an empty `options` option, meaning:
 ``` ts
@@ -2215,7 +2215,7 @@ pkg.getInfo({ package: 'com.example.app' })
 ```
 yield the same results. In this case, the returned `Manifest` object does not contain optional fields.
 
-When the `query` parameter is not specified, information about the current application can be returned via `getInfo()`:
+When the `query` parameter is not specified, the information of the current application can be returned via `getInfo()`:
 ``` js
 let manifest = pkg.getInfo()
 console.log(manifest)
@@ -2263,7 +2263,7 @@ FILE_PATH: src/transl/EN/api/system-notification.md
 import notification from '@system.notification'
 ```
 
-Developers need to declare the application's access permission for `watch.permission.NOTIFICATION` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare access permission for `watch.permission.NOTIFICATION` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ## API
 
@@ -2280,15 +2280,15 @@ Developers need to declare the application's access permission for `watch.permis
 </pre></decl>
 
 Publishes a message notification. The fields in the `options` parameter are described as follows:
-- `icon`: URI of the notification icon;
+- `icon`: URI of the message icon;
 - `id`: Unique ID of the application notification;
-- `contentType`: Content type. 1: Plain text notification type. 2: Image notification type; image notifications are not currently supported;
+- `contentType`: Content type. `1`: Plain text notification type. `2`: Image notification type (image notifications are not currently supported);
 - `content`: Used in conjunction with `contentType` to represent the content of the notification;
-  - When `contentType` is 1, it represents the content of a plain text notification; object type, containing the following fields:
-    - `title`: Title of the plain text notification; string type;
-    - `text`: Content of the plain text notification; string type;
+  - When `contentType` is `1`, it represents the content of a plain text notification (`object` type), containing the following fields:
+    - `title`: Title of the plain text notification (`string` type);
+    - `text`: Content of the plain text notification (`string` type);
 - `deliveryTime`: Notification delivery time;
-- `actionUri`: URI to navigate to when the notification is clicked.
+- `actionUri`: URI to jump to when the notification is clicked.
 
 ### `remove` 
 <decl method><pre>
@@ -2300,8 +2300,8 @@ Publishes a message notification. The fields in the `options` parameter are desc
 </pre></decl>
 
 Clears message notifications. The `options` parameter contains the following fields:
-- query: Query conditions for clearing,
-  - id: Clears the message notification with the specified ID. If no ID is passed, all message notifications are cleared.
+- `query`: Query conditions for clearing,
+  - `id`: Clears the message notification with the specified ID. If no ID is passed, all message notifications are cleared.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-audiokit.md
@@ -2326,9 +2326,9 @@ Queries the active audio player [`AudioPlayer`](#AudioPlayer) object in the syst
 
 ### `subscribe` <decl type="(callback: (PlayerEvent) => void): number" method/>
 
-Listens for changes to audio players in the system. The `PlayerEvent` parameter of `callback` is a [notification event](#PlayerEvent). The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to stop listening.
+Listens for changes to audio players in the system. The `callback` parameter `PlayerEvent` is the [notification event](#PlayerEvent). The ID returned by this method can be used with the [`unsubscribe()`](#unsubscribe) method to remove the listener.
 
-Type signature of `PlayerEvent`:
+Type signature for `PlayerEvent`:
 
 ```ts
 type PlayerEvent = {
@@ -2339,9 +2339,9 @@ type PlayerEvent = {
 
 Change event types:
 
-- `active`: The currently active player in the system has changed.  
-- `append`: A player has been added to the system.
-- `remove`: A player has been removed from the system.
+- `active`: The currently active player in the system has changed  
+- `append`: A player has been added to the system
+- `remove`: A player has been removed from the system
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
@@ -2395,11 +2395,11 @@ interface AudioPlayer {
 ```
 :::
 
-- The `AudioPlayer` object (hereinafter referred to as `audiokit.Player`) and the `AudioPlayer` object created in the `system.media` module (hereinafter referred to as `media.Player`) are different JS objects, but they manage the same player. Additionally, the `audiokit.Player` object provides more features than the `media.Player` object, such as `next()`, `previous()`, etc. Operations like `play()` executed by the user through the `audiokit.Player` object will also trigger notifications to the listeners of the `media.Player` object.
+- The `AudioPlayer` object (hereinafter referred to as `audiokit.Player`) and the `AudioPlayer` object created in the `system.media` module (hereinafter referred to as `media.Player`) are different JS objects, but they manage the same player. Additionally, the `audiokit.Player` object provides some extra functionality compared to the `media.Player` object, such as `next()`, `previous()`, etc. Operations like `play()` executed by users through the `audiokit.Player` object will also notify the listeners of the `media.Player` object.
 
 ### `src` <decl type="string" set get />
 
-Sets or reads the URL of the audio to be played. Supports [local resource paths](/framework/application/resource.md#uri-和路径) and network resource paths using HTTP and HTTPS protocols (e.g., `https://www.rt-thread.com/service/test/001.mp3`). Below is a simple example of setting `src` and starting playback:
+Sets or gets the URL of the audio to be played. Supports [local resource paths](/framework/application/resource.md#uri-和路径) and network resource paths using HTTP and HTTPS protocols (e.g., `https://www.rt-thread.com/service/test/001.mp3`). Below is a simple example of setting the src and starting playback:
 
 ```ts
 import audiokit from '@system.audiokit'
@@ -2408,7 +2408,7 @@ let player = audiokit.getActivePlayer()
 if (player != null) {
   // First, stop the currently playing audio
   player.stop()
-  // Set the audio URL to play
+  // Set the audio URL to be played
   player.src = 'https://www.rt-thread.com/service/test/001.mp3'
   // Start playing audio
   player.play()
@@ -2417,7 +2417,7 @@ if (player != null) {
 
 ### `name` <decl type="string" set get />
 
-The name of the player object. If not set, defaults to the name of the application that created the player. Note that the player object's name is not guaranteed to be globally unique and cannot be used to uniquely identify a player object.
+The name of the player object. If not set, it defaults to the name of the application that created the player. Note that the player object name is not globally unique, and names cannot be used to uniquely identify player objects.
 
 ### `icon` <decl type="string" set get />
 
@@ -2425,12 +2425,12 @@ The icon URL of the player object. Supports [local resource paths](/framework/ap
 
 ### `mode` <decl type="string" set get />
 
-Playback mode. The functionality corresponding to this property should be implemented by the player application; the player object does not process it by default and only provides the property.
+Playback mode. The functionality corresponding to this property should be implemented by the player application; the player object does not process it by default and only provides this property.
 
 - `sequential`: Sequential playback  
 - `random`: Random playback  
-- `singleloop`: Single-track loop  
-- `listloop`: Playlist loop  
+- `singleloop`: Single track loop  
+- `listloop`: List loop  
 
 ### `status` <decl type="string" get />
 
@@ -2438,17 +2438,17 @@ Reads the current playback status.
 
 - `play`: Playing status  
 - `pause`: Paused status  
-- `stop`: Stopped status  
+- `stop`: Stopped status 
 - `ended`: Playback ended status  
 - `error`: Playback error status  
 
 ### `duration` <decl type="number" get />
 
-Total duration of the audio, in seconds.
+Total audio duration in seconds.
 
 ### `position` <decl type="number" set get />
 
-Current playback time position of the audio, in seconds.
+Current audio playback position in seconds.
 
 ### `songAttribute` <decl type="songAttribute" set get />
 
@@ -2457,12 +2457,12 @@ Song attribute object.
 ::: details Type Signature
 ```ts
 type songAttribute = {
-  title: string; // Title of the song
-  artist: string; // Name of the performer, can be an individual or a band
+  title: string; // Song title
+  artist: string; // Performer's name, can be an individual or a band
   album: string; // Name of the album the song belongs to
   year: string; // Release year of the song
   genre: string; // Genre of the song, such as pop, rock, classical, etc.
-  track: string; // Track number in the album, e.g., "1/12" means track 1 of 12
+  track: string; // Current track number in the album, e.g., "1/12" means track 1 of 12
   coverArt: string; // URL of the song cover image
   lyrics: string; // URL of the lyrics text
   comments: string; // Additional information, such as copyright notes
@@ -2470,7 +2470,7 @@ type songAttribute = {
 ```
 :::
 
-Like the `AudioPlayer` object, the `songAttribute` object is a Proxy object, meaning it cannot be serialized/deserialized with JSON, nor can it be referenced in a reactive framework. Below is a simple usage example:
+Like the AudioPlayer object, the songAttribute object is a Proxy object, meaning it cannot be serialized/deserialized with JSON, nor can it be referenced in a reactive framework. Below is a simple usage example:
 
 ```ts
 // Set the song title
@@ -2483,22 +2483,22 @@ console.dir(this.player.songAttribute.title)
 
 ### `volume` <decl type="number" set get />
 
-Current volume of the player, range: [0.0, 1.0].
+Current player volume, range: [0.0, 1.0].
 
 ### `nextAvailable` <decl type="bool" set get />
 
-Sets or queries whether switching to the next track is available.
+Sets or queries whether skipping to the next track is available.
 
 ### `prevAvailable` <decl type="bool" set get />
 
-Sets or queries whether switching to the previous track is available.
+Sets or queries whether skipping to the previous track is available.
 
 ### `play` <decl type="(): void" method />
 
-Starts playing the audio specified in the `src` property.
+Starts playing the audio specified in the src property.
 
-- If the `src` property is not set before calling this method, playback will fail and trigger the `onerror` event.
-- This method is synchronous. After executing this interface, you need to wait for the `onplay` event or `onerror` event to determine whether playback succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
+- If the src property is not set before calling this method, playback will fail and trigger the onerror event;
+- This method is a synchronous interface. After executing this interface, you need to wait for the onplay event or onerror event to determine whether the playback succeeded or failed. Other operations executed before the event is triggered will be ignored;  
 
 Below is a simple example of calling the `play()` interface:
 
@@ -2509,7 +2509,7 @@ let player = audiokit.getActivePlayer()
 if (player != null) {
   // First, stop the currently playing audio
   player.stop()
-  // Set the audio URL to play
+  // Set the audio URL to be played
   player.src = 'https://www.rt-thread.com/service/test/001.mp3'
   // Set the onplay event
   player.onplay = () => { console.dir("Started playing") }
@@ -2522,33 +2522,33 @@ if (player != null) {
 
 ### `pause` <decl type="(): void" method />
 
-Pauses the playback of the current audio.  
+Pauses the currently playing audio.  
 
-- This method is synchronous. After executing this interface, you need to wait for the `onpause` event or `onerror` event to determine whether pausing succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
+- This method is a synchronous interface. After executing this interface, you need to wait for the onpause event or onerror event to determine whether the pause succeeded or failed. Other operations executed before the event is triggered will be ignored;  
 
 ### `stop` <decl type="(): void" method />
 
-Stops audio playback. Playback can be resumed using `play`.  
+Stops audio playback. Playback can be resumed using play.  
 
-- This method is synchronous. After executing this interface, you need to wait for the `onstop` event or `onerror` event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored.  
+- This method is a synchronous interface. After executing this interface, you need to wait for the onstop event or onerror event to determine whether the stop succeeded or failed. Other operations executed before the event is triggered will be ignored;  
 
 ### `release` <decl type="(): void" method />
 
 Releases audio resources.  
 
-- Executing this interface will stop the playback of the current audio. You need to wait for the `onstop` event or `onerror` event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored.   
+- Executing this interface will stop playing the current audio. You need to wait for the onstop event or onerror event to determine whether the stop succeeded or failed. Other operations executed before the event is triggered will be ignored;   
 
 ### `next` <decl type="(): void" method />
 
-Notifies the player application to play the next track. Executing this interface will trigger the `onnext` event to notify the player application listening to this event, which then executes the song-switching logic.
+Notifies the player application to play the next track. Executing this interface triggers the onnext event to notify the player application listening to this event, and the player application executes the track-switching logic.
 
 ### `previous` <decl type="(): void" method />
 
-Notifies the player application to play the previous track. Executing this interface will trigger the `onprevious` event to notify the player application listening to this event, which then executes the song-switching logic.
+Notifies the player application to play the previous track. Executing this interface triggers the onprevious event to notify the player application listening to this event, and the player application executes the track-switching logic.
 
-### `requestFocus` <decl type="({acquireType: string, volumeType: string}): void" method />
+### `requestFocus` <decl type="({acquireType: string，volumeType: string}): void" method />
 
-Requests audio focus. Executing this interface will notify the underlying system to request or release audio focus, allowing the underlying system to control switching and interruption logic for different types of audio.
+Requests audio focus. Executing this interface notifies the underlying system to request or release audio focus, and the underlying system controls the switching and interruption logic for different types of audio.
 
 The `acquireType` parameter indicates the request type:
 - `gain`: Request audio focus
@@ -2557,9 +2557,9 @@ The `acquireType` parameter indicates the request type:
 The `volumeType` parameter indicates the audio type:
 - `system`: System prompts
 - `media`: Media music
-- `tts`: Voice broadcasts
+- `tts`: Text-to-speech voice broadcasts
 
-The following example demonstrates how to use `requestFocus` to request audio focus:
+The following example demonstrates how to request audio focus using the `requestFocus` function:
 ``` ts
 import audiokit from '@system.audiokit'
 // Query the active audio player in the system
@@ -2572,39 +2572,39 @@ if (player != null) {
 
 ### `releaseFocus` <decl type="(): void" method />
 
-Releases audio focus. Executing this interface will notify the underlying system to release audio focus, allowing the underlying system to control switching and interruption logic for different types of audio.
+Releases audio focus. Executing this interface notifies the underlying system to release audio focus, and the underlying system controls the switching and interruption logic for different types of audio.
 
 ### `onplay` <decl type="?: () => void" set />
 
-Callback event triggered when audio `play` succeeds.
+Callback event when audio play succeeds.
 
 ### `onpause` <decl type="?: () => void" set />
 
-Callback event triggered when audio `pause` succeeds.
+Callback event when audio pause succeeds.
 
 ### `onstop` <decl type="?: () => void" set />
 
-Callback event triggered when audio `stop` succeeds.
+Callback event when audio stop succeeds.
 
 ### `onended` <decl type="?: () => void" set />
 
-Callback event triggered when audio playback ends.
+Callback event when audio playback ends.
 
 ### `onerror` <decl type="?: () => void" set />
 
-Callback event triggered when errors occur during interfaces such as `play`, `pause`, `stop`, or `position`. When an error occurs, corresponding events like `onplay` will not be triggered.
+Callback event when an error occurs while executing interfaces such as `play`, `pause`, `stop`, or `position`. When an error occurs, corresponding events like `onplay` will not be triggered.
 
 ### `ontimeupdate` <decl type="?: () => void" set />
 
-Callback event triggered when the `position` property updates. This event is only triggered when the application is in the foreground and will stop dispatching when the application enters the background.
+Callback event triggered when the `position` property is updated. This event is only triggered when the application is in the foreground and stops dispatching when the application goes to the background.
 
 ### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
 
 Callback function when an audio interruption event occurs, notifying temporary or permanent interruption when the current audio is preempted by audio of the same or another type.
 
 The `interruptHint` parameter of `action` indicates the type of interruption event:
-- `1`: Transient interruption (can recover automatically, e.g., music being interrupted by a notification)
-- `2`: Permanent interruption (cannot recover automatically, e.g., NetEase Cloud Music being interrupted by Ximalaya)
+- `1`: Transient interruption (can recover automatically, e.g., music interrupted by a notification)
+- `2`: Permanent interruption (cannot recover automatically, e.g., NetEase Cloud Music interrupted by Himalaya)
 
 The following example demonstrates how to register the `oninterrupt` callback function, which will be called when the event occurs:
 ``` js
@@ -2639,7 +2639,7 @@ Callback event when the song attribute object changes.
 
 ### `onposition` <decl type="?: () => void" set />
 
-Callback event when setting the current audio playback time position via `position` succeeds.
+Callback event when setting the current audio playback position via `position` succeeds.
 
 ### `onrequestfocus` <decl type="?: () => void" set />
 
@@ -2678,15 +2678,15 @@ Creates an [`AudioPlayer`](#audioplayer-object) object.
 
 Creates an [`AudioRecorder`](#audiorecorder-object) object.
 
-Developers need to declare the access permission for `watch.permission.RECORD` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare the application's access permission for `watch.permission.RECORD` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ### `setVolume` <decl type="(volume: number): void" method />
 
-Sets the system media volume. The `volume` parameter is a value between $[0.0, 1.0]$. This property is used to control the system media volume, and its specific functionality depends on the platform implementation. Adjusting the volume should preferably use the `volume` property of the `AudioPlayer` object.
+Sets the system media volume. The `volume` parameter is a volume value between $[0.0, 1.0]$. This property is used to control the system media volume, and its specific function depends on the platform implementation. Adjusting the volume should prioritize using the `volume` property of the `AudioPlayer` object.
 
 ### `getVolume` <decl type="(): number" method />
 
-Gets the system media volume. The result is a value between $[0.0, 1.0]$. This property is used to get the system media volume, and its specific functionality depends on the platform implementation. Getting the volume should preferably use the `volume` property of the `AudioPlayer` object.
+Gets the system media volume. The result is a volume value between $[0.0, 1.0]$. This property is used to retrieve the system media volume, and its specific function depends on the platform implementation. Getting the volume should prioritize using the `volume` property of the `AudioPlayer` object.
 
 ## `AudioPlayer` Object
 
@@ -2739,7 +2739,7 @@ interface AudioPlayer {
 
 ### `src` <decl type="string" set get />
 
-Sets or reads the URL of the audio to be played. Supports [local resource paths](/framework/application/resource.md#uri-and-paths) and network resource paths using http and https protocols (e.g., `https://www.rt-thread.com/service/test/001.mp3`). Below is a simple example of setting the src and starting playback:
+Sets or reads the URL of the audio to be played. Supports [local resource paths](/framework/application/resource.md#uri-and-paths) and network resource paths using HTTP and HTTPS protocols (e.g., `https://www.rt-thread.com/service/test/001.mp3`). Below is a simple example of setting `src` and starting playback:
 
 ```ts
 import media from '@system.media'
@@ -2753,7 +2753,7 @@ player.play()
 
 ### `name` <decl type="string" set get />
 
-The name of the player object. If not set, it defaults to the name of the application that created the player. Note that the name of the player object is not globally unique, and you cannot use the name to identify a player object.
+The name of the player object. If not set, it defaults to the name of the application that created the player. Note that the player object's name is not globally unique, and you cannot use the name to identify a player object.
 
 ### `icon` <decl type="string" set get />
 
@@ -2761,11 +2761,11 @@ The icon URL of the player object. Supports [local resource paths](/framework/ap
 
 ### `mode` <decl type="string" set get />
 
-Playback mode. The functionality corresponding to this property should be implemented by the player application. The player object does not handle it by default and only provides this property.
+Playback mode. The functionality corresponding to this property should be implemented by the player application; the player object does not process it by default and only provides the property.
 
 - `sequential`: Sequential playback  
-- `random`: Shuffle playback  
-- `singleloop`: Single track loop  
+- `random`: Random playback  
+- `singleloop`: Single-track loop  
 - `listloop`: List loop  
 
 ### `status` <decl type="string" get />
@@ -2784,7 +2784,7 @@ Total duration of the audio, in seconds.
 
 ### `position` <decl type="number" set get />
 
-Current audio playback time position, in seconds.
+Current playback time position of the audio, in seconds.
 
 ### `openSystemNotification` <decl type="bool" set get />
 
@@ -2801,16 +2801,16 @@ type songAttribute = {
   artist: string; // Name of the performer, can be an individual or a band
   album: string; // Name of the album the song belongs to
   year: string; // Release year of the song
-  genre: string; // Genre of the song, e.g., pop, rock, classical, etc.
-  track: string; // Current song number in the album, e.g., "1/12" means track 1 of 12
+  genre: string; // Genre of the song, such as pop, rock, classical, etc.
+  track: string; // Current track number in the album, e.g., "1/12" means track 1 of 12
   coverArt: string; // URL of the song cover image
   lyrics: string; // URL of the lyrics text
-  comments: string; // Additional information, such as copyright notes
+  comments: string; // Additional information, such as copyright remarks
 }
 ```
 :::
 
-Like the AudioPlayer object, the songAttribute object is a Proxy object, meaning it cannot be serialized or deserialized using JSON, nor can it be referenced within a reactive framework. Below is a simple usage example:
+Like the `AudioPlayer` object, the `songAttribute` object is a Proxy object, meaning it cannot be serialized/deserialized using JSON, nor can it be referenced within a reactive framework. Below is a simple usage example:
 
 ```ts
 // Set the song title
@@ -2823,7 +2823,7 @@ console.dir(this.player.songAttribute.title)
 
 ### `volume` <decl type="number" set get />
 
-Current volume of the player, range: [0.0, 1.0].
+Current volume of the player, range: $[0.0, 1.0]$.
 
 ### `nextAvailable` <decl type="bool" set get />
 
@@ -2835,12 +2835,12 @@ Sets or queries whether switching to the previous track is available.
 
 ### `play` <decl type="(): void" method />
 
-Starts playing the audio specified in the src property.
+Starts playing the audio specified in the `src` property.
 
-- If the src property is not set before calling this method, playback will fail and trigger the onerror event;
-- This method is a synchronous interface. After executing this interface, you need to wait for the onplay event or onerror event to determine whether the playback succeeded or failed. Any other operations performed before the event is triggered will be ignored;  
+- If the `src` property is not set before calling this method, playback will fail and trigger the `onerror` event;
+- This method is a synchronous interface. After executing this interface, you need to wait for the `onplay` event or `onerror` event to determine whether the playback succeeded or failed. Before these events are triggered, other executed operations will be ignored;  
 
-Below is a simple example of calling the play() interface:
+Below is a simple example of calling the `play()` interface:
 
 ```ts
 import media from '@system.media'
@@ -2858,33 +2858,33 @@ player.play()
 
 ### `pause` <decl type="(): void" method />
 
-Pauses the playback of the current audio.  
+Pauses the playback of the current audio.
 
-- This method is a synchronous interface. After executing this interface, you need to wait for the onpause event or onerror event to determine whether the pause succeeded or failed. Any other operations performed before the event is triggered will be ignored;  
+- This method is a synchronous interface. After executing this interface, you need to wait for the `onpause` event or `onerror` event to determine whether the pause succeeded or failed. Before these events are triggered, other executed operations will be ignored;  
 
 ### `stop` <decl type="(): void" method />
 
-Stops audio playback. You can resume playback using play.  
+Stops audio playback. You can replay the audio via `play`.
 
-- This method is a synchronous interface. After executing this interface, you need to wait for the onstop event or onerror event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored;  
+- This method is a synchronous interface. After executing this interface, you need to wait for the `onstop` event or `onerror` event to determine whether the stop succeeded or failed. Before these events are triggered, other executed operations will be ignored;  
 
 ### `release` <decl type="(): void" method />
 
-Releases audio resources.  
+Releases audio resources.
 
-- Executing this interface will stop the current audio playback. You need to wait for the onstop event or onerror event to determine whether stopping succeeded or failed. Any other operations performed before the event is triggered will be ignored;   
+- Executing this interface will stop the current audio playback. You need to wait for the `onstop` event or `onerror` event to determine whether the stop succeeded or failed. Before these events are triggered, other executed operations will be ignored;   
 
 ### `next` <decl type="(): void" method />
 
-Notifies the player application to play the next track. Executing this interface triggers the onnext event to notify the player application listening to this event, and the player application executes the song switching logic.
+Notifies the player application to play the next track. After executing this interface, the `onnext` event will be triggered to notify the player application listening to this event, and the player application will execute the song-switching logic.
 
 ### `previous` <decl type="(): void" method />
 
-Notifies the player application to play the previous track. Executing this interface triggers the onprevious event to notify the player application listening to this event, and the player application executes the song switching logic.
+Notifies the player application to play the previous track. After executing this interface, the `onprevious` event will be triggered to notify the player application listening to this event, and the player application will execute the song-switching logic.
 
 ### `requestFocus` <decl type="({acquireType: string, volumeType: string}): void" method />
 
-Requests audio focus. Executing this interface notifies the underlying system to request or release audio focus, and the underlying system controls the switching and interruption logic for different types of audio.
+Requests audio focus. After executing this interface, it will notify the underlying layer to request or release audio focus, and the underlying layer will control the switching and interruption logic for different types of audio.
 
 The `acquireType` parameter indicates the request type:
 - `gain`: Request audio focus
@@ -2900,25 +2900,25 @@ The following example demonstrates how the `requestFocus` function requests audi
 import media from '@system.media'
 // Create an audio player
 let player = media.createAudioPlayer()
-// Acquire audio focus for media music type
+// Request audio focus for media music type
 player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
 ```
 
 ### `releaseFocus` <decl type="(): void" method />
 
-Releases audio focus. Executing this interface notifies the underlying system to release audio focus, and the underlying system controls the switching and interruption logic for different types of audio.
+Releases audio focus. After executing this interface, it will notify the underlying layer to release audio focus, and the underlying layer will control the switching and interruption logic for different types of audio.
 
 ### `onplay` <decl type="?: () => void" set />
 
-Callback event when audio play succeeds.
+Callback event when audio `play` succeeds.
 
 ### `onpause` <decl type="?: () => void" set />
 
-Callback event when audio pause succeeds.
+Callback event when audio `pause` succeeds.
 
 ### `onstop` <decl type="?: () => void" set />
 
-Callback event when audio stop succeeds.
+Callback event when audio `stop` succeeds.
 
 ### `onended` <decl type="?: () => void" set />
 
@@ -2926,21 +2926,21 @@ Callback event when audio playback ends.
 
 ### `onerror` <decl type="?: () => void" set />
 
-Callback event when errors occur during interfaces such as `play`, `pause`, `stop`, `position`. When an error occurs, corresponding events like onplay will not be triggered.
+Callback event when errors occur during interfaces like `play`, `pause`, `stop`, `position`. When an error occurs, corresponding events like `onplay` will not be triggered.
 
 ### `ontimeupdate` <decl type="?: () => void" set />
 
-Callback event triggered when the position property is updated. This event is only triggered when the application is in the foreground and stops dispatching when the application is in the background.
+Callback event triggered when the `position` property is updated. This event is only triggered when the application is in the foreground, and dispatching will stop when the application is in the background.
 
 ### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
 
-Callback function when an audio interruption event occurs, notifying temporary or permanent interruption when the current audio is preempted by audio of the same or another type.
+Callback function when an audio interruption event occurs, notifying temporary or complete interruption when the current audio is preempted by audio of the same or different audio types.
 
 The `interruptHint` in the `action` parameter indicates the type of interruption event:
-- `1`: Brief interruption (can recover automatically, e.g., music being interrupted)
-- `2`: Complete interruption (cannot recover automatically, e.g., NetEase Cloud Music interrupted by Ximalaya)
+- `1`: Brief interruption (can resume automatically, e.g., music being interrupted)
+- `2`: Complete interruption (cannot resume automatically, e.g., NetEase Cloud Music being interrupted by Ximalaya)
 
-The following example demonstrates how to register the `oninterrupt` callback function, which is called when the event occurs:
+The following example demonstrates how to register the `oninterrupt` callback function, which will be called when the event occurs:
 ``` js
 player.oninterrupt = (action) => {
   console.log(action.interruptHint)
@@ -2957,23 +2957,23 @@ Callback event when the previous track needs to be played.
 
 ### `onrequestplay` <decl type="?: () => void" set />
 
-Callback event triggered when the underlying system needs to start playback, notifying the JS application to execute the start playback logic.
+Triggered when the underlying layer needs to start playback, notifying the JS application to execute the start playback logic.
 
 ### `onrequestpause` <decl type="?: () => void" set />
 
-Callback event triggered when the underlying system needs to pause playback, notifying the JS application to execute the pause playback logic.
+Triggered when the underlying layer needs to pause playback, notifying the JS application to execute the pause playback logic.
 
 ### `onrequeststop` <decl type="?: () => void" set />
 
-Callback event triggered when the underlying system needs to stop playback, notifying the JS application to execute the stop playback logic.
+Triggered when the underlying layer needs to stop playback, notifying the JS application to execute the stop playback logic.
 
 ### `onsongattribute` <decl type="?: () => void" set />
 
-Callback event when the song attribute object changes.
+Callback event when song attribute objects change.
 
 ### `onposition` <decl type="?: () => void" set />
 
-Callback event when setting the current audio playback position via `position` succeeds.
+Callback event when setting the current audio playback time position via `position` succeeds.
 
 ### `onrequestfocus` <decl type="?: () => void" set />
 
@@ -3032,15 +3032,15 @@ interface AudioRecorder {
 </pre></decl>
 
 Starts recording audio. The functions of the fields in the `options` parameter are:
-- `uri`: The URI of the recording file to be stored. Only the `internal` protocol is supported, and directories will be created automatically;
+- `uri`: URI of the recording file to be stored. Only the `internal` protocol is supported, and directories will be created automatically;
 - `sample`: Audio sampling rate in $\rm Hz$, defaults to $8000$;
 - `layout`: Audio data bit depth, defaults to $16$;
 - `channel`: Number of audio channels, defaults to $1$;
-- `bitrate`: Audio bitrate in $\rm kbps$, defaults to $16$. Higher bitrates yield better sound quality but larger file sizes.
-- `codec`: Audio encoding format as a string. If left blank, a suitable encoding is automatically matched based on the `format` parameter;
-- `format`: Audio container/封装 format as a string. If left blank, a suitable container is automatically matched based on the suffix of the `uri` parameter;
+- `bitrate`: Audio bitrate in $\rm kbps$, defaults to $16$. Higher bitrates yield better sound quality but larger files.
+- `codec`: Audio encoding format, string type. If left blank, a suitable encoding is automatically matched based on the `format` parameter;
+- `format`: Audio container format, string type. If left blank, a suitable container is automatically matched based on the suffix of the `uri` parameter;
 
-  The support relationships for common recording formats, encoding formats, and container formats are as follows (an empty value in the table indicates that the corresponding parameter can be left blank):
+  The support relationships for common recording formats, encoding formats, and container formats are as follows ("None" in the table indicates that the corresponding parameter can be left blank):
 
   | Common Recording Formats | codec (Encoding Format) | format (Container Format) |
   | ------------------------ | ----------------------- | ------------------------- |
@@ -3050,7 +3050,7 @@ Starts recording audio. The functions of the fields in the `options` parameter a
   | opus-ogg                 | opus                    | ogg                       |
   | silk                     | silk                    | None                      |
 
-Here is sample code to start recording:
+Example code for starting a recording:
 
 ``` js
 let recorder = media.createAudioRecord()
@@ -3064,7 +3064,7 @@ recorder.start({
 ```
 
 ::: info
-For more descriptions regarding the `internal` URI protocol, please refer to the [Resource Access](/framework/application/resource.md) documentation.
+For more descriptions about the `internal` URI protocol, please refer to the [Resource Access](/framework/application/resource.md) documentation.
 :::
 
 After recording is complete, please call the [stop()](#stop-1) method to end the recording.
@@ -3076,11 +3076,11 @@ After recording is complete, please call the [stop()](#stop-1) method to end the
 }): void
 </pre></decl>
 
-Reads the recorded audio data (each read retrieves all available data from the end of the previous read up to the current moment).
+Reads recorded audio data (each read retrieves all available data from the end of the last read up to the present).
 
 ### `stop` <decl type="(): void" method />
 
-Stops recording audio. After calling this interface, other modules can read the audio file recorded by the [`start()`](#start) method (specified by the `uri` parameter).
+Stops audio recording. After calling this interface, other modules can read the audio file recorded by the [`start()`](#start) method (specified by the `uri` parameter).
 
 ### `release` <decl type="(): void" method />
 
@@ -3088,15 +3088,15 @@ Releases audio recording resources.
 
 ### `onstart` <decl type="?: () => void" set />
 
-Callback event after recording starts.
+Callback event after recording `start`.
 
 ### `onstop` <decl type="?: () => void" set />
 
-Callback event after recording stops.
+Callback event after recording `stop`.
 
 ### `onrelease` <decl type="?: () => void" set />
 
-Callback event after recording is released.
+Callback event after recording `release`.
 
 ### `onavailable` <decl type="(data: ArrayBuffer) => void" set />
 
@@ -3104,7 +3104,7 @@ Callback event when new data is generated after recording starts.
 
 ### `onerror` <decl type="?: () => void" set />
 
-Callback event when errors occur during `start`, `stop`, or `release` events. When an error occurs, corresponding events like onstart will not be triggered.
+Callback event when errors occur during `start`, `stop`, or `release` events. When an error occurs, corresponding events like `onstart` will not be triggered.
 
 ## Examples
 
@@ -3118,7 +3118,7 @@ async function record() {
   // Create a recording object
   let record = media.createAudioRecord()
   console.log('start record')
-  // Only the uri parameter is provided; other parameters use default values
+  // Only the uri parameter is provided, other parameters use default values
   await record.start({
     uri: 'internal://tmp/test.mp3'
   })
@@ -3131,9 +3131,9 @@ async function record() {
 record()
 ```
 
-When the `record()` function is called, it creates a recording object, starts recording, and stops recording after 3 seconds. The recording will be saved to the `internal://tmp/test.mp3` file and encoded in MP3 format.
+Calling the `record()` function creates a recording object, starts recording, and stops recording after 3 seconds. The recording will be saved to the `internal://tmp/test.mp3` file and encoded in MP3 format.
 
-This example only passes the `uri` parameter to the [`AudioPlayer.start()`](#start) method; `sample`, `layout`, `channel`, and `bitrate` all use their default configurations.
+This example only passes the `uri` parameter to the [`AudioPlayer.start()`](#start) method, while `sample`, `layout`, `channel`, and `bitrate` all use default configurations.
 
 ::: tip
 When using the simulator, you can find and play the recording file in the application's data directory. The file path corresponding to `internal://tmp/test.mp3` is `.glyphix-work/image/{device}/data/temp/{app-id}/test.mp3`, where `{device}` and `{app-id}` are the device name and application name during simulation.
@@ -3161,7 +3161,7 @@ Gets the current language setting of the application. The return value is a stri
 ============================================================
 FILE_PATH: src/transl/EN/api/system-cipher.md
 
-# Cipher Algorithm
+# Cryptographic Algorithms
 
 ## Import Module
 
@@ -3184,20 +3184,20 @@ import cipher from '@system.cipher'
   }): Promise&lt;{ text: string }>
 </pre></decl>
 
-`aes` encryption and decryption. The functions of each field in the `options` parameter are as follows:
+`aes` encryption and decryption. The functions of the fields in the `options` parameter are as follows:
 - `action`: The type of encryption or decryption, with two optional values: `'encrypt'` for encryption, and `'decrypt'` for decryption;
-- `text`: The text content to be encrypted or decrypted. Text to be encrypted should be plain text, and text to be decrypted should be binary data encoded in `base64`;
-- `key`: The key used for encryption or decryption, generated as a string after `base64` encoding. Before being decoded from `base64`, the key must be a multiple of $16$ bytes;
-- `transformation`: The encryption mode (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) and padding scheme for the `AES` algorithm, defaulting to `'AES/CBC/PKCS5Padding'`. The available AES padding options are:
+- `text`: The text content to be encrypted or decrypted. The text to be encrypted should be plain text, while the text to be decrypted should be binary values encoded in `base64`;
+- `key`: The key used for encryption or decryption, generated as a base64-encoded string. Before base64 decoding, the key length must be a multiple of $16$ bytes;
+- `transformation`: The encryption mode (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) and padding scheme for the `AES` algorithm. The default is `'AES/CBC/PKCS5Padding'`. Available AES padding options are:
   - `'PKCS5Padding'`
   - `'PKCS7Padding'`
   - `'NoPadding'`
   - `'OneAndZerosPadding'`
   - `'ZerosAndLenPadding'`
   - `'ZerosPadding'` 
-- `iv`: The initialization vector (IV) for AES encryption/decryption, as a Base64-encoded string, defaulting to the value of the `key` field;
-- `ivOffset`: The initialization vector offset for AES encryption/decryption, defaulting to $0$;
-- `ivLen`: The byte length of the initialization vector for AES encryption/decryption, defaulting to $16$;
+- `iv`: The initialization vector (IV) for AES encryption/decryption, represented as a Base64-encoded string. The default value is the value of the `key` field;
+- `ivOffset`: The initialization vector offset for AES encryption/decryption. The default value is $0$;
+- `ivLen`: The byte length of the initialization vector for AES encryption/decryption. The default value is $16$;
 
 ::: details Sample Code
 
@@ -3228,7 +3228,7 @@ async function AesTest() {
   console.log(`decrypto text: ${decrypt.text}`)
 }
 
-AesTest() // Print the encrypted and decrypted text, console output
+AesTest() // Print encrypted and decrypted text, output to console
 // encrypt text: yI4dWJzQNCQfXq5P8du1dtYWZuBvbl9F9Vh15Fh9qjg=
 // decrypto text: this is a test project!
 ```
@@ -3246,9 +3246,9 @@ AesTest() // Print the encrypted and decrypted text, console output
 
 `rsa` encryption and decryption. The functions of the fields in the `options` parameter are as follows:
 - `action`: The type of encryption or decryption, with two optional values: `'encrypt'` for encryption, and `'decrypt'` for decryption;
-- `text`: The text content to be encrypted or decrypted. The text to be decrypted should be binary data encoded in Base64;
-- `key`: The `RSA` key, which is a string generated after `base64` encoding. When encrypting, `key` is the public key; when decrypting, `key` is the private key;
-- `transformation`: The padding scheme of the RSA algorithm, defaulting to `RSA/None/OAEPwithSHA-256andMGF1Padding`. The available RSA padding options are:
+- `text`: The text content to be encrypted or decrypted. The text to be decrypted should be binary values encoded in Base64;
+- `key`: The `RSA` key, generated as a base64-encoded string. When encrypting, `key` is the public key; when decrypting, `key` is the private key;
+- `transformation`: The padding scheme for the RSA algorithm, defaulting to `RSA/None/OAEPwithSHA-256andMGF1Padding`. Available RSA padding options are:
   - `'PKCS_v15andMGF1Padding'`
   - `'OAEPwithMD5andMGF1Padding'`
   - `'OAEPwithSHA-1andMGF1Padding'`
@@ -3296,7 +3296,7 @@ async function rsaTest() {
   console.log(`decrypt text: ${decrypt.text}`)
 }
 
-rsaTest() // Print the encrypted and decrypted text, console output sample
+rsaTest() // Print encrypted and decrypted text, console output sample
 // encrypt text: FF+4R3iJ9pjeozZ6/Oulz9LUBH/uGQbIesJ7JbYRWvxGIHpJKNiEB+4MT/JcKs8ddN/ZQ4ts+YWMgUeglRBugRx+T4kqq0rKBdQrYdiMP58deCViSJjXJS+joPppwLDPL1Lg0VxpW89B+gA1jfC+9N8tvEHPhcX+nF8uAKRcW0M=
 // decrypt text: this is a Rsa test.
 ```
@@ -3311,10 +3311,10 @@ rsaTest() // Print the encrypted and decrypted text, console output sample
 }): Promise&lt;{ sign: string }>
 </pre></decl>
 
-`sign` signature. The functions of each field in the `options` parameter are as follows:
+`sign` for digital signatures. The functions of the fields in the `options` parameter are as follows:
 - `text`: The content to be signed;
 - `key`: The RSA private key;
-- `algorithm`: The signature algorithm, defaulting to `'SHA256withRSA'`. The available signature algorithms are:
+- `algorithm`: The signature algorithm, defaulting to `'SHA256withRSA'`. Available signature algorithms are:
   - `'MD5withRSA'`
   - `'SHA1withRSA'`
   - `'SHA256withRSA'`
@@ -3374,10 +3374,10 @@ signTest()
 }): Promise&lt;string | ArrayBuffer>
 </pre></decl>
 
-`hash` encryption. The functions of each field in the `options` parameter are as follows:
+`hash` encryption (hashing). The functions of the fields in the `options` parameter are as follows:
 - `data`: The raw data used to generate the digest;
 - `algorithm`: The digest algorithm, with optional values `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `encode`: The encoding and type of the returned data, with optional values:
+- `encode`: The encoding and type of the returned data, with possible values:
   - `'hex'`: Default value, returns a hex-encoded string;
   - `'base64'`: Returns a Base64-encoded string of the encryption result;
   - `'arraybuffer'`: Returns data of type ArrayBuffer;
@@ -3392,7 +3392,7 @@ async function md5Test(){
   })
   console.log(res)
 }
-md5Test() // Print the generated digest, console output
+md5Test() // Print the generated digest, output to console
 // output：5d41402abc4b2a76b9719d911017c592
 ```
 :::
@@ -3407,11 +3407,11 @@ md5Test() // Print the generated digest, console output
 }): Promise&lt;string | ArrayBuffer>
 </pre></decl>
 
-Generates a keyed-hash message authentication code (HMAC) using the HMAC algorithm. The functions of each field in the `options` parameter are as follows:
+Generates a keyed-hash message authentication code (HMAC) using the HMAC algorithm. The functions of the fields in the `options` parameter are as follows:
 - `data`: The raw data used to generate the digest;
-- `algorithm`: The digest algorithm, with optional values `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `key`: The key;
-- `encode`: The encoding and type of the returned data, with optional values:
+- `algorithm`: The digest algorithm, optional values are `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
+- `key`: The secret key;
+- `encode`: The encoding and type of the returned data, with possible values:
   - `'hex'`: Default value, returns a hex-encoded string;
   - `'base64'`: Returns a Base64-encoded string of the encryption result;
   - `'arraybuffer'`: Returns data of type `ArrayBuffer`;
@@ -3427,18 +3427,18 @@ async function hmacTest() {
   })
   console.log(res)
 }
-hmacTest() // Print the generated digest, console output
+hmacTest() // Print the generated digest, output to console
 // output：6fce0a55cf8bae80e2cf479b50035f773491c5ad
 ```
 :::
 
 ### `base64Encode` <decl type="(data: string | ArrayBuffer): Promise&lt;string>" method />
 
-Performs Base64 encoding on the input data.
+Encodes input data into Base64 format.
 
 ### `base64Decode` <decl type="(data: string | ArrayBuffer): Promise&lt;ArrayBuffer>" method />
 
-Performs Base64 decoding on the input data.
+Decodes input data from Base64 format.
 
 ::: details Sample Code
 
@@ -3461,7 +3461,7 @@ async function base64Test() {
   console.log('Decoded Data:', decodedData);
 }
 
-base64Test()  // Print the results of encoding and decoding
+base64Test()  // Print the encoding and decoding results
 // Encoded Data: SGVsbG8sIFdvcmxkIQ==
 // Decoded Data: Hello, World!
 ```
@@ -3494,11 +3494,11 @@ Gets the screen brightness mode.
 
 ### `setMode` <decl type="(mode: number): void" method />
 
-Sets the screen brightness mode. When `number` is set to `0`, it is standard mode; when `number` is set to `1`, it is automatic mode.
+Sets the screen brightness mode. When `number` is set to `0`, it is standard mode; when `number` is set to $1$, it is automatic mode.
 
 ### `setKeepScreenOn` <decl type="(mode: Boolean): void" method />
 
-Sets whether to keep the screen on. When `mode` is set to `true`, the screen stays on; when `mode` is set to `false`, the screen is no longer kept on.
+Sets whether to keep the screen on. When `mode` is set to `true`, the screen stays on; when `mode` is set to `false`, the screen-on state is canceled.
 
 ### `wakeScreenOn`
 <decl method><pre>
@@ -3508,22 +3508,22 @@ Sets whether to keep the screen on. When `mode` is set to `true`, the screen sta
 }): void
 </pre></decl>
 
-Turns the screen on or off. The fields of the `options` parameter are as follows:
-- `screenOn`: Whether to turn on the screen
-- `timeout`: Automatic screen-off time, leaving it blank means no time limit
+Turns the screen on or off. The functions of the fields in the `options` parameter are as follows:
+- `screenOn`: Whether to turn on the screen.
+- `timeout`: Automatic screen-off time. If left blank, there is no time limit.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/README.md
 
 # API
 
-Glyphix provides a full set of runtime JavaScript APIs, including browser-like APIs such as [`setInterval`](timer.md) and [`console`](console.md), as well as various system capability interfaces essential for building the entire application.
+Glyphix provides a complete set of runtime JavaScript APIs, including browser-like APIs such as [`setInterval`](timer.md) and [`console`](console.md), as well as various system capability interfaces essential for implementing the entire application.
 
-However, unlike the browser environment, Glyphix does not provide DOM interfaces. Therefore, it lacks objects like `window` and `document`, and cannot perform any DOM operations.
+However, unlike the browser environment, Glyphix does not provide DOM interfaces. Therefore, objects like `window` and `document` do not exist, and no DOM operations can be performed.
 
 ## QuickApp Asynchronous Interfaces
 
-Glyphix supports the Watch QuickApp standard, but we primarily use Promise-style asynchronous interfaces rather than callback-style ones. For example, the callback pattern for the `file.readText()` interface in Watch QuickApp is used like this:
+Glyphix supports the Watch QuickApp standard, but we primarily use Promise-style asynchronous interfaces rather than callback-style ones. For example, the callback pattern for the `file.readText()` interface in Watch QuickApps is used like this:
 ``` js
 import file from '@system.file'
 
@@ -3537,7 +3537,7 @@ file.readText({
   }
 })
 ```
-However, the Promise style is commonly used in Glyphix:
+However, in Glyphix, the Promise style is commonly used:
 ``` js
 import file from '@system.file'
 
@@ -3549,7 +3549,7 @@ try {
   console.error('read text failed:', e)
 }
 ```
-Since Promise-style APIs better align with modern usage habits established after the ES6 standard, this documentation only retains the type signatures for the Promise version.
+Since Promise-style APIs better align with modern usage habits post-ES6, this documentation only retains the type signatures for the Promise version.
 
 ### Promise vs. Callback Interfaces
 
@@ -3562,20 +3562,20 @@ type CallbackAPI = (options: {
   // Other parameters...
 }) => void
 ```
-Whereas Promise-style asynchronous interfaces have the following type:
+While Promise-style asynchronous interfaces have the following type:
 ``` ts
 type PromiseAPI = (options: any) => Promise<any>
 ```
 
-When any `success`, `fail`, or `complete` property is present in the `options` parameter, the API will automatically use the callback function style (with no return value); otherwise, it will use the Promise return value style.
+When any `success`, `fail`, or `complete` property is present in the `options` parameter, the API automatically uses the callback function style (with no return value); otherwise, it uses the Promise return value style.
 
 ::: warning
-When using the callback function style, asynchronous APIs do not return any value, so the `await` syntax cannot be used. Therefore, make sure not to pass any `success`, `fail`, or `complete` callback functions when using the Promise/`await` syntax.
+When using the callback function style, the asynchronous API does not return any value, making it impossible to use the `await` syntax. Therefore, make sure not to pass any `success`, `fail`, or `complete` callback functions when using the Promise/`await` syntax.
 :::
 
 ### API Examples
 
-Taking the [`system.file`](system-file.md) module as an example, all of its functions support both Promise and callback styles of asynchronous invocation modes. The code snippet below provides a comparison of the two API usages.
+Taking the [`system.file`](system-file.md) module as an example, all of its functions support both Promise and callback styles of asynchronous invocation patterns. The code snippet below compares the two API usages.
 
 ::: code-tabs#js
 
@@ -3599,7 +3599,7 @@ readFile()
 import file from '@system.file'
 
 file.readText({ uri: '/app.js' })
-  .then(console.log) // Tip: The type of console.log() matches Promise.then(), so arrow functions are not required
+  .then(console.log) // Tip: The console.log() type matches Promise.then(), so arrow functions are not needed
   .fail((error) => console.log(`${error.message}: ${error.code}`))
 ```
 
@@ -3624,10 +3624,10 @@ file.readText({
 
 :::
 
-This documentation will only provide Promise-style API types, and examples of asynchronous operations will exclusively use the await/async syntax.
+This documentation will only provide Promise-style API types, and examples of asynchronous operations will exclusively use the `await`/`async` syntax.
 
 ::: tip
-Developers are not recommended to additionally wrap Glyphix APIs, especially manually wrapping their callback-compatible styles into Promise modes. This practice requires writing extra code and will hurt performance.
+Developers are not recommended to write additional wrappers around Glyphix APIs, especially manually wrapping their callback-compatible styles into Promise patterns. This practice requires writing extra code and will hurt performance.
 :::
 
 ## Subscription Interfaces
@@ -3643,7 +3643,7 @@ FILE_PATH: src/transl/EN/api/system-storage.md
 
 The data storage module `system.storage` allows applications to store their own data, which is persistently saved in the application's storage object. Data stored in `system.storage` will be cleared when the application is uninstalled.
 
-`system.storage` stores data in the form of key-value pairs, where the key must be a string, and the value is a JSON value (or a JavaScript value that can be serialized to JSON).
+`system.storage` stores data in the form of key-value pairs, where the key must be a string, and the value is a JSON value (or a JavaScript value that can be serialized into JSON).
 
 ## Import Module
 
@@ -3655,15 +3655,15 @@ import storage from '@system.storage'
 
 ### `get` <decl type="(key: string): any" method />
 
-Gets the value corresponding to the key `key` in the storage. Returns `undefined` if the key-value pair does not exist.
+Gets the value corresponding to the key name `key` in the storage. Returns `undefined` if the key-value pair does not exist.
 
 ### `set` <decl type="(key: string, value: any): void" method />
 
-This method accepts a key `key` and a value `value` as parameters and adds this key-value pair to the storage. If the key already exists, its corresponding value is updated.
+This method accepts a key name `key` and a value `value` as parameters and adds this key-value pair to the storage. If the key name already exists, its corresponding value is updated.
 
 ### `delete` <decl type="(key: string): boolean" method />
 
-Deletes the key-value pair corresponding to the key `key` from the storage. Returns `true` if the key-value pair exists and is successfully deleted.
+Deletes the key-value pair corresponding to the key name `key` in the storage. Returns `true` if the key-value pair exists and is successfully deleted.
 
 ### `clear` <decl type="(): void" method />
 
@@ -3678,11 +3678,11 @@ FILE_PATH: src/transl/EN/api/global.md
 
 ### `encodeURIComponent` <decl type="(str: string): string" function />
 
-The `encodeURIComponent()` global function is used to encode a URI component `str`. It escapes certain special characters into their corresponding UTF-8 percentage (`%`) escape sequences, ensuring that the component can be correctly interpreted when used as part of a URL, particularly in query string parameters, paths, or fragments.
+The `encodeURIComponent()` global function is used to encode a URI component `str`. It escapes certain special characters into their corresponding UTF-8 percentage (`%`) escape sequences. This ensures that the component can be correctly interpreted when used as part of a URL, particularly within query string parameters, paths, or fragments.
 
-Letters, numbers, and `- _ . ! ~ * ' ( )` are not encoded. Other characters are encoded into percentage escape sequences (for example, a space is encoded as `%20`).
+Letters, numbers, and `- _ . ! ~ * ' ( )` are not encoded. Other characters are encoded into percentage escape sequences (for example, spaces are encoded as `%20`).
 
-The behavior of `encodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the Web.
+`encodeURIComponent()` behaves identically to the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -3692,9 +3692,9 @@ console.log(encodeURIComponent("https://example.com/page?id=100"));
 
 ### `decodeURIComponent` <decl type="(str: string): string" function />
 
-The `decodeURIComponent()` global function is used to decode a URI component `str` encoded by `encodeURIComponent()`. It converts percentage (`%`)-encoded sequences back to their original character forms, thereby restoring the original URI component. For example, it converts `%20` back to a space.
+The `decodeURIComponent()` global function is used to decode a URI component `str` that was encoded by `encodeURIComponent()`. It converts percentage (`%`)-encoded escape sequences back into their original character forms, thereby restoring the original URI component. For example, it converts `%20` back into a space.
 
-The behavior of `decodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) in the Web.
+`decodeURIComponent()` behaves identically to the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -3712,7 +3712,7 @@ The return value is an object containing the following fields:
 - `path: string`: The path field parsed from the parameter;
 - `query: string`: The query field parsed from the parameter;
 - `origin: string`: The original URI string from the parameter;
-- `toString: () => string`: This method can re-encode the object back into a URI string.
+- `toString: function`: This method can re-encode this object back into a URI string.
 
 For example:
 ``` js
@@ -3743,17 +3743,17 @@ FILE_PATH: src/transl/EN/api/console.md
 
 # Console Module
 
-The functionality of the `console` module is similar to the `console` feature in browsers and is used for logging. This module can be used directly without importing, and all properties are bound to the `console` global variable, for example:
+The functionality of the `console` module is similar to the `console` feature in browsers, used for logging. This module can be used directly without importing. All properties are bound to the `console` global variable, for example:
 ``` js
 console.log('Hello world!')
 ```
 
 
-## Interface Definitions
+## API Definitions
 
 ### `backtrace` <decl type="boolean" />
 
-When `backtrace` is set to `true`, all log outputs will include call stack information. The default value is `false`, in which case only `console.warn()` and higher-level APIs will output the call stack.
+When `backtrace` is set to `true`, all log printouts will include call stack information. The default value is `false`, in which case only `console.warn()` and higher-level APIs will output the call stack.
 
 ### `log` <decl type="(...data: any[]): void" method />
 
@@ -3767,7 +3767,7 @@ When `backtrace` is set to `true`, all log outputs will include call stack infor
 
 ### `error` <decl type="(...data: any[]): void" method />
 
-## Log Filtering Level
+## Log Filtering Levels
 
 The log filtering level of the `console` module is determined by the underlying system's log filtering mechanism and cannot be configured in JavaScript code.
 
@@ -3782,7 +3782,7 @@ FILE_PATH: src/transl/EN/api/system-sensor.md
 import sensor from '@system.sensor';
 ```
 
-Developers need to declare access to `watch.permission.ACCESS_SENSORS` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare the application's access permission to `watch.permission.ACCESS_SENSORS` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ## Interface Definitions
 
@@ -3794,11 +3794,11 @@ Developers need to declare access to `watch.permission.ACCESS_SENSORS` in the [`
 }): number
 </pre></decl>
 
-Listens for changes in accelerometer data. The functions of the fields in the `options` parameter are:
+Listens for changes in accelerometer sensor data. The functions of the fields in the `options` parameter are as follows:
 - `interval`: Listening frequency, defaults to `'normal'`. Available values are:
-  - `'game'`: Game mode, frequency is 20ms/time;
-  - `'ui'`: UI mode, frequency is 60ms/time;
-  - `'normal'`: Normal mode, frequency is 200ms/time.
+  - `'game'`: Game mode, with a frequency of 20ms/time;
+  - `'ui'`: UI mode, with a frequency of 60ms/time;
+  - `'normal'`: Normal mode, with a frequency of 200ms/time.
 - `callback`: Accelerometer data update callback. The signature of the accelerometer data type `AccelerometerValue` is as follows:
   ``` ts
   type AccelerometerValue = {
@@ -3817,13 +3817,13 @@ const id = sensor.subscribeAccelerometer({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeAccelerometer(id)
 ```
 
 ### `unsubscribeAccelerometer` <decl type="(id: number): void" method/>
 
-Cancels listening for accelerometer data. The `id` parameter is the listening ID returned by the [`subscribeAccelerometer`](#subscribeaccelerometer) method.
+Cancels listening to accelerometer sensor data. The `id` parameter is the listening ID returned by the [`subscribeAccelerometer`](#subscribeaccelerometer) method.
 
 ### `subscribeCompass`
 <decl method><pre>
@@ -3832,17 +3832,17 @@ Cancels listening for accelerometer data. The `id` parameter is the listening ID
 }): number
 </pre></decl>
 
-Listens for changes in compass data. Returns the listening ID, which is used to cancel listening. The functions of the fields in the `options` parameter are:
+Listens for changes in compass data. Returns the listening ID, which is used to cancel listening. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Compass data change callback.
 
 `CompassValue` signature:
 ``` ts
   type CompassValue = {
-    direction: number   // Angle between the y-axis and the geomagnetic North Pole (in radians)
+    direction: number   // Angle between the y-axis and the geomagnetic north pole (in radians)
     accuracy: number    // Accuracy
   }
 ```
-- `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic North Pole, with a value range of $(-\pi,\pi]$, where:
+- `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic north pole, with a value range of $(-\pi,\pi]$, where:
   - `0`: True North
   - $\pi$` / 2` (approx. 1.57): True East
   - $\pi$ (approx. 3.14): True South
@@ -3852,7 +3852,7 @@ Listens for changes in compass data. Returns the listening ID, which is used to 
   - `2`: Medium accuracy
   - `1`: Low accuracy
   - `0`: Unreliable (reason unknown)
-  - `-1`: Unreliable (sensor disconnected)
+  - `-1`: Unreliable (sensor lost connection)
 
 Example:
 ```js
@@ -3862,23 +3862,23 @@ const id = sensor.subscribeCompass({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeCompass(id)
 ```
 
 ### `unsubscribeCompass`<decl type="(id: number): void" method/>
 
-Cancels listening for compass data. The `id` parameter is the listening ID returned by the [`subscribeCompass`](#subscribecompass) method.
+Cancels listening to compass data. The `id` parameter is the listening ID returned by the [`subscribeCompass`](#subscribecompass) method.
 
 ### `calibrationCompass` <decl type="(): Promise<void>" method/>
 
-Starts the compass calibration process. When the compass accuracy is low, guide the user to perform actions and call this method to calibrate the compass.
+Starts the compass calibration process. When the compass accuracy is low, guide the user to operate and call this method to calibrate the compass.
 
 This function returns a Promise object with no result, which is resolved when the system completes the calibration.
 
 ### `getCompassValue` <decl type="(): Promise<CompassValue>" method/>
 
-Gets the current compass data. Returns an asynchronous result containing a Promise object of type `CompassValue`, which includes compass direction and accuracy information.
+Gets the current compass data. Returns an asynchronous result containing a Promise object of type `CompassValue` with compass direction and accuracy information.
 
 ### `subscribeStepCounter`
 <decl method><pre>
@@ -3887,7 +3887,7 @@ Gets the current compass data. Returns an asynchronous result containing a Promi
 }): number
 </pre></decl>
 
-Listens for changes in step counter sensor data. The functions of the fields in the `options` parameter are:
+Listens for changes in step counter sensor data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Step counter data change callback. The signature of the step counter data type `StepCounterValue` is as follows:
   ``` ts
   type StepCounterValue = {
@@ -3903,13 +3903,13 @@ const id = sensor.subscribeStepCounter({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeStepCounter(id)
 ```
 
 ### `unsubscribeStepCounter` <decl type="(id: number): void" method/>
 
-Cancels listening for step counter sensor data. The `id` parameter is the listening ID returned by the [`subscribeStepCounter`](#subscribestepcounter) method.
+Cancels listening to step counter sensor data. The `id` parameter is the listening ID returned by the [`subscribeStepCounter`](#subscribestepcounter) method.
 
 ### `subscribeOnBodyState`
 <decl method><pre>
@@ -3918,7 +3918,7 @@ Cancels listening for step counter sensor data. The `id` parameter is the listen
 }): number
 </pre></decl>
 
-Listens for changes in the device on-body (wearing) state. The functions of the fields in the `options` parameter are:
+Listens for changes in the device on-body state. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Device on-body state change callback. The signature of the device on-body state data type `OnBodyStateValue` is as follows:
   ``` ts
   type OnBodyStateValue = {
@@ -3934,13 +3934,13 @@ const id = sensor.subscribeOnBodyState({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeOnBodyState(id)
 ```
 
 ### `unsubscribeOnBodyState` <decl type="(): void" method/>
 
-Cancels listening for the on-body state. The `id` parameter is the listening ID returned by the [`subscribeOnBodyState`](#subscribeonbodystate) method.
+Cancels listening to the on-body state. The `id` parameter is the listening ID returned by the [`subscribeOnBodyState`](#subscribeonbodystate) method.
 
 ### `getOnBodyState` <decl type="(): Promise<OnBodyStateValue>" method/>
 
@@ -3961,13 +3961,13 @@ async function getOnBodyStat() {
 }): number
 </pre></decl>
 
-Listens for changes in gyroscope data. The functions of the fields in the `options` parameter are:
+Listens for changes in gyroscope data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Gyroscope data change callback. The signature of the gyroscope data type `GyroscopeValue` is as follows:
   ``` ts
   type GyroscopeValue = {
-    x: number   // Angular velocity around the x-axis
-    y: number   // Angular velocity around the y-axis
-    z: number   // Angular velocity around the z-axis
+    x: number   // Angular velocity along the x-axis
+    y: number   // Angular velocity along the y-axis
+    z: number   // Angular velocity along the z-axis
   }
   ```
 
@@ -3979,13 +3979,13 @@ const id = sensor.subscribeGyroscope({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeGyroscope(id)
 ```
 
 ### `unsubscribeGyroscope` <decl type="(id: number): void" method/>
 
-Cancels listening for gyroscope data. The `id` parameter is the listening ID returned by the [`subscribeGyroscope`](#subscribegyroscope) method.
+Cancels listening to gyroscope data. The `id` parameter is the listening ID returned by the [`subscribeGyroscope`](#subscribegyroscope) method.
 
 ### `subscribeBarometer`
 <decl method><pre>
@@ -3994,11 +3994,11 @@ Cancels listening for gyroscope data. The `id` parameter is the listening ID ret
 }): number
 </pre></decl>
 
-Listens for changes in barometer sensor data. The functions of the fields in the `options` parameter are:
+Listens for changes in barometer sensor data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Barometer data change callback. The signature of the barometer data type `BarometerValue` is as follows:
   ``` ts
   type BarometerValue = {
-    pressure: number   // Air pressure value, unit: Pa
+    pressure: number   // Barometric pressure value, unit: Pa
   }
   ```
 
@@ -4010,13 +4010,13 @@ sensor.subscribeBarometer({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeBarometer(id)
 ```
 
 ### `unsubscribeBarometer` <decl type="(id: number): void" method/>
 
-Cancels listening for the barometer sensor. The `id` parameter is the listening ID returned by the [`subscribeBarometer`](#subscribebarometer) method.
+Cancels listening to the barometer sensor. The `id` parameter is the listening ID returned by the [`subscribeBarometer`](#subscribebarometer) method.
 
 ### `subscribeWristLift`
 <decl method><pre>
@@ -4025,7 +4025,7 @@ Cancels listening for the barometer sensor. The `id` parameter is the listening 
 }): number
 </pre></decl>
 
-Listens for wrist lift events. The functions of the fields in the `options` parameter are:
+Listens for wrist lift events. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Wrist lift event listener callback.
 
 Example:
@@ -4036,17 +4036,17 @@ const id = sensor.subscribeWristLift({
   }
 });
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeWristLift(id)
 ```
 
 ### `unsubscribeWristLift` <decl type="(id: number): void" method/>
 
-Cancels listening for wrist lifts. The `id` parameter is the listening ID returned by the [`subscribeWristLift()`](#subscribewristlift) method.
+Cancels listening to wrist lifts. The `id` parameter is the listening ID returned by the [`subscribeWristLift()`](#subscribewristlift) method.
 
 ## Usage Limits
 
-When the current device does not support the corresponding sensor capability, calling the interface will directly throw an exception, and the listener will not take effect.
+If the current device does not support the corresponding sensor capability, calling the interface will directly throw an exception, and the listener will not take effect.
 Example of exception log: `the device does not support accelerometer sensor`
 
 Example of catching exception information:
@@ -4070,7 +4070,7 @@ It is recommended to unsubscribe promptly when sensor data is no longer needed. 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-configuration.md
 
-# App Configuration
+# Application Configuration
 
 ## Import Module
 
@@ -4088,19 +4088,19 @@ import configuration from '@system.configuration'
 }
 </pre></decl>
 
-Gets the current locale of the application. The system locale is used by default and may change due to settings or system locale changes.
+Obtains the current locale of the application. The system locale is used by default, which may change due to settings or changes in the system locale.
  - `language` represents the current language, such as 'zh', 'en', etc.
  - `countryOrRegion` represents the current country or region, such as 'CN', 'US', etc.
 
 ============================================================
 FILE_PATH: src/transl/EN/api/system-ble.md
 
-# Low Energy Bluetooth Module
+# Bluetooth Low Energy Module
 
 This module provides Bluetooth capabilities based on Bluetooth Low Energy (BLE) technology, supporting BLE scanning initiation as well as connections and data transmission based on the Generic Attribute Profile (GATT) (currently, only creating a `GattClient` is supported; creating a `GattServer` is not yet supported).
 
 ::: warning
-Most APIs in `@system.bluetooth.ble` are [Promise asynchronous operations](#Promise异步操作), which are fundamentally different from synchronous IO access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
+Most APIs in `@system.bluetooth.ble` are [Promise-based asynchronous operations](#Promise异步操作), which are fundamentally different from synchronous I/O access. Please make sure you understand the basic concepts of asynchronous programming and are familiar with the usage of Promises and `async/await`.
 :::
 
 ## Importing the Module
@@ -4112,10 +4112,10 @@ import ble from '@system.bluetooth.ble'
 ## Permissions
 
 ::: tip
-Applications using this module need to declare the permission: `watch.permission.BLUETOOTH`
+Using this module requires declaring the following permission in the application: `watch.permission.BLUETOOTH`
 :::
 
-## ble Interface Definition
+## BLE Interface Definitions
 
 ### `ResultCode`
 
@@ -4136,7 +4136,7 @@ Result enumeration returned in Promises
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Starts scanning, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Starts scanning using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of starting a scan:
 ```ts
@@ -4162,7 +4162,7 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Stops scanning, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Stops scanning using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of stopping a scan:
 ```ts
@@ -4185,18 +4185,18 @@ export default {
 
 ### `ScanResult`
 
-This object is used to represent the reported scan results. Its type signature is as follows:
+This object is used to represent the reported scan results, with the following type signature:
 
 ```ts
 /**
- * Scan result object definition
+ * Definition of the scan result object
  */
 type ScanResult = {
     deviceId: string; // Device ID (e.g., "AA:BB:CC:DD:EE:FF")
     rssi: number; // Signal strength in dBm
-    data: ArrayBuffer; // Advertisement packet raw data
+    data: ArrayBuffer; // Raw advertising packet data
     deviceName: string; // Device name (if available)
-    connectable: boolean; // Whether connectable, true means connectable
+    connectable: boolean; // Whether connectable, true indicates connectable
 }
 ```
 
@@ -4205,10 +4205,10 @@ type ScanResult = {
 (): Promise&lt;Array&lt;ScanResult&gt;&gt;
 </pre></decl>
 
-Queries scan results, using a Promise asynchronous callback. This interface asynchronously returns an array containing [`ScanResult`](#scanresult) objects (i.e., `Array<`[`ScanResult`](#scanresult)`>`).
+Queries scan results using a Promise-based asynchronous callback. This interface asynchronously returns an array containing [`ScanResult`](#scanresult) objects (i.e., `Array<`[`ScanResult`](#scanresult)`>`).
 
 ::: warning
-Since the underlying Bluetooth adapter is a singleton, multiple applications may operate Bluetooth devices simultaneously. This can lead to a situation where: App A starts scanning for a period of time, and then App B starts scanning again. In this case, the scan results listened to by App B will be incomplete. To handle this scenario, it is recommended that all applications query the current scan results immediately after starting a scan.
+Since the underlying Bluetooth adapter is a singleton, multiple applications may operate Bluetooth devices simultaneously. This can lead to a scenario where: App A starts scanning for a period of time, and then App B starts scanning again. In this case, the scan results monitored by App B will be incomplete. To handle this situation, it is recommended that all applications immediately query the current scan results after starting a scan.
 :::
 
 Here is an example of querying scan results after starting a scan:
@@ -4236,7 +4236,7 @@ export default {
 ### `subscribeScanStatus`
 <decl type="(callback: Callback<{ scan: boolean }> => void): number" method/>
 
-Subscribes to scan status changes, using a Callback asynchronous callback. When the scan status changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+Subscribes to scan status changes using a Callback-based asynchronous callback. When the scan status changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - `scan`: Current scan status. `true` indicates scanning is in progress, `false` indicates scanning has stopped.
@@ -4283,10 +4283,10 @@ export default {
 ### `subscribeBLEDeviceFind`
 <decl type="(callback: Callback<ScanResult> => void): number" method/>
 
-Subscribes to scan result reporting events, using a Callback asynchronous callback. Whenever a new device is scanned, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+Subscribes to scan result reporting events using a Callback-based asynchronous callback. Whenever a new device is scanned, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 ::: tip
-Scan results are reported in incremental mode, meaning one device is reported as soon as it is discovered. After listening to this event, users need to store the scan results themselves.
+Scan results are reported in an incremental mode—each discovered device is reported as it is found. After listening to this event, users need to store the scan results themselves.
 :::
 
 Description of callback function parameter fields:
@@ -4335,7 +4335,7 @@ export default {
 
 ### `GattClientDevice`
 
-This object is used to represent the Client object in the GATT protocol. Its type signature is as follows:
+This object is used to represent the Client object in the GATT protocol, with the following type signature:
 
 ```ts
 /**
@@ -4367,10 +4367,10 @@ type GattClientDevice = {
 
 ### `createGattClientDevice` <decl type="(deviceId: string): GattClientDevice" method />
 
-Creates a [`GattClientDevice`](#gattclientdevice) instance representing the client side in a GATT connection. This interface synchronously returns a [`GattClientDevice`](#gattclientdevice) instance.
+Creates a [`GattClientDevice`](#gattclientdevice) instance, representing the client side in a GATT connection. This interface synchronously returns a [`GattClientDevice`](#gattclientdevice) instance.
 
  - Through this instance, you can operate client-side behaviors, such as calling [`connect`](#connect) to initiate a connection to the peer device, and calling [`getServices`](#getservices) to retrieve all service capabilities supported by the peer device.
- - The `deviceId` (device address) required to create this instance represents the server-side device address. You can obtain the server-side device address via the [`startBLEScan`](#startblescan) interface, and you must ensure that the server-side device's BLE advertisement is connectable.
+ - The `deviceId` (device address) required to create this instance represents the server-side device address. You can obtain the server-side device address via the [`startBLEScan`](#startblescan) interface, and you must ensure that the server-side device's BLE advertising is connectable.
 
 Here is an example of creating a [`GattClientDevice`](#gattclientdevice) instance:
 ```ts
@@ -4387,16 +4387,16 @@ export default {
 }
 ```
 
-## GattClientDevice Interface Definition
+## GattClientDevice Interface Definitions
 
 ### `connect`
 <decl method><pre>
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client actively initiates a GATT protocol connection with the server Bluetooth device, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client actively initiates a GATT protocol connection with the server Bluetooth device, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
- - Before using the methods of this class, you need to construct an instance of this class via the [`createGattClientDevice`](#creategattclientdevice) method.
+ - Before using the methods of this class, you must construct an instance of this class via the [`createGattClientDevice`](#creategattclientdevice) method.
  - By creating different instances of this class, you can manage multiple GATT connections.
 
 Here is an example of initiating a GATT protocol connection:
@@ -4428,7 +4428,7 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client actively disconnects the GATT protocol connection with the server Bluetooth device, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client actively disconnects the GATT protocol connection with the server Bluetooth device, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 Here is an example of disconnecting a GATT protocol connection:
 ```ts
@@ -4473,16 +4473,16 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-Closes the client instance, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+Closes the client-side instance using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 ### `getDeviceName`
 <decl method><pre>
 (): Promise&lt;string&gt;
 </pre></decl>
 
-The client retrieves the name of the remote BLE device, using a Promise asynchronous callback. This interface asynchronously returns a device name of type `<string>`.
+The client retrieves the name of the remote BLE device using a Promise-based asynchronous callback. This interface asynchronously returns a device name of type `<string>`.
 
-Here is an example of retrieving the device name after a successful GATT connection:
+Here is an example of getting the device name after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -4506,17 +4506,17 @@ export default {
 
 ### `GattService`
 
-This object is used to represent the GATT service structure. Its type signature is as follows:
+This object is used to represent the GATT service structure, with the following type signature:
 
 ```ts
 /**
- * GATT service structure definition, which can contain multiple BLECharacteristic values and other dependent services.
+ * Definition of the GATT service structure, which can contain multiple BLECharacteristics and other dependent services.
  */
 type GattService = {
-    serviceUuid: string; // Service UUID, identifying a GATT service. Example: 00001888-0000-1000-8000-00805f9b34fb.
-    isPrimary: boolean; // Whether it is a primary service. true means primary service, false means secondary service.
+    serviceUuid: string; // Service UUID, identifying a GATT service. For example: 00001888-0000-1000-8000-00805f9b34fb.
+    isPrimary: boolean; // Whether it is a primary service. true indicates a primary service, false indicates a secondary service.
     characteristics: Array<BLECharacteristic>; // List of characteristics contained in the current service.
-    includeServices: Array<GattService>; // Other services depended upon by the current service.
+    includeServices: Array<GattService>; // Other services depended on by the current service.
 }
 ```
 
@@ -4525,9 +4525,9 @@ type GattService = {
 (): Promise&lt;Array&lt;GattService&gt;&gt;
 </pre></decl>
 
-The client retrieves all services of the BLE device (service discovery), using a Promise asynchronous callback. This interface asynchronously returns an array of type `Array<`[`GattService`](#gattservice)`>` containing all services.
+The client retrieves all services of the BLE device (service discovery) using a Promise-based asynchronous callback. This interface asynchronously returns an array of type `Array<`[`GattService`](#gattservice)`>` containing all services.
 
-Here is an example of retrieving all services of the device after a successful GATT connection:
+Here is an example of getting all services of the device after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -4551,31 +4551,31 @@ export default {
 
 ### `GattProperties`
 
-This object is used to represent the properties supported by a GATT characteristic. Its type signature is as follows:
+This object is used to represent the properties supported by a GATT characteristic, with the following type signature:
 
 ```ts
 /**
  * Describes the properties supported by a GATT characteristic. Determines how the characteristic content and descriptors are used and accessed.
  */
 type GattProperties = {
-    write: boolean; // Whether the characteristic supports write operations. true means supported, and a response from the peer device is required when written; false means not supported.
-    writeNoResponse: boolean; // Whether the characteristic supports write operations. true means supported, and no response from the peer device is required when written; false means not supported.
-    read: boolean; // Whether the characteristic supports read operations. true means supported, false means not supported.
-    notify: boolean; // Whether the characteristic supports actively notifying the peer device of its content. true means supported, and the peer device does not need to reply with a confirmation; false means not supported.
-    indicate: boolean; // Whether the characteristic supports indicating its content to the peer device. true means supported, and the peer device needs to reply with a confirmation; false means not supported.
-    broadcast: boolean; // Whether the characteristic supports being sent by the server as broadcast content. true means supported, and the server can carry the characteristic content in the advertisement packet as ServiceData; false means not supported.
-    authenticatedSignedWrite: boolean; // Whether the characteristic supports authenticated signed write operations, replacing encryption with signature verification of the written content. true means supported, false means not supported.
-    extendedProperties: boolean; // Whether the characteristic has extended properties. true means extended properties exist, false means they do not.
+    write: boolean; // Whether this characteristic supports write operations. true indicates support, and the peer device needs to send a response when written; false indicates no support.
+    writeNoResponse: boolean; // Whether this characteristic supports write operations. true indicates support, and no response is needed from the peer device when written; false indicates no support.
+    read: boolean; // Whether this characteristic supports read operations. true indicates support, false indicates no support.
+    notify: boolean; // Whether this characteristic supports actively notifying the peer device of its content. true indicates support, and the peer device does not need to send an acknowledgment; false indicates no support.
+    indicate: boolean; // Whether this characteristic supports indicating its content to the peer device. true indicates support, and the peer device needs to send an acknowledgment; false indicates no support.
+    broadcast: boolean; // Whether this characteristic supports being sent by the server as advertising data. true indicates support, and the server can carry the characteristic content as ServiceData in the advertising packet; false indicates no support.
+    authenticatedSignedWrite: boolean; // Whether this characteristic supports signed write operations, replacing the encryption process with signature verification of the written content. true indicates support, false indicates no support.
+    extendedProperties: boolean; // Whether the characteristic has extended properties. true indicates extended properties exist, false indicates they do not.
 }
 ```
 
 ### `BLECharacteristic`
 
-This object is used to represent a GATT characteristic. Its type signature is as follows:
+This object is used to represent a GATT characteristic, with the following type signature:
 
 ```ts
 /**
- * GATT characteristic type definition, the core data unit of the GattService
+ * GATT characteristic type definition, which is the core data unit of the GattService
  */
 type BLECharacteristic = {
     serviceUuid: string; // Service UUID to which the characteristic belongs, e.g., 00001888-0000-1000-8000-00805f9b34fb
@@ -4583,7 +4583,7 @@ type BLECharacteristic = {
     characteristicValue: ArrayBuffer; // Data content of the characteristic, used when reading/writing data
     descriptors: Array<BLEDescriptor>; // List of descriptors contained in the characteristic
     properties: GattProperties; // Properties supported by the characteristic
-    characteristicValueHandle: number; // Unique identifier handle of the characteristic. When the server BLE device provides multiple characteristics with the same UUID, this handle can be used to distinguish between them
+    characteristicValueHandle: number; // Unique identification handle of the characteristic. When the server BLE device provides multiple characteristics with the same UUID, this handle can be used to distinguish between them
 }
 ```
 
@@ -4592,7 +4592,7 @@ type BLECharacteristic = {
 (characteristic: BLECharacteristic): Promise&lt;BLECharacteristic&gt;
 </pre></decl>
 
-The client reads data from a specified server characteristic, using a Promise asynchronous callback. This interface asynchronously returns an object of type [`BLECharacteristic`](#blecharacteristic).
+The client reads data from a specified server characteristic using a Promise-based asynchronous callback. This interface asynchronously returns an object of type [`BLECharacteristic`](#blecharacteristic).
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be read.
 
@@ -4606,7 +4606,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async read() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -4625,7 +4625,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to read only the first characteristic of the first service; modify as needed if reading other characteristics
+            // For testing, we only try to read the first characteristic of the first service. Modify as needed to read other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Read the specified characteristic
@@ -4644,18 +4644,18 @@ export default {
 
 Characteristic write type enumeration
 
-- `1`: After writing to the characteristic, the peer Bluetooth device is required to reply with a confirmation.
-- `2`: After writing to the characteristic, the peer Bluetooth device is not required to reply.
+- `1`: After writing to the characteristic, the peer Bluetooth device needs to send an acknowledgment response.
+- `2`: After writing to the characteristic, the peer Bluetooth device does not need to respond.
 
 ### `writeCharacteristicValue`
 <decl method><pre>
 (characteristic: BLECharacteristic, writeType: GattWriteType): Promise&lt;number&gt;
 </pre></decl>
 
-The client writes data to a specified server characteristic, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client writes data to a specified server characteristic using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be written.
- - This interface requires passing a [`GattWriteType`](#gattwritetype) enumeration value to indicate the data write mode.
+ - This interface requires passing a [`GattWriteType`](#gattwritetype) enumeration value to indicate the data writing mode.
 
 Here is an example of writing data to a specified characteristic after a successful GATT connection:
 ```ts
@@ -4676,7 +4676,7 @@ export default {
     },
 
     async write() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -4695,12 +4695,12 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Write to the specified characteristic
         if (this.gattClient && this.characteristic) {
-            // Generate an ArrayBuffer of the specified length carrying random numbers
+            // Generate an ArrayBuffer of the specified length containing random numbers
             let value = this.randomArrayBuffer(15)
             this.characteristic.characteristicValue = value
             await this.gattClient.writeCharacteristicValue(this.characteristic, 1).then((result) => {
@@ -4719,18 +4719,18 @@ export default {
 
 ### `BLEDescriptor`
 
-This object represents a GATT descriptor, and its type is defined as follows:
+This object represents a GATT descriptor, with the following type definition:
 
 ```ts
 /**
- * GATT descriptor type definition, a data unit of the BLECharacteristic, used to describe additional information and properties of the characteristic
+ * GATT descriptor type definition, which is a data unit of the BLECharacteristic, used to describe additional information and properties of the characteristic
  */
 type BLEDescriptor = {
     serviceUuid: string; // Service UUID to which the characteristic belongs, e.g., 00001888-0000-1000-8000-00805f9b34fb
     characteristicUuid: string; // Characteristic UUID, e.g., 00002a11-0000-1000-8000-00805f9b34fb
     descriptorUuid: string; // Descriptor UUID, e.g., 00002902-0000-1000-8000-00805f9b34fb
     descriptorValue: ArrayBuffer; // Data content of the descriptor, used when reading/writing data
-    descriptorHandle: number; // Unique identifier handle of the descriptor. When the server BLE device provides multiple descriptors with the same UUID, this handle can be used to distinguish between them.
+    descriptorHandle: number; // Unique identification handle of the descriptor. When the server BLE device provides multiple descriptors with the same UUID, this handle can be used to distinguish between them.
 }
 ```
 
@@ -4739,7 +4739,7 @@ type BLEDescriptor = {
 (descriptor: BLEDescriptor): Promise&lt;BLEDescriptor&gt;
 </pre></decl>
 
-The client reads data from a specified server descriptor, using a Promise asynchronous callback. This interface asynchronously returns an object of type [`BLEDescriptor`](#bledescriptor).
+The client reads data from a specified server descriptor using a Promise-based asynchronous callback. This interface asynchronously returns an object of type [`BLEDescriptor`](#bledescriptor).
 
  - This interface requires passing an object of type [`BLEDescriptor`](#bledescriptor) to indicate which descriptor needs to be read.
 
@@ -4753,7 +4753,7 @@ export default {
     gattClient: null,
     descriptor: null,
     async read() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -4773,8 +4773,8 @@ export default {
         });
         console.dir("gatt client found:" + JSON.stringify(this.services))
         if (this.services.length > 0) {
-            // Test tries to read only the first descriptor of the first characteristic of the first service; modify as needed if reading other descriptors.
-            // Note that not all characteristics have descriptors. You can adjust this yourself to select a service with descriptors and read/write permissions for testing.
+            // For testing, we only try to read the first descriptor of the first characteristic of the first service. Modify as needed.
+            // Note that not all characteristics have descriptors. You can adjust this to select services that have descriptors and read/write permissions for testing.
             this.descriptor = this.services[0].characteristics[0].descriptors[0];
         }
         // 4. Read the specified descriptor
@@ -4794,7 +4794,7 @@ export default {
 (descriptor: BLEDescriptor): Promise&lt;number&gt;
 </pre></decl>
 
-The client writes data to a specified server descriptor, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client writes data to a specified server descriptor using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLEDescriptor`](#bledescriptor) to indicate which descriptor needs to be written.
 
@@ -4817,7 +4817,7 @@ export default {
     },
 
     async write() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -4837,8 +4837,8 @@ export default {
         });
         console.dir("gatt client found:" + JSON.stringify(this.services))
         if (this.services.length > 0) {
-            // Test tries to operate only on the first descriptor of the first characteristic of the first service; modify as needed if operating on other descriptors.
-            // Note that not all characteristics have descriptors. You can adjust this yourself to select a service with descriptors and read/write permissions for testing.
+            // For testing, we only try to operate on the first descriptor of the first characteristic of the first service. Modify as needed.
+            // Note that not all characteristics have descriptors. Adjust accordingly to test services with descriptors and read/write permissions.
             this.descriptor = this.services[0].characteristics[0].descriptors[0];
         }
         // 4. Write to the specified descriptor
@@ -4864,9 +4864,9 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client retrieves the Received Signal Strength Indication (RSSI) of the GATT connection link, using a Promise asynchronous callback. This interface asynchronously returns a signal strength of type `<string>` in units of dBm.
+The client retrieves the Received Signal Strength Indication (RSSI) of the GATT connection link using a Promise-based asynchronous callback. This interface asynchronously returns a signal strength of type `<string>` `<number>`, unit: dBm.
 
-Here is an example of retrieving the device signal strength after a successful GATT connection:
+Here is an example of getting the device signal strength after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -4875,7 +4875,7 @@ export default {
     },
     gattClient: null,
     async rssi() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         if (this.gattClient) {
             await this.gattClient.getRssiValue().then((rssi) => {
@@ -4891,9 +4891,9 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client retrieves the MTU (Maximum Transmission Unit) size of the GATT connection link, using a Promise asynchronous callback. This interface asynchronously returns a length of type `<number>` in units of bytes.
+The client retrieves the MTU (Maximum Transmission Unit) size of the GATT connection link using a Promise-based asynchronous callback. This interface asynchronously returns a length of type `<number>`, unit: bytes.
 
-Here is an example of retrieving the GATT connection link MTU (Maximum Transmission Unit) size after a successful GATT connection:
+Here is an example of getting the GATT connection link MTU size after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -4902,7 +4902,7 @@ export default {
     },
     gattClient: null,
     async mtu() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         if (this.gattClient) {
             await this.gattClient.getBLEMtuSize().then((mtu) => {
@@ -4918,14 +4918,14 @@ export default {
 (): Promise&lt;number&gt;
 </pre></decl>
 
-The client negotiates the MTU (Maximum Transmission Unit) size with the server, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client negotiates the MTU (Maximum Transmission Unit) size with the server using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
 ### `setCharacteristicChangeNotification`
 <decl method><pre>
 (characteristic: BLECharacteristic, enable: boolean): Promise&lt;number&gt;
 </pre></decl>
 
-The client enables or disables the capability to receive server characteristic value change notifications, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client enables or disables the capability to receive server characteristic value change notifications, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be operated on.
  - This interface requires passing a boolean value to indicate whether to enable or disable the content change notification capability (`true` to enable, `false` to disable).
@@ -4940,7 +4940,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async notify() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -4959,7 +4959,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Operate on the specified characteristic
@@ -4968,7 +4968,7 @@ export default {
                 if (result === 0) {
                     console.log('set characteristic Notification success')
                 } else {
-                    console.log('This characteristic does not allow enabling notifications, ResultCode:' + result);
+                    console.log('This characteristic does not allow setting notification, ResultCode:' + result);
                 }
             }).catch((error) => {
                 console.error('set characteristic Notification error: ' + JSON.stringify(error))
@@ -4983,7 +4983,7 @@ export default {
 (characteristic: BLECharacteristic, enable: boolean): Promise&lt;number&gt;
 </pre></decl>
 
-The client enables or disables the capability to receive server characteristic value change indications, using a Promise asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
+The client enables or disables the capability to receive server characteristic value change indications, using a Promise-based asynchronous callback. This interface asynchronously returns a [`ResultCode`](#resultcode) to determine whether the execution succeeded or failed.
 
  - This interface requires passing an object of type [`BLECharacteristic`](#blecharacteristic) to indicate which characteristic needs to be operated on.
  - This interface requires passing a boolean value to indicate whether to enable or disable the content change indication capability (`true` to enable, `false` to disable).
@@ -4998,7 +4998,7 @@ export default {
     gattClient: null,
     characteristic: null,
     async indication() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -5017,7 +5017,7 @@ export default {
             console.dir('gatt get services error: ' + JSON.stringify(error))
         });
         if (this.services.length > 0) {
-            // Test tries to operate only on the first characteristic of the first service; modify as needed if operating on other characteristics
+            // For testing, we only try to operate on the first characteristic of the first service. Modify as needed for other characteristics.
             this.characteristic = this.services[0].characteristics[0];
         }
         // 4. Write to the specified characteristic
@@ -5026,7 +5026,7 @@ export default {
                 if (result === 0) {
                     console.log('set characteristic Indication success')
                 } else {
-                    console.log('This characteristic does not allow enabling indications, ResultCode:' + result);
+                    console.log('This characteristic does not allow setting indication, ResultCode:' + result);
                 }
             }).catch((error) => {
                 console.error('set characteristic Indication error:' + JSON.stringify(error))
@@ -5041,7 +5041,7 @@ export default {
 (callback: Callback(characteristic: BLECharacteristic) => void): number
 </pre></decl>
 
-The client subscribes to server characteristic change events. When a characteristic changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to server characteristic change events. When a characteristic changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - [`BLECharacteristic`](#blecharacteristic): The characteristic object that changed.
@@ -5056,7 +5056,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -5095,7 +5095,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -5137,7 +5137,7 @@ GATT link disconnection reason enumeration
 
 ### `BLEConnectionChangeState`
 
-This object is used to represent the Bluetooth connection state. Its type signature is as follows:
+This object is used to represent the Bluetooth connection state, with the following type signature:
 
 ```ts
 /**
@@ -5155,12 +5155,12 @@ type BLEConnectionChangeState = {
 (callback: Callback(connectionChangeState: BLEConnectionChangeState) => void): number
 </pre></decl>
 
-The client subscribes to GATT protocol connection state change events. When the connection state changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to GATT protocol connection state change events. When the connection state changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - [`BLEConnectionChangeState`](#bleconnectionchangestate): Connection state.
 
-Here is an example of subscribing to connection state changes after a successful GATT connection:
+Here is an example of subscribing to the connection state after a successful GATT connection:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -5170,7 +5170,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -5197,7 +5197,7 @@ export default {
 
 The client unsubscribes from GATT protocol connection state change events. The `subscribeId` parameter is the subscription ID returned by the [`subscribeBLEConnectionStateChange`](#subscribebleconnectionstatechange) method.
 
-Here is an example of unsubscribing from connection state changes:
+Here is an example of unsubscribing from the connection state:
 ```ts
 import ble from '@system.bluetooth.ble'
 export default {
@@ -5207,7 +5207,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Call the connect interface to initiate a connection
         await this.gattClient.connect().then(async (result) => {
@@ -5237,7 +5237,7 @@ export default {
 (callback: Callback(mtu: number) => void): number
 </pre></decl>
 
-The client subscribes to MTU (Maximum Transmission Unit) size change events. When the MTU changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscription.
+The client subscribes to MTU (Maximum Transmission Unit) size change events. When the MTU changes, the `callback` function is automatically invoked. This interface synchronously returns a subscription ID used for unsubscribing.
 
 Description of callback function parameter fields:
 - `mtu`: MTU (Maximum Transmission Unit) size.
@@ -5252,7 +5252,7 @@ export default {
     gattClient: null,
     listener: null,
     async listen() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Subscribe to MTU changes
         this.listener = this.gattClient.subscribeBLEMtuChange((mtu) => {
@@ -5279,7 +5279,7 @@ export default {
     gattClient: null,
     listener: null,
     async unlisten() {
-        // 1. Construct the gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
+        // 1. Construct gattClient instance. Please replace 'XX:XX:XX:XX:XX:XX' below with the device address you want to connect to
         this.gattClient = getGattClient('XX:XX:XX:XX:XX:XX');
         // 2. Subscribe to MTU changes
         this.listener = this.gattClient.subscribeBLEMtuChange((mtu) => {
@@ -5321,8 +5321,8 @@ const timerId = setTimeout(() => {
 
 ### `setInterval` <decl type="(callback: () => void, duration: number): number" />
 
-Sets a timer that repeatedly executes a callback function at specified intervals. Parameter descriptions:
-- `callback`: The callback function to execute every time the timer triggers;
+Sets a timer that repeatedly executes a callback function at a specified interval. Parameter descriptions:
+- `callback`: The callback function to execute each time the timer triggers;
 - `duration`: The execution interval in milliseconds.
 
 Returns a timer ID, which can be used to cancel the timer via the [`clearInterval()`](#clearinterval) method.
@@ -5342,20 +5342,20 @@ Cancels a timer set by the [`setTimeout()`](#settimeout) method. The `timerId` p
 ::: warning
 Unlike web environments, the timer ID pool in this implementation **may be reused**. Therefore, **do not** call `clearTimeout()` repeatedly on the same valid timer ID, as this may accidentally stop other running timers.
 
-It is recommended to set the timer ID to `null` after clearing it to avoid repeated clearing. `clearTimeout()` can safely accept invalid IDs such as `null` or `0`, and these calls will not produce side effects.
+It is recommended to set the timer ID to `null` after clearing it to avoid duplicate clearing. `clearTimeout()` safely accepts invalid IDs such as `null` or `0` without any side effects.
 :::
 
 Example:
 ``` js
 const timerId = setTimeout(() => {
-  console.log('This message will not be printed')
+  console.log('This message will not be logged')
 }, 1000)
 
 // Cancel the timer before it triggers
 clearTimeout(timerId)
 ```
 
-The recommended practice is to set the timer ID to null after clearing it to avoid repeatedly clearing a valid ID:
+The recommended practice is to nullify the timer ID after clearing to avoid repeatedly clearing a valid ID:
 ``` js
 export default {
   onInit() {
@@ -5369,7 +5369,7 @@ export default {
     clearTimeout(this.timerId)
   },
   someMethod() {
-    // Clear the timer and set to null
+    // Clear the timer and nullify the ID
     clearTimeout(this.timerId)
     this.timerId = null
   },
@@ -5383,7 +5383,7 @@ Cancels a timer set by the [`setInterval()`](#setinterval) method. The `timerId`
 ::: warning
 Unlike web environments, the timer ID pool in this implementation **may be reused**. Therefore, **do not** call `clearInterval()` repeatedly on the same valid timer ID, as this may accidentally stop other running timers.
 
-It is recommended to set the timer ID to `null` after clearing it to avoid repeated clearing. `clearInterval()` can safely accept invalid IDs such as `null` or `0`, and these calls will not produce side effects.
+It is recommended to set the timer ID to `null` after clearing it to avoid duplicate clearing. `clearInterval()` safely accepts invalid IDs such as `null` or `0` without any side effects.
 :::
 
 Example:
@@ -5393,38 +5393,38 @@ const timerId = setInterval(() => {
   count++
   console.log(`Execution count: ${count}`)
   if (count >= 5)
-    clearInterval(timerId) // Stop after 5 executions
+    clearInterval(timerId) // Stop after executing 5 times
 }, 500)
 ```
 
 ::: tip
-`clearInterval` and `clearTimeout` are actually two aliases for the same function, but it is recommended to use the corresponding method to keep the code clear.
+`clearInterval` and `clearTimeout` are effectively two aliases for the same function, but it is recommended to use the corresponding method to keep your code clear.
 :::
 
 ## Development Notes
 
 ### Timer ID Reuse
 
-There is an important difference between this implementation and standard web environments: **Timer IDs may be reused**.
+There is an important difference between this implementation and standard web environments: **timer IDs may be reused**.
 
-In web browsers and Node.js, every call to `setTimeout()` or `setInterval()` returns a unique, monotonically increasing ID that is never reused. Therefore, in a web environment, calling `clearTimeout()` or `clearInterval()` on an already cleared or invalid timer ID is safe and has no side effects.
+In web browsers and Node.js, each call to `setTimeout()` or `setInterval()` returns a unique, monotonically increasing ID that is never reused. Therefore, in a web environment, calling `clearTimeout()` or `clearInterval()` on an already cleared or invalid timer ID is safe and has no side effects.
 
-However, in this implementation, timer IDs come from a limited pool. When a timer is cleared or finishes execution, its ID may be reused by a newly created timer. This means that if you repeatedly clear the same ID (i.e., the number returned by `setTimeout()` or `setInterval()`), you might accidentally stop another running timer.
+However, in this implementation, timer IDs come from a limited ID pool. Once a timer is cleared or finishes execution, its ID may be reused by a newly created timer. This means that if you repeatedly clear the same ID (i.e., the number returned by `setTimeout()` or `setInterval()`), you might accidentally stop another running timer.
 
-`clearTimeout()` and `clearInterval()` can safely accept non-timer ID values such as `null`, `0`, and `undefined`, and these calls will not produce side effects.
+`clearTimeout()` and `clearInterval()` safely accept non-timer ID values such as `null`, `0`, and `undefined` without side effects.
 
-Therefore, **be sure to follow these best practices**:
+Therefore, **always follow these best practices**:
 1. Clear each timer ID only once;
-2. Set the timer ID to `null`, `0`, or `undefined` after clearing to prevent accidental repeated clearing.
+2. Set the timer ID to `null`, `0`, or `undefined` after clearing it to prevent accidental duplicate clearing.
 
-`clearTimeout()` and `clearInterval()` can safely accept non-timer ID values such as `null` and `0`, so there is no need to check for validity before calling them.
+`clearTimeout()` and `clearInterval()` safely accept non-timer ID values such as `null` and `0`, so validity checks before calling them are unnecessary.
 
 The examples in the API documentation above demonstrate the recommended practices.
 
-An exception is that you can clear a timer ID within its own `setTimeout` callback:
+As an exception, you can clear a timer ID from within its own `setTimeout` callback function:
 ``` js
 let timer = setTimeout(() => {
-  clearTimeout(timer) // This will not affect other timers, nor will it trigger warning logs
+  clearTimeout(timer) // This will not affect other timers or trigger warning logs
 }, 1000)
 ```
 
@@ -5432,20 +5432,20 @@ let timer = setTimeout(() => {
 
 Timer APIs **do not guarantee precise time intervals**, and actual execution times may vary. This is because:
 - System scheduling and performance constraints may cause timer trigger times to be inaccurate;
-- The minimum timer interval is subject to system limitations and is constantly affected by low-power policies.
+- The minimum interval for timers is subject to system limitations and is constantly influenced by low-power policies.
 
-Therefore, **do not** use timer APIs for precise timing. If you need to measure time intervals or implement timer functionality, you should use the `Date` object to obtain actual timestamps.
+Therefore, **do not** use timer APIs for high-precision timing. If you need to measure time intervals or implement a stopwatch, you should use the `Date` object to obtain actual timestamps.
 
 #### Incorrect Example: Using Timer Counts for Timing
 
-The code below attempts to calculate elapsed time by accumulating timer trigger counts, which is incorrect:
+The following code attempts to calculate elapsed time by accumulating timer triggers, which is incorrect:
 ``` js
 export default {
   data: {
-    elapsedTime: 0, // Calculate elapsed time by accumulation
+    elapsedTime: 0, // Calculating elapsed time by accumulation
   },
   onInit() {
-    // Incorrect: Assumes the timer triggers precisely once per second
+    // Incorrect: Assuming the timer triggers precisely once per second
     this.timerId = setInterval(() => {
       this.elapsedTime += 1000
     }, 1000)
@@ -5456,11 +5456,11 @@ export default {
 }
 ```
 
-The problem with this approach is that even if the set interval is $1000\rm ms$, the actual trigger interval might be $1010\rm ms$ or even longer. Cumulative errors will make the timing increasingly inaccurate. After the device enters low-power mode, timers may run with second-level precision or be suspended directly.
+The problem with this approach is that even if the set interval is $1000\rm ms$, the actual trigger interval might be $1010\rm ms$ or even longer. Cumulative errors will make the timing increasingly inaccurate. Once the device enters low-power mode, timers may run with second-level precision or be suspended altogether.
 
 #### Correct Example: Timing Using the `Date` Object
 
-The correct approach is to record the start timestamp and calculate the difference from the current time on each update:
+The correct approach is to record the start timestamp and calculate the difference from the current time upon each update:
 ``` js
 export default {
   data: {
@@ -5471,7 +5471,7 @@ export default {
     this.startTime = Date.now()
     // Use a timer to periodically update the display
     this.timerId = setInterval(() => {
-      // Get the actual elapsed time by calculating the timestamp difference
+      // Calculate the actual elapsed time using the timestamp difference
       this.elapsedTime = Date.now() - this.startTime
     }, 100) // A shorter update interval can be set to improve display smoothness
   },
@@ -5501,8 +5501,8 @@ Below is a complete stopwatch component example demonstrating how to correctly i
 ``` js
 export default {
   data: {
-    elapsedTime: 0,     // Elapsed time (milliseconds)
-    isRunning: false,   // Whether the stopwatch is running
+    elapsedTime: 0,     // Elapsed time in milliseconds
+    isRunning: false,   // Whether the timer is running
   },
   onInit() {
     this.startTime = 0       // Timestamp of the current start
@@ -5515,7 +5515,7 @@ export default {
   },
   start() {
     if (this.isRunning)
-      return // Already running, avoid restarting
+      return // Already running, avoid duplicate starts
 
     this.isRunning = true
     // Record the timestamp of the current start
@@ -5534,16 +5534,16 @@ export default {
     this.isRunning = false
     // Stop the timer
     clearInterval(this.timerId)
-    this.timerId = null // Set to null after clearing
+    this.timerId = null // Nullify after clearing
 
-    // Save accumulated time for resumption later
+    // Save the accumulated time to resume later
     this.accumulatedTime = this.elapsedTime
   },
   reset() {
     // Stop the timer
     this.isRunning = false
     clearInterval(this.timerId)
-    this.timerId = null // Set to null after clearing
+    this.timerId = null // Nullify after clearing
 
     // Reset all states
     this.elapsedTime = 0
@@ -5596,20 +5596,20 @@ export default {
 </glyphix>
 
 This example demonstrates:
-- Using `Date.now()` to get accurate timestamps and calculating the actual elapsed time via timestamp differences;
+- Using `Date.now()` to get an accurate timestamp and calculating the actual elapsed time via the timestamp difference;
 - Using `setInterval()` solely for periodically updating the UI display;
 - Correctly handling state transitions for start, pause, and reset;
-- Cleaning up timer resources when the component is destroyed.
+- Clearing timer resources when the component is destroyed.
 
 ### Preventing Memory Leaks
 
-Be sure to clear timers promptly when using them; otherwise, it may lead to memory leaks or access to already destroyed components. Clear all timers in the component's [`onDestroy()`](/framework/component/life-cycle.md) lifecycle function:
+Always ensure timely clearing of timers when using them; otherwise, it may lead to memory leaks or attempts to access already destroyed components. Clear all timers in the component's [`onDestroy()`](/framework/component/life-cycle.md) lifecycle hook:
 ``` js
 export default {
   onInit() {
     this.timerId = setTimeout(() => {
       // Perform some operations
-      this.timerId = null // Set to null after execution
+      this.timerId = null // Nullify after execution
     }, 5000)
   },
   onDestroy() {
@@ -5619,5 +5619,5 @@ export default {
 }
 ```
 
-This is especially important for periodic timers created with `setInterval()`, as they will continue to run until explicitly cancelled.
+This is particularly crucial for periodic timers created with `setInterval()`, as they will run continuously until explicitly cancelled.
 

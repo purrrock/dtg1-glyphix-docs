@@ -3,17 +3,17 @@ icon: package-variant-closed
 ---
 # Glyphix.js Packaging Tool
 
-glyphix.js is the packaging tool for Glyphix applications. It includes a command-line tool named `gx`, which can be used to create, build, and run Glyphix applications. The tool also includes a graphical simulator for running Glyphix applications on a computer.
+glyphix.js is the packaging tool for Glyphix applications. It includes a command-line tool named `gx`, which can be used to create, build, and run Glyphix applications. The tool also includes a graphical emulator to simulate running Glyphix applications on your computer.
 
 This document provides installation and usage instructions for glyphix.js. The [Getting Started](/tutorials/getting-started.md) tutorial serves as a simpler introductory guide. Please also read [Building and Running](#building-and-running) to learn how to develop, build, and publish a Glyphix application.
 
 ## Installation
 
-This section covers how to install the glyphix.js packaging tool. For general purposes, only the [npm Installation](#npm-installation) method is needed. The [Manual Installation](#manual-installation) method is suitable for special scenarios, such as restricted network environments or CI builds.
+This section describes how to install the glyphix.js packaging tool. For general purposes, you only need to know the [npm Installation](#npm-installation) method. The [Manual Installation](#manual-installation) method is suitable for special scenarios, such as network-restricted environments or CI builds.
 
 ### npm Installation
 
-You can use the [npm](https://nodejs.org) package manager to install the glyphix.js packaging tool. It is recommended to use the `-g` option for a global installation:
+You can use the [npm](https://nodejs.org) package manager to install the glyphix.js packaging tool. It is recommended to use the `-g` option for global installation:
 ::: code-tabs
 @tab npm
 ```bash
@@ -35,7 +35,7 @@ yarn global add glyphix-cli
 Before performing a global installation with pnpm, you may need to run `pnpm setup` to configure environment variables. The `pnpm install -g` command will prompt you on how to configure them.
 :::
 
-Once installed, you can run `gx --version` in your terminal to verify the installation. For example:
+Once installed, you can run `gx --version` in your terminal to check if the installation was successful. For example:
 ```bash
 $ npm install -g glyphix-cli
 $ gx --version
@@ -43,14 +43,14 @@ gx v0.10.1 - The Glyphix applet development toolchain
 commit a9337cf1 - Tue Sep 23 10:03:48 2025 +0800
 ```
 
-Additionally, [pngquant](#pngquant) must be installed to package application assets for certain devices.
+In addition, [pngquant](#pngquant) must be installed to package application assets for certain devices.
 
 ### Manual Installation
 
-You can also install glyphix.js manually from its compressed archive: add the `bin` directory from the extracted folder to your `PATH` environment variable. The installation methods for mainstream operating systems are described below.
+You can also manually install the glyphix.js packaging tool from its archive: add the `bin` directory from the extracted folder to your `PATH` environment variable. The installation methods for mainstream operating systems are introduced below.
 
 ::: tip
-The glyphix.js tool is not just a single executable file; please do not omit other resource files (including all files in the `bin` and `share` directories).
+The glyphix.js tool is not just a single executable file. Do not omit other resource files (including all files in the `bin` and `share` directories).
 :::
 
 #### macOS / Linux
@@ -75,7 +75,7 @@ sudo pacman -S xz
 ```
 :::
 
-After downloading the glyphix.js compressed archive, use the following commands to extract and install it:
+After downloading the glyphix.js archive, use the following command to extract and install it:
 ::: code-tabs
 @tab macOS
 ```bash
@@ -87,7 +87,7 @@ tar -xvJf glyphix-v0.7.2-darwin-arm64.tar.xz -C ~/.local
 tar -xvJf glyphix-v0.7.2-linux-x86_64.tar.xz -C ~/.local
 ```
 :::
-Please replace the `.tar.xz` filename with the actual downloaded filename corresponding to your operating system and CPU architecture. After extraction, commands like `gx` will be located in the `~/.local/bin` directory. Please add this directory to your `PATH` environment variable, for example, by updating `.bashrc` like this:
+Please replace the `.tar.xz` filename with the actual downloaded filename corresponding to your operating system and CPU architecture. After extraction, commands like `gx` will be located in the `~/.local/bin` directory. Add this directory to your `PATH` environment variable, for example, by updating your `.bashrc` like this:
 ```bash
 # If ~/.local/bin is not in PATH, add it
 echo "$PATH" | grep -q "$HOME/.local/bin" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -95,14 +95,14 @@ source ~/.bashrc # Reload bash configuration
 ```
 
 ::: tip
-When using `Zsh`, your `.zshrc` configuration file may import `.bashrc`, so you only need to update `.bashrc`. Otherwise, update `.zshrc` using the method above.
+When using `Zsh`, your `.zshrc` configuration file may import `.bashrc`, so updating `.bashrc` is sufficient. Otherwise, update `.zshrc` according to the method above.
 
-It is recommended to install the glyphix.js packaging tool in the user's `~/.local` directory to avoid root permissions.
+It is recommended to install the glyphix.js packaging tool in the user's `~/.local` directory to avoid installing with root privileges.
 :::
 
 #### Windows
 
-To install glyphix.js on Windows, download the corresponding Windows version archive, and use an extraction tool that supports the `7z` format (such as [7-Zip](https://www.7-zip.org/)) to extract it to a directory, such as `C:\glyphix`. Then, add `C:\glyphix\bin` to your system's [`PATH` environment variable](https://learn.microsoft.com/zh-cn/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)).
+To install glyphix.js on Windows, download the corresponding Windows version archive, and then use an extraction tool that supports the `7z` format (such as [7-Zip](https://www.7-zip.org/)) to extract it to a directory, such as `C:\glyphix`. Then add `C:\glyphix\bin` to your system's [`PATH` environment variable](https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)).
 
 You can also use the `7z` command-line tool to extract it, for example:
 ```shell
@@ -116,7 +116,7 @@ This is similar to the installation method on macOS and other systems.
 
 Linux and macOS users need to install `pngquant` additionally. You can use `npm` to install it:
 ```bash
-npm install -g pngquant-bin # pngquant-bin only supports installation via npm
+npm install -g pngquant-bin # pngquant-bin can only be installed using npm
 ```
 The Windows version of `glyphix-cli` includes `pngquant.exe`, so no additional installation is required.
 
@@ -126,13 +126,13 @@ You can also download precompiled binaries from [pngquant.org](https://pngquant.
 
 #### Linux System Dependencies
 
-The Linux installation package for glyphix.js is distro-agnostic, and currently only includes a build for the `linux-x86_64` architecture. We have tested it to run on Ubuntu 20.04 (or newer) and Arch Linux.
+The Linux installation package of glyphix.js is distro-agnostic and currently only has a `linux-x86_64` architecture build. We have tested that it runs on Ubuntu 20.04 (or newer) and Arch Linux.
 
-If you only use the `gx` command for packaging (commonly used in CI builds), headless Linux distributions should work out of the box. Running the graphical simulator relies on the X Window System, so you may need to install Xorg-related packages. Especially under a Wayland environment, you will also need to install the `xwayland` package (native Wayland is not yet supported by the simulator).
+If you only use the `gx` command for packaging (which is commonly used in CI builds), headless Linux distributions should work out of the box. Running the graphical emulator relies on the X Window System, so you may need to install xorg-related packages. Especially under a Wayland environment, you also need to install the `xwayland` package (the emulator does not yet support native Wayland).
 
 ### Uninstallation
 
-For glyphix.js installed globally via a package manager like npm, use the corresponding package manager to uninstall it, for example:
+For glyphix.js globally installed via a package manager like npm, you can use the corresponding package manager to uninstall it, for example:
 ::: code-tabs
 @tab npm
 ```bash
@@ -154,7 +154,7 @@ yarn global remove glyphix-cli
 For non-global installations using package managers like npm, simply remove the `glyphix-cli` dependency from `package.json` and run `npm install` (or `pnpm install`, `yarn install`) to update the `node_modules` directory.
 :::
 
-For manual installations, simply delete the files from the installation archive. For example, for a `tar.xz` installation on macOS and Linux:
+For manual installations, simply delete the files from the installation archive. For example, for `tar.xz` installation files on macOS and Linux:
 ```bash
 tar -tf glyphix-v0.7.2-darwin-arm64.tar.xz > filelist.txt
 cat filelist.txt # Inspect the list of files to be deleted
@@ -164,9 +164,9 @@ The `tar -tf` command lists the files in the archive. Replace `glyphix-xxx.tar.x
 
 ## Building and Running
 
-After installing glyphix.js, use the [`gx build`](#gx-build) command in the root directory of your app source code to build the app package, or use the [`gx emu`](#gx-emu) command to run the simulator.
+After installing glyphix.js, use the [`gx build`](#gx-build) command in the root directory of your application source code to build the application package, or use the [`gx emu`](#gx-emu) command to run the emulator.
 
-After building the application, refer to the [Submitting Application Packages](#submitting-application-packages) section to learn how to install the app onto a device or submit it to an app publishing platform.
+After building the application, please refer to the [Submitting Application Packages](#submitting-application-packages) section to learn how to install the application onto a device or submit it to an app publishing platform.
 
 ## Command-Line Arguments
 
@@ -174,7 +174,7 @@ After building the application, refer to the [Submitting Application Packages](#
 
 #### `gx --help`
 
-View help information. Help information can also be used with specific subcommands, for example, `gx build --help` views the help information for the `build` subcommand exclusively.
+View help information. Help information can also be used with specific subcommands, for example, using `gx build --help` to view help exclusively for the `build` subcommand.
 
 #### `gx --version`
 
@@ -182,7 +182,7 @@ The `-V --version` option is used to view the version number of the `gx` command
 
 #### `gx --verbose`
 
-`-v --verbose` enables verbose logging output, which is generally unnecessary for application developers.
+`-v --verbose` enables detailed log output. Application developers generally do not need to use this.
 
 #### `gx --numeric-version`
 
@@ -190,7 +190,7 @@ Outputs the pure numeric version number of the `gx` command, such as `0.10.1`.
 
 #### `gx --quiet`
 
-`-q --quiet` enables quiet mode, suppressing most non-warning and non-error log outputs. This includes build progress logs when using `gx build`, which is typically used in CI environments that need to build a large number of app packages.
+`-q --quiet` enables quiet mode, suppressing most non-warning and non-error log outputs. This includes build progress logs when using `gx build`. This mode is typically used in CI environments where a large number of application packages need to be built.
 
 View the version number.
 
@@ -200,7 +200,7 @@ Creates a new project. For example, `gx new myapp` creates a new project named `
 
 ### `gx build`
 
-Builds the project (default action). You can use the `--device` or `-d` option to specify the target device, for example:
+Builds the project (default operation). You can use the `--device` or `-d` option to specify the target device, for example:
 ``` bash
 gx build -d default # Specify building for the default device
 ```
@@ -213,15 +213,15 @@ The `-r --image-rules` parameter can specify the image packaging rules file, whi
 #### Command Options
 
 - `-d --device=NAME`: Specifies the target device name, which must be an installed device configuration name. You can use the `gx list device` command to view the list of installed devices. If this option is not specified, the `default` device is used.
-- `-f --full`: Forces a complete rebuild of the project instead of an incremental build.
-- `-e --emulator`: Builds the project for the emulator rather than an actual device. This option is automatically used when running the `gx emu` command.
+- `-f --full`: Forces a full rebuild of the project instead of an incremental build.
+- `-e --emulator`: Builds the project for the emulator rather than an actual device. The `gx emu` command automatically uses this option.
 - `-r --image-rules=PATH`: Specifies the image packaging rules file, defaulting to `config/image-rules.json`.
 
 #### Submitting Application Packages
 
-After building with `gx build`, a `.glyphix-work/dist/<device-name>/<package-name>` directory will be generated in your project directory, containing the built app package file (`.pkg` file). You can install this file onto a device for debugging using the mobile debug app, or submit it to an app publishing platform.
+After building with `gx build`, a `.glyphix-work/dist/<device-name>/<package-name>` directory will be generated in the project directory, containing the built application package files (`.pkg` file). You can install this file onto a device for testing via mobile debugging or submit it to an app publishing platform.
 
-You should use the `-d` option to build app packages separately for all supported devices. Here is an example directory structure:
+You should use the `-d` option to build application packages separately for all supported devices. Here is an example directory structure:
 ```bash
 .glyphix-work/dist
 ├─ generic-watch-368x448
@@ -235,14 +235,14 @@ You should use the `-d` option to build app packages separately for all supporte
       ├─ icon.png
       └─ manifest.json
 ```
-When submitting the app package, please compress and upload the **entire** `.glyphix-work/dist` directory, rather than just uploading the `.pkg` file or any single subdirectory. The platform identifies the app based on the information in `manifest.json` and may require `icon.png` as a preview icon.
+When submitting an application package, please compress and upload the **entire** `.glyphix-work/dist` directory rather than just the `.pkg` file or any single subdirectory. The platform identifies applications based on the information in `manifest.json` and may require `icon.png` as a preview icon.
 
 ::: tip
-For Linux or macOS users, you can use a command like this to package apps for a specific category of devices:
+For Linux or macOS users, you can use a command like this to package applications for a specific category of devices:
 ```bash
 gx list device | grep "^generic-" | xargs -n 1 gx build -d
 ```
-This builds app packages for all devices whose names start with `generic-`.
+This builds application packages for all devices whose names start with `generic-`.
 
 Under Windows, you can also use a similar PowerShell command for batch building:
 ```shell
@@ -252,7 +252,7 @@ gx list device | ? { $_ -match "^generic-" } | % { gx build -d $_ }
 
 ### `gx emu`
 
-See the [Simulator and Debugging](/tutorials/glyphix.js/emulator.md) documentation.
+See the [Emulator and Debugging](/tutorials/glyphix.js/emulator.md) documentation.
 
 ### `gx clean`
 
@@ -260,13 +260,13 @@ Cleans build artifacts. This command deletes the `.glyphix-work` directory under
 
 ### `gx config`
 
-This command launches a Web interface for editing image packaging rules files. Following the command prompts, you can open the page in a browser to operate. This command has two usages:
+This command starts a Web interface for editing image packaging rules files. Follow the command prompts to open the page in your browser for operation. This command has two usages:
 ``` bash
 gx config # When inside a Glyphix project, no source directory needs to be specified (currently can only be used in the project root directory)
-gx config path/to/dir # Configures the specified directory, usable for non-project image resource configuration
+gx config path/to/dir # Configures a specified directory, which can be used for configuring non-project image resources
 ```
 
-The `-r --image-rules` parameter can specify the image packaging rules file, defaulting to `config/image-rules.json`.
+The `-r --image-rules` parameter can specify the image packaging rules file, which defaults to `config/image-rules.json`.
 
 ### `gx image-forge`
 
@@ -276,17 +276,17 @@ gx image-forge src -o dist
 ```
 
 Option Descriptions:
-- `src` is the source path to convert. The `image-forge` command recursively converts all images and generates them into the target path specified by `-o, --output` (defaulting to `dist`), preserving the relative directory structure.
-- `-r --image-rules` parameter can specify the image packaging rules file, defaulting to `config/image-rules.json`.
+- `src` is the source path to be converted. The `image-forge` command recursively converts all images and generates them into the target path specified by `-o, --output` (defaults to `dist`) while maintaining the relative directory structure.
+- `-r --image-rules` parameter can specify the image packaging rules file, which defaults to `config/image-rules.json`.
 - `-d --device` specifies the target device for image conversion.
 
 ### `gx list`
 
-Lists certain information. Three operations are currently supported:
+Lists certain information. Currently supports three operations:
 ``` bash
-gx list device # Lists all installed device configurations
-gx list template # Lists all installed project templates
-gx list image # Lists relative paths of all image resources in the current directory (similar to the find command)
+gx list device # List all installed device configurations
+gx list template # List all installed project templates
+gx list image # List relative paths of all image resources in the current directory (similar to the find command)
 ```
 
 Detailed description text for certain information can be listed using `-d, --detailed`, for example:
@@ -303,11 +303,11 @@ The following devices have been found:
 
 ### `gx completion`
 
-This command is used to generate shell auto-completion scripts for the `gx` command, currently supporting [Zsh](https://www.zsh.org/) and [PowerShell 7+](https://github.com/PowerShell/PowerShell). Using `gx completion [SHELL]` outputs the auto-completion script for the specified shell (detecting the current shell if the `SHELL` argument is omitted). To install the completion script, use:
+This command is used to generate shell auto-completion scripts for the `gx` command. It currently supports [Zsh](https://www.zsh.org/) and [PowerShell 7+](https://github.com/PowerShell/PowerShell). Using `gx completion [SHELL]` outputs the auto-completion script for the specified shell (if the `SHELL` parameter is not specified, the current shell is detected). To install the completion script, use:
 ```bash
 gx completion --install
 ```
-Upon successful installation, it will prompt the installation path of the command completion script. Restarting your shell session will enable auto-completion, or you can use these commands to take effect immediately:
+After successful installation, it will prompt the installation path of the command completion script. Restarting your shell session will enable auto-completion, or you can use these commands to take effect immediately:
 ::: code-tabs
 @tab Oh My Zsh
 ```bash
@@ -320,13 +320,13 @@ Import-Module glyphix -Force
 ```
 :::
 
-When using the auto-completion script, you can select `gx emu` devices, command-line options, etc., directly in the terminal without manual typing.
+When using the auto-completion script, you can select `gx emu` devices, command-line options, etc., in the terminal without manual typing.
 
-PowerShell uses cyclic completion by default; it is recommended to change it to a completion menu:
+PowerShell uses cycle completion by default. It is recommended to change it to menu completion:
 ```shell
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 ```
-Add this command to your [`$PROFILE`](https://learn.microsoft.com/en-us/powershell/scripting/learn/shell/creating-profiles#adding-customizations-to-your-profile) configuration file to make it permanently effective.
+Adding this command to your [`$PROFILE`](https://learn.microsoft.com/en-us/powershell/scripting/learn/shell/creating-profiles#adding-customizations-to-your-profile) configuration file will make it permanent.
 
 ::: note
 If the `--install` option fails to install automatically, you can also manually install the completion script using the `gx completion` command, for example:
@@ -337,46 +337,47 @@ gx completion zsh > ~/.zsh/completion/_gx.zsh
 
 ## Default Configuration Paths
 
-Configurations, project templates, device information, and other data in the glyphix.js tool can be stored in the following paths:
-- System-level configuration: The `share/glyphix` directory relative to the parent directory of the `gx`/`gx.exe` executable. For example, assuming the `gx` executable path is `/usr/local/glyphix`, the system-level configuration resource path is `/usr/local/share/glyphix`.
+Configurations, project templates, device information, etc., in the glyphix.js tool can be stored in the following paths:
+- System-level configuration: The `share/glyphix` directory relative to the parent directory of the `gx`/`gx.exe` executable file. For example, assuming the path of the `gx` executable is `/usr/local/glyphix`, the system-level configuration resource path is `/usr/local/share/glyphix`.
 - User-level configuration: `~/.local/share/glyphix` on Unix-like systems, and `%APPDATA%\AppData\Roaming\glyphix` on Windows.
 
-Configuration files can be placed in either of these paths, with user-level configuration taking higher priority. `gx.js` comes with default configuration files bundled upon installation.
+Configuration files can be stored in either of the above paths, with user-level configuration having a higher priority. `gx.js` comes with default configuration files upon installation.
 
 ## Project Templates
 
-Project templates are stored in the `templates` directory under the configuration path. Currently, only the `simple` template is supported, and customization is not supported.
+Project templates are stored in the `templates` directory of the configuration path. Currently, only the `simple` template is supported, and customization is not supported.
 
 ## Device Configuration Files
 
-Device configuration files are stored in the `devices` directory under the configuration path. Each device has a YAML configuration file named `<device-name>.yml`. The format of the configuration file is explained below:
+Device configuration files are stored in the `devices` directory of the configuration path. Each device has a YAML configuration file named `<device-name>.yml`. The format of the configuration file is described as follows:
 
 ``` yaml
 # file: default.yml
 description:
   Device description information for developers to view.
 
-screen: # Fields describing the device screen configuration; all these fields are mandatory (affects UI layout and resource scaling)
+screen: # Fields describing device screen configuration, all of which are mandatory (affects UI layout and asset scaling)
   width: 454 # Horizontal pixels of the screen
   height: 454 # Vertical pixels of the screen
-  dpi: 326 # Pixel density of the screen, in pixels per inch
+  dpi: 326 # Pixel density of the screen, in pixels/inch
 
-ui: # Global interface configuration, all optional fields
+ui: # Global interface configuration, all are optional fields
   font-family: sans-serif # System default font family name (defaults to serif)
-  font-size: 3.5 # System default font size, in points (pt, point), note: not pixels!!
-  font-map: true # Whether to use a global font configuration mapping file. If true, the system resources must contain
-                 # a font-faces.css file
+  font-size: 3.5 # System default font size, in points (pt), note: not pixels!!
+  font-map: true # Whether to use a global font configuration mapping file. If true, font-faces.css
+                 # must exist in system resources.
 
-# Optional system global asset package path; the following configuration means the global asset package
-# is stored in a folder named default-global at the same level as default.yml. The global asset package
+# Optional path for the system's global asset package. The following configuration implies that the global 
+# asset package is stored in the `default-global` folder parallel to `default.yml`. The global asset package 
 # contains pre-installed fonts and font configuration mapping files, etc.
 global-assets: default-global
 
-# Optional image conversion script. The script file path is relative to where the current device description file is stored.
-# If no image conversion script is specified, raw PNG assets will be output during packaging, but resolution scaling will be applied.
+# Optional image conversion script. The script file path is relative to where the current device description 
+# file is stored. If not specified, original PNG assets will be output during packaging, but resolution 
+# scaling will be applied.
 image-build: image-convert.scm
 
-# Command to run the simulator, defaults to executing glyphix-emu. The simulator command's executable file
-# must be located in a directory within the PATH environment variable, otherwise execution will fail.
+# Command to run the emulator, which executes glyphix-emu by default. The emulator command's executable file 
+# must be located in a directory within the PATH environment variable, otherwise it will fail to execute.
 emulator: glyphix-emu
 ```

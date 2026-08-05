@@ -3,43 +3,43 @@ headerDepth: 2
 ---
 # Widget Development Guide
 
-In Glyphix, all visible UI elements are `Widget`s. The framework comes with built-in common controls such as buttons, labels, images, and scroll areas, but device manufacturers often need to develop customized widgets based on their product features. For example, a smart watch might customize a special list animation due to its small circular screen, while dashboard equipment requires specialized chart widgets. This document explains how to implement a new widget in C++.
+In Glyphix, all visible UI elements are `Widget` instances. The framework includes built-in common controls such as buttons, labels, images, and scroll areas, but device manufacturers often need to develop customized widgets tailored to their product features. For example, a smartwatch might customize special list animations due to a small circular screen, while dashboard equipment might require specialized chart widgets. This document describes how to implement a new widget using C++.
 
 ## Widget Basics
 
-A `Widget` is a rectangular area that has basic properties such as position, size, visibility, and opacity. It can receive events and is responsible for painting its own content. Widgets are organized in a tree structure: a parent widget contains several child widgets, and the coordinates of a child widget are relative to its parent.
+A `Widget` represents a rectangular area with basic properties such as position, size, visibility, and opacity. It can receive events and is responsible for rendering its own content. Widgets are organized in a tree structure: a parent widget contains multiple child widgets, and the coordinates of a child widget are relative to its parent widget.
 
-Each widget has a **logical update cycle**: when a widget's state changes (e.g., data updates), calling `update()` marks it as "needs repaint." The framework will uniformly repaint all marked widgets in the next render frame rather than repainting immediately—this avoids duplicate repaints within the same frame.
+Each widget has a **logical update cycle**: when a widget's state changes (for example, data is updated), calling `update()` marks it as "needs redraw". The framework then unifies the redrawing of all marked widgets on the next render frame rather than redrawing immediately—this prevents multiple redundant redraws within the same frame.
 
-### Widgets and the Component System
+### Widgets vs. Component Systems
 
-UI widgets are typically implemented as C++ classes inheriting from `Widget` and complying with standard C++ object-oriented design. Glyphix's reactive framework and component system support directly exposing these C++ widgets as native components for use in a templated, declarative manner.
+UI widgets are typically implemented as C++ classes inheriting from `Widget`, conforming to standard C++ object-oriented design. Glyphix's reactive framework and component system allow these C++ widgets to be directly exposed as native components and used in a templated, declarative manner.
 
-This design allows widget development on the C++ side and component usage on the front-end side to remain relatively independent while preserving their respective habitual development styles. For example, in C++ you can build interfaces in a way similar to LVGL or Qt Widgets without needing to adopt the popular declarative style of front-end frameworks.
+This design allows C++-side widget development and front-end component usage to remain relatively independent while preserving the customary development practices of both sides. For example, in C++ you can build interfaces using an approach similar to LVGL or Qt Widgets, without needing to adopt the popular declarative style of front-end frameworks.
 
 ### Comparison with Other Frameworks
 
-The Glyphix widget system is designed similarly to traditional C/C++ UI frameworks like Qt Widgets or LVGL. Therefore, you will find that the methods and knowledge system for developing a new widget are very similar to those frameworks:
+The design of the Glyphix widget system is similar to traditional C/C++ UI frameworks such as Qt Widgets or LVGL. Therefore, you will find that the methodology and knowledge system for developing a new widget are very similar to those frameworks:
 - Create a new widget class by inheriting from `Widget`;
 - Core mechanisms such as layout systems, event systems, and painting systems exist;
-- Data binding and event notification are implemented through the property system and signal mechanism;
-- Geometric concepts such as coordinate systems and dimensions exist, and nested widget tree structures are supported.
+- Data binding and event notifications are achieved through property systems and signal mechanisms;
+- They possess geometric concepts such as coordinate systems and dimensions, and support nested widget tree structures.
 
-::: tip Developing UI with C++ Widgets is Not Recommended
-The original design intention of Glyphix is not to develop UI directly on the C++ side; therefore, we do not provide related documentation and examples.
+::: tip Developing UIs with C++ Widgets is Not Recommended
+The original design intent of Glyphix is not to develop UIs directly on the C++ side; therefore, we do not provide related documentation and examples.
 :::
 
 ## Creating Custom Widgets
 
-This section uses a circular progress bar widget (`ProgressRing`) as an example to step-by-step illustrate the essential elements required to develop a custom widget.
+This section uses a progress ring widget (`ProgressRing`) as an example to step through the elements required to develop a custom widget.
 
 ::: tip Comprehensive Widget Example
-The [slider-demo](./widget-slider-demo.md) example included with the SDK is a complete practice of all the knowledge points in this document, including inheriting existing widgets, painting, event processing, property declaration, `ValueAnimation` animation, and `StyleEngine` customization. It is recommended to read it after reading this document.
+The [slider-demo](./widget-slider-demo.md) example included with the SDK is a complete implementation of all the knowledge points in this document, including inheriting existing widgets, painting, event handling, property declarations, `ValueAnimation` animations, and `StyleEngine` customization. It is recommended to review it after reading this document.
 :::
 
 ### Defining the Widget Class
 
-Create a new widget, inherit from `Widget`, add the `GX_OBJECT` macro at the very beginning of the class definition, and **override the `event()`** virtual function as the entry point for event handling:
+Create a new widget class inheriting from `Widget`, add the `GX_OBJECT` macro at the very beginning of the class definition, and **override the `event()`** virtual function as the entry point for event handling:
 
 ```cpp
 // progressring.h
@@ -61,7 +61,7 @@ public:
 protected:
     void paintEvent(PaintEvent *event);
 
-    // EventDispatch needs access to protected methods; declare it as a friend
+    // EventDispatch needs to access protected methods, declare friend
     friend struct EventTraits<ProgressRing>;
 
 private:
@@ -69,7 +69,7 @@ private:
 };
 ```
 
-`GX_OBJECT` is essential. It triggers the meta-object compiler to generate metadata for this class, allowing the widget to be properly recognized by the framework's property system, animation system, and component system (see [Object System](./object-system.md) for details).
+`GX_OBJECT` is essential; it triggers the meta-object compiler to generate metadata for the class, allowing the widget to be properly recognized by the framework's property system, animation system, and component system (see [Object System](./object-system.md) for details).
 
 ### Painting the Widget
 
@@ -87,17 +87,17 @@ bool ProgressRing::event(Event *event) {
 void ProgressRing::paintEvent(PaintEvent *event) {
     Widget::paintEvent(event);
     Painter p(this);
-    // ... See the painting section for details
+    // ... see painting section for details
 }
 ```
 
-Custom painting is accomplished by implementing `paintEvent()`. Passing the `this` pointer when constructing a `Painter` yields the drawing context associated with the current widget, after which various drawing methods can be called to paint. For a complete description of the `Painter` API, refer to the [Painting](./painting.md) section.
+Custom painting is accomplished by implementing `paintEvent()`. Constructing a `Painter` by passing the `this` pointer provides the drawing context associated with the current widget, after which various drawing methods can be called to perform rendering. For a complete description of the `Painter` API, refer to the [Painting](./painting.md) section.
 
 ### Handling Events
 
-Glyphix's event system **does not rely on virtual function inheritance** to dispatch events. Methods like `paintEvent()` and `gestureEvent()` are not `virtual`, and **do not** add `override` during declaration (doing so will cause a compilation error). The framework routes calls to the correct handler function at **compile time** according to the event type via `EventDispatch`.
+The Glyphix event system **does not rely on virtual function inheritance** to dispatch events. Methods like `paintEvent()` and `gestureEvent()` are not `virtual`, and you **must not** add `override` when declaring them (doing so will cause a compilation error). Instead, the framework routes calls to the correct handling functions at **compile time** based on event types via `EventDispatch`.
 
-The only virtual function that needs to be (and must be) overridden is **`event()`**, in which you delegate to `EventDispatch`:
+The only virtual function that needs to be (and must be) overridden is **`event()`**, within which you delegate to `EventDispatch`:
 
 ```cpp
 bool ProgressRing::event(Event *event) {
@@ -105,68 +105,68 @@ bool ProgressRing::event(Event *event) {
 }
 ```
 
-The first template parameter of `EventDispatch` is usually the **direct base class** (i.e., the class that `ProgressRing` inherits from, which is `Widget` here). It checks at compile time whether the current class directly declares the corresponding handler function. If so, it calls it; otherwise, it automatically falls back to the base class implementation. Returning `bool` from a handler function indicates whether the event was consumed; returning `void` is treated as consumed.
+The first template parameter of `EventDispatch` is typically the **direct base class** (i.e., the class that `ProgressRing` inherits from, which here is `Widget`). It checks at compile time whether the current class directly declares the corresponding handling function. If so, it calls it; otherwise, it automatically falls back to the base class implementation. A return value of `bool` for a handling function indicates whether the event was consumed; a return value of `void` is treated as consumed.
 
 ::: tip Base Class Selection Tips
-There are some optimization tips for choosing the base class parameter of `EventDispatch`. Usually, you can choose the direct base class, but you can also use a higher-level ancestor class, which will cause subtle differences in code size and performance. Generally, however, you don't need to dwell on it too much, nor do you need to worry about misuse errors—as long as it compiles successfully, event dispatching will work correctly.
+There are some optimization techniques for selecting the base class parameter of `EventDispatch`. Typically you can choose the direct base class, but you can also use higher-level ancestor classes, which results in subtle code size and performance differences. Generally, however, you do not need to overthink this or worry about misuse—as long as it compiles, event dispatch will work correctly.
 :::
 
 ::: important
-When mentioning "overriding `xxxEvent()`" below, please note that it is merely **declaring** a non-virtual member function in the derived widget class with the same signature as the base class event handler function. This is **not** a virtual function, `override` cannot be added, and it does not rely on the virtual function mechanism to dispatch events.
+When references are made below to "overriding `xxxEvent()`", please note that this simply means **declaring** a non-virtual member function in the derived widget class that shares the same signature as the base class event handling function. This is **not** a virtual function, `override` cannot be added, and event dispatch does not rely on virtual function mechanisms.
 
-The IDE may prompt you to change these member functions to virtual; ignore this prompt.
+The IDE may suggest changing these member functions to virtual; ignore this prompt.
 :::
 
-If you need to handle gesture input, declare `gestureEvent()` and implement it in the class:
+If you need to handle gesture inputs, declare `gestureEvent()` and implement it in the class:
 
 ```cpp
-// Add a declaration in the protected area of the header file:
+// Add declaration in the protected area of the header file:
 bool gestureEvent(GestureEvent *event);
 
-// Implement in .cpp:
+// Implement in the .cpp file:
 bool ProgressRing::gestureEvent(GestureEvent *event) {
     if (event->type() == Event::Press) {
         // ...
-        return true;   // Return true to indicate the event is consumed and will not be passed to the parent widget
+        return true;   // Returning true indicates the event is consumed and will not propagate to the parent widget
     }
     return false;
 }
 ```
 
-Supported event types:
+Handled event types:
 
 | Method Signature | Trigger Timing |
 |---|---|
 | `bool gestureEvent(GestureEvent *)` | Gesture events, including Press, Pan, Swipe, etc. |
-| `bool wheelEvent(WheelEvent *)` | Wheel or dial input (such as a watch crown) |
+| `bool wheelEvent(WheelEvent *)` | Wheel or dial input (such as a crown) |
 | `bool keyEvent(KeyEvent *)` | Physical keys |
 | `void resizeEvent(ResizeEvent *)` | Widget size change |
 | `void moveEvent(MoveEvent *)` | Widget position change |
 | `bool focusEvent(FocusEvent *)` | Focus change |
-| `void paintEvent(PaintEvent *)` | Repaint request |
+| `void paintEvent(PaintEvent *)` | Redraw request |
 | `bool layoutEvent(LayoutEvent *)` | Layout request |
-| `void tickEvent(TickEvent *)` | Frame-by-frame tick (must explicitly call `requestNextTick()` to enable) |
+| `void tickEvent(TickEvent *)` | Per-frame tick (requires calling `requestNextTick()` to enable) |
 
-If certain event handler functions are **mandatory** for the current widget, they can be declared in the template parameters of `EventDispatch`. Omissions or signature mismatches will result in compilation errors:
+If certain event handling functions are **mandatory** for the current widget, you can declare them in the template parameters of `EventDispatch`, causing a compilation error if omitted or if signatures do not match:
 
 ```cpp
 bool MyButton::event(Event *event) {
-    // Compilation fails if paintEvent or gestureEvent are not correctly declared
+    // Fails to compile if paintEvent or gestureEvent are not correctly declared
     return EventDispatch<Widget, PaintEvent, GestureEvent>{}(this, event);
 }
 ```
 
-::: tip Declaring Necessary Event Handlers
-Although `EventDispatch<Widget>` can be used to automatically dispatch all events, it is **strongly recommended** to explicitly declare the event types that the current widget needs to handle. This catches omissions or typos at compile time as much as possible and reduces the burden of manual review.
+::: tip Declaring Necessary Event Handling Functions
+Although you can use `EventDispatch<Widget>` to automatically dispatch all events, it is **strongly recommended** to explicitly declare the event types that the current widget needs to handle. This catches omissions or typos at compile time as much as possible and reduces manual review burdens.
 :::
 
 ### Properties and Signals
 
-Expose properties to the framework using the `GX_PROPERTY` macro so that they can be bound by the application layer or serve as targets for property animations:
+Use the `GX_PROPERTY` macro to expose properties to the framework so they can be bound by the application layer and targeted by property animations:
 
 ```cpp
-// Declare the value property, with getter value() and setter setValue()
-// The signal field associates the change signal for subscription by the reactive framework
+// Declare the value property, with getter value(), setter setValue(),
+// and signal field associated with change signals for reactive framework subscription
 GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
 ```
 
@@ -174,22 +174,22 @@ Once declared, the `value` property can:
 - Be directly bound by application-layer templates (e.g., `<progress-ring :value="progress"/>`)
 - Be smoothly transitioned by the property animation system (when the property type supports interpolation)
 
-Call `update()` in the setter to trigger a repaint, and emit signals at the appropriate time to notify external observers:
+Call `update()` in the setter to trigger a redraw, and emit signals at the appropriate time to notify external observers:
 
 ```cpp
 void ProgressRing::setValue(int v) {
     if (m_value == v) return;
     m_value = v;
-    update();          // Mark for repaint in the next frame
+    update();          // Mark for redraw on the next frame
     valueChanged(v);   // Emit signal
 }
 ```
 
-`Signal<T>` is a standard template member variable, emitted directly like a function call. Parameterless signals use `Signal<>` and take no arguments when called. For complete semantics regarding properties and signals, refer to the relevant section in the [Object System](./object-system.md).
+`Signal<T>` is an ordinary templated member variable, emitted directly like a function call. Parameterless signals use `Signal<>` and take no arguments when invoked. For complete semantics regarding properties and signals, refer to the relevant section in [Object System](./object-system.md).
 
 ### Layout
 
-After instantiating a widget, manually specify its position and size via `setGeometry()`; if the parent widget uses automatic layout, override `sizeHint()` to declare the desired size of the widget:
+After a widget is instantiated, its position and size can be manually specified via `setGeometry()`. If the parent widget uses automatic layout, override `sizeHint()` to declare the widget's desired size:
 
 ```cpp
 Size ProgressRing::sizeHint() const {
@@ -197,53 +197,53 @@ Size ProgressRing::sizeHint() const {
 }
 ```
 
-For container widgets that need to manage the layout of their child widgets themselves, complete the geometric calculation of child widgets in `layoutEvent()`, or mount a layout class provided by the framework (such as `FlexLayout`) via `setLayout()`. See the [Layout and Dimensions](#layout-and-dimensions) section for details.
+For container widgets that need to manage child widget layouts themselves, complete the child widget's geometry calculations in `layoutEvent()`, or mount layout classes provided by the framework (such as `FlexLayout`) via `setLayout()`. For details, see the [Layout and Dimensions](#layout-and-dimensions) section.
 
 ## Painting
 
 ### Painter Initialization
 
-Construct a `Painter` inside the widget's `paintEvent()` member function to start painting:
+Construct a `Painter` inside the widget's `paintEvent()` member function to begin drawing:
 
 ```cpp
 void ProgressRing::paintEvent(PaintEvent *event) {
     Painter p(this);
-    // All subsequent painting is done via p
+    // All subsequent drawing is accomplished via p
 }
 ```
 
-The painting coordinate system has its **origin at the top-left corner of the widget**, with $+x$ to the right and $+y$ downwards, in units of pixels. `rect()` returns the local rectangle `(0, 0, width(), height())` of the current widget, which is the most commonly used reference area during painting.
+The drawing coordinate system uses the **top-left corner of the widget as the origin**, with $+x$ pointing right and $+y$ pointing down, in units of pixels. `rect()` returns the local rectangle of the current widget `(0, 0, width(), height())`, which is the most commonly used reference area during painting.
 
-If the widget has set background colors or other framework-managed style properties through application-layer styles or `StyleModifier`, you can call the base class to handle these backgrounds before painting custom content:
+If the widget has framework-managed style properties such as background color set via application-layer styles or `StyleModifier`, you can call the base class to handle these backgrounds before drawing custom content:
 
 ```cpp
 void ProgressRing::paintEvent(PaintEvent *event) {
-    Widget::paintEvent(event);  // Paint framework-managed background first (if any)
+    Widget::paintEvent(event);  // Draw framework-managed background first (if any)
     Painter p(this);
     // ...
 }
 ```
 
-When the base class is not called, framework-managed background styles are ignored, and the widget is entirely responsible for its own visual presentation through its `paintEvent`.
+When the base class is not called, framework-managed background styles are ignored, and the widget is entirely responsible for its own visual presentation via `paintEvent`.
 
-### Drawing States
+### Painting States
 
-`Painter` maintains a set of current drawing states. Every drawing call uses the current state until it is modified next time.
+`Painter` maintains a set of current painting states. Every drawing call uses the current state until it is modified again.
 
 #### Brush
 
-The brush determines the colors used for **filling** methods (`fillRect`, `fillRoundedRect`, `fillPath`, etc.) as well as **text**:
+The brush determines the color used by **filling** methods (`fillRect`, `fillRoundedRect`, `fillPath`, etc.) as well as **text**:
 
 ```cpp
 p.setBrush(Color(200, 200, 200));   // RGB gray
 p.setBrush(Color{"#35a7ff"});       // Hexadecimal string
 p.setBrush(Color::White);           // Predefined constant
-p.setBrush(Color(0xff4486ff));      // ARGB hexadecimal integer (0xff is fully opaque)
+p.setBrush(Color(0xff4486ff));      // ARGB hex integer (0xff is fully opaque)
 ```
 
 #### Pen
 
-The pen determines the color and line width used for **stroking** methods (`drawRect`, `drawArc`, `drawLine`, etc.):
+The pen determines the color and line width used by **stroking** methods (`drawRect`, `drawArc`, `drawLine`, etc.):
 
 ```cpp
 Pen pen(Color(64, 156, 255));
@@ -255,10 +255,10 @@ p.setPen(pen);
 
 ```cpp
 p.setFont(Font(18));     // 18px font size, affects drawText()
-p.setOpacity(127);      // Opacity [0, 255], affects all subsequent painting
+p.setOpacity(127);      // Opacity [0, 255], affects all subsequent drawing
 ```
 
-All states only apply to the current `Painter` instance. Painters constructed by different widgets are completely independent and do not interfere with each other.
+All states apply only to the current `Painter` instance. Painters constructed by different widgets are completely independent and do not interfere with each other.
 
 ### Basic Shapes
 
@@ -269,8 +269,8 @@ p.setBrush(Color::White);
 p.fillRect(rect());                    // Fill the entire widget area
 p.fillRect(Rect(10, 10, 60, 20));      // Fill the specified rectangle
 
-p.fillRoundedRect(rect(), 8.0f);       // Rounded fill, corner radius 8px
-p.drawRoundedRect(rect(), 8.0f);       // Rounded stroke (no fill, uses Pen color)
+p.fillRoundedRect(rect(), 8.0f);       // Rounded rectangle fill, radius 8px
+p.drawRoundedRect(rect(), 8.0f);       // Rounded rectangle stroke (no fill, uses Pen color)
 ```
 
 When the corner radius equals half of the smaller of the width and height, the rectangle becomes a capsule shape, which is very common in buttons and progress bars:
@@ -283,25 +283,25 @@ p.fillRoundedRect(box, radius);
 #### Straight Line
 
 ```cpp
-p.drawLine(Point(0, cy), Point(width(), cy));   // Horizontal dividing line
+p.drawLine(Point(0, cy), Point(width(), cy));   // Horizontal separator line
 ```
 
 #### Arc
 
-`drawArc` specifies an arc by center coordinates and radius. The units for `startAngle`/`endAngle` are degrees, where $0^\circ$ corresponds to the $3\text{ o'clock}$ position and increases clockwise:
+`drawArc` specifies an arc by center coordinates and radius. The units for `startAngle`/`endAngle` are degrees, where $0°$ corresponds to the $3$ o'clock position and increases clockwise:
 
 ```cpp
 float cx = width() / 2.0f;
 float cy = height() / 2.0f;
 float radius = min(cx, cy) - 4.0f;
 
-// Draw full arc (background ring), from -90° (12 o'clock) around a full circle
+// Draw complete arc (background ring), from -90° (12 o'clock) for a full circle
 Pen bgPen(Color(200, 200, 200));
 bgPen.setWidth(6);
 p.setPen(bgPen);
 p.drawArc({cx, cy}, radius, -90.0f, -90.0f + 360.0f);
 
-// Draw progress arc (clockwise from 12 o'clock to the position corresponding to progress)
+// Draw progress arc (from 12 o'clock clockwise to the position corresponding to progress)
 if (m_value > 0) {
     Pen fgPen(Color(64, 156, 255));
     fgPen.setWidth(6);
@@ -312,79 +312,79 @@ if (m_value > 0) {
 
 The visual thickness of the arc is determined by the line width of the current `Pen`.
 
-### Vector Path (`VectorPath`)
+### Vector Paths (`VectorPath`)
 
-For complex shapes that cannot be described by rectangles and arcs, use `VectorPath` to build arbitrary outlines, and then render them via `fillPath()` or `drawPath()`.
+For complex shapes that cannot be described by rectangles and arcs, use `VectorPath` to construct arbitrary contours, and then render them via `fillPath()` or `drawPath()`.
 
 ```cpp
 #include "gx_vectorpath.h"
 ```
 
-`VectorPath` works like a "brush trajectory": it uses `moveTo` to drop the pen, `lineTo` for straight segments, and `arcTo` for circular arc segments to sequentially describe the outline, which is finally rendered uniformly by `Painter`.
+`VectorPath` works like a "pen trajectory": contours are described sequentially using `moveTo` to place the pen, `lineTo` for straight segments, and `arcTo` for circular arc segments, and finally rendered uniformly by `Painter`.
 
 #### Straight Segment Path
 
 ```cpp
 VectorPath path;
-path.moveTo(x0, y0);   // Drop pen (no drawing)
-path.lineTo(x1, y1);   // Straight line to (x1, y1)
+path.moveTo(x0, y0);   // Place pen (no drawing)
+path.lineTo(x1, y1);   // Line to (x1, y1)
 path.lineTo(x2, y2);
 path.lineTo(x0, y0);   // Return to start, forming a closed triangle
 
-p.fillPath(path, Color(64, 156, 255)); // Fill closed area
+p.fillPath(path, Color(64, 156, 255)); // Fill closed region
 ```
 
-`fillPath()` automatically treats the path as a closed area even if it doesn't explicitly return to the start point at the end. `drawPath()` draws the outline of the path using the current `Pen` without filling it.
+`fillPath()` automatically treats the path as a closed region even if it does not explicitly return to the start at the end. `drawPath()` draws the path outline using the current `Pen` without filling.
 
 #### Arc Segment Path
 
-The parameters for `arcTo` are center point, $x/y$ radii (which differ for ellipses), start angle, and sweep angle (in degrees, positive clockwise):
+The parameters for `arcTo` are the center point, $x/y$ radii (which differ for ellipses), start angle, and sweep angle (in degrees, positive clockwise):
 
 ```cpp
-// Draw horizontal capsule shape: left semicircle + right semicircle, arcTo automatically connects the two segments with a line
+// Draw horizontal capsule shape: left semicircle + right semicircle; arcTo automatically connects the two segments with a line
 float r  = rect.height() * 0.5f;
 float x1 = rect.left() + r;
 float x2 = rect.right() - r;
 float y  = rect.top() + r;
 
 VectorPath path;
-path.arcTo(PointF(x1, y), r, r, 90.0f, 270.0f);    // Left semicircle (counterclockwise from 9 o'clock to 3 o'clock)
-path.arcTo(PointF(x2, y), r, r, -90.0f, 90.0f);    // Right semicircle (counterclockwise from 3 o'clock to 9 o'clock)
+path.arcTo(PointF(x1, y), r, r, 90.0f, 270.0f);    // Left semicircle (counter-clockwise from 9 to 3 o'clock)
+path.arcTo(PointF(x2, y), r, r, -90.0f, 90.0f);    // Right semicircle (counter-clockwise from 3 to 9 o'clock)
 p.fillPath(path);
 ```
 
-`arcTo` automatically inserts a straight line between the current end point of the path and the start point of the new arc, so the two arc segments connect naturally head-to-tail without requiring an extra call to `lineTo`.
+`arcTo` automatically inserts a straight line between the current end point of the path and the start point of the new arc, so the two arc segments connect naturally without requiring an explicit call to `lineTo`.
 
 #### Curves
 
-Use `conicTo` or `cubicTo` to build quadratic or cubic Bézier curve segments, which can be combined with `moveTo` and `lineTo` to describe complex outlines:
+Quadratic or cubic Bezier curve segments can be constructed using `conicTo` or `cubicTo`, which, combined with `moveTo` and `lineTo`, can describe complex contours:
 
 ```cpp
 VectorPath path;
 path.moveTo(x0, y0);
-// Quadratic Bézier curve, (cx, cy) is the control point
+// Quadratic Bezier curve, with (cx, cy) as control point
 path.conicTo(cx, cy, x1, y1);
-// Cubic Bézier curve, (cx1, cy1) and (cx2, cy2) are control points
+// Cubic Bezier curve, with (cx1, cy1) and (cx2, cy2) as control points
 path.cubicTo(cx1, cy1, cx2, cy2, x2, y2);
-// Fill the path using the specified brush
+// Fill path using specified brush
 p.fillPath(path, brush);
 ```
 
 #### Combined Path Example
 
-Combining multiple instructions can build shapes of arbitrary complexity. Taking the wave fill area in `WaveSlider` as an example, the path contains a top wave polyline and a bottom rounded edge:
+Combining multiple instructions can build shapes of arbitrary complexity. Taking the wave-filled area in `WaveSlider` as an example, the path consists of a top wave polyline and a bottom rounded edge:
 
 ```cpp
 VectorPath path;
 path.moveTo(leftX, waveY(leftX));
 for (int i = 1; i <= sampleCount; ++i) {
     float x = leftX + (rightX - leftX) * float(i) / sampleCount;
-    path.lineTo(x, waveY(x));           // Top wave outline
+    path.lineTo(x, waveY(x));           // Top wave contour
 }
-path.lineTo(rightX, bottomEdge(rightX)); // Right drop
+path.lineTo(rightX, bottomEdge(rightX)); // Right descent
 for (int i = sampleCount - 1; i >= 0; --i) {
     float x = leftX + (rightX - leftX) * float(i) / sampleCount;
-    path.lineTo(x, bottomEdge(x));       // Bottom edge (returns along the bottom of the rounded rectangle)
+    path.lineTo(x, bottomEdge(x));       // Bottom edge (returning along the rounded rectangle bottom)
 }
 path.lineTo(leftX, waveY(leftX));        // Return to start
 p.fillPath(path);
@@ -392,7 +392,7 @@ p.fillPath(path);
 
 ### Text
 
-`drawText()` lays out and draws text within a rectangular range. The text color is determined by the current `Brush`, and the font is set by `setFont()`:
+`drawText()` lays out and renders text within a rectangular range. The text color is determined by the current `Brush`, and the font is set via `setFont()`:
 
 ```cpp
 p.setFont(Font(18));
@@ -401,7 +401,7 @@ p.drawText(rect(), format("{}%", m_value), AlignCenter);
 ```
 
 ::: tip Formatted Strings
-`format()` is a formatting function provided by the framework. Its syntax is similar to [`std::format`](https://en.cppreference.com/w/cpp/utility/format/format) and it can be used cross-platform.
+`format()` is a formatting function provided by the framework with syntax similar to [`std::format`](https://en.cppreference.com/w/cpp/utility/format/format), usable cross-platform.
 :::
 
 Alignment flags can be freely combined:
@@ -414,15 +414,15 @@ Alignment flags can be freely combined:
 | `AlignTop` | Vertical top alignment |
 | `AlignVCenter` | Vertical center alignment |
 | `AlignBottom` | Vertical bottom alignment |
-| `AlignCenter` | Horizontal + vertical center (equivalent to `AlignHCenter \| AlignVCenter`) |
+| `AlignCenter` | Horizontal + Vertical center (equivalent to `AlignHCenter | AlignVCenter`) |
 
-The `font()` method returns the font currently inherited by the widget from the style system. Using it in painting allows the widget to automatically follow changes in the application font size:
+The `font()` method returns the current font inherited by the widget from the style system. Using it during painting allows the widget to automatically follow application font size changes:
 
 ```cpp
-p.setFont(font());   // Use the widget's inherited style font instead of a fixed size
+p.setFont(font());   // Use the widget's inherited style font rather than a fixed size
 ```
 
-`drawText()` also supports more complex text layouts, such as multi-line text and automatic wrapping. See the API documentation for details.
+`drawText()` also supports more complex text layouts, such as multi-line text and auto-wrapping. See the API documentation for details.
 
 ### Images
 
@@ -433,11 +433,11 @@ Image img{"file://path/to/icon.png"};
 p.drawImage(widget->rect(), img); // Draw image to specified area without automatic scaling
 ```
 
-In actual use, images usually come from the resource system, and the loading method depends on the platform and packaging configuration.
+In actual usage, images typically come from the resource system, and the loading method depends on the platform and packaging configuration.
 
 ### Complete Example
 
-The following is the complete `paintEvent` of `ProgressRing`, combining the painting capabilities mentioned above:
+The following is the complete `paintEvent` for `ProgressRing`, combining the painting capabilities discussed above:
 
 ```cpp
 void ProgressRing::paintEvent(PaintEvent *event) {
@@ -449,7 +449,7 @@ void ProgressRing::paintEvent(PaintEvent *event) {
     float cx = width() / 2.0f;
     float cy = height() / 2.0f;
     float radius = min(cx, cy) - 4.0f;
-    float startAngle = -90.0f;   // Start from 12 o'clock direction
+    float startAngle = -90.0f;   // Start from 12 o'clock position
 
     // Draw gray background ring
     Pen bgPen(Color(200, 200, 200));
@@ -479,11 +479,11 @@ Override `sizeHint()` to inform the layout system of the widget's "desired size"
 
 ```cpp
 Size ProgressRing::sizeHint() const {
-    return Size(80, 80);  // Recommended display as 80×80px
+    return Size(80, 80);  // Recommended display size 80×80px
 }
 ```
 
-If the height of the widget varies with its width (such as an aspect-ratio-scaled image), override `heightForWidth()`:
+If the widget's height varies with its width (such as an aspect-ratio-scaled image), override `heightForWidth()`:
 
 ```cpp
 int AspectWidget::heightForWidth(int width) const {
@@ -491,7 +491,7 @@ int AspectWidget::heightForWidth(int width) const {
 }
 ```
 
-For cases where you need to manually manage the layout of child widgets, override `layoutEvent()` and set the geometry of child widgets within it:
+For cases where you need to manually manage child widget layouts, override `layoutEvent()` and set the geometry of child widgets within it:
 
 ```cpp
 bool ContainerWidget::layoutEvent(LayoutEvent *event) {
@@ -508,26 +508,26 @@ bool ContainerWidget::layoutEvent(LayoutEvent *event) {
 }
 ```
 
-You can also use ready-made layout classes provided by the framework (such as `FlexLayout`, `StackLayout`), mounted via `setLayout(new FlexLayout())`.
+You can also use ready-made layout classes provided by the framework (such as `FlexLayout` or `StackLayout`), mounted via `setLayout(new FlexLayout())`.
 
-::: tip Use Ready-made Layout Classes
-Unless you are creating a container widget with a special layout, it is recommended to use the layout classes provided by the framework to manage the layout of child widgets. In this case, there is no need to override `layoutEvent()`.
+::: tip Using Ready-Made Layout Classes
+Unless you are building a container widget with a special layout, it is recommended to use the layout classes provided by the framework to manage child widget layouts. In such cases, there is no need to override `layoutEvent()`.
 
-Implementing a complete layout algorithm is relatively complex, requiring handling interactions in multiple aspects such as `sizeHint()`, while also considering performance optimization.
+Implementing a complete layout algorithm is relatively complex, requiring handling of interactions across aspects like `sizeHint()`, along with performance optimizations.
 :::
 
-## Animation
+## Animations
 
-The framework provides three types of animation mechanisms: **Style Animation**, **Property Animation**, and **`ValueAnimation`**. Style animation and property animation are mainly used on the **application layer** (i.e., the side using widgets), while when implementing custom widgets, `ValueAnimation` is most commonly used directly.
+The framework provides three categories of animation mechanisms: **Style Animations**, **Property Animations**, and **`ValueAnimation`**. Style animations and property animations are primarily used on the **application layer** (i.e., the side consuming widgets), whereas when implementing custom widgets, `ValueAnimation` is most commonly used directly.
 
 ### ValueAnimation
 
-`ValueAnimation<T>` is an animation class that interpolates any type `T`. Each frame it calculates the interpolation result based on the current progress and emits it via the `value` signal. You simply connect the signal to your own update logic:
+`ValueAnimation<T>` is an animation class that interpolates any type `T`. Each frame, it calculates the interpolation result based on the current progress and emits it via the `value` signal. You simply need to connect the signal to your own update logic:
 
 ```cpp
 #include "gx_valueanimation.h"
 
-// Declare an animation object among the widget's members, usually using a pointer for dynamic creation and destruction when needed
+// Declare the animation object among the widget's members, typically using a pointer for dynamic creation/destruction when needed
 ValueAnimation<int> *m_animation = nullptr;
 ```
 
@@ -542,19 +542,19 @@ m_animation->start();
 // Frame callback: receive the interpolated value calculated each frame
 void MyWidget::onAnimationValue(int v) {
     m_currentValue = v;
-    update();  // Trigger repaint
+    update();  // Trigger redraw
 }
 ```
 
-The `finished` signal is emitted when the animation ends. If you don't need to manually manage its lifecycle, you can use the `DeleteOnStop` strategy to automatically destroy the animation after playback completes:
+A `finished` signal is emitted when the animation ends. If manual lifecycle management is unnecessary, you can use the `DeleteOnStop` strategy to automatically destroy the animation after playback completes:
 
 ```cpp
-// The animation object does not need external access; delete automatically after new
+// Animation object does not require external access, automatically deleted after new
 auto *anim = new ValueAnimation<int>;
 anim->setValueLimits(0, 100);
 anim->setDuration(500);
 anim->value.connect(this, &MyWidget::onValue);
-anim->start(AbstractAnimation::DeleteOnStop);  // Automatically delete after playback
+anim->start(AbstractAnimation::DeleteOnStop);  // Automatically delete after playing
 ```
 
 The framework has built-in interpolation support for the following types: `int`, `float` (and other numeric types), `Color`, `Point`, `Pen`, `Brush`, `Length`, `Transform`, etc.
@@ -565,7 +565,7 @@ Other common configurations:
 // Infinite loop playback
 anim->setRepeat(AbstractAnimation::Infinity);
 
-// Alternating playback back and forth (forward → backward → forward...)
+// Alternating playback back and forth (forward → reverse → forward...)
 anim->setDirection(AbstractAnimation::Alternate);
 
 // Set easing curve
@@ -575,9 +575,9 @@ anim->setEaseCurve(easing::make_curve<easing::Ease>());
 
 ### Style Animations and Property Animations
 
-**Style Animation** (`StyleAnimation`) defines transition effects in a way similar to CSS transitions, automatically played by the framework when the widget's style state switches, and is mainly used in the style configuration of application-layer components.
+**Style Animations** (`StyleAnimation`) define transition effects in a way similar to CSS transitions, automatically played by the framework when a widget's style state switches, primarily used in style configurations for application-layer components.
 
-**Property Animation** (`PropertyAnimation`) drives properties declared with `GX_PROPERTY` via property name strings, and is often used by the application layer to animate widget properties:
+**Property Animations** (`PropertyAnimation`) drive properties declared with `GX_PROPERTY` via property name strings, commonly used at the application layer to animate widget properties:
 
 ```cpp
 #include "gx_propertyanimation.h"
@@ -589,27 +589,27 @@ anim->setDuration(1000);
 anim->start(AbstractAnimation::DeleteOnStop);
 ```
 
-When implementing the widget itself, property animation is usually unnecessary because `ValueAnimation` is more direct and lacks the overhead of looking up properties by name.
+When implementing the widget itself, property animations are usually unnecessary because `ValueAnimation` is more direct and lacks the overhead of looking up properties by name.
 
 ## Text Display Widgets
 
-When implementing widgets with text content, besides basic painting logic, you also need to handle issues such as text measurement, layout caching, and style linkage. `Label` is the framework's most typical text widget, and its implementation can serve as a reference template for similar widgets.
+When implementing widgets containing text content, in addition to basic painting logic, you must also handle issues such as text measurement, layout caching, and style linkage. `Label` is the framework's most typical text widget, and its implementation can serve as a reference template for similar widgets.
 
 ### Using `updateLayout()`
 
-`update()` only marks a widget as needing a **repaint** and does not affect the layout system. When text content changes, the desired size of the widget (the return value of `sizeHint()`) usually changes accordingly. At this time, you must call `updateLayout()` simultaneously to trigger the parent widget's layout recalculation:
+`update()` only marks a widget as needing a **redraw** and does not affect the layout system. When text content changes, the widget's desired size (the return value of `sizeHint()`) typically changes accordingly. In this case, you must call `updateLayout()` simultaneously to trigger the parent widget's layout recalculation:
 
 ```cpp
 void MyTextWidget::setText(const String &text) {
     if (m_text == text)
         return;
     m_text = text;
-    update();        // Trigger repaint
+    update();        // Trigger redraw
     updateLayout();  // Notify parent layout to recalculate (because sizeHint changed)
 }
 ```
 
-The consequence of calling only `update()` is that the text content has been updated, but the widget size remains the value calculated for the old text, resulting in a messed-up layout.
+The consequence of calling only `update()` is that the text content is updated, but the widget size remains what was calculated for the old text, leading to disorganized layouting.
 
 ### Text Measurement and `sizeHint()`
 
@@ -627,48 +627,48 @@ Size MyTextWidget::sizeHint() const {
 }
 ```
 
-For multi-line text supporting automatic wrapping, you also need to implement `heightForWidth()` to inform the layout system of the widget's height at a given width:
+For multi-line text that supports auto-wrapping, you also need to implement `heightForWidth()`, informing the layout system of the widget's height at a given width:
 
 ```cpp
 int MyTextWidget::heightForWidth(int width) const {
     if (width == 0) return 0;
     FontMetrics fm(font());
     float lineHeight = font().pixelSize() * 1.2f;
-    // boundingRect calculates the actual boundary of text at a given width
+    // boundingRect calculates the actual boundaries of text at a given width
     return fm.boundingRect(m_text, width, 1024 * 1024, 0, 0, lineHeight).height();
 }
 ```
 
-If the widget is strictly single-line (does not wrap with width), `heightForWidth()` returns `-1` to indicate that it does not depend on width:
+If the widget is strictly single-line (does not wrap with width), `heightForWidth()` returns `-1` to indicate no dependency on width:
 
 ```cpp
 int SingleLineWidget::heightForWidth(int) const { return -1; }
 ```
 
-### Responding to Styles and Size Changes
+### Responding to Style and Size Changes
 
-When style properties like fonts and colors change, text measurement results also change. Override `styleEvent()` to respond to style changes, call the base class implementation to refresh style-related caches, and then trigger layout updates:
+When style properties such as font and color change, text measurement results also change. Override `styleEvent()` to respond to style changes, call the base class implementation to refresh style-related caches, and then trigger layout updates:
 
 ```cpp
 void MyTextWidget::styleEvent(StyleEvent *event) {
-  // Must call base class first; it updates internal style data
+    // Must call base class first; it updates internal style data
     Widget::styleEvent(event);
-    // After styles like font change, the return value of sizeHint may change
+    // After styles such as fonts change, the return value of sizeHint may change
     updateLayout();
 }
 ```
 
-Similarly, if the widget size changes and there are width-dependent text wrapping calculations, you need to trigger updates in `resizeEvent()`:
+Similarly, if there are width-dependent text wrapping calculations when the widget size changes, you need to trigger updates in `resizeEvent()`:
 
 ```cpp
 void MyTextWidget::resizeEvent(ResizeEvent *event) {
     Widget::resizeEvent(event); // Call base class
-    update();                   // Repaint content after size change
+    update();                   // Redraw content after size change
 }
 ```
 
 ::: important
-The base class implementations of event handlers like `styleEvent()` and `resizeEvent()` usually have side effects that cannot be omitted and **must be called**. The timing of the call depends on your logic requirements: in most cases, call the base class first, then execute your own logic.
+Base class implementations of event handling functions like `styleEvent()` and `resizeEvent()` typically have non-omissible side effects and **must be called**. The timing of the call depends on your logic requirements: in most cases, call the base class first, then execute your own logic.
 :::
 
 ### Overriding `event()`
@@ -684,7 +684,7 @@ bool MyTextWidget::event(Event *event) {
 
 ### Flow Layout and Inline Elements
 
-`setFlowLayout(true)` sets a **container widget** to flow layout mode, with an effect similar to CSS block-level flow. The framework automatically arranges child elements in rows without needing to create independent layout objects via `setLayout()`. `Label` enables this mode in its constructor, allowing itself to act as a `SpanLabel` container (embedding multiple child labels with different styles):
+`setFlowLayout(true)` sets a **container widget** to flow layout mode, producing an effect similar to CSS block-level flow. The framework automatically arranges child elements row by row without needing to create independent layout objects via `setLayout()`. `Label` enables this mode in its constructor, allowing itself to act as a `SpanLabel` container (embedding multiple sub-labels with different styles):
 
 ```cpp
 Label::Label(Widget *parent) : Widget(parent) {
@@ -692,23 +692,23 @@ Label::Label(Widget *parent) : Widget(parent) {
 }
 ```
 
-`setInlineWidget(true)` is a setting targeted at **child elements**, marking the widget as an inline element so that it embeds into the text stream of the parent container for layout just like text. For example, embedding an icon widget inline within rich text:
+`setInlineWidget(true)` is a setting targeted at **child elements**, marking the widget as an inline element so that it embeds into the parent container's text flow like text to participate in layouting. For example, embedding an icon widget inline within rich text:
 
 ```cpp
 auto *icon = new ImageBox(label);
-// Mixed typesetting with text as an inline element. ImageBox is already inline by default; this is just for illustration.
+// Mixed-layout with text as an inline element. ImageBox is already inline by default; this is just for illustration.
 icon->setInlineWidget(true);
 ```
 
-When a `Label` is used as a `SpanLabel` container accommodating inline child elements, the layout system automatically coordinates the `Label`'s own text measurement logic and its arrangement of child elements as a container. Both share the same layout mechanism, and developers do not need to manually intervene in this process.
+When `Label` is used as a `SpanLabel` container accommodating inline child elements, the layout system automatically coordinates `Label`'s own text measurement logic and its arrangement of child elements as a container. Both share the same layout mechanism, and developers do not need to manually intervene in this process.
 
-## AbstractScrollArea and Scrollable Widgets
+## `AbstractScrollArea` and Scrollable Widgets
 
-When a widget requires scrolling behavior, you don't need to implement gesture recognition, inertial scrolling, and bounce effects from scratch. Directly inheriting from `AbstractScrollArea` grants these capabilities. Built-in framework controls like `ScrollArea` (list scrolling) and `TextField` (single-line text input) are implemented based on it.
+When a widget requires scrolling behavior, there is no need to implement gesture recognition, inertial scrolling, and bounce effects from scratch. Directly inheriting from `AbstractScrollArea` provides these capabilities. The framework's built-in `ScrollArea` (list scrolling) and `TextField` (single-line text input) are both implemented based on it.
 
 ### Basic Structure
 
-Widgets inheriting from `AbstractScrollArea` follow a fixed structure: the widget itself is the "viewport", and inside there is a **content widget** responsible for hosting the actual content. When scrolling, it is the content widget that moves, not the viewport itself.
+Widgets inheriting from `AbstractScrollArea` follow a fixed structure: the widget itself is the "viewport", and inside there is a **content widget** responsible for carrying the actual content. When scrolling, it is the content widget that moves, not the viewport itself.
 
 Complete initialization in the constructor:
 
@@ -735,7 +735,7 @@ protected:
 
 MyTicker::MyTicker(Widget *parent) : AbstractScrollArea(parent) {
     setDirection(Horizontal);     // Horizontal scrolling
-    setDamping(5);                // Adjust damping (larger value means stronger friction)
+    setDamping(5);                // Adjust damping (higher value means stronger friction)
 
     auto *content = new Widget;   // Create content widget
     setContentWidget(content);
@@ -746,56 +746,56 @@ bool MyTicker::event(Event *event) {
 }
 ```
 
-Setting the base class parameter of `EventDispatch` to `AbstractScrollArea` (rather than `Widget`) allows events not handled by the current class (gestures, wheels, resize, etc.) to automatically fall back to `AbstractScrollArea`'s implementation, thereby retaining complete scrolling behavior.
+Setting the base class parameter of `EventDispatch` to `AbstractScrollArea` (instead of `Widget`) allows events not handled by the current class (gestures, wheels, resizes, etc.) to automatically fall back to `AbstractScrollArea`'s implementation, preserving complete scrolling behavior.
 
-### Configuring Scrolling Parameters
+### Configuring Scroll Parameters
 
 ```cpp
 setDirection(Vertical);          // Vertical scrolling (default)
 setDirection(Horizontal);        // Horizontal scrolling
-setDamping(3);                   // Lower damping: stronger inertia, slides further
+setDamping(3);                   // Lower damping: stronger inertia, slides farther
 setDamping(20);                  // Higher damping: weaker inertia, close to no inertia
-setScrollBar(true);              // Show scroll bar
+setScrollBar(true);              // Show scrollbar
 setBouncesPolicy(SnapType::SnapEdge);  // Edge bounce policy
 ```
 
-`AbstractScrollArea` also provides `scrollTo(x, y, behavior)` to programmatically control the scroll position, where `behavior` is `Instant` (jump immediately) or `Smooth` (with animation).
+`AbstractScrollArea` also provides `scrollTo(x, y, behavior)` to control the scroll position programmatically, where `behavior` is `Instant` (jump immediately) or `Smooth` (animated).
 
 ::: tip Inertia Damping
-For widgets like `TextField` that require precise control over the scroll position, a higher damping value is usually set to weaken inertia; whereas for widgets like `ScrollArea` focused on browsing, a lower damping can be set for a smoother scrolling experience.
+For widgets like `TextField` that require precise control over the scroll position, a higher damping value is typically set to weaken inertia; whereas for widgets like `ScrollArea` centered around browsing, a lower damping value can be set for a smoother scrolling experience.
 
-Do not set the damping too low; otherwise, ultra-long-distance scrolling may cause content caching to invalidate, resulting in stuttering.
+Do not set the damping too low; otherwise, ultra-long-distance scrolling may cause content cache invalidation and stuttering.
 :::
 
-### Calling the Base Class in Event Dispatch
+### Calling Base Class in Event Dispatch
 
-Sometimes you need to perform extra processing on an event before handing control over to `AbstractScrollArea`'s default implementation. The typical approach is to call the base class method directly inside the handler function:
+Sometimes you need to perform extra processing on an event before handing control over to `AbstractScrollArea`'s default implementation. A typical approach is to call the base class method directly inside the handler:
 
 ```cpp
-// TextField approach: only forward gestures to the scroll area when there is text
+// Approach in TextField: forward gestures to scroll area only when there is text
 bool TextField::gestureEvent(GestureEvent *event) {
-    if (text().empty()) // Ignore directly when there is no text
+    if (text().empty()) // Ignore directly when text is empty
         return false;
     // Hand over to base class scrolling logic in other cases
     return AbstractScrollArea::gestureEvent(event);
 }
 ```
 
-In this pattern, the base class parameter of `EventDispatch` uses `Widget`, and the current class decides for itself when to call which base class method:
+Under this pattern, `Widget` is used as the base class parameter for `EventDispatch`, and the current class decides for itself when and which base class method to call:
 
 ```cpp
 bool TextField::event(Event *event) {
-    // Use Widget as base class, completely controlling the timing of calls to AbstractScrollArea behaviors by yourself
+    // Use Widget as base class, fully controlling when AbstractScrollArea behavior is invoked
     return EventDispatch<Widget, GestureEvent, ResizeEvent>{}(this, event);
 }
 ```
 
-### Content Widget Event Filtering
+### Event Filtering of Content Widgets
 
-The content widget is responsible for layout and hosting child widgets, but certain events of its own (such as layout requests) sometimes need to be intercepted and customized by the container. Register the container as an event filter for the content widget via `setEventFilter(this)`, and then override `eventFilter()` to handle events of interest:
+The content widget is responsible for layout and carrying child widgets, but certain events (such as layout requests) sometimes need to be intercepted and custom-processed by the container. Register the container as an event filter for the content widget via `setEventFilter(this)`, and then override `eventFilter()` to handle events of interest:
 
 ```cpp
-// Register in constructor
+// Register in the constructor
 content->setEventFilter(this);
 
 // Intercept content widget layout requests
@@ -804,38 +804,38 @@ bool MyTicker::eventFilter(Object *receiver, Event *e) {
         auto *lv = static_cast<LayoutEvent *>(e);
         if (lv->isLayoutRequest()) {
             // Custom layout logic...
-            return true; // Return true to prevent the event from propagating further
+            return true; // Return true to prevent event from continuing to propagate
         }
     }
-    // Hand over to base class for other cases
+    // Hand over to base class in other cases
     return AbstractScrollArea::eventFilter(receiver, e);
 }
 ```
 
 ::: tip
-Unhandled events should be passed back to `AbstractScrollArea::eventFilter()`, which is responsible for interaction with internal mechanisms like scroll bars.
+Unhandled events should be fallen back to `AbstractScrollArea::eventFilter()`, which is responsible for interaction with internal mechanisms like scrollbars.
 :::
 
 ### Setting Inline Widgets
 
-Calling `setInlineWidget(true)` allows a widget to participate in inline layouts, making it suitable for scenarios embedded within text flows. `TextField` is handled this way so it can be embedded inline just like text.
+Calling `setInlineWidget(true)` allows a widget to participate in inline layouts, making it suitable for scenarios embedded in text streams. `TextField` handles things this way so it can be embedded inline like text.
 
-### ScrollArea and Derived Classes
+### `ScrollArea` and Derived Classes
 
-`ScrollArea` is a derived class of `AbstractScrollArea` that adds capabilities such as **index navigation** (`index()`/`setIndex()`), **snap modes**, and **visual effects** on top of scrolling. It is the preferred base class for scenarios like lists and marquees. `Swiper` further adds paging (`pageLength`) and indicators on top of `ScrollArea`, making it suitable for carousel modes and similar scenarios.
+`ScrollArea` is a derived class of `AbstractScrollArea` that adds capabilities such as **index navigation** (`index()`/`setIndex()`), **snap modes** (snap), and **visual effects** on top of scrolling. It is the preferred base class for scenarios like lists and tickers. `Swiper`, on top of `ScrollArea`, further adds features like pagination (`pageLength`) and indicator dots, making it suitable for carousel modes and similar patterns.
 
-These classes usually **do not need further derivation**, and most customization requirements can be met by configuring parameters and mounting peripheral facilities without subclassing.
+These classes generally **do not need further subclassing**; most customization requirements can be met by configuring parameters and mounting surrounding facilities without subclassing.
 
 #### Visual Effects (`VisualEffect`)
 
-`ScrollArea` supports mounting a `VisualEffect` object via `setVisualEffect()`, which applies visual transformations such as opacity, scale, and translation to each child widget before it is painted, thereby achieving dynamic effects during scrolling. The framework has built-in effects:
+`ScrollArea` supports mounting a `VisualEffect` object via `setVisualEffect()`. This applies visual transformations such as opacity, scaling, and translation to each child widget before painting it, thereby achieving dynamic effects during scrolling. The framework includes several built-in effects:
 
 | Class Name | Effect |
 |---|---|
-| `FisheyeVisualEffect` | Fisheye effect, center elements enlarged, edges shrunk |
-| `FadeVisualEffect` | Edge fade-out, opacity decreases the further it is from the viewport center |
-| `CollapseVisualEffect` | Collapse effect, elements gather and shrink towards the top (or bottom) edge |
-| `BlendVisualEffect` | Interpolate and transition between two effects by progress |
+| `FisheyeVisualEffect` | Fisheye effect: center elements scale up, edges scale down |
+| `FadeVisualEffect` | Edge fade-out: opacity decreases the further an element is from the viewport center |
+| `CollapseVisualEffect` | Collapse effect: elements gather and shrink towards the top (or bottom) edges |
+| `BlendVisualEffect` | Interpolated transition between two effects based on progress |
 
 ```cpp
 #include "gx_visualeffect.h"
@@ -843,11 +843,11 @@ These classes usually **do not need further derivation**, and most customization
 scrollArea->setVisualEffect(make_shared<FisheyeVisualEffect>());
 ```
 
-To customize effects, inherit from `VisualEffect` and implement the `resolve()` method. `resolve()` receives the target child widget, viewport rectangle, and child widget center point, and returns a `PaintModifier`, in which properties such as `opacity`, `scale`, and `translate` can be set.
+If a custom effect is required, inherit from `VisualEffect` and implement the `resolve()` method. `resolve()` receives the target child widget, viewport rectangle, and child widget center point, returning a `PaintModifier` where properties like `opacity`, `scale`, and `translate` can be set.
 
-Complete parameter descriptions for `ScrollArea` and `Swiper`, as well as how to implement custom `VisualEffects`, are introduced separately in [Scroll Area](./scroll-area.md).
+Complete parameter descriptions for `ScrollArea` and `Swiper`, along with how to implement custom `VisualEffect`s, are covered separately in [Scroll Area](./scroll-area.md).
 
-## Widget Tree and Lifecycle
+## Widget Trees and Lifecycles
 
 When creating widgets in C++, parent-child relationships are established through the `parent` parameter of the constructor:
 
@@ -858,8 +858,8 @@ auto *child  = new ProgressRing(parent);
 child->setGeometry(10, 10, 80, 80);
 ```
 
-Whether you manually `delete` the parent widget or the framework cleans up the widget tree when the application exits, all child widgets are automatically destroyed. You do not need to `delete` child widgets in the destructor.
+Whether you manually `delete` the parent widget or the framework cleans up the widget tree upon application exit, all child widgets are automatically destroyed. You do not need to `delete` child widgets in the destructor.
 
-If delayed destruction is required (for example, inside an event handler function), you can use `deleteLater()`, which destroys the object after the current event handling completes, avoiding issues like "destroying yourself inside a callback."
+If delayed destruction is required (for example, inside an event handling function), you can use `deleteLater()`, which destroys the object after the current event handling completes, avoiding issues like "destroying oneself within a callback".
 
-In the reactive framework, the widget tree is maintained by the component framework, and custom development only requires [registering the widget class](./widget-export.md).
+In the reactive framework, widget trees are maintained by the component framework. Customized development only requires [registering widget classes](./widget-export.md).

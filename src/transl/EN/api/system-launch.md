@@ -1,4 +1,4 @@
-# App Launch
+# Application Launch
 
 ## Import Module
 
@@ -6,7 +6,7 @@
 import launch from '@system.launch'
 ```
 
-## API Definition
+## Interface Definitions
 
 ### `launch` <decl type="(app: string): Promise<bool>" method/>
 
@@ -18,7 +18,7 @@ Switches the application to the background. `app` is the ID of a launched applic
 
 ### `exit` <decl type="(app?: string): Promise<void>" method />
 
-Exits an application. The `app` parameter is the ID of a launched application. If no parameter is specified, the current application is exited.
+Exits an application. The `app` parameter is the ID of a launched application. If no parameter is specified, the current application will be exited.
 
 ### `getRunning` <decl type="(): string[]" method />
 

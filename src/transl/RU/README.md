@@ -4,7 +4,7 @@ title: Home
 icon: home
 heroImage: /logo.png
 heroText: Glyphix Framework
-tagline: Решение GUI для RTOS-устройств
+tagline: Решение GUI для устройств на базе RTOS
 actions:
   - text: Tutorials
     link: /tutorials/

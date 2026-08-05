@@ -21,7 +21,7 @@ export default {
 </glyphix>
 
 ::: note
-The style of the `switch` component is typically as shown in the example, but it may vary depending on the device. In particular, the width of the `switch` may differ across devices, and developers should reserve appropriate layout margins.
+The style of the `switch` component is usually as shown in the example, but it may vary depending on the device. In particular, the width of the `switch` may differ across devices, and developers should reserve appropriate layout margins.
 :::
 
 ## Attributes
@@ -46,9 +46,9 @@ The overall style of the `switch` component is determined by the system and is n
 
 #### `color`
 
-Sets the color of the `switch` component's thumb. Unlike general CSS [`color`](/framework/generic/styles.md#color), the `color` property of the `switch` does not support inheritance, so you must define it directly on the current `switch` component.
+Sets the thumb color of the `switch` component. Unlike general CSS [`color`](/framework/generic/styles.md#color), the `color` property of the `switch` does not support inheritance, so you must define it directly on the current `switch` component.
 
-<glyphix id="components-switch-color" height="36" title="siwtch thumb color">
+<glyphix id="components-switch-color" height="36" title="switch thumb color">
 
 ``` html
 <div>
@@ -59,7 +59,7 @@ Sets the color of the `switch` component's thumb. Unlike general CSS [`color`](/
 
 ``` css
 div {
-  color: red; /* Note: switch does not inherit the color property */
+  color: red; /* Note that switch does not inherit the color property */
 }
 
 .red {
@@ -70,11 +70,11 @@ div {
 
 #### `background-color`
 
-Controls the background color of the `switch` component. See the documentation for the [`active`](#active) pseudo-class for details.
+Controls the background color of the `switch` component. For details, refer to the documentation for the [`active`](#active) pseudo-class. 
 
 #### `font-size`
 
-You can use the [`font-size`](/framework/generic/styles.md#font-size) CSS property to adjust the size of the `switch` so that its inline text size coordinates harmoniously. The following example demonstrates the relationship between `font-size` and the size of the `switch`:
+You can adjust the size of the `switch` using the [`font-size`](/framework/generic/styles.md#font-size) CSS property so that it harmonizes with inline text sizes. The following example demonstrates the relationship between `font-size` and the `switch` size:
 
 <glyphix id="components-switch-size" height="100" title="font-size and switch size">
 
@@ -95,7 +95,7 @@ div {
 }
 
 .title {
-  color: #415a77; /* Note: switch does not inherit the color property */
+  color: #415a77; /* Note that switch does not inherit the color property */
   font-size: 1.25rem;
 }
 ```
@@ -111,7 +111,7 @@ The display size of the `switch` is not controlled by properties such as `width`
 
 The `active` pseudo-class is used to define the style of the `switch` when it is in the on state. As shown in the example below, it is usually configured alongside regular style rules:
 
-<glyphix id="components-switch-colors" height="36" title="siwtch thumb color settings">
+<glyphix id="components-switch-colors" height="36" title="switch thumb color settings">
 
 ``` html
 <div>
@@ -134,8 +134,8 @@ switch:active {
 ```
 </glyphix>
 
-This example controls the color style of the `switch` when toggled using the `color` and `background-color` CSS properties. The `switch` component will only respond to the configuration of these two CSS properties even when the `active` pseudo-class is activated.
+This example controls the color style of the `switch` during toggling via the `color` and `background-color` CSS properties. The `switch` component will only respond to the configuration of these two CSS properties when the `active` pseudo-class is activated.
 
 ::: tip
-Please define both the `color` and `background-color` properties for both the normal state and the `active` state; otherwise, the `switch` will not transition colors accordingly when toggled.
+Please define the `color` and `background-color` properties for both the normal and `active` states; otherwise, the `switch` will not transition colors accordingly when toggled.
 :::

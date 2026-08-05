@@ -1,10 +1,10 @@
 # Component Reuse
 
-Application-level component reuse is primarily achieved through custom components.
+Application-level component reuse is mainly achieved through custom components.
 
 ## Child Components
 
-Suppose the structure inside the `<template>` tag of a [UX file](/framework/component/README.md#ux-file) describes the organization of the user interface, for example:
+Assume that the structure within the `<template>` tag of a certain [UX file](/framework/component/README.md#ux-file) describes the organization of the user interface, for example:
 ``` html
 <template>
   <div>
@@ -21,7 +21,7 @@ flowchart TB
   div --- image
   div --- qrcode
 ```
-This component tree has a parent node `div` and $3$ child nodes: `p`, `image`, and `qrcode`. The `div` component is the outermost component within the `<template>` tag. We refer to this type of component as the **root component**. Root components are sometimes not unique; for example:
+This component tree has one parent node `div` and $3$ child nodes: `p`, `image`, and `qrcode`. The `div` component is the outermost component within the `<template>` tag. We refer to this type of component as the **root component**. Sometimes root components are not unique, for example:
 ``` html
 <template>
   <p>text</p>
@@ -29,7 +29,7 @@ This component tree has a parent node `div` and $3$ child nodes: `p`, `image`, a
   <qrcode value="hello world!" />
 </template>
 ```
-contains $3$ root components. Additionally, using the [`for` directive](/framework/commands/for.md) may also result in multiple root component instances, for example:
+has 3 root components. In addition, using the [`for` directive](/framework/commands/for.md) may also result in multiple root component instances, for example:
 ``` html
 <template>
   <p for="x in ['one', 'two', 'three']">

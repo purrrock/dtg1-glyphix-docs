@@ -4,11 +4,11 @@
 
 ### `encodeURIComponent` <decl type="(str: string): string" function />
 
-The `encodeURIComponent()` global function is used to encode a URI component `str`. It escapes certain special characters into their corresponding UTF-8 percentage (`%`) escape sequences, ensuring that the component can be correctly interpreted when used as part of a URL, particularly in query string parameters, paths, or fragments.
+The `encodeURIComponent()` global function is used to encode a URI component `str`. It escapes certain special characters into their corresponding UTF-8 percentage (`%`) escape sequences. This ensures that the component can be correctly interpreted when used as part of a URL, particularly within query string parameters, paths, or fragments.
 
-Letters, numbers, and `- _ . ! ~ * ' ( )` are not encoded. Other characters are encoded into percentage escape sequences (for example, a space is encoded as `%20`).
+Letters, numbers, and `- _ . ! ~ * ' ( )` are not encoded. Other characters are encoded into percentage escape sequences (for example, spaces are encoded as `%20`).
 
-The behavior of `encodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the Web.
+`encodeURIComponent()` behaves identically to the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -18,9 +18,9 @@ console.log(encodeURIComponent("https://example.com/page?id=100"));
 
 ### `decodeURIComponent` <decl type="(str: string): string" function />
 
-The `decodeURIComponent()` global function is used to decode a URI component `str` encoded by `encodeURIComponent()`. It converts percentage (`%`)-encoded sequences back to their original character forms, thereby restoring the original URI component. For example, it converts `%20` back to a space.
+The `decodeURIComponent()` global function is used to decode a URI component `str` that was encoded by `encodeURIComponent()`. It converts percentage (`%`)-encoded escape sequences back into their original character forms, thereby restoring the original URI component. For example, it converts `%20` back into a space.
 
-The behavior of `decodeURIComponent()` is consistent with the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) in the Web.
+`decodeURIComponent()` behaves identically to the [function of the same name](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) in the Web.
 
 Example:
 ```js
@@ -38,7 +38,7 @@ The return value is an object containing the following fields:
 - `path: string`: The path field parsed from the parameter;
 - `query: string`: The query field parsed from the parameter;
 - `origin: string`: The original URI string from the parameter;
-- `toString: () => string`: This method can re-encode the object back into a URI string.
+- `toString: function`: This method can re-encode this object back into a URI string.
 
 For example:
 ``` js

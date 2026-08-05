@@ -6,7 +6,7 @@
 import interconnect from '@system.interconnect'
 ```
 
-## Interface Definitions
+## Interface Definition
 
 ### `instance` <decl type="(options: {package: string, fingerprint: string}): Connect" method/>
 
@@ -20,7 +20,7 @@ const connect = interconnect.instance({
 ```
 
 - package: The package name of the mobile application.
-- fingerprint: Fingerprint information, which must be consistent with the fingerprint information passed when creating the connection in the mobile application.
+- fingerprint: Fingerprint information, which must match the fingerprint information passed when creating the connection in the mobile application.
 
 ## `Connect` Interface
 

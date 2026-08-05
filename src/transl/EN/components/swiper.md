@@ -1,53 +1,53 @@
 # swiper
 
-Card view container, supporting arbitrary sub-components. The scrolling direction of the card view is specified by the specific layout mode: lists using the `flex-column` layout are vertical, while lists using the `flex-row` layout are horizontal.
+A card view container that supports arbitrary child components. The scrolling direction of the card view is specified by the layout method: lists using `flex-column` layout are vertical, while lists using `flex-row` layout are horizontal.
 
 ## Properties
 
 ### `scroll` <decl type="{ scrollX: number, scrollY: number, scrollState: number }" get listen />
 
-The `scroll` property value is an object containing the following fields: `scrollX`, `scrollY`, and `scrollState`. The `scrollX` and `scrollY` properties represent the horizontal and vertical scrolling positions in pixels, respectively. The `scrollState` property represents the scrolling state, with a value of $0$, $1$, or $2$, as detailed in the table below. Changes to the `scroll` property can be listened to using the `on` directive. Any content position changes caused by user operations and API operations will trigger the listener.
+The `scroll` property value is an object containing the following fields: `scrollX`, `scrollY`, and `scrollState`. The `scrollX` and `scrollY` properties represent the horizontal and vertical scrolling positions respectively, in pixels; the `scrollState` property represents the scrolling state, with a value of $0$, $1$, or $2$, as detailed in the table below. Changes to the `scroll` property can be listened to using the `on` directive. Any changes to the content position caused by user actions or API operations will trigger the listener.
 
 | `scrollState` Value | Description |
 | :--------------: | ------------------------------------------------------------------- |
-|       $0$        | Stopped scrolling |
-|       $1$        | Scrolling via user gestures |
-|       $2$        | The user has released their hand; scrolling is caused by method calls such as [`scrollTo`](#scrollto) or inertia |
+|       $0$        | Scrolling has stopped.                                                        |
+|       $1$        | Scrolling via user gestures.                                              |
+|       $2$        | The user has released their hand; scrolling is caused by methods such as [`scrollTo`](#scrollto) or inertia, etc. |
 
 ### `scrollTop` <decl type="number" get listen />
 
-The vertical scrolling position, which is the distance from the top of the `swiper` component's content to the top of the viewport, in pixels. This property can be used to listen to changes in the scroll position. Unlike the [`scroll`](#scroll) property, listening to the `scrollTop` property itself cannot distinguish whether it is a user gesture scroll, an API call, or an inertia-generated scroll.
+The vertical scroll position, which is the distance from the top of the `swiper` component's content to the top of the viewport, in pixels. Changes to the scroll position can be listened to via this property. Unlike the [`scroll`](#scroll) property, listening to the `scrollTop` property itself cannot distinguish whether it is a user gesture scroll, an API call, or an inertia-generated scroll.
 
 ### `scrollLeft` <decl type="number" get listen />
 
-The horizontal scrolling position, which is the distance from the left of the `swiper` component's content to the left of the viewport, in pixels. This property can be used to listen to changes in the scroll position. Unlike the [`scroll`](#scroll) property, listening to the `scrollLeft` property itself cannot distinguish whether it is a user gesture scroll, an API call, or an inertia-generated scroll.
+The horizontal scroll position, which is the distance from the left of the `swiper` component's content to the left of the viewport, in pixels. Changes to the scroll position can be listened to via this property. Unlike the [`scroll`](#scroll) property, listening to the `scrollLeft` property itself cannot distinguish whether it is a user gesture scroll, an API call, or an inertia-generated scroll.
 
 ### `scrollWidth` <decl type="number" get listen />
 
-The width of the `swiper` component's content area. The width of a vertically laid out `swiper` equals the viewport width, while the width of a horizontally laid out `swiper` is the sum of the widths of all elements. Changes to the content width can be listened to via this.
+The width of the `swiper` component's content area. The width of a vertically laid out `swiper` is equal to the view width, whereas the width of a horizontally laid out `swiper` is the sum of the widths of all elements. Changes to the content width can be listened to via this.
 
 ### `scrollHeight` <decl type="number" get listen />
 
-The height of the `swiper` component's content area. The height of a vertically laid out `swiper` equals the viewport height, while the height of a horizontally laid out `swiper` is the sum of the heights of all elements. Changes to the content height can be listened to via this.
+The height of the `swiper` component's content area. The height of a vertically laid out `swiper` is equal to the view height, whereas the height of a horizontally laid out `swiper` is the height of all elements combined. Changes to the content height can be listened to via this.
 
 ### `snapshot` <decl type="boolean" get set />
 
-When the `snapshot` property is enabled, the sub-components of `swiper` will enter snapshot mode. Please refer to the [`snapshot`](scroll.md#snapshot) property of the `scroll` component.
+When the `snapshot` property is enabled, the child components of `swiper` will enter snapshot mode. Please refer to the [`snapshot`](scroll.md#snapshot) property of the `scroll` component.
 
 ### `deformation` <decl type="string" set />
 
-Sets the deformation effect of child elements. Through deformation effects, appearances like fisheye can be achieved. A built-in deformation effect can be specified by name (string), or defined via a JavaScript function.
+Sets the deformation effect for child elements, through which appearances such as a fisheye effect can be achieved. You can specify a built-in deformation effect by its name (string), or define a deformation effect using a JavaScript function.
 
 | Value | Description |
 | :-: | :- |
-| `'none'` | No deformation effect (default). |
-| `'fade'` | Fade and scale transition effect. This effect highlights the "focus" of elements within the current viewport while making elements outside the viewport recede into the background. For details, please refer to the effect in the example in this section. |
+| `'none'` | No deformation effect (default value). |
+| `'fade'` | Fade and scale transition effect; this effect highlights the "focus" of elements within the current viewport and makes elements outside the viewport recede into the background. For details, please refer to the effect in the example in this section. |
 | `'fisheye'` | Built-in fisheye effect. This property component is used for the [`scroll`](scroll.md) component rather than `swiper`. |
 | function | Specifies the deformation effect via a JavaScript function. |
 
-Deformation effects should be constants and should not be modified.
+Deformation effects should be constant and not modified.
 
-If the content of `swiper`'s child elements changes frequently, it is recommended to add the [`quiescent`](/framework/generic/properties.md#quiescent) property to the elements when using deformation effects to avoid updating during transitions and to improve performance. You can refer to the example below:
+If the content of the `swiper` child elements changes frequently, it is recommended to add the [`quiescent`](/framework/generic/properties.md#quiescent) property to the elements when using deformation effects to avoid updates during transitions and to improve performance. You can refer to the example below:
 
 <glyphix id="components-swiper-deformation" height="360" width="360" title="Element Deformation Effect">
 
@@ -84,7 +84,7 @@ The first child element in the example does not have the `quiescent` property en
 
 ### `vertical` <decl type="boolean" set />
 
-Sets whether the `swiper` component uses a vertical layout. When set to the default `false`, a horizontal layout is used. The following example demonstrates the interaction effect of a `swiper` under a vertical layout (note that it must be scrolled vertically; horizontal sliding will not respond).
+Sets whether the `swiper` component uses a vertical layout. When it is `false` by default, a horizontal layout is used. The following example demonstrates the interaction effect of `swiper` under a vertical layout (note that it must be scrolled vertically, as horizontal swiping will not respond).
 
 <glyphix id="components-swiper-vertical" height="360" width="360" title="Vertical Layout">
 
@@ -110,50 +110,50 @@ p {
 
 ### `indicator` <decl type="boolean" get set />
 
-Sets whether the `swiper` component displays dot indicators. The display position of the dot indicators is determined by the `vertical` property: for a vertical layout, the dot indicators are displayed in the middle of the right side; for a horizontal layout, they are displayed in the middle of the bottom. For specific effects, please refer to the examples of the [`deformation`](#deformation) and [`vertical`](#vertical) properties.
+Sets whether the `swiper` component displays dot indicators. The display position of the dot indicators is determined by the `vertical` property: for vertical layouts, dot indicators are displayed in the middle of the right side; for horizontal layouts, dot indicators are displayed in the middle of the bottom. For specific effects, please refer to the examples of the [`deformation`](#deformation) and [`vertical`](#vertical) properties.
 
 Refer to [Dot Indicator CSS Properties](#dot-indicator-css-properties) to learn how to customize the display style of dot indicators.
 
 ### `pageLength`  <decl type="number" set />
 
-Sets the size or proportion of child pages. When expressed as a percentage, it sets the size of the sub-components along the sliding direction (relative to the component itself); when expressed as other numbers, it sets the size of the sub-components along the sliding direction.
+Sets the size or proportion of child pages. When it is a percentage, it sets the size of the child component in the sliding direction (relative to the component itself); when it is other numbers, it sets the size of the child component in the sliding direction.
 
 ### `index`  <decl type="number" get set listen />
 
-The index of the currently displayed sub-component. When the `index` property is set, the component will scroll to the specified sub-component via animation. Position changes can be listened to using the `on` directive, and sub-component index changes can be listened to via the `index` property.
+The index of the currently displayed child component. When the `index` property is set, the component will scroll to the specified child component via an animation. Position changes can be listened to using the `on` directive, and changes to the child component index can be monitored via the `index` property.
 
 ### `finalChanged` <decl type="bool" get set />
 
-Sets whether to trigger the [`index`](#index) change event only when scrolling stops. By default (i.e., when `finalChanged` is `false`), listening events are triggered whenever scrolling gestures or other reasons cause the `index` property of the `swiper` component to change. However, doing so can easily lead to dropped animation frames, or overly frequent and unnecessary event triggering. When `finalChanged` is set, the `index` change event is triggered only when scrolling stops.
+Sets whether to trigger the [`index`](#index) change event only when scrolling stops. By default (i.e., when `finalChanged` is `false`), whenever scrolling gestures or other reasons cause the `index` property of the `swiper` component to change, its listening event will be triggered. However, doing this can easily cause dropped frames in animations or overly frequent, unnecessary event triggers. When `finalChanged` is set, the `index` change event is triggered only when scrolling stops.
 
 ::: tip
-When implementing dot indicators and other effects by listening to the `index` property, it is recommended to set `finalChanged` to `true`, which can prevent dropped frames caused by rendering updates triggered by events during the sliding process.
+When implementing effects like dot indicators by listening to the `index` property, it is recommended to set `finalChanged` to `true`, which can avoid dropped frames caused by rendering updates triggered by events during the swiping process.
 :::
 
 ### `weakGesture` <decl type="'none' | 'start' | 'end' | 'edge'" get set />
 
-Sets under which circumstances the `swiper` component will bubble up scrolling gestures. By default, `swiper` prevents bubbling for the gestures it responds to, so its parent elements cannot receive gestures that cause `swiper` to scroll. `weakGesture` allows enabling gesture event bubbling when dragged to the content boundary positions, enabling parent elements to receive these gestures.
+Sets under which circumstances the `swiper` component will bubble scroll gestures. By default, `swiper` prevents bubbling for the gestures it responds to, so its parent elements cannot receive the gestures that make `swiper` scroll. `weakGesture` allows enabling gesture event bubbling when dragged to the content boundary positions, enabling parent elements to receive these gestures.
 
-|    Value    | Description                                             |
+|    Value     | Description                                             |
 | :-------: | ------------------------------------------------ |
 | `'none'`  | Do not bubble responded gesture events.                     |
 | `'start'` | Bubble responded gesture events after dragging to the start position of the content.       |
 |  `'end'`  | Bubble responded gesture events after dragging to the end position of the content.       |
 | `'edge'`  | Bubble responded gesture events after dragging to the start or end position of the content. |
 
-If the underlying element of the page is a horizontal `swiper` component, but you want right-swipe gestures to return to the previous page, you can configure it like this:
+If the underlying element of a page is a horizontal `swiper` component, but you want a right-swipe gesture to allow returning from the page, you can configure it like this:
 ``` html
 <swiper weak-gesture="start"> ... </swiper>
 ```
-When the user swipes to the beginning of the `swiper` component and continues to swipe right, they can exit the page.
+When the user swipes to the head of the `swiper` component and continues to swipe right, they can exit the page.
 
 ### `bounces` <decl type="'none' | 'start' | 'end' | 'edge'" get set />
 
-Sets whether to trigger a bounce effect after scrolling `swiper` to the boundaries via gestures. The initial value of this property is `edge`, which allows bouncing at the start and end positions. The `bounces` property of `swiper` is similar to the [`bounces`](scroll.md#bounces) property of the [`scroll`](scroll.md) component; please refer to the related documentation for more details.
+Sets whether a bounce effect is triggered after scrolling `swiper` to the boundary via gestures. The initial value of this property is `edge`, which means bouncing is allowed at both the start and end positions. The `bounces` property of `swiper` is similar to the [`bounces`](scroll.md#bounces) property of the [`scroll`](scroll.md) component; for more explanations, please refer to the related documentation.
 
 ### `scrolled` <decl type="boolean" listen />
 
-Listens to whether the `swiper` component is in a scrolling state via the `scrolled` property. A property value of `true` triggered by the event indicates that it is currently scrolling, otherwise it means it has stopped scrolling.
+Listens to whether the `swiper` component is in a scrolling state via the `scrolled` property. A property value of `true` triggered by the event indicates that it is scrolling, otherwise it means scrolling has stopped.
 
 Both scrolling operations generated by user touches and scrolling via the `scroll` property will trigger the `scrolled` event. When stopping from the scrolling state, the parameter value of the `scrolled` event is `false`.
 
@@ -165,21 +165,21 @@ Both scrolling operations generated by user touches and scrolling via the `scrol
 }): void
 </pre></decl>
 
-Moves the viewport to the sub-component specified by the index. If this move crosses the viewport boundary, the viewport position will stay at the first or last component. The roles of the `options` parameter properties are:
-- `index`: The index of the target sub-component to move to, where $0$ represents the first sub-component.
-- `behavior`: Uses an animation transition when set to `'smooth'`, or moves immediately to the specified sub-component position when set to `'instant'` (default).
+Moves the viewport to the child component specified by the index. If this move crosses the viewport boundary, the viewport position will stay at the first or last component. The roles of the `options` parameter properties are:
+- `index`: The index of the target child component to move to, with $0$ representing the first child component.
+- `behavior`: When set to `'smooth'`, an animated transition is used; when set to `'instant'` (default value), it moves immediately to the specified child component position.
 
 ### `scrollTo` <decl type="(position: number): void" method />
 
-Scrolls the content to the specified position. The scrolling direction is consistent with the layout direction of the scroll component.
+Scrolls the content to a specified position. The scrolling direction is consistent with the layout direction of the scroll component.
 
-The `scrollTo` method ignores the snap effect of elements.
+The `scrollTo` method will ignore the snap effect of elements.
 
 ## CSS Specifications
 
 ### Dot Indicator CSS Properties
 
-This section introduces the CSS properties available when the `swiper` component has the [`indicator`](#indicator) property enabled, which are used to control some display styles of the dot indicators. The dot indicators of `swiper` are always displayed as a group of horizontally or vertically aligned dots, and developers can only customize based on this foundation.
+This section introduces the CSS properties available when the `swiper` component has the [`indicator`](#indicator) property enabled, which are used to control some display styles of the dot indicators. The dot indicators of `swiper` are always displayed as a group of horizontally or vertically aligned dots, and developers can only customize based on this.
 
 #### `indicator-color`
 
@@ -217,7 +217,7 @@ swiper {
 
 #### `indicator-selected-color`
 
-Defines the color of selected dot indicators. For the effect, refer to the example of the [`indicator-color`](#indicator-color) property, where you can observe that the dot indicator corresponding to the selected page is displayed in the color defined by this CSS property.
+Defines the color of selected dot indicators. For the effect, you can refer to the example of the [`indicator-color`](#indicator-color) property, where you can observe that the dot indicator corresponding to the selected page is displayed in the color defined by this CSS property.
 
 #### `indicator-size`
 
@@ -256,7 +256,7 @@ swiper {
 
 #### `indicator-top`
 
-When `swiper` has a [horizontal layout](#vertical), the `indicator-top` property can be used to specify the distance of the dot indicators from the top. By default, the dot indicators are displayed at the bottom middle position; this property can display them at the top:
+When `swiper` has a [horizontal layout](#vertical), you can use the `indicator-top` property to specify the distance of the dot indicators from the top. By default, dot indicators are displayed at the bottom middle position; this property can display them at the top:
 
 <glyphix id="components-swiper-indicator-top" height="360" width="360" title="Top Dot Indicator">
 
@@ -292,7 +292,7 @@ Do not set `indicator-left`, `indicator-top`, `indicator-right`, and `indicator-
 
 #### `indicator-left`
 
-When `swiper` has a [vertical layout](#vertical), the `indicator-left` property can be used to specify the distance of the dot indicators from the left. By default, the dot indicators are displayed in the middle of the right side; this property can display them on the left:
+When `swiper` has a [vertical layout](#vertical), you can use the `indicator-left` property to specify the distance of the dot indicators from the left. By default, dot indicators are displayed in the middle of the right side; this property can display them on the left:
 
 <glyphix id="components-swiper-indicator-left" height="360" width="360" title="Left Dot Indicator">
 
@@ -324,7 +324,7 @@ swiper {
 
 #### `indicator-right`
 
-When `swiper` has a [vertical layout](#vertical), the `indicator-right` property can be used to specify the distance of the dot indicators from the right. The effect is shown below:
+When `swiper` has a [vertical layout](#vertical), you can use the `indicator-right` property to specify the distance of the dot indicators from the right. The effect is shown below:
 
 <glyphix id="components-swiper-indicator-right" height="360" width="360" title="Right Dot Indicator">
 
@@ -356,8 +356,8 @@ swiper {
 
 #### `indicator-bottom`
 
-When `swiper` has a [horizontal layout](#vertical), the `indicator-bottom` property can be used to specify the distance of the dot indicators from the bottom. For the effect, refer to the examples of the [`indicator-color`](#indicator-color) and [`indicator-size`](#indicator-size) properties.
+When `swiper` has a [horizontal layout](#vertical), you can use the `indicator-bottom` property to specify the distance of the dot indicators from the bottom. For the effect, you can refer to the examples of the [`indicator-color`](#indicator-color) and [`indicator-size`](#indicator-size) properties.
 
 ### `padding` and `overflow` <version-badge since="0.9" />
 
-See the relevant instructions in the [scroll component](scroll.md#padding-and-overflow). The `padding` and `overflow` properties of the `swiper` component share the same behavioral specifications as properties of the same name in the `scroll` component. Please refer to the related documentation for more details.
+See the related descriptions in the [scroll component](scroll.md#padding-和-overflow). The `padding` and `overflow` properties of the `swiper` component have the same behavioral specifications as the properties of the same name in the `scroll` component; for more explanations, please refer to the related documentation.

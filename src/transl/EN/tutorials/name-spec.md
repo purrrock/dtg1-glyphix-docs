@@ -3,7 +3,7 @@ icon: code-tags-check
 ---
 # Component Naming Conventions
 
-This document introduces the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions must be followed; otherwise, unexpected results may occur. Adhering to the recommended naming conventions ensures maximum compatibility.
+This document introduces the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strictly required; failure to comply may result in unexpected behavior. Adhering to the recommended naming conventions ensures maximum compatibility.
 
 ## Template Naming Conventions
 
@@ -21,7 +21,7 @@ Attribute names must be in kebab-case or camelCase:
 <component propName="expr"></component>
 ```
 
-It is recommended to uniformly use the Web-compliant kebab-case naming convention.
+It is recommended to uniformly use the kebab-case naming convention that complies with Web standards.
 
 ## JavaScript Code Naming Conventions
 
@@ -36,7 +36,7 @@ export default {
   }
 }
 ```
-These property names are automatically converted to their corresponding kebab-case equivalents in template code.
+These property names are automatically converted to their corresponding kebab-case in template code.
 
 ## File Naming Conventions
 
@@ -45,4 +45,4 @@ UX files must use the same name as the component, which is PascalCase. In the `<
 <import src="path/to/UxFile" name="UxFile"/>
 <import src="path/to/UxFile" name="ux-file"/>
 ```
-In fact, the naming requirements for the `name` attribute are consistent with those for tag names in templates.
+In fact, the naming requirement for the `name` attribute is consistent with that of tag names in templates.

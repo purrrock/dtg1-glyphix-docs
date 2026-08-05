@@ -1,6 +1,6 @@
 # Path Operations
 
-This module provides interfaces for path operations, including path concatenation, splitting, and normalization.
+This module provides interfaces for path operations, including path joining, splitting, and normalization.
 
 ## Import Module
 
@@ -20,7 +20,7 @@ path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
 
 #### `path.dirname` <decl type="(path:string): string" method />
 
-Returns the directory name portion of the `path` (opposite of `basename()`, which discards the file name portion). For example:
+Returns the directory name portion of the `path` (unlike `basename()`, this discards the file name portion). For example:
 ``` js
 path.dirname('/foo/bar/baz') // '/foo/bar'
 ```
@@ -45,7 +45,7 @@ path.isAbsolute('.');        // false
 
 #### `path.join` <decl type="(...paths: string[]): string" method />
 
-Concatenates multiple paths together and normalizes the result. For example:
+Joins and normalizes multiple paths. For example:
 ``` js
 path.join('/foo', 'bar', 'baz/asdf', 'quux', '..') // '/foo/bar/baz/asdf'
 ```

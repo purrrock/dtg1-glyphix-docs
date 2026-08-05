@@ -1,14 +1,14 @@
 # Testing Framework
 
-Glyphix provides an automated testing framework for applications, designed to simulate user operations and check interface behavior. This testing framework does not simulate operations randomly; instead, it requires developers to write test cases.
+Glyphix provides an automated application testing framework for simulating user actions and inspecting UI behavior. This testing framework does not simulate actions randomly; instead, it requires developers to write test cases.
 
 ## Basic Concepts
 
-The Glyphix testing framework is essentially a set of JavaScript APIs that generally implement the following features:
+The Glyphix testing framework is essentially a set of JavaScript APIs that generally implement the following functions:
 
 - Registering test cases
-- Finding interface elements
-- Simulating user operations or actions
+- Finding UI elements
+- Simulating user actions or gestures
 - Assertions and verification logic
 
 ### Test Steps
@@ -19,24 +19,24 @@ The basic principle of a test step is to **find a specific element**, **execute 
 2. Click this element;
 3. Do not verify the content.
 
-In an actual interface, `.play-button` might be a play button that starts playing music when clicked. The JavaScript code corresponding to this test is as follows:
+In an actual UI, `.play-button` might be a play button, and clicking it will start playing music. The JavaScript code corresponding to this test is as follows:
 
 ```js
 await tc.getByClass("play-button").click();
 ```
 
-This test code will automatically wait for the `.play-button` element to appear and move it into the interface viewport before clicking the element. These testing APIs automatically wait for animations or gestures in the interface and will fulfill the `await` only after the click gesture is fully completed. Therefore, it is usually unnecessary to manually move elements or explicitly wait for operations to complete.
+The test code automatically waits for the `.play-button` element to appear and moves it into the UI viewport before clicking it. These test APIs automatically wait for animations or gestures in the interface and fulfill the `await` only after the click gesture is fully completed. Therefore, it is generally unnecessary to manually move elements or explicitly wait for operations to complete.
 
 ### Finding Elements
 
-The testing framework provides a series of interfaces to find elements in the interface, such as:
+The testing framework provides a series of interfaces to find elements in the UI, such as:
 
-- `tc.getByClass()`: Finds elements by class name;
-- `tc.getByTag()`: Finds elements by tag name.
+- `tc.getByClass()`: Find elements by class name;
+- `tc.getByTag()`: Find elements by tag name.
 
-All these interfaces wait for the element to appear and attempt to move the element into the visible area before the next operation.
+These interfaces wait for the element to appear and attempt to move the element into the visible area before the next operation.
 
-### Simulating User Operations
+### Simulating User Actions
 
 ## Getting Started with Writing Tests
 
@@ -46,25 +46,25 @@ Glyphix test cases are written in JavaScript and stored within the application's
 
 ```shell
 <app-name>
-├─ README.md         # Project README file
+├─ README.md         # Project README
 └─ src               # Project source code directory
     ├─ app.js        # App entry script file
-    ├─ manifest.json # Configures basic application information
-    ├─ tests         # Stores all test cases
+    ├─ manifest.json # Configuration of basic app information
+    ├─ tests         # Directory storing all test cases
     │  └─ spec.js    # Test case code
-    └─ Main          # Directory for the home page
-        └─ index.ux  # Interface description file for the home page
+    └─ Main          # Directory storing the home page
+        └─ index.ux  # Home page UI description file
 ```
 
 The test code in this example is the `src/tests/spec.js` file, and multiple test files can be created as needed.
 
 ::: tip
-The filename for test cases is usually `spec`, which is short for specification. A spec file is used to define and describe the expected behavior and functionality of software, typically containing a set of test cases to verify whether the software works as expected.
+The file name for test cases is usually `spec`, which is short for specification. A spec file is used to define and describe the expected behavior and functionality of software, and typically contains a set of test cases used to verify whether the software works as expected.
 :::
 
 ### Writing Test Cases
 
-Suppose our application has a home page with a `span` element whose class name is `clickable`:
+Suppose our application has a home page containing a `span` element with the class name `clickable`:
 
 ```html
 <div>
@@ -89,11 +89,11 @@ tc.testcase("click-test", async () => {
 });
 ```
 
-Next, we need to register this test script and start the test.
+Next, you need to register this test script and start the test.
 
 ### Registering Test Scripts
 
-In general code, statements like `import 'tests/spec.js'` are typically used to import scripts, but this would cause the JavaScript module to always be loaded. To optimize application loading speed and memory usage, we do not need to import these scripts in non-test environments. To achieve this, you can register the test script in the App object within the `src/app.js` file:
+In regular code, statements like `import 'tests/spec.js'` are typically used to import scripts, but this would cause the JavaScript module to always be loaded. To optimize application loading speed and memory usage, we don't need to import these scripts in non-test environments. To achieve this, you can register test scripts in the App object within the `src/app.js` file:
 
 ```js
 export default {
@@ -106,17 +106,17 @@ export default {
 };
 ```
 
-This method does not immediately import these test scripts; instead, it delays their import until the tests are executed. Therefore, when tests are not being run, using the `testsuite` property incurs no extra overhead, and developers do not need to worry about the performance burden of loading test scripts.
+This method does not import the test scripts immediately, but defers their import until the tests are executed. Therefore, when tests are not being run, using the `testsuite` property introduces no overhead, and developers do not need to worry about the performance burden of loading test scripts.
 
 ::: warning
-Even if there is only a single test script, the `testsuite` property must be an `Array` object, with the path of the test script included within it, just like the example in this section. The path of the test script is always relative to the directory where the `app.js` file is located, or you can use an absolute path, such as `/tests/spec.js`.
+Even if there is only a single test script, the `testsuite` property must be an `Array` object containing the path of the test script, as shown in the example in this section. The path of the test script is always relative to the directory where the `app.js` file is located. You can also use an absolute path, such as `/tests/spec.js`.
 :::
 
 ## Running Test Cases
 
-### Emulator
+### Simulator
 
-To run test cases, you should use the `gx emu -i` command to start the emulator. You will see information like this in the terminal:
+To run test cases, use the `gx emu -i` command to start the simulator. You will see information like this in your terminal:
 
 ```shell
 ❯ gx emu -i
@@ -127,7 +127,7 @@ Next, open the link `http://localhost:14200` in your browser, go to the "Console
 ```json
 {"fn": "test.start", "name": "click-test"}
 ```
-This will start the `click-test` test case written earlier. At this point, you should see the following logs in the log viewer:
+This will start the `click-test` test case written previously. You should then see the following logs in the log viewer:
 
 ```log
 19:14:33.320 [inspector] test com.example.app . click-test started
@@ -137,4 +137,4 @@ This will start the `click-test` test case written earlier. At this point, you s
 19:14:37.600 [tester] com.example.app testcase click-test finished
 ```
 
-This indicates that the test executed successfully and that the `span` element was indeed clicked $3$ times.
+This indicates that the test executed successfully and the `span` element was indeed clicked $3$ times.

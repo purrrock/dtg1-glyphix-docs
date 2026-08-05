@@ -1,6 +1,6 @@
-# Internal Interfaces
+# Internal APIs
 
-The `system.internal` module provides internal interfaces for system use. This module can only be used in the launcher application.
+The `system.internal` module provides internal interfaces for system use. This module can only be used within the launcher application.
 
 ## Import Module
 
@@ -12,17 +12,17 @@ import internal from '@system.internal'
 
 ### `globalComponent` <decl type="(name: string, uri: string): void" method />
 
-Registers a [global component](/framework/component/README.md#全局组件), which can be imported in all applications. The `name` parameter is the name of the global component, and the `uri` parameter is the relative path or URI of the global component UX file to the current source file. For example:
+Registers a [global component](/framework/component/README.md#全局组件), which can be imported in all applications. The `name` parameter is the name of the global component, and `uri` is the path or URI of the global component UX file relative to the current source file. For example:
 ``` js
 internal.globalComponent('TopBar', '/global/TopBar.ux')
 ```
-Afterwards, the global component `TopBar` can be referenced in all applications using `<import name="TopBar" />`.
+Afterwards, the global component `TopBar` can be referenced in any application using `<import name="TopBar" />`.
 
 It is best to execute the `globalComponent()` method during the execution phase of the launcher application's `app.js`, so that global component information can be registered before any interface is loaded.
 
 ### `setDefaultKeyHandler` <decl type="(handler: (event: KeyEvent) => void): void" method />
 
-Registers the system's default key handler. The `handler` parameter is a callback function. The prototype of the `KeyEvent` type is:
+Registers the system's default key handler, where the `handler` parameter is a callback function. The prototype of the `KeyEvent` type is:
 ``` ts
 interface KeyEvent  {
   type: 'keydown' | 'keyup', // Type of the key event

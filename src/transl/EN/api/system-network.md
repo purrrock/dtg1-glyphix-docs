@@ -14,25 +14,25 @@ Listens for changes in network status. The `status` parameter of the `callback` 
 
 ### `unsubscribe` <decl type="(subscribeID: number): void" method/>
 
-Cancels network status listening. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
+Cancels the network status listener. `subscribeID` is the ID value returned by the [`subscribe()`](#subscribe) method.
 
 ### `getType` <decl type="(): Promise<NetworkState>" method/>
 
-Gets the current network status and returns a [`NetworkState`](#networkstate) value.
+Gets the current network status, returning a [`NetworkState`](#networkstate) value.
 
 ## Type Definitions
 
 ### `NetworkState`
 
-This object is used to represent the current network status, with the following type signature:
+This object represents the current network status. The type signature is as follows:
 
 ```ts
 type NetworkState = {
   device: string; // The name of the network device
   type: string; // The type of the network device
   linkUp: boolean; // Whether the network device is turned on
-  online: boolean; // Whether the device is online (whether the internet can be accessed)
+  online: boolean; // Whether the device is online (whether the internet is accessible)
 };
 ```
 
-Typically, the `online` property of `NetworkState` can be used to check whether the device has internet access.
+Typically, you can use the `online` property of `NetworkState` to check whether the device has internet access.

@@ -1,10 +1,10 @@
 # slider-arc
 
-An arc slider selector. It is a block-level element by default, and style customization is currently not supported.
+An arc-shaped slider selector. It is a block-level element by default, and style customization is currently not supported.
 
-## Properties
+## Attributes
 
-Inherits properties from the [slider](slider) component.
+Inherits attributes from the [slider](slider) component.
 
 ### `arc-center` <decl type="{ x: number, y: number }" set />
 

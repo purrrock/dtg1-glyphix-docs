@@ -3,7 +3,7 @@ icon: help-circle-outline
 ---
 # Frequently Asked Questions
 
-## Bundler
+## Packaging Tools
 
 ### Project Build Issues
 
@@ -22,7 +22,7 @@ This issue occurs because a previous build step failed, causing the ongoing imag
 
 #### Simulator Default Language
 
-The default language of the simulator is `zh-CN`. Therefore, if you have added [internationalization](/framework/component/i18n.md) configuration, it will use the `zh-CN.json` translation file by default. When running the simulator using the `gx` command, you can use the `-l` or `--language` option to specify the language:
+The default language of the simulator is `zh-CN`. Therefore, if you have added [internationalization](/framework/component/i18n.md) configuration, it will default to using the `zh-CN.json` translation file. You can use the `-l` or `--language` option with the `gx` command to specify the language when running the simulator:
 ``` shell
 gx emu -l en-US # Use American English
 ```

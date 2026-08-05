@@ -28,27 +28,27 @@ Sets whether the `progress-arc` component is in a busy state. In the busy state,
 
 </glyphix>
 
-In this example, the difference between the start angle and the stop angle of the progress bar is $360^\circ$. At this point, a typical loading animation effect can be displayed using the `busy` attribute.
+In this example, the start angle and stop angle of the progress bar differ by $360^\circ$. At this point, the `busy` attribute can be used to display a typical loading animation effect.
 
 ::: tip
-As long as the progress bar is circular, a fixed busy animation effect will be displayed; the start and stop angles have no effect on this.
+As long as the progress bar is circular, a fixed busy animation effect will be displayed; the start and end angles have no effect on this.
 :::
 
 ### `startAngle` <decl type="number" get set />
 
-The start angle of the arc progress bar, with a default value of $135$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
+The starting angle of the arc progress bar, with a default value of $135$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
 
 ### `stopAngle` <decl type="number" get set />
 
-The stop angle of the arc progress bar, with a default value of $405$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
+The ending angle of the arc progress bar, with a default value of $405$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
 
-## Instructions
+## Usage Instructions
 
 ### Angle Configuration
 
-Unlike the linear [`progress`](progress.md), arc or circular progress bars require proper configuration of the `startAngle` and `stopAngle` attributes to display correctly. Both attributes use angular units. In the screen coordinate system, $0^\circ$ points horizontally to the right (the 3 o'clock position on a clock) and increases in the clockwise direction, decreasing otherwise.
+Unlike the linear [`progress`](progress.md), arc or circular progress bars require proper configuration of the `startAngle` and `stopAngle` attributes to display correctly. Both attributes use angular units. In the screen coordinate system, $0^\circ$ points horizontally to the right (i.e., the $3$ o'clock position on a clock) and increases in the clockwise direction, decreasing otherwise.
 
-The display of `progress-arc` linearly interpolates the angle range based on the proportion of `value` within $[\texttt{min}, \texttt{max}]$. Specifically, users will see the highlighted angle of the progress start at `startAngle` and end at `valueAngle`:
+The display of `progress-arc` linearly interpolates the angle range based on the proportion of `value` within $[\texttt{min}, \texttt{max}]$. Specifically, users will see the highlighted progress angle start at `startAngle` and end at `valueAngle`:
 
 $$
 \begin{aligned}
@@ -57,11 +57,11 @@ $$
 \end{aligned}
 $$
 
-Therefore, to display a full-circle progress bar, the difference between the start and stop angles must be $360^\circ$, even if these two angles appear visually identical. Additionally, the start angle can be greater than the stop angle, which will reverse the direction of the progress.
+Therefore, to display a full-circle circular progress bar, the start and end angles must differ by $360^\circ$, even if the two angles appear visually identical. Additionally, the start angle can be greater than the end angle, which will reverse the direction of the progress.
 
-The following example shows the practical effects of various angle configurations. Note that the second example demonstrates the reverse progress display technique.
+The following example shows the practical effects of various angle configurations. Note that the second example demonstrates the technique for reverse progress display.
 
-<glyphix id="components-progress-arc-angles" height="120" width="720" title="Angle Configuration Example">
+<glyphix id="components-progress-arc-angles" height="120" width="720" title="Angle Configuration Examples">
 
 ``` html
 <div>
@@ -127,35 +127,35 @@ p {
 
 ## CSS Specifications
 
-### Dimension Calculation
+### Size Calculation
 
-The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will fill the shorter axis, and the center of the arc progress bar will be the center of the element. By default, the size of `progress-arc` may be close to a single character, resulting in a very bizarre display effect. Therefore, it is usually necessary to explicitly specify the width and height in CSS, or use other reasonable layout strategies.
+The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will fill the shorter axis, and the center of the arc progress bar will be the center of the element. By default, the size of `progress-arc` may be close to a single character, resulting in a very strange display effect. Therefore, it is usually necessary to explicitly specify the width and height in CSS or use other reasonable layout strategies.
 
 ::: tip
-It is best to specify a reasonable width and height for the `progress-arc` component; otherwise, it may become unrecognizable. At the very least, the `width` CSS property should be set, and the component's layout strategy will automatically use a $1:1$ aspect ratio.
+It is best to specify a reasonable width and height for the `progress-arc` component, otherwise it may be unrecognizably small. At the very least, the `width` CSS property should be set, and the component's layout strategy will automatically use a $1:1$ aspect ratio.
 :::
 
 ### CSS Properties
 
-You can adjust the appearance of the `progress-arc` component using CSS.
+The appearance of the `progress-arc` component can be adjusted via CSS.
 
 #### `stroke-width`
 
-This property specifies the width of the arc outline of the `progress-arc` component. The value type is [Length](/framework/render/style-and-layout.md#长度), and percentage units are not supported.
+This property specifies the arc outline width of the `progress-arc` component. The value type is [Length](/framework/render/style-and-layout.md#长度), and percentage units are not supported.
 
 ::: tip
-If you want the rendering width of the `progress-arc` component to be proportional to the font size, it is recommended to use the [`rem`](/framework/application/font-config.md#rem-字号单位) length unit, such as `0.15rem`.
+If you want the rendering width of the `progress-arc` component to be proportional to the font size, it is recommended to use [`rem`](/framework/application/font-config.md#rem-字号单位) length units, such as `0.15rem`.
 :::
 
 #### `color`
 
-Sets the color of the highlighted progress bar for `progress-arc`. By default, the system theme color is used.
+Sets the color of the highlighted progress bar of `progress-arc`. By default, the system theme color is used.
 
 #### `background-color`
 
-Sets the color of the background progress bar for `progress-arc`. By default, it is configured according to the system theme.
+Sets the color of the background progress bar of `progress-arc`. By default, it is configured according to the system theme.
 
-### CSS Pseudo-Elements
+### CSS Pseudo-elements
 
 #### `value`
 

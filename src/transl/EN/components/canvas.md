@@ -1,10 +1,10 @@
 # canvas
 
-Canvas component. Using scripts in JavaScript, you can draw graphics and more on the `canvas`.
+The canvas component allows drawing graphics and more on the `canvas` using scripts in JavaScript.
 
 ### `context`
 
-**Value Type**: The context content obtained from the canvas API
+**Value Type**: Context content obtained from the canvas API
 
 **Operation**: Set
 

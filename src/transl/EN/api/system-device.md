@@ -6,7 +6,7 @@
 import device from '@system.device'
 ```
 
-Developers need to declare the application's access permission to `watch.permission.DEVICE_INFO` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare access to the `watch.permission.DEVICE_INFO` permission for the application in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ## Interface Definition
 
@@ -27,7 +27,7 @@ Developers need to declare the application's access permission to `watch.permiss
 }>
 </pre></decl>
 
-Gets the basic information of the device. The meanings of the property fields in the returned object are:
+Gets basic device information. The meanings of the properties in the returned object are as follows:
 - `brand`: Device brand name.
 - `manufacturer`: Device manufacturer.
 - `model`: Device model.
@@ -51,7 +51,7 @@ Gets the basic information of the device. The meanings of the property fields in
 }>
 </pre></decl>
 
-Batch gets device identification information. The `types` parameter specifies the categories of information to be obtained, which is an Array object consisting of elements `'device'`, `'mac'`, `'user'`, or `'advertising'`. Depending on the values in `types`, the meanings of the property fields in the returned object are:
+Gets device identification information in batches. The `types` parameter specifies the categories of information to retrieve, which is an Array object consisting of elements `'device'`, `'mac'`, `'user'`, or `'advertising'`. Depending on the values in `types`, the meanings of the properties in the returned object are as follows:
 - `type`: .
 - `device`: Unique device identifier, present only when `types` contains the `'device'` element.
 - `mac`: Device MAC address, present only when `types` contains the `'mac'` element.
@@ -100,4 +100,4 @@ The screen shape of the device. The values mean the following:
 
 Gets the memory profile property of the device. This property is the JavaScript API version of the [`memory-profile`](/framework/render/media-query.md#memory-profile) media query property. For details, please refer to the documentation of media query properties.
 
-Unlike the `memory-profile` media query property, the value of the `memoryProfile` property is an integer with a fixed unit of $\rm KiB$.
+Unlike the `memory-profile` media query property, the value of the `memoryProfile` property is an integer, with a fixed unit of $\rm KiB$.

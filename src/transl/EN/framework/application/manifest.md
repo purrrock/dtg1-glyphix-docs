@@ -1,4 +1,4 @@
-# The manifest File
+# manifest File
 
 The `manifest.json` file contains information such as application descriptions, interface declarations, and page routing.
 
@@ -30,25 +30,25 @@ interface Manifest {
 
 #### `package` <decl type="string" />
 
-The `package` field is the application's package name and is a mandatory field. It is recommended to use the format `com.company.module`, such as `com.example.demo`. Application package names must be unique within the system.
+The `package` field is the application's package name and is a required field. It is recommended to use the format `com.company.module`, such as `com.example.demo`. Application package names must be unique within the system.
 
 ::: important
-App stores of many device manufacturers do not support hyphens `-` as part of the package name, so please avoid them. We also do not recommend using underscores `_` or `.` as substitutes; in such cases, simply connect the words directly, e.g., `com.wateralert.demo`.
+App stores of many device manufacturers do not support hyphens `-` as part of the package name, so please avoid using them. We also do not recommend using underscores `_` or `.` as replacements; in such cases, simply connect the words directly, e.g., `com.wateralert.demo`.
 :::
 
 #### `name` <decl type="string" />
 
-The display name of the application, a mandatory field. It should be within 6 Chinese characters and match the name saved in the app store. It is used to display the app name on desktop icons, pop-up windows, etc. This field can use `${}` expressions to reference [internationalized strings](i18n.md), for example:
+The display name of the application, which is a required field. It should be within 6 Chinese characters and match the name saved in the app store. It is used to display the application name on desktop icons, pop-up windows, etc. This field can use `${}` expressions to reference [internationalized strings](i18n.md), for example:
 ``` json
 {
   "name": "${appName}"
 }
 ```
-Here, `appName` is a key for an internationalized string. Internationalized application names allow the device's application list to display the application name in the current language rather than a fixed language.
+Here, `appName` is the key for an internationalized string. Internationalized application names allow the device's application list to display the app name in the current language rather than a fixed language.
 
 #### `icon` <decl type="string" />
 
-The path to the application icon, for example, `/assets/icon.png`.
+The path to the application icon, for example `/assets/icon.png`.
 
 #### `versionName` <decl type="string" />
 
@@ -60,11 +60,11 @@ The application version code, which is an integer. It is recommended to incremen
 
 #### `config` <decl type="?: Config" />
 
-An optional field describing system configuration information, see [`Config` Object](#config-object).
+An optional field describing system configuration information. See the [`Config` Object](#config-object).
 
 #### `permissions` <decl type="?: PermissionInfo[]" />
 
-An array consisting of `PermissionInfo` objects, representing the list of permissions used by the application. When the application needs to access location information, sensors, device information, audio recording, Bluetooth, health data, and other capabilities, the corresponding permissions must be declared in this field, for example:
+An array consisting of `PermissionInfo` objects, representing the list of permissions used by the application. When the app needs to access capabilities such as location information, sensors, device information, audio recording, Bluetooth, or health data, the corresponding permissions must be declared in this field, for example:
 
 ``` json
 {
@@ -74,41 +74,41 @@ An array consisting of `PermissionInfo` objects, representing the list of permis
   ]
 }
 ```
-The `PermissionInfo` object describes the permission information required by the application. It currently only has a `name` field. Its signature is as follows:
+The `PermissionInfo` object describes the permission information required by the application, and currently it only has a `name` field. Its signature is as follows:
 ``` ts
 type PermissionInfo = {
-  name: string; // Permission name, uniquely identifies a permission item
+  name: string; // Permission name, uniquely identifying a permission item
 }
 ```
 The `name` field identifies the specific permission name. The permission names correspond to the system module interface list as follows:
 
-| Permission Name                       | Corresponding System Module                         | Permission Description                           |
-| ------------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
-| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md)                 | Keep the application running in the foreground   |
-| `watch.permission.LOCATION`           | [`@system.geolocation`](/api/system-geolocation.md) | Location information                             |
-| `watch.permission.ACCESS_SENSORS`     | [`@system.compass`](/api/system-sensor.md)         | Built-in sensors (e.g., compass, accelerometer)  |
-| `watch.permission.DEVICE_INFO`        | [`@system.device`](/api/system-device.md)           | Device information                               |
-| `watch.permission.RECORD`             | [`@system.media`](/api/system-media.md)             | Audio recording related APIs only require permissions |
-| `watch.permission.BLUETOOTH`          | [`@system.bluetooth.ble`](/api/system-ble.md)       | Allow using device Bluetooth                     |
-| `watch.permission.READ_HEALTH_DATA`   | Not supported yet                                   | Read health data (e.g., step count, heart rate)  |
-| `watch.permission.SCHEDULE`           | [`@system.schedule`](/api/system-schedule.md)       | Set scheduled tasks                              |
-| `watch.permission.NOTIFICATION`       | [`@system.notification`](/api/system-notified.md)   | Allow application notification reminders         |
+| Permission Name                       | Corresponding System Module                         | Permission Description                             |
+| ------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| `watch.permission.FOREGROUND_SERVICE` | [`@system.app`](/api/system-app.md)                 | Keep the application running in the foreground     |
+| `watch.permission.LOCATION`           | [`@system.geolocation`](/api/system-geolocation.md) | Location information                               |
+| `watch.permission.ACCESS_SENSORS`     | [`@system.compass`](/api/system-sensor.md)         | Built-in sensors (e.g., compass, accelerometer)    |
+| `watch.permission.DEVICE_INFO`        | [`@system.device`](/api/system-device.md)           | Device information                                 |
+| `watch.permission.RECORD`             | [`@system.media`](/api/system-media.md)             | Permissions required only for audio recording APIs |
+| `watch.permission.BLUETOOTH`          | [`@system.bluetooth.ble`](/api/system-ble.md)       | Allow the use of device Bluetooth                  |
+| `watch.permission.READ_HEALTH_DATA`   | Not supported yet                                   | Read health data (e.g., step count, heart rate)    |
+| `watch.permission.SCHEDULE`           | [`@system.schedule`](/api/system-schedule.md)       | Set scheduled tasks                                |
+| `watch.permission.NOTIFICATION`       | [`@system.notification`](/api/system-notified.md)   | Allow application notification reminders           |
 
 #### `router` <decl type="Router" />
 
-A mandatory field describing page routing information within the application, see [`Router` Object](#router-object) for details.
+A required field describing the in-app page routing information. See the [`Router` Object](#router-object) for details.
 
 #### `display` <decl type="?: Display" />
 
-Configuration for display effects within the application, see [`Display` Object](#display-object) for details.
+Configuration for in-app display effects. See the [`Display` Object](#display-object) for details.
 
 #### `dial` <decl type="?: Dial" />
 
-If the `dial` field is present, it indicates that this project is a watch face package rather than an application. Exclusive watch face metadata is described by the [`Dial` Object](#dial-object). Watch face packages do not use the [`icon`](#icon) field.
+If the `dial` field is present, it indicates that this project is a watch face package rather than an application. The exclusive metadata of the watch face is described by the [`Dial` Object](#dial-object). Watch face packages do not use the [`icon`](#icon) field.
 
 #### `widgets` <decl type="?: Widget[]" />
 
-Represents the configuration information for the list of widgets and small components. For configuration fields, see [`Widget` Object](#widget-object).
+Represents the configuration information for the list of widgets and small components. See the [`Widget` Object](#widget-object) for configuration field details.
 
 ### `Config` Object
 
@@ -125,39 +125,39 @@ interface Config {
 
 #### `designWidth` <decl type="?: number" />
 
-The baseline width for page design (in pixels), with a default value of `750`. The `px` length unit in CSS will be scaled based on the ratio of the actual device width to `designWidth`. For example, when `designWidth` is `466`, pixel lengths on a device with an actual width of `410` pixels will be scaled by a factor of $410/466$.
+The baseline width for page design (in pixels), with a default value of `750`. The `px` length unit in CSS is scaled based on the ratio of the actual device width to `designWidth`. For example, when `designWidth` is `466`, the pixel length on a device with an actual width of `410` pixels will be scaled by a factor of $410/466$.
 
-It is recommended to use the screen size of the device currently being designed for, rather than the default `750`, to avoid a large amount of conversion during development.
+It is recommended to use the screen size of the device you are currently designing for, rather than the default `750`, to avoid a large amount of conversion during development.
 
 #### `designImageScale` <decl type="?: number" />
 
-The scaling factor for sliced image resources, with a default value of $1.0$. To meet multi-device resolution adaptation, designers need to scale images up according to the design draft before slicing to ensure quality after packaging.
+The slice scaling factor for image resources, with a default value of $1.0$. To meet multi-device resolution adaptation requirements, designers need to scale up images according to the design draft before slicing to ensure the quality after packaging.
 
 `designImageScale` is the ratio between the size of the original resource image in the project and the logical resolution of the scaled image. Specifically, the scaling factor $\it{scale}$ of the resource image on the actual device is:
 $$
 \it{scale} = \tt{designImageScale}\frac{\tt{deviceWidth}}{\tt{designWidth}}
 $$
-Where $\tt{deviceWidth}$ is the actual width of the device screen. Therefore, the actual display size $(w', h')$ of the image is:
+where $\tt{deviceWidth}$ is the actual width of the device screen. Therefore, the actual display size $(w', h')$ of the image is:
 $$
 (w', h') = \it{scale} \cdot (w, h)
 $$
-Where $(w, h)$ is the size of the original resource image.
+where $(w, h)$ is the size of the original resource image.
 
 ::: tip
-Do not use a `designImageScale` configuration smaller than $1$, as this means resource images will be enlarged during packaging, resulting in noticeable blurring and distortion. If you want your application to display images exquisitely across multiple devices, you should prepare resource images at a larger size than actually required and set the correct `designImageScale` parameter.
+Do not use a `designImageScale` configuration smaller than $1$, as this means resource images will be upscaled during packaging, resulting in noticeable blurring and distortion. If you want your application to display images exquisitely across multiple devices, you should prepare resource images at a larger size than actually required and set the correct `designImageScale` parameter.
 
-For example, if the image size displayed on the actual device (assuming $\tt{designWidth} == \tt{deviceWidth}$) is $96\rm px \times 96\rm px$, you can prepare $192\rm px \times 192\rm px$ assets with twice the resolution and set `designImageScale` to $2$.
+For example, if the image size displayed on the actual device (assuming $\tt{designWidth} == \tt{deviceWidth}$) is $96\rm px \times 96\rm px$, you can prepare $192\rm px \times 192\rm px$ assets with double the resolution, and set `designImageScale` to $2$.
 :::
 
 #### `fontFaces` <decl type="?: string" />
 
-Specifies the file path of the application-level font mapping table, where fonts defined within it can be used directly in the application. This path can be a relative path to `manifest.json` or an absolute path relative to the root directory of the application resource package.
+Specifies the file path of the application-level font mapping table, where defined fonts can be used directly within the application. This path can be a relative path to `manifest.json` or an absolute path to the root directory of the application resource package.
 
 Refer to [Font Configuration](font-config.md).
 
 #### `assets` <decl type="?: string | string[]" />
 
-Specifies the path glob patterns (file wildcards) for custom resources. For example:
+Specifies the glob pattern (file wildcard) for custom resource paths. For example:
 ``` json
 {
   "config": {
@@ -168,17 +168,17 @@ Specifies the path glob patterns (file wildcards) for custom resources. For exam
 This will package all files under the `assets` directory in the project and all `data.bin` files in the project. These files will only be packaged in the form of static resource files (i.e., copied directly).
 
 File wildcards can be the same as paths, but have the following special forms:
-- `*` matches a single path component, excluding path separators (`/`).
+- `*` matches a path component, excluding path separators (`/`).
 - `**` matches any number of path components and can include path separators.
 
 For example:
-- `test.js` can match the `test.js` file in the root directory of the project.
+- `test.js` can match the `test.js` file under the project root directory.
 - `**/*-data.bin` can match files with the `-data.bin` suffix under any path.
 - `*/*.bin` matches files with the `.bin` suffix under any level of directory in the project root.
 
 ### `Router` Object
 
-Defines the composition of pages and related configuration information.
+Defines the page composition and related configuration information.
 
 ::: details Type Signature
 ``` ts
@@ -191,11 +191,11 @@ interface Router {
 
 #### `entry` <decl type="?: string" />
 
-The name of the application home page. When the application starts, it will first navigate to this page. Defaults to `"main"`.
+The name of the application's home page. When the application starts, it will first navigate to this page. Defaults to `"main"`.
 
 #### `pages` <decl type="{ [name: string]: PageInfo }" />
 
-Declares the information for each page. The key `name` of the `pages` property is the page name, and the property value, the [`PageInfo` Object](#pageinfo-object), is the detailed configuration information of the page. For example:
+Declares information for each page. The key `name` of the `pages` property is the page name, and the property value, the [`PageInfo` Object](#pageinfo-object), is the detailed configuration information of the page. For example:
 ``` json
 {
   "router": {
@@ -217,7 +217,7 @@ All pages in the application must be entered into the routing table before they 
 
 #### `pageAnimation` <decl type="?: PageAnimation" />
 
-The default transition animation configuration for pages within the application. The value is a [`PageAnimation` Object](#pageanimation-object).
+The default transition animation configuration for pages within the app. The value is a [`PageAnimation` Object](#pageanimation-object).
 
 ## `PageInfo` Object
 
@@ -236,7 +236,7 @@ interface PageInfo {
 
 #### `path` <decl type="?: string" />
 
-The path of the page directory (the path of the folder storing page components). Defaults to the same as the page name, which is the key of the `Router` object.
+The path of the page directory (the path of the folder where page components are stored). Defaults to the same as the page name, which is the key of the `Router` object.
 
 #### `component` <decl type="?: string" />
 
@@ -244,17 +244,17 @@ The name of the page component, which matches the UX file name without the *.ux*
 
 #### `pageAnimation` <decl type="?: PageAnimation" />
 
-The transition animation configuration of the page, whose value is a [`PageAnimation` Object](#pageanimation-object). This configuration has a higher priority than the `display.pageAnimation` configuration in `manifest.json`.
+The transition animation configuration for the page. The value is a [`PageAnimation` Object](#pageanimation-object). This configuration takes precedence over the `display.pageAnimation` configuration in `manifest.json`.
 
 #### `launchMode` <decl type="?: 'standard' | 'singleTask'" version="0.8" />
 
-The launch mode of the page, defaulting to `standard`. When a page's `launchMode` is configured as `singleTask`, if you attempt to open a page instance that is already in the back stack, all page instances above that instance will be popped out of the stack, returning to the page where that instance resides (similar to [`router.back('<page-name>')`](/api/system-router.md#back)), rather than creating a new page instance.
+The launch mode of the page, defaulting to `standard`. When a page's `launchMode` is configured as `singleTask`, if you attempt to open a page instance that is already in the back stack, all pages above that instance will be popped, and the app will return to the page where that instance resides (similar to [`router.back('<page-name>')`](/api/system-router.md#back)), rather than creating a new page instance.
 
-When "opening" and returning to an existing page in `singleTask` mode, the [`onRefresh`](../component/life-cycle.md#onrefresh) lifecycle function is triggered.
+When "opening" and returning to an existing page in `singleTask` mode, the [`onRefresh`](../component/life-cycle.md#onrefresh) lifecycle function will be triggered.
 
 ### `PageAnimation` Object
 
-The properties of this object configure the behavior of page transition animations. Transition animations are only valid for the top-most page; non-top pages will not play transition animations.
+The properties of this object configure the behavior of page transition animations. Transition animations are only valid for the top-most page; pages that are not on top will not play transition animations.
 
 ::: details Type Signature
 ``` ts
@@ -269,38 +269,38 @@ interface PageAnimation {
 
 Each property can take the following values:
 - `"none"`: No transition animation, which is the default value for all properties.
-- `"slide"`: The page transitions with a sliding animation. This transition effect varies under different transition configuration properties:
+- `"slide"`: The page transitions with a sliding animation. This transition effect varies depending on the transition configuration property, where:
   - For `openEnter` transitions, the slide effect is that the page enters from the left side of the screen towards the right until it completely covers the screen.
-  - For `closeExit` transitions, the slide effect is that the page starts sliding to the right from a position completely covering the screen until it completely leaves the screen.
+  - For `closeExit` transitions, the slide effect is that the page slides to the right starting from its position completely covering the screen until it completely leaves the screen.
   - For `closeEnter` and `openExit` transitions, the slide effect has no animation.
 
-Default transition animations for pages and applications are defined by the device. If `manifest.json` does not specify fields related to `pageAnimation`, some devices may not play transition animations, while other devices may use manufacturer-customized animation effects.
+Default transition animations for pages and applications are defined by the device. If `pageAnimation`-related fields are not specified in `manifest.json`, some devices may not play transition animations, while other devices may use custom animation effects provided by the manufacturer.
 
 ::: warning
-The simulator always plays slide page transition animations, regardless of which device it is simulating. If you want to ensure that page transition animations are disabled, use syntax like:
+The simulator will always play slide page transition animations regardless of which device it is emulating. If you want to ensure that page transition animations are disabled, use a syntax like:
 ``` json
 {
   "pageAnimation": { "openEnter": "none" }
 }
 ```
-Rather than `"pageAnimation": {}`, as the latter does not take effect for unknown reasons.
+instead of `"pageAnimation": {}`, as the latter does not work for unknown reasons.
 :::
 
 #### `openEnter` <decl type="?: string" />
 
-This property configures the transition animation of the new page when opening a new page.
+This property configures the transition animation for a new page when it is opened.
 
 #### `closeEnter` <decl type="?: string" />
 
-This property configures the transition animation of the old page underneath that will be covered when opening a new page.
+This property configures the transition animation for the old page underneath that will be covered when a new page is opened.
 
 #### `openExit` <decl type="?: string" />
 
-This property configures the exit transition animation of the closed page when closing a page.
+This property configures the exit transition animation for a page when it is closed.
 
 #### `closeExit` <decl type="?: string" />
 
-This property configures the transition animation of the page that is about to be re-displayed underneath the closed page when closing a page.
+This property configures the transition animation for the page that will be re-displayed beneath the closed page when it is closed.
 
 ### `Dial` Object
 
@@ -317,11 +317,11 @@ interface Dial {
 
 #### `component` <decl type="string" />
 
-The path of the watch face entry component. It can be an absolute path within the package or a relative path to the `manifest.json` file.
+The path to the watch face entry component. This can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 #### `preview` <decl type="string" />
 
-The path of the watch face preview image. It can be an absolute path within the package or a relative path to the `manifest.json` file.
+The path to the watch face preview image. This can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 ### `Widget` Object
 
@@ -339,12 +339,12 @@ interface Widget {
 
 #### `name` <decl type="string" />
 
-The name of the widget/small component. Widgets within the same application package cannot have duplicate names.
+The name of the widget/small component. Widgets within the same application package cannot share duplicate names.
 
 #### `component` <decl type="string" />
 
-The path of the widget/small component entry component. It can be an absolute path within the package or a relative path to the `manifest.json` file.
+The path to the widget/small component entry component. This can be an absolute path within the package or a relative path to the `manifest.json` file.
 
 #### `preview` <decl type="string" />
 
-The path of the widget/small component preview image. It can be an absolute path within the package or a relative path to the `manifest.json` file.
+The path to the widget/small component preview image. This can be an absolute path within the package or a relative path to the `manifest.json` file.

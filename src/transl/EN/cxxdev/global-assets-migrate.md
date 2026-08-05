@@ -1,36 +1,36 @@
 # Global Resource Migration Guide
 
-This document is intended for downstream Glyphix integration projects, helping you upgrade global resource loading methods from legacy projects to the latest scheme. This provides an easily manageable and editable global resource layout, eliminating the dependency on vendor packaging or conversion tools.
+This document is intended for Glyphix downstream integration projects, helping you upgrade global resource loading methods from older projects to the latest scheme. This achieves an easily manageable and editable global resource layout without relying on vendor-supplied packaging or conversion tools.
 
-In the early days, Glyphix used the `global.pkg` binary archive package to manage global resources (font files, font mapping tables, etc.). Later, it gradually evolved to directly use unpackaged resource files, and finally, the format of the font mapping file was transitioned from binary to standard JSON <version-badge since="0.9" />. If the entry code you maintain still uses the old syntax, you can follow this article to upgrade.
+Early versions of Glyphix used `global.pkg` binary archive packages to manage global resources (font files, font mapping tables, etc.). Later, it gradually evolved to directly using unpacked resource files, and finally, the font mapping file format transitioned from binary to standard JSON <version-badge since="0.9" />. If your maintained entry code still uses the old syntax, you can follow this guide to upgrade.
 
 ::: tip
-Using the old mode brings maintenance hassles and difficulties in managing and editing global resources. It is strongly recommended to upgrade immediately.
+Using the old mode introduces maintenance hassles, making it difficult to manage and edit global resources. Upgrading immediately is strongly recommended.
 :::
 
 ## Removing `global.pkg`
 
-### Characteristics of Old Code
+### Old Code Characteristics
 
-If your entry code contains either of the following patterns, it means you are using `global.pkg`:
+If your entry code contains any of the following patterns, it means you are using `global.pkg`:
 
 ```cpp
 EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
 static String globalUri(const String &path) { return "pkg:///" + path; }
 ```
 
-The effect of these two lines is to route all resource requests with the `pkg:///` protocol to files inside the `/global.pkg` binary archive package.
+The effect of these two lines is to route all resource requests with the `pkg:///` protocol to the files inside the `/global.pkg` binary archive package.
 
 Why it needs to be removed:
-- Every time fonts or other resources are changed, the packaging tool must be re-run to generate the `.pkg` file.
-- Individual files inside `.pkg` cannot be directly viewed or replaced during debugging, making content verification difficult.
-- The packaging workflow depends on dedicated tools, increasing communication and maintenance costs.
+- Every time fonts or other resources are replaced, the packaging tool must be re-run to generate the `.pkg` file.
+- Individual files inside `.pkg` cannot be directly viewed or replaced during debugging, making it difficult to verify contents.
+- The packaging process relies on dedicated tools, increasing communication and maintenance costs.
 
 ### Migration Steps
 
 **Step 1: Extract resources from `global.pkg`.**
 
-If you no longer have the source `.pkg` file, you can extract the contents from `global.pkg` (using the Glyphix command-line tool or by requesting the original resource files). Typically, you need to extract the following:
+If you no longer have the `.pkg` source files, you can extract the contents from `global.pkg` (using the Glyphix command-line tool or by requesting the original resource files). Typically, you need to extract the following:
 
 ```
 fonts/
@@ -42,11 +42,11 @@ fonts/
 
 Place the extracted directory into your project's resource directory, for example, `/fonts/`.
 
-**Step 2: Remove code related to `global.pkg`.**
+**Step 2: Remove `global.pkg` related code.**
 
 1. Delete the entire line `EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg")`.
 2. Delete wrapper functions like `globalUri()`.
-3. Change all resource references of `pkg:///xxx` to direct file paths, i.e., `/xxx`.
+3. Change all resource references from `pkg:///xxx` to direct file paths, i.e., `/xxx`.
 
 **Step 3: Modify font loading code.**
 
@@ -70,7 +70,7 @@ int main() {
 }
 ```
 
-Change it to use direct file paths (without the `globalUri()` function and `GlobalPackage` registration):
+Change it to use file paths directly (without the `globalUri()` function and `GlobalPackage` registration):
 
 ```cpp
 static void setupFont(const String &fontMap) {
@@ -95,22 +95,22 @@ At this stage, the resource layout becomes:
     ...
 ```
 
-At this phase, you are still using the binary `font-faces` file. The next section upgrades it to JSON.
+You are still using the binary `font-faces` file at this stage; the next section will upgrade it to JSON.
 
 ## Switching to JSON Font Mapping Files
 
-### Characteristics of Old Code
+### Old Code Characteristics
 
 ```cpp
 FontFaceMap &map = App()->fontManager()->faces();
 map.readFile("/fonts/font-faces");
 ```
 
-`readFile` reads a custom binary format file. This binary file cannot be edited manually and must be converted and generated from a CSS file using a packaging tool.
+`readFile` reads a custom binary format file. This binary file cannot be edited manually and must be converted and generated from CSS files using a packaging tool.
 
 ### JSON Format Description
 
-Now we describe font mapping relationships directly using a JSON file. You only need to create a `font-faces.json` file with the following format:
+Now, we use a JSON file directly to describe the font mapping relationships. You only need to create a `font-faces.json` file with the following format:
 
 ```json
 {
@@ -152,13 +152,13 @@ Field Descriptions:
 | `family` | String | Yes | - | Font family name, e.g., `sans-serif`, `serif` |
 | `weight` | Integer | No | 400 | CSS font weight value (100-900), 400 is regular, 700 is bold |
 | `style` | String | No | normal | Font style, options are `italic` or `oblique` |
-| `urls` | Array of strings | Yes | - | Font file path, relative to the directory where the JSON file is located |
+| `urls` | String Array | Yes | - | Font file paths, relative to the directory where the JSON file is located |
 
 Further explanations for key fields are provided below.
 
 **The `weight` Field**
 
-For `weight`, input the CSS font weight numerical value directly, which will be rounded to the nearest standard value:
+For `weight`, directly enter the CSS font weight numerical value, which will be rounded to the nearest standard value:
 
 - `100` Thin
 - `400` Regular (default value, can be omitted)
@@ -167,9 +167,9 @@ For `weight`, input the CSS font weight numerical value directly, which will be 
 
 **`urls` Path Resolution**
 
-Paths in `urls` are resolved relative to the directory where the JSON file is located. For example, if the JSON file is located at `/fonts/font-faces.json`, writing `"fonts/NotoSans-Regular.ttf"` in `urls` will ultimately resolve to `/fonts/fonts/NotoSans-Regular.ttf`.
+Paths in `urls` are resolved relative to the directory where the JSON file is located. For example, if the JSON file is located at `/fonts/font-faces.json`, writing `"fonts/NotoSans-Regular.ttf"` in `urls` will ultimately be resolved as `/fonts/fonts/NotoSans-Regular.ttf`.
 
-Therefore, it is recommended to place the JSON file directly in the same directory as the font files so that URLs can just use the file names. For example, the directory layout:
+Therefore, it is recommended to place the JSON file directly in the same directory as the font files, allowing URLs to be written simply as file names. For example, the directory layout:
 
 ```
 /fonts/
@@ -179,7 +179,7 @@ Therefore, it is recommended to place the JSON file directly in the same directo
     NotoSans-Bold.ttf
 ```
 
-In this case, the JSON content is as shown in the code above.
+The JSON content at this point matches the code snippet above.
 
 ### Code Modifications
 
@@ -202,13 +202,13 @@ int main() {
 }
 ```
 
-This is the only API call change; the rest of the code remains unchanged. Afterward, you can directly edit `font-faces.json` to add/remove fonts or adjust mapping relationships, without needing any conversion tools.
+Only this single API call needs to be changed; no other code needs to be modified. Afterwards, you can directly edit `font-faces.json` to add/remove fonts or adjust mapping relationships without needing any conversion tools.
 
 ## FAQ
 
-**How to handle multiple variants (like Regular, Bold, Italic) for the same family?**
+**How to handle multiple variants (Regular, Bold, Italic, etc.) for the same family?**
 
-Add independent entries for each variant in the `font-faces` array, distinguished by `weight` and `style`:
+Add an independent entry for each variant in the `font-faces` array, distinguishing them using `weight` and `style`:
 
 ```json
 {
@@ -235,11 +235,11 @@ Add independent entries for each variant in the `font-faces` array, distinguishe
 }
 ```
 
-MCU projects typically only use the Regular `sans-serif` font with `normal` weight, and the system will fall back automatically.
+MCU projects typically only use the Regular `sans-serif` font with `normal` weight, and the system will automatically fall back.
 
-**Can the `urls` array contain multiple files? When is it needed?**
+**Can multiple files be placed in the `urls` array? When is it needed?**
 
-Yes. When a font family needs to cover multi-language characters, put multiple font files into the same `urls` array. For example, `sans-serif` needs to support Latin letters, CJK characters, and Arabic simultaneously:
+Yes. When a font family needs to cover multi-language characters, put multiple font files into the same `urls` array. For example, if `sans-serif` needs to support Latin letters, CJK characters, and Arabic simultaneously:
 
 ```json
 {
@@ -255,13 +255,13 @@ Yes. When a font family needs to cover multi-language characters, put multiple f
 }
 ```
 
-When rendering text, the engine will look up character glyphs in these files sequentially, and the first matched glyph will be used.
+When rendering text, the engine will search for character glyphs in these files sequentially, and the first matched glyph will be used.
 
-**Must the font files be in the same directory as the JSON?**
+**Must the font files and JSON be in the same directory?**
 
-No. Paths in `urls` are resolved relative to the directory where the JSON file is located, so you can use relative paths to place fonts in subdirectories. Absolute paths can also be used, in which case they are unaffected by the JSON directory.
+No. Paths in `urls` are resolved relative to the JSON file's directory; you can use relative paths to place fonts in subdirectories. Absolute paths can also be used, in which case they are unaffected by the JSON directory.
 
-**Can a JSON string be passed directly in the code?**
+**Can a JSON string be passed directly in code?**
 
 Yes. Use the two-parameter overloaded version:
 

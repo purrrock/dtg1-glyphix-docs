@@ -10,18 +10,18 @@ import battery from '@system.battery'
 
 ### `getStatus` <decl type="(): Promise<{charge: ChargeState, level: number}>" method />
 
-Получение состояния зарядки батареи `charge` (тип [`ChargeState`](#chargestate)) и уровня заряда `level`. Уровень заряда представляет собой целое число в диапазоне $[0, 100]$.
+获取电池的充电状态 `charge` （[`ChargeState`](#chargestate) 类型）和电量值 `level`。电量值是 $[0, 100]$ 间的整数。
 
-## Типы
+## 类型
 
 ### `ChargeState`
 
-Перечисление `ChargeState` содержит все возможные состояния зарядки батареи, его определение выглядит следующим образом:
+`ChargeState` 枚举所有的电池充电状态，其定义如下：
 ``` ts
 type ChargeState = 'charging' | 'discharging' | 'not-charging' | 'full'
 ```
-Значения и их смысл:
-- `'charging'`: батарея заряжается;
-- `'discharging'`: зарядка отключена (разрядка);
-- `'not-charging'`: зарядка не происходит;
-- `'full'`: батарея полностью заряжена.
+各个值的含义为：
+- `'charging'`：电池处于充电状态；
+- `'discharging'`：断开充电状态；
+- `'not-charging'`：未处于充电状态；
+- `'full'`：电池已经充满电。

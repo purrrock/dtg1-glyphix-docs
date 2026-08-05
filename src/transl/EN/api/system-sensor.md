@@ -6,7 +6,7 @@
 import sensor from '@system.sensor';
 ```
 
-Developers need to declare access to `watch.permission.ACCESS_SENSORS` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
+Developers need to declare the application's access permission to `watch.permission.ACCESS_SENSORS` in the [`manifest.json`](/framework/application/manifest.md#permissions) file.
 
 ## Interface Definitions
 
@@ -18,11 +18,11 @@ Developers need to declare access to `watch.permission.ACCESS_SENSORS` in the [`
 }): number
 </pre></decl>
 
-Listens for changes in accelerometer data. The functions of the fields in the `options` parameter are:
+Listens for changes in accelerometer sensor data. The functions of the fields in the `options` parameter are as follows:
 - `interval`: Listening frequency, defaults to `'normal'`. Available values are:
-  - `'game'`: Game mode, frequency is 20ms/time;
-  - `'ui'`: UI mode, frequency is 60ms/time;
-  - `'normal'`: Normal mode, frequency is 200ms/time.
+  - `'game'`: Game mode, with a frequency of 20ms/time;
+  - `'ui'`: UI mode, with a frequency of 60ms/time;
+  - `'normal'`: Normal mode, with a frequency of 200ms/time.
 - `callback`: Accelerometer data update callback. The signature of the accelerometer data type `AccelerometerValue` is as follows:
   ``` ts
   type AccelerometerValue = {
@@ -41,13 +41,13 @@ const id = sensor.subscribeAccelerometer({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeAccelerometer(id)
 ```
 
 ### `unsubscribeAccelerometer` <decl type="(id: number): void" method/>
 
-Cancels listening for accelerometer data. The `id` parameter is the listening ID returned by the [`subscribeAccelerometer`](#subscribeaccelerometer) method.
+Cancels listening to accelerometer sensor data. The `id` parameter is the listening ID returned by the [`subscribeAccelerometer`](#subscribeaccelerometer) method.
 
 ### `subscribeCompass`
 <decl method><pre>
@@ -56,17 +56,17 @@ Cancels listening for accelerometer data. The `id` parameter is the listening ID
 }): number
 </pre></decl>
 
-Listens for changes in compass data. Returns the listening ID, which is used to cancel listening. The functions of the fields in the `options` parameter are:
+Listens for changes in compass data. Returns the listening ID, which is used to cancel listening. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Compass data change callback.
 
 `CompassValue` signature:
 ``` ts
   type CompassValue = {
-    direction: number   // Angle between the y-axis and the geomagnetic North Pole (in radians)
+    direction: number   // Angle between the y-axis and the geomagnetic north pole (in radians)
     accuracy: number    // Accuracy
   }
 ```
-- `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic North Pole, with a value range of $(-\pi,\pi]$, where:
+- `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic north pole, with a value range of $(-\pi,\pi]$, where:
   - `0`: True North
   - $\pi$` / 2` (approx. 1.57): True East
   - $\pi$ (approx. 3.14): True South
@@ -76,7 +76,7 @@ Listens for changes in compass data. Returns the listening ID, which is used to 
   - `2`: Medium accuracy
   - `1`: Low accuracy
   - `0`: Unreliable (reason unknown)
-  - `-1`: Unreliable (sensor disconnected)
+  - `-1`: Unreliable (sensor lost connection)
 
 Example:
 ```js
@@ -86,23 +86,23 @@ const id = sensor.subscribeCompass({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeCompass(id)
 ```
 
 ### `unsubscribeCompass`<decl type="(id: number): void" method/>
 
-Cancels listening for compass data. The `id` parameter is the listening ID returned by the [`subscribeCompass`](#subscribecompass) method.
+Cancels listening to compass data. The `id` parameter is the listening ID returned by the [`subscribeCompass`](#subscribecompass) method.
 
 ### `calibrationCompass` <decl type="(): Promise<void>" method/>
 
-Starts the compass calibration process. When the compass accuracy is low, guide the user to perform actions and call this method to calibrate the compass.
+Starts the compass calibration process. When the compass accuracy is low, guide the user to operate and call this method to calibrate the compass.
 
 This function returns a Promise object with no result, which is resolved when the system completes the calibration.
 
 ### `getCompassValue` <decl type="(): Promise<CompassValue>" method/>
 
-Gets the current compass data. Returns an asynchronous result containing a Promise object of type `CompassValue`, which includes compass direction and accuracy information.
+Gets the current compass data. Returns an asynchronous result containing a Promise object of type `CompassValue` with compass direction and accuracy information.
 
 ### `subscribeStepCounter`
 <decl method><pre>
@@ -111,7 +111,7 @@ Gets the current compass data. Returns an asynchronous result containing a Promi
 }): number
 </pre></decl>
 
-Listens for changes in step counter sensor data. The functions of the fields in the `options` parameter are:
+Listens for changes in step counter sensor data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Step counter data change callback. The signature of the step counter data type `StepCounterValue` is as follows:
   ``` ts
   type StepCounterValue = {
@@ -127,13 +127,13 @@ const id = sensor.subscribeStepCounter({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeStepCounter(id)
 ```
 
 ### `unsubscribeStepCounter` <decl type="(id: number): void" method/>
 
-Cancels listening for step counter sensor data. The `id` parameter is the listening ID returned by the [`subscribeStepCounter`](#subscribestepcounter) method.
+Cancels listening to step counter sensor data. The `id` parameter is the listening ID returned by the [`subscribeStepCounter`](#subscribestepcounter) method.
 
 ### `subscribeOnBodyState`
 <decl method><pre>
@@ -142,7 +142,7 @@ Cancels listening for step counter sensor data. The `id` parameter is the listen
 }): number
 </pre></decl>
 
-Listens for changes in the device on-body (wearing) state. The functions of the fields in the `options` parameter are:
+Listens for changes in the device on-body state. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Device on-body state change callback. The signature of the device on-body state data type `OnBodyStateValue` is as follows:
   ``` ts
   type OnBodyStateValue = {
@@ -158,13 +158,13 @@ const id = sensor.subscribeOnBodyState({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeOnBodyState(id)
 ```
 
 ### `unsubscribeOnBodyState` <decl type="(): void" method/>
 
-Cancels listening for the on-body state. The `id` parameter is the listening ID returned by the [`subscribeOnBodyState`](#subscribeonbodystate) method.
+Cancels listening to the on-body state. The `id` parameter is the listening ID returned by the [`subscribeOnBodyState`](#subscribeonbodystate) method.
 
 ### `getOnBodyState` <decl type="(): Promise<OnBodyStateValue>" method/>
 
@@ -185,13 +185,13 @@ async function getOnBodyStat() {
 }): number
 </pre></decl>
 
-Listens for changes in gyroscope data. The functions of the fields in the `options` parameter are:
+Listens for changes in gyroscope data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Gyroscope data change callback. The signature of the gyroscope data type `GyroscopeValue` is as follows:
   ``` ts
   type GyroscopeValue = {
-    x: number   // Angular velocity around the x-axis
-    y: number   // Angular velocity around the y-axis
-    z: number   // Angular velocity around the z-axis
+    x: number   // Angular velocity along the x-axis
+    y: number   // Angular velocity along the y-axis
+    z: number   // Angular velocity along the z-axis
   }
   ```
 
@@ -203,13 +203,13 @@ const id = sensor.subscribeGyroscope({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeGyroscope(id)
 ```
 
 ### `unsubscribeGyroscope` <decl type="(id: number): void" method/>
 
-Cancels listening for gyroscope data. The `id` parameter is the listening ID returned by the [`subscribeGyroscope`](#subscribegyroscope) method.
+Cancels listening to gyroscope data. The `id` parameter is the listening ID returned by the [`subscribeGyroscope`](#subscribegyroscope) method.
 
 ### `subscribeBarometer`
 <decl method><pre>
@@ -218,11 +218,11 @@ Cancels listening for gyroscope data. The `id` parameter is the listening ID ret
 }): number
 </pre></decl>
 
-Listens for changes in barometer sensor data. The functions of the fields in the `options` parameter are:
+Listens for changes in barometer sensor data. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Barometer data change callback. The signature of the barometer data type `BarometerValue` is as follows:
   ``` ts
   type BarometerValue = {
-    pressure: number   // Air pressure value, unit: Pa
+    pressure: number   // Barometric pressure value, unit: Pa
   }
   ```
 
@@ -234,13 +234,13 @@ sensor.subscribeBarometer({
   }
 })
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeBarometer(id)
 ```
 
 ### `unsubscribeBarometer` <decl type="(id: number): void" method/>
 
-Cancels listening for the barometer sensor. The `id` parameter is the listening ID returned by the [`subscribeBarometer`](#subscribebarometer) method.
+Cancels listening to the barometer sensor. The `id` parameter is the listening ID returned by the [`subscribeBarometer`](#subscribebarometer) method.
 
 ### `subscribeWristLift`
 <decl method><pre>
@@ -249,7 +249,7 @@ Cancels listening for the barometer sensor. The `id` parameter is the listening 
 }): number
 </pre></decl>
 
-Listens for wrist lift events. The functions of the fields in the `options` parameter are:
+Listens for wrist lift events. The functions of the fields in the `options` parameter are as follows:
 - `callback`: Wrist lift event listener callback.
 
 Example:
@@ -260,17 +260,17 @@ const id = sensor.subscribeWristLift({
   }
 });
 
-// Cancel listening
+// Unsubscribe
 sensor.unsubscribeWristLift(id)
 ```
 
 ### `unsubscribeWristLift` <decl type="(id: number): void" method/>
 
-Cancels listening for wrist lifts. The `id` parameter is the listening ID returned by the [`subscribeWristLift()`](#subscribewristlift) method.
+Cancels listening to wrist lifts. The `id` parameter is the listening ID returned by the [`subscribeWristLift()`](#subscribewristlift) method.
 
 ## Usage Limits
 
-When the current device does not support the corresponding sensor capability, calling the interface will directly throw an exception, and the listener will not take effect.
+If the current device does not support the corresponding sensor capability, calling the interface will directly throw an exception, and the listener will not take effect.
 Example of exception log: `the device does not support accelerometer sensor`
 
 Example of catching exception information:

@@ -1,6 +1,6 @@
 # image-animator
 
-The `image-animator` component is used to play a sequence of image frames as an animation. By default, it is an inline element.
+The `image-animator` component is used to play a sequence of image frames as an animation. It is an inline element by default.
 
 <glyphix id="image-animator-1" height="190" width="360" >
 
@@ -58,7 +58,7 @@ button:active {
 
 ### `images` <decl type="string[]" set />
 
-Sets the collection of sequence frame images. Each element in `images` is the path or URI of that frame's image. Typically, the dimensions of each frame are consistent.
+Sets the collection of sequence frame images. Each element in `images` is the path or URI of that frame's image. Typically, the dimensions of each frame image are consistent.
 
 Supports PNG or JPEG format images.
 
@@ -75,9 +75,9 @@ export default {
 };
 ```
 
-The benefit of this is that multiple component instances will share the same `frames` array object (reactive properties are copied to each component instance). You should only place it in the `data` object if the frame sequence truly needs reactivity.
+The advantage of doing this is that multiple component instances will share the same `frames` array object (reactive properties are copied to each component instance). You should only place it in the `data` object if the frame sequence truly requires reactivity.
 
-If the frame sequence is sequentially encoded, you can use this trick to simplify the creation of the frames array:
+If the frame sequence is sequentially numbered, you can use this trick to simplify the creation of the frames array:
 
 ```js
 export default {
@@ -100,29 +100,29 @@ The `images` property does not yet support Quick App's `ImageFrame` structure, s
 
 ### `duration` <decl type="number" get set />
 
-Specifies the playback duration of each frame, in milliseconds.
+Specifies the playback duration of each frame in milliseconds.
 
 ### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
 
-Sets the playback state, supporting start, pause, and stop states. `image-animator` is initially in the `stop` state and will therefore automatically stay at the first frame of [`images`](#images).
+Sets the playback state, supporting start, pause, and stop states. `image-animator` is initially in the `stop` state, so it will automatically rest at the first frame position of [`images`](#images).
 
-|   Value   | Description                         |
-| :-------: | ----------------------------------- |
+|   Value   | Description                          |
+| :-------: | ------------------------------------ |
 | `'start'` | Starts playing from the current frame. |
 | `'pause'` | Pauses playback and displays the current frame. |
 | `'stop'`  | Stops playback and displays the first frame. |
 
-As shown above, `play` only supports the three enumerated values `'start'`, `'pause'`, or `'stop'`. However, the following trick can be used to automatically play the animation:
+As shown above, `play` only supports three enumerated values: `'start'`, `'pause'`, or `'stop'`. However, the following trick can be used to automatically play the animation:
 
 ```html
 <image-animator :images="frames" play :duration="100" />
 ```
 
-Writing the `play` property without a value is equivalent to the [implicit property value](/framework/component/template.md#隐式属性值) syntax of `:play="true"`. Boolean types like `true` are always converted to the default `'start'` enumerated value. This syntax is very useful for scenarios where you need to automatically play a frame sequence animation.
+Writing the `play` property without a value is equivalent to the [implicit property value](/framework/component/template.md#隐式属性值) syntax `:play="true"`. Boolean types like `true` are always converted to the default `'start'` enumerated value. This syntax is very useful for scenarios that require automatic playback of frame sequence animations.
 
 ### `iteration` <decl type="number" set />
 
-Sets the number of repetitions for all frames in `images`. When the limit is reached, it will automatically switch to `'pause'` mode. `0` indicates infinite playback.
+Sets the number of repetitions for all frame sequences in `images`. When the maximum limit is reached, it will automatically switch to `'pause'` mode. `0` indicates infinite playback.
 
 ## Inherited Properties
 

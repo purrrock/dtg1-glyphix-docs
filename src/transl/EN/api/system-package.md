@@ -2,7 +2,7 @@
 
 This module provides resource package installation and uninstallation functions.
 
-## Importing the Module
+## Import Module
 
 ``` js
 import pkg from '@system.package'
@@ -10,21 +10,21 @@ import pkg from '@system.package'
 
 Since `package` is a JavaScript keyword and cannot be used as a variable name, we can export the `"@system.package"` module to the `pkg` variable.
 
-## Interface Definitions
+## Interface Definition
 
 ### `install` <decl function type="(options: { src: string }): Promise<void>" />
 
 Installs an application or watch face package from the file system. The `src` property of the `options` parameter is the URI of the resource package file to be installed.
 
-If the resource package is an application resource package, it can be launched using [`launch()`](system-launch.md#launch-launch-app) after installation with `pkg.install({ src: 'package-uri' })`, and the contents within the package can be accessed using the [`app`](/framework/application/resource.md#app) URI protocol.
+If the resource package is an application resource package, it can be launched via [`launch()`](system-launch.md#launch-launch-app) after being installed using `pkg.install({ src: 'package-uri' })`, and the contents within the package can be accessed using the [`app`](/framework/application/resource.md#app) URI scheme.
 
-`src` is the URI of the resource package file to be installed. The installed package must be a valid application or watch face package, meaning it must have a [`manifest.json`](/framework/application/manifest.md) file. The package name after installation is determined by [`manifest.package`](/framework/application/manifest.md#package).
+`src` is the URI of the resource package file to be installed. The installed package must be a valid application or watch face package, meaning it must contain a [`manifest.json`](/framework/application/manifest.md) file. The package name after installation is determined by [`manifest.package`](/framework/application/manifest.md#package).
 
-After installation, resources within the package can be accessed using the [`prc`](/framework/application/resource.md#prc) protocol, and application resource packages can also be accessed using the `app` protocol.
+After installation, resources within the resource package can be accessed using the [`prc`](/framework/application/resource.md#prc) scheme, and application resource packages can also be accessed using the `app` scheme.
 
 If the package to be installed already exists, an upgrade operation will be performed. If the application being upgraded is currently running, it will be exited first, and can be launched again later by calling [`launch()`](system-launch.md#launch-launch-app).
 
-The installed package can be deleted using the [`remove()`](#remove) API.
+The installed package can be deleted by the [`remove()`](#remove) API.
 
 ### `remove`<decl type="(options: { package: string }): Promise<void>" function />
 
@@ -33,12 +33,12 @@ Deletes the resource package installed by [`install()`](#install). The `package`
 Related resources should be closed before deleting the resource package, such as destroying related components and closing related pages. The `remove()` function will automatically close the application corresponding to the resource package (if it is an application resource package).
 
 ::: warning
-You must use `remove()` instead of directly using file system APIs to delete the resource package, because the latter will not clear the resource cache and cannot correctly delete the installation information.
+You must use `remove()` instead of directly using the file system API to delete the resource package, because the latter will not clear the resource cache and cannot correctly delete the installation information.
 :::
 
 ### `getInfo` <decl type="(query?: string | Query): Manifest | undefined" method/>
 
-Gets the manifest information of an application package. The optional parameter `query` can be a package name string or a more complex `Query` object:
+Gets the manifest information of the application package. The optional parameter `query` can be a package name string or a more complex `Query` object:
 ``` ts
 type Query = {
   package: string,                 // Package name to query
@@ -58,24 +58,24 @@ type Query = {
   versionCode: number,  // Version code
   icon?: string,        // Application image path, this field only exists for application packages
   dial?: {              // Optional field: watch face information, only present in watch face packages
-    component: string,  // Path to the watch face component
-    preview: string     // Path to the watch face preview image
+    component: string,  // Path of the watch face component
+    preview: string     // Path of the watch face preview image
   },
-  widgets?: {           // Optional field: widget and gadget information
-    name: string,       // Widget/gadget name
-    component: string,  // Widget/gadget path
-    preview: string     // Widget/gadget preview image path
+  widgets?: {           // Optional field: widget and small widget information
+    name: string,       // Widget/small widget name
+    component: string,  // Widget/small widget path
+    preview: string     // Widget/small widget preview image path
   }[]
 }
 ```
-The `dial` and `widgets` fields of the `Manifest` object are optional, and their presence is determined by the contents of `Query.options`. For example:
+The `dial` and `widgets` fields of the `Manifest` object are optional fields, and their existence is determined by the contents of `Query.options`. For example:
 ``` js
 pkg.getInfo({
   package: 'com.example.app',
   options: ['dial', 'widgets']
 })
 ```
-will cause the resulting `Manifest` to include the `dial` and `widgets` fields (although application packages never include the `dial` field).
+will make the resulting `Manifest` contain the `dial` and `widgets` fields (however, application packages never contain the `dial` field).
 
 When the `query` parameter is a string, it is equivalent to an empty `options` option, meaning:
 ``` ts
@@ -84,7 +84,7 @@ pkg.getInfo({ package: 'com.example.app' })
 ```
 yield the same results. In this case, the returned `Manifest` object does not contain optional fields.
 
-When the `query` parameter is not specified, information about the current application can be returned via `getInfo()`:
+When the `query` parameter is not specified, the information of the current application can be returned via `getInfo()`:
 ``` js
 let manifest = pkg.getInfo()
 console.log(manifest)

@@ -1,4 +1,4 @@
-# Cipher Algorithm
+# Cryptographic Algorithms
 
 ## Import Module
 
@@ -21,20 +21,20 @@ import cipher from '@system.cipher'
   }): Promise&lt;{ text: string }>
 </pre></decl>
 
-`aes` encryption and decryption. The functions of each field in the `options` parameter are as follows:
+`aes` encryption and decryption. The functions of the fields in the `options` parameter are as follows:
 - `action`: The type of encryption or decryption, with two optional values: `'encrypt'` for encryption, and `'decrypt'` for decryption;
-- `text`: The text content to be encrypted or decrypted. Text to be encrypted should be plain text, and text to be decrypted should be binary data encoded in `base64`;
-- `key`: The key used for encryption or decryption, generated as a string after `base64` encoding. Before being decoded from `base64`, the key must be a multiple of $16$ bytes;
-- `transformation`: The encryption mode (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) and padding scheme for the `AES` algorithm, defaulting to `'AES/CBC/PKCS5Padding'`. The available AES padding options are:
+- `text`: The text content to be encrypted or decrypted. The text to be encrypted should be plain text, while the text to be decrypted should be binary values encoded in `base64`;
+- `key`: The key used for encryption or decryption, generated as a base64-encoded string. Before base64 decoding, the key length must be a multiple of $16$ bytes;
+- `transformation`: The encryption mode (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) and padding scheme for the `AES` algorithm. The default is `'AES/CBC/PKCS5Padding'`. Available AES padding options are:
   - `'PKCS5Padding'`
   - `'PKCS7Padding'`
   - `'NoPadding'`
   - `'OneAndZerosPadding'`
   - `'ZerosAndLenPadding'`
   - `'ZerosPadding'` 
-- `iv`: The initialization vector (IV) for AES encryption/decryption, as a Base64-encoded string, defaulting to the value of the `key` field;
-- `ivOffset`: The initialization vector offset for AES encryption/decryption, defaulting to $0$;
-- `ivLen`: The byte length of the initialization vector for AES encryption/decryption, defaulting to $16$;
+- `iv`: The initialization vector (IV) for AES encryption/decryption, represented as a Base64-encoded string. The default value is the value of the `key` field;
+- `ivOffset`: The initialization vector offset for AES encryption/decryption. The default value is $0$;
+- `ivLen`: The byte length of the initialization vector for AES encryption/decryption. The default value is $16$;
 
 ::: details Sample Code
 
@@ -65,7 +65,7 @@ async function AesTest() {
   console.log(`decrypto text: ${decrypt.text}`)
 }
 
-AesTest() // Print the encrypted and decrypted text, console output
+AesTest() // Print encrypted and decrypted text, output to console
 // encrypt text: yI4dWJzQNCQfXq5P8du1dtYWZuBvbl9F9Vh15Fh9qjg=
 // decrypto text: this is a test project!
 ```
@@ -83,9 +83,9 @@ AesTest() // Print the encrypted and decrypted text, console output
 
 `rsa` encryption and decryption. The functions of the fields in the `options` parameter are as follows:
 - `action`: The type of encryption or decryption, with two optional values: `'encrypt'` for encryption, and `'decrypt'` for decryption;
-- `text`: The text content to be encrypted or decrypted. The text to be decrypted should be binary data encoded in Base64;
-- `key`: The `RSA` key, which is a string generated after `base64` encoding. When encrypting, `key` is the public key; when decrypting, `key` is the private key;
-- `transformation`: The padding scheme of the RSA algorithm, defaulting to `RSA/None/OAEPwithSHA-256andMGF1Padding`. The available RSA padding options are:
+- `text`: The text content to be encrypted or decrypted. The text to be decrypted should be binary values encoded in Base64;
+- `key`: The `RSA` key, generated as a base64-encoded string. When encrypting, `key` is the public key; when decrypting, `key` is the private key;
+- `transformation`: The padding scheme for the RSA algorithm, defaulting to `RSA/None/OAEPwithSHA-256andMGF1Padding`. Available RSA padding options are:
   - `'PKCS_v15andMGF1Padding'`
   - `'OAEPwithMD5andMGF1Padding'`
   - `'OAEPwithSHA-1andMGF1Padding'`
@@ -133,7 +133,7 @@ async function rsaTest() {
   console.log(`decrypt text: ${decrypt.text}`)
 }
 
-rsaTest() // Print the encrypted and decrypted text, console output sample
+rsaTest() // Print encrypted and decrypted text, console output sample
 // encrypt text: FF+4R3iJ9pjeozZ6/Oulz9LUBH/uGQbIesJ7JbYRWvxGIHpJKNiEB+4MT/JcKs8ddN/ZQ4ts+YWMgUeglRBugRx+T4kqq0rKBdQrYdiMP58deCViSJjXJS+joPppwLDPL1Lg0VxpW89B+gA1jfC+9N8tvEHPhcX+nF8uAKRcW0M=
 // decrypt text: this is a Rsa test.
 ```
@@ -148,10 +148,10 @@ rsaTest() // Print the encrypted and decrypted text, console output sample
 }): Promise&lt;{ sign: string }>
 </pre></decl>
 
-`sign` signature. The functions of each field in the `options` parameter are as follows:
+`sign` for digital signatures. The functions of the fields in the `options` parameter are as follows:
 - `text`: The content to be signed;
 - `key`: The RSA private key;
-- `algorithm`: The signature algorithm, defaulting to `'SHA256withRSA'`. The available signature algorithms are:
+- `algorithm`: The signature algorithm, defaulting to `'SHA256withRSA'`. Available signature algorithms are:
   - `'MD5withRSA'`
   - `'SHA1withRSA'`
   - `'SHA256withRSA'`
@@ -211,10 +211,10 @@ signTest()
 }): Promise&lt;string | ArrayBuffer>
 </pre></decl>
 
-`hash` encryption. The functions of each field in the `options` parameter are as follows:
+`hash` encryption (hashing). The functions of the fields in the `options` parameter are as follows:
 - `data`: The raw data used to generate the digest;
 - `algorithm`: The digest algorithm, with optional values `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `encode`: The encoding and type of the returned data, with optional values:
+- `encode`: The encoding and type of the returned data, with possible values:
   - `'hex'`: Default value, returns a hex-encoded string;
   - `'base64'`: Returns a Base64-encoded string of the encryption result;
   - `'arraybuffer'`: Returns data of type ArrayBuffer;
@@ -229,7 +229,7 @@ async function md5Test(){
   })
   console.log(res)
 }
-md5Test() // Print the generated digest, console output
+md5Test() // Print the generated digest, output to console
 // output：5d41402abc4b2a76b9719d911017c592
 ```
 :::
@@ -244,11 +244,11 @@ md5Test() // Print the generated digest, console output
 }): Promise&lt;string | ArrayBuffer>
 </pre></decl>
 
-Generates a keyed-hash message authentication code (HMAC) using the HMAC algorithm. The functions of each field in the `options` parameter are as follows:
+Generates a keyed-hash message authentication code (HMAC) using the HMAC algorithm. The functions of the fields in the `options` parameter are as follows:
 - `data`: The raw data used to generate the digest;
-- `algorithm`: The digest algorithm, with optional values `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `key`: The key;
-- `encode`: The encoding and type of the returned data, with optional values:
+- `algorithm`: The digest algorithm, optional values are `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
+- `key`: The secret key;
+- `encode`: The encoding and type of the returned data, with possible values:
   - `'hex'`: Default value, returns a hex-encoded string;
   - `'base64'`: Returns a Base64-encoded string of the encryption result;
   - `'arraybuffer'`: Returns data of type `ArrayBuffer`;
@@ -264,18 +264,18 @@ async function hmacTest() {
   })
   console.log(res)
 }
-hmacTest() // Print the generated digest, console output
+hmacTest() // Print the generated digest, output to console
 // output：6fce0a55cf8bae80e2cf479b50035f773491c5ad
 ```
 :::
 
 ### `base64Encode` <decl type="(data: string | ArrayBuffer): Promise&lt;string>" method />
 
-Performs Base64 encoding on the input data.
+Encodes input data into Base64 format.
 
 ### `base64Decode` <decl type="(data: string | ArrayBuffer): Promise&lt;ArrayBuffer>" method />
 
-Performs Base64 decoding on the input data.
+Decodes input data from Base64 format.
 
 ::: details Sample Code
 
@@ -298,7 +298,7 @@ async function base64Test() {
   console.log('Decoded Data:', decodedData);
 }
 
-base64Test()  // Print the results of encoding and decoding
+base64Test()  // Print the encoding and decoding results
 // Encoded Data: SGVsbG8sIFdvcmxkIQ==
 // Decoded Data: Hello, World!
 ```

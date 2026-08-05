@@ -1,6 +1,6 @@
 # label
 
-The `label` component is used to display text or tag information, and defaults to an inline element. `label` can be used in conjunction with the following form components to display tag information:
+The `label` component is used to display text or tag information, and is an inline element by default. `label` can be used in conjunction with the following form components to display tag information:
 - [input](input)
 - [radio](radio)
 - [switch](switch)
@@ -24,10 +24,10 @@ The ID of the target component. For example:
 ```html
 <radio id="red" /><label target="red">red</label>
 ```
-Clicking the `label` component in this example will also trigger an update of the `radio` component with the ID `red`, but clicking the `label` component will not trigger touch events such as `click` on the target component.
+Clicking the `label` component in the example will also trigger an update for the `radio` component with the ID `red`, but clicking the `label` component will not trigger touch events such as `click` on the target component.
 
-Due to performance considerations, only target components that are siblings to the `label` component (i.e., share the same parent component) are supported.
+Due to performance considerations, only target components that are siblings of the `label` component (i.e., sharing the same parent component) are supported.
 
 ::: warning
-Changing the target component is currently not supported.
+Changing the target component dynamically is currently not supported.
 :::

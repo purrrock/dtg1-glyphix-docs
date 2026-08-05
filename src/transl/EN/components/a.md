@@ -1,6 +1,6 @@
 # a
 
-The anchor component, which is an inline element by default, used to jump to a specified page.
+The anchor component, which is an inline element by default, is used to jump to a specified page.
 
 ## Attributes
 
@@ -9,7 +9,7 @@ The anchor component, which is an inline element by default, used to jump to a s
 Specifies the [page name](/framework/application/manifest.md#pages) or URI string to jump to.
 
 ``` html
-<a href="page1">Jump to page1</a>
+<a href="page1">跳转到 page1 页面</a>
 ``` 
 
 Unlike the `<a>` tag in Web, the `a` component only supports page navigation and does not support hyperlink navigation.
@@ -17,7 +17,7 @@ Unlike the `<a>` tag in Web, the `a` component only supports page navigation and
 The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings in the form of `PageName?key=value`, which consists of a page name (as the path field) and a query field. The query field of this URI will be parsed as navigation parameters for the page. For example, when clicking this `<a>` element:
 
 ``` html
-<a href="page1?text=test-text&message=hello">Jump to page1</a>
+<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
 ```
 
 It is equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:

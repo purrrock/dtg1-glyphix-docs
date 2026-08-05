@@ -1,18 +1,18 @@
 # Clangd Configuration
 
-When developing firmware using a cross-compilation toolchain such as `arm-none-eabi-gcc` along with a build system like CMake, you can configure the Clangd language server to enhance your development experience. Specifically, you will gain the following benefits:
-- Accurate jump-to-declaration or definition based on the actual project structure;
-- View API documentation (documentation comments written in Doxygen formats such as `/**` or `//!`);
+When developing firmware using a cross-compilation toolchain such as `arm-none-eabi-gcc` along with a build system like CMake, you can configure the Clangd language server to enhance your development experience. Specifically, you will benefit from the following features:
+- Accurate navigation to declarations or definitions based on the actual project structure;
+- Viewing API documentation (documentation comments written in Doxygen formats such as `/**` and `//!`);
 - Support for code formatting rules defined by `.clang-format`;
 - Real-time static analysis or error checking without the need for compilation;
-- Code hints and completion while typing;
-- Find references, code refactoring, and more.
+- Code suggestions and completion as you type;
+- Finding references, code refactoring, and more.
 
-## Prerequisites
+## Preparation
 
-First, use an editor that supports LSP (Language Server Protocol), such as Visual Studio Code, and install clangd and its related extension. If you need to install clangd manually, you can download a suitable version from [LLVM Releases](https://github.com/llvm/llvm-project/releases) or use your operating system's package manager.
+First, you need an editor that supports the LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and its related extensions. If you need to install clangd manually, you can download a suitable version from [LLVM](https://github.com/llvm/llvm-project/releases) or use your operating system's package manager.
 
-After installing the necessary extensions, clangd may work out-of-the-box in simple native projects, but further configuration is required in complex cross-compilation environments.
+After installing the necessary extensions, clangd may work out-of-the-box for simple native host projects, but further configuration is required in complex cross-compilation environments.
 
 ## Cross-Compilation Environment Configuration
 
@@ -31,10 +31,10 @@ Then, when you configure or build the project using CMake, a `compile_commands.j
 ### Clangd Configuration
 
 After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you are likely to encounter the following issues:
-- `compile_commands.json` is located deep in the directory hierarchy, and clangd cannot find it;
-- clangd cannot find the standard header files suitable for the cross-compilation environment, such as `stdint.h`.
+- `compile_commands.json` is located deep within the directory hierarchy, so clangd cannot find it;
+- clangd cannot find standard headers suitable for the cross-compilation environment, such as `stdint.h`.
 
-To solve these problems, you first need to create a `.clangd` file in the project's root directory (i.e., the directory opened by the editor, usually where the `.git` folder resides). This is a YAML file; populate it with the following content:
+To resolve these issues, you first need to create a `.clangd` file in the root directory of your project (i.e., the directory opened by your editor, usually where the `.git` folder is located). This is a YAML file; populate it with the following content:
 ``` yaml
 CompileFlags:
   CompilationDatabase: "Relative path to the directory containing compile_commands.json"
@@ -47,11 +47,11 @@ CompileFlags:
   Remove:
     - -fno-reorder-functions
 ```
-Please modify the file paths according to your actual situation. Next, add the following command-line option to clangd's startup arguments:
+Please modify the file paths according to your actual setup. Next, add the following command-line option to clangd's startup arguments:
 ``` bash
---query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # Fill in the path based on your actual situation
+--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # Fill in the path according to your actual setup
 ```
-Then restart the language server, and clangd should work properly.
+Then restart the clangd language server, and it should work properly.
 
 In VS Code, you can add arguments via `clangd.arguments` in the project's `.vscode/settings.json`:
 ``` json

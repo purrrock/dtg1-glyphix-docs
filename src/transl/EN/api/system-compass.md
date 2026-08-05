@@ -1,6 +1,6 @@
 # Compass
 
-The `@system.compass` module provides the ability to access the device's compass sensor, allowing you to obtain the device's orientation relative to the Earth's magnetic North Pole.
+The `@system.compass` module provides the ability to access the device's compass sensor, allowing you to obtain the device's directional information relative to the Earth's magnetic North Pole.
 
 ## Import Module
 
@@ -8,22 +8,22 @@ The `@system.compass` module provides the ability to access the device's compass
 import compass from '@system.compass'
 ```
 
-## Interface Definitions
+## Interface Definition
 
 ### `subscribe` <decl type="(callback: (data: Value) => void): number" method/>
 
 Subscribes to compass data changes. When the device orientation changes, the callback function is automatically invoked. The `callback` function receives compass data of type [`Value`](#value).
 
-Returns a subscription ID used for unsubscribing.
+Returns a subscription ID used to unsubscribe.
 
 ### `unsubscribe` <decl type="(subscribeId: number): void" method/>
 
-Unsubscribes from compass data. The `subscribeId` parameter is the subscription ID returned by the [`subscribe()`](#subscribe) method.
+Unsubscribes from compass data. The parameter `subscribeId` is the subscription ID returned by the [`subscribe()`](#subscribe) method.
 
-This method should be called to cancel the `subscribe()` subscription when the page or component is destroyed:
+This method should be called when the page or component is destroyed to cancel the subscription made by `subscribe()`:
 ``` js
 const subscribeId = compass.subscribe((data) => {
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy: ${data.accuracy}`)
 })
 
@@ -46,20 +46,20 @@ Example:
 ``` js
 // Using Promise
 compass.getValue().then((data) => {
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy level: ${data.accuracy}`)
 })
 
 // Using async/await
 async function getCompassData() {
   const data = await compass.getValue()
-  console.log(`Direction: ${data.direction} rad`)
+  console.log(`Direction: ${data.direction} radians`)
   console.log(`Accuracy level: ${data.accuracy}`)
 }
 ```
 
 ::: note
-Due to implementation limitations, this method does not support callback-style calls (such as `{ success: (data) => {...} }`); please use Promise or async/await instead.
+Due to implementation limitations, this method does not support callback-style calls (such as `{ success: (data) => {...} }`). Please use Promises or async/await.
 :::
 
 ## Type Definitions
@@ -73,7 +73,7 @@ type Value = {
   accuracy: number   // Compass accuracy level
 }
 ```
-Property descriptions:
+Property description:
 - `direction`: The angle in radians between the device's Y-axis and the Earth's magnetic North Pole, with a value range of $[0,2\pi]$, where:
   - `0`: Due North
   - `Math.PI / 2` (approx. 1.57): Due East
@@ -84,7 +84,7 @@ Property descriptions:
   - `2`: Medium accuracy
   - `1`: Low accuracy
   - `0`: Unreliable (reason unknown)
-  - `-1`: Unreliable (sensor disconnected)
+  - `-1`: Unreliable (sensor lost connection)
 
 Example:
 ``` js

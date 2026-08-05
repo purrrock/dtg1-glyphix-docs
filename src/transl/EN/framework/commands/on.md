@@ -13,12 +13,12 @@ The `on` directive is used to listen for changes in property values that support
 <div @attribute="expr"></div>  <!-- Vue-style syntax -->
 ```
 
-`attribute` is the name of the property to listen for changes on, and `expr` is the expression to execute when the property changes. The standard `on` directive uses the `on:` prefix, and `on` and `@` character prefixes are also supported.
+`attribute` is the name of the property whose changes need to be listened to, and `expr` is the expression to be executed when the property changes. The standard `on` directive uses the `on:` prefix, while the `on` and `@` character prefixes are also supported.
 
-The property value of the `on` directive supports the [directive property value](/framework/component/template.md#指令属性值) syntax.
+The property value of the `on` directive supports the [Directive Property Value](/framework/component/template.md#指令属性值) syntax.
 
 ::: tip
-It is recommended to use the `on:attribute` format. `onattribute` can easily lead developers to unconsciously confuse the `on` directive with regular properties. In addition, property names like `oneself` will be parsed as the `on:eself` directive, which requires special attention.
+It is recommended to use the `on:attribute` format. `onattribute` can easily lead developers to unconsciously confuse the `on` directive with ordinary properties. In addition, property names like `oneself` will be parsed as the `on:eself` directive, which requires special attention.
 :::
 
 ## Listening Expressions
@@ -29,7 +29,7 @@ The following code listens to a touch event on a `div` component:
 ``` html
 <div on:touchmove="console.log($event)"></div>
 ```
-In this example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to, and the [touch event object](../generic/properties.md#touchevent) is printed directly. The `$event` variable is used to get the event value, which is defined by the `on` directive (its scope is limited to the `on` directive expression).
+In this example, the [`touchmove`](../generic/properties.md#touchmove) event is listened to, and the [touch event object](../generic/properties.md#touchevent) is printed directly here. The `$event` variable is used to get the event value, which is a variable defined by the `on` directive (its scope is limited to the `on` directive expression).
 
 You can also call methods defined in the component object:
 ``` html
@@ -63,12 +63,12 @@ export default {
 As shown in the example, the event value will be passed as the sole argument to the function.
 
 ::: tip
-The listening expression does not necessarily have to be a function variable; it can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function, it will be invoked by the `on` directive.
+The listening expression does not have to be a function variable; it can also be a complex expression (such as an expression containing a function call). As long as the value of the expression is a function, it will be invoked by the `on` directive.
 :::
 
-## Listening to Component Property Value Changes
+## Listening for Component Property Value Changes
 
-Some component property values generate events when they change, which can be listened to using the `on` directive:
+The property values of some components generate events when they change, which can be listened to via the `on` directive:
 
 ``` html
 <list on:index="indexChanged($event)">

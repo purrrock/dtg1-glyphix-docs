@@ -14,19 +14,19 @@ The minimum progress value. The [`value`](#value) attribute will not be less tha
 
 ### `value` <decl type="number" set get listen />
 
-Sets the progress value. The display ratio of the progress depends on the proportion of the `value` attribute within the range from `min` to `max`, and the display ratio is restricted between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
+Sets the progress value. The display proportion of the progress depends on the ratio of the `value` attribute within the range from `min` to `max`, and the display proportion is limited between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
 
 ### `vertical` <decl type="boolean" set />
 
-If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise horizontally. The default value is `false`.
+If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise horizontally. The default value is `false`. 
 
-## CSS Specifications
+## CSS Specification
 
 Developers can customize the appearance of the `progress` component using CSS.
 
 ### Dimension Calculation
 
-By default, the width and height of `progress` are the same as the font size of the element, which is set by the [`font-size`](/framework/generic/styles.md#font-size) property (or inherited). The dimensions of `progress` can be customized via the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) properties.
+By default, the width and height of `progress` are the same as the font size of the element, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (or inherited). The dimensions of `progress` can be customized via the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
 
 ### CSS Properties
 
@@ -41,15 +41,15 @@ Other CSS properties may also be useful, such as using the [`border`](/framework
 
 #### `value`
 
-This pseudo-element can be used to style the `progress` bar independently of the background portion. For example, you can set the border radius of the scrollbar background and the progress bar portion separately to achieve an effect where the outer border has rounded line caps while the progress bar has straight line caps.
+This pseudo-element can be used to style the progress bar part of `progress` separately from the background part. For example, you can set the border-radius of the scrollbar background and the progress bar part separately to achieve an effect where the outer border has rounded caps while the progress bar has straight caps.
 
 ``` css
 progress {
-  border-radius: 50%; /* Scrollbar background border radius */
+  border-radius: 50%; /* Scrollbar background border-radius */
 }
 
 progress::value {
-  border-radius: 0; /* Progress bar has no border radius */
+  border-radius: 0; /* Progress bar has no border-radius */
 }
 ```
 
@@ -63,7 +63,7 @@ The following example demonstrates some ways to customize the appearance of the 
 <div>
   <!-- Default style -->
   <progress :value="40" />
-  <!-- Flat-cap progress bar style -->
+  <!-- Flat-head progress bar style -->
   <progress class="flat" :value="50" />
   <progress class="more-style" :value="60" />
 </div>
@@ -75,12 +75,12 @@ div > * {
 }
 
 .flat::value {
-  /* Set the border-radius of the value pseudo-element to 0 for a flat-cap progress bar effect */
+  /* Set the border-radius of the value pseudo-element to 0 to achieve a flat-head effect on the progress bar */
   border-radius: 0;
 }
 
 .more-style {
-  /* Custom border radius */
+  /* Custom border-radius */
   border-radius: 30%;
   /* Progress bar background color */
   background-color: #b3c5d7;
