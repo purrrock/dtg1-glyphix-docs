@@ -5,10 +5,21 @@ import zlib
 import lzma
 import argparse
 
-# Константы структур
+# --- Константы структур ---
 AOTA_MAGIC = b'AOTA'
-ACT_BOOT_MAGIC = b'ACTHHTCA'
-ACT_LZMA_MAGIC = b'LZMA\x10\x00\x00\x00'
+
+# Actions Boot Header (40 байт / 0x28)
+ACTIONS_BOOT_HEADER_FMT = '<8sIIIIIIII'
+ACTIONS_BOOT_HEADER_SIZE = struct.calcsize(ACTIONS_BOOT_HEADER_FMT)
+
+# Actions LZMA Header (16 байт / 0x10)
+ACTIONS_LZMA_HEADER_FMT = '<4sIII'
+ACTIONS_LZMA_HEADER_SIZE = struct.calcsize(ACTIONS_LZMA_HEADER_FMT)
+
+ACTIONS_BOOT_MAGIC = b'ACTHHTCA'
+# Строгая сигнатура: "LZMA" + header_size (0x00000010)
+ACTIONS_LZMA_MAGIC_STRICT = b'LZMA\x10\x00\x00\x00'
+
 
 def parse_aota_container(file_path, output_dir):
     """
@@ -24,7 +35,6 @@ def parse_aota_container(file_path, output_dir):
         if magic != AOTA_MAGIC:
             raise ValueError(f"Неверная сигнатура {magic}. Ожидается 'AOTA'.")
             
-        # Извлечение метаданных (актуально для внешнего и внутреннего контейнера)
         build_ver = header[0x40:0x60].split(b'\x00')[0].decode('ascii', errors='ignore')
         platform_id = header[0x60:0x7E].split(b'\x00')[0].decode('ascii', errors='ignore')
 
@@ -34,7 +44,6 @@ def parse_aota_container(file_path, output_dir):
             
         print(f"    [+] Версия: {build_ver} | Платформа: {platform_id}")
         
-        # Парсинг FAT
         f.seek(fat_offset)
         extracted_files = []
         for i in range(file_count):
@@ -44,12 +53,10 @@ def parse_aota_container(file_path, output_dir):
             name_b, file_offset, file_size, _, file_crc = struct.unpack('<16sIIII', fat_entry)
             filename = name_b.split(b'\x00')[0].decode('ascii')
             
-            # Чтение полезной нагрузки файла
             current_pos = f.tell()
             f.seek(file_offset)
             payload = f.read(file_size)
             
-            # Проверка целостности
             actual_crc = zlib.crc32(payload) & 0xFFFFFFFF
             status = "OK" if actual_crc == file_crc else "CRC_ERR"
             
@@ -64,56 +71,70 @@ def parse_aota_container(file_path, output_dir):
             
     return extracted_files
 
-def parse_temp_boot_image(temp_path, output_dir):
+
+def parse_temp_boot_image(temp_path, output_dir, save_chunks=False):
     """
-    Парсер загрузочного образа Stage-2 (TEMP.bin).
-    Разбирает заголовки, вырезает загрузчик и клеит XZ-чанки в памяти.
+    Распаковывает загрузочный контейнер TEMP.bin (v1.6):
+    - Парсит 40-байтный заголовок ACTHHTCA
+    - Извлекает Boot Stub (включая заполнитель и IVT)
+    - Извлекает и декомпрессирует сжатые XZ-чанки в памяти (In-Memory)
+    - Склеивает разжатые блоки в единый inner_aota_container.bin
     """
     os.makedirs(output_dir, exist_ok=True)
     
     with open(temp_path, 'rb') as f:
-        # Чтение Boot Header
-        header_data = f.read(40)
-        if header_data[:8] != ACT_BOOT_MAGIC:
-            raise ValueError("Неверная сигнатура TEMP.bin (ожидается ACTHHTCA)")
-            
-        with open(os.path.join(output_dir, "actions_boot_header.bin"), 'wb') as hf:
-            hf.write(header_data)
-            
-        # Чтение Boot Stub (включая padding и IVT)
-        f.seek(0x28)
-        boot_stub_data = f.read(0x111E0 - 0x28)
-        with open(os.path.join(output_dir, "boot_stub.bin"), 'wb') as bf:
-            bf.write(boot_stub_data)
-            
-        print(f"    [+] Извлечены 'actions_boot_header.bin' и 'boot_stub.bin'")
-        
-        # Чтение сжатой зоны
-        f.seek(0x111E0)
-        compressed_payload = f.read()
+        data = f.read()
 
-    offset = 0
+    # 1. Чтение и валидация Boot Header
+    if data[:8] != ACTIONS_BOOT_MAGIC:
+        raise ValueError("Неверная сигнатура Boot Header (ожидается ACTHHTCA)")
+
+    with open(os.path.join(output_dir, "actions_boot_header.bin"), 'wb') as hf:
+        hf.write(data[:ACTIONS_BOOT_HEADER_SIZE])
+    print(f"    [+] Извлечен 'actions_boot_header.bin'")
+
+    # 2. Динамический поиск начала сжатых XZ-чанков
+    lzma_offset = data.find(ACTIONS_LZMA_MAGIC_STRICT)
+    if lzma_offset == -1:
+        raise ValueError("Сжатые данные (LZMA) не найдены внутри TEMP.bin")
+
+    # 3. Извлечение Boot Stub (от конца заголовка до начала первого LZMA-блока)
+    boot_stub_data = data[ACTIONS_BOOT_HEADER_SIZE:lzma_offset]
+    with open(os.path.join(output_dir, "boot_stub.bin"), 'wb') as bf:
+        bf.write(boot_stub_data)
+        
+    print(f"    [+] Извлечен 'boot_stub.bin' (размер: {len(boot_stub_data)} байт)")
+    print(f"    [+] Начало сжатых блоков LZMA: 0x{lzma_offset:08X}")
+    
+    # 4. Чтение и декомпрессия XZ-чанков
+    offset = lzma_offset
     chunk_index = 0
     unpacked_chunks = []
     
-    while offset < len(compressed_payload):
-        if offset + 16 > len(compressed_payload):
+    while offset < len(data):
+        if offset + ACTIONS_LZMA_HEADER_SIZE > len(data):
             break
             
-        magic, header_sz, comp_sz, uncomp_sz = struct.unpack('<4sIII', compressed_payload[offset:offset+16])
+        # Проверка строгой сигнатуры LZMA для текущего чанка
+        if data[offset:offset+8] != ACTIONS_LZMA_MAGIC_STRICT:
+            break
+            
+        magic, header_sz, comp_sz, uncomp_sz = struct.unpack(ACTIONS_LZMA_HEADER_FMT, data[offset:offset+ACTIONS_LZMA_HEADER_SIZE])
         
-        # Строгая проверка сигнатуры LZMA
-        if compressed_payload[offset:offset+8] != ACT_LZMA_MAGIC:
-            break
-            
-        xz_start = offset + 16
+        xz_start = offset + ACTIONS_LZMA_HEADER_SIZE
         xz_end = xz_start + comp_sz
-        chunk_data = compressed_payload[xz_start:xz_end]
+        chunk_data = data[xz_start:xz_end]
         
         try:
             unpacked = lzma.decompress(chunk_data)
+            
+            if save_chunks:
+                chunk_path = os.path.join(output_dir, f"chunk_{chunk_index}_unpacked.bin")
+                with open(chunk_path, 'wb') as cf:
+                    cf.write(unpacked)
+                    
             unpacked_chunks.append(unpacked)
-            print(f"    [+] XZ Чанк #{chunk_index}: {comp_sz} B -> {len(unpacked)} B")
+            print(f"    [+] XZ Чанк #{chunk_index}: Сжато {comp_sz} B -> Разжато {len(unpacked)} B (Ожидалось {uncomp_sz})")
         except Exception as e:
             print(f"    [-] Ошибка декомпрессии XZ блока #{chunk_index}: {e}")
             
@@ -121,21 +142,23 @@ def parse_temp_boot_image(temp_path, output_dir):
         chunk_index += 1
 
     if not unpacked_chunks:
-        raise ValueError("Сжатые данные не найдены внутри TEMP.bin")
+        raise ValueError("Сжатые данные не найдены или повреждены")
 
-    # Склейка внутреннего AOTA
+    # 5. Склейка внутреннего AOTA
     inner_container = b''.join(unpacked_chunks)
     inner_path = os.path.join(output_dir, "inner_aota_container.bin")
     
     with open(inner_path, 'wb') as out_f:
         out_f.write(inner_container)
         
-    print(f"    [+] Сформирован внутренний монолит: {len(inner_container)} байт")
+    print(f"    [+] Сформирован внутренний монолит (inner_aota_container.bin): {len(inner_container)} байт")
     return inner_path
+
 
 def main():
     parser = argparse.ArgumentParser(description="Полная рекурсивная распаковка прошивки Actions ATS3085S")
     parser.add_argument("input_file", help="Путь к оригинальному файлу OTA (.bin)")
+    parser.add_argument("--save-chunks", action="store_true", help="Опционально: сохранить промежуточные XZ-чанки на диск")
     args = parser.parse_args()
 
     base_name = os.path.splitext(os.path.basename(args.input_file))[0]
@@ -156,7 +179,7 @@ def main():
     print("\n" + "="*50)
     print(f"[*] ЭТАП 2: Анализ ядра и декомпрессия TEMP.bin (Layer 2)")
     print("="*50)
-    inner_aota_path = parse_temp_boot_image(temp_bin_path, layer2_dir)
+    inner_aota_path = parse_temp_boot_image(temp_bin_path, layer2_dir, save_chunks=args.save_chunks)
 
     layer3_dir = os.path.join(layer2_dir, "inner_aota_extracted")
     
@@ -170,8 +193,9 @@ def main():
     print("\n" + "="*50)
     print("[SUCCESS] Полная распаковка успешно завершена!")
     if app_bin_path:
-        print(f"[*] Целевой файл для IDA/Ghidra: {app_bin_path}")
+        print(f"[*] Целевой файл для реверс-инжиниринга: {app_bin_path}")
     print("="*50 + "\n")
+
 
 if __name__ == "__main__":
     main()
