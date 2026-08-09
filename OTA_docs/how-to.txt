@@ -1,0 +1,47 @@
+Инструкция по использованию
+
+Распаковываем AOTA контейнер:
+aota_unpacker.py ota_A5S10GLY_C175_CD5-2026-04-29-10-01_V1_74_60.bin
+
+В папке ota_A5S10GLY_C175_CD5-2026-04-29-10-01_V1_74_60_extracted появятся файлы:
+ota.xml
+sdfs_a.bin
+sdfs_k.bin
+TEMP.bin
+а также файл version.txt с содержимым:
+build_ver=1.00_2602281703
+platform_id=A5S10GLY
+
+Модификация версии:
+Откройте version.txt и измените версию (например, build_ver=1.00_2604291002).
+
+Распаковываем TEMP.bin:
+В папке TEMP_extracted появятся файлы:
+ota.xml
+sdfs_a.bin
+sdfs_k.bin
+TEMP.bin
+
+Распаковываем inner_aota_container.bin:
+aota_unpacker.py
+В папке inner_aota_container_extracted появятся файлы:
+app.bin
+ota.xml
+sdfs.bin
+а также файл version.txt с содержимым:
+build_ver=1.00_2602281703
+platform_id=A5S10GLY
+
+Модификация версии:
+Откройте version.txt и измените версию (например, build_ver=1.00_2604291002).
+
+Модифицируйте app.bin как вам нужно.
+
+Упаковка прошивки:
+aota_packer.py
+compress_and_pack_temp.py
+aota_packer.py
+
+
+Со структурой и алгоритмами распаковки и упаковки TEMP.bin я разобрался (приложил спецификацию и прогамму распаковки). Внутри ещё один AOTA контейнер, который снова нужно распаковать нашим aota_unpacker.py (прилагаю) и внутри будет app.bin для модификации.
+Напиши скрипт aota_full_unpack.py, который будет полностью разбирать прошивку в структуру каталогов для обратной сборки.
