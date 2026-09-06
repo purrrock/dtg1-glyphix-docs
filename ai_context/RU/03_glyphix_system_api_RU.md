@@ -2,1401 +2,101 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/transl/RU/api/system-notification.md
+FILE_PATH: src/transl/RU/api/system-schedule.md
 
-# 消息通知
+# Планировщик задач (定时任务)
 
-## 导入模块
+## Импорт модуля
 
 ``` js
-import notification from '@system.notification'
+import schedule from "@system.schedule"
+// Или
+const schedule = require("@system.schedule")
 ```
 
-开发者需要在 [`manifest.json`](/framework/application/manifest.md#permissions) 文件中声明应用对 `watch.permission.NOTIFICATION` 的访问权限。
+Разработчикам необходимо объявить разрешение на доступ к `watch.permission.SCHEDULE` для приложения в файле [`manifest.json`](/framework/application/manifest.md#permissions).
 
 ## API
 
-### `publish`
+### `scheduleJob`
 <decl method><pre>
 (options: {
-  icon: string,
-  id?: number,
-  contentType: number,
-  content: object,
-  deliveryTime: number,
-  actionUri: string
-}): void
-</pre></decl>
-
-发布消息通知。`options` 参数的各字段功能为：
-- `icon`：消息图标的 URI；
-- `id`：应用通知的唯一 id；
-- `contentType`：正文类型。 1：普通文本通知类型。 2：图片通知类型；暂时不支持图片通知；
-- `content`：与 `contentType` 配合使用，表示通知的正文内容；
-  - 当 `contentType` 为 1 时，表示普通文本通知的正文内容；object 类型，包含以下字段：
-    - `title`：普通文本通知标题；string 类型；
-    - `text`：普通文本通知内容；string 类型；
-- `deliveryTime`：通知发送时间；
-- `actionUri`：点击通知时跳转的 URI。
-
-### `remove` 
-<decl method><pre>
-(options: {
-  query:{
-    id?: number
-  }
-}): void
-</pre></decl>
-
-清除消息通知。`options` 参数包含以下字段：
-- query：清除的查询条件，
-  - id：清除指定 id 的消息通知，如果不传入 id，则清除所有消息通知。
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-vibrator.md
-
-# Вибрация
-
-## Импорт модуля
-
-``` js
-import vibrator from '@system.vibrator'
-```
-
-## API
-
-### `vibrate`
-<decl method><pre>
-(options: {
-  mode: string
-}): bool
-</pre></decl> 
-
-Запуск вибрации. Назначение полей параметра `options`:
-- `mode`: режим вибрации, `long` означает длинную вибрацию, `short` — короткую. Значение по умолчанию — `long`.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-launch.md
-
-# Переход между приложениями
-
-## Импорт модуля
-
-``` js
-import launch from '@system.launch'
-```
-
-## Определение интерфейсов
-
-### `launch` <decl type="(app: string): Promise<bool>" method/>
-
-Запускает указанное приложение и переводит его на передний план. `app` — это строка с идентификатором уже установленного приложения. Возвращаемый Promise указывает, успешно ли загружено приложение.
-
-### `inactive` <decl type="(app?: string): Promise<void>" method/>
-
-Переводит приложение в фоновый режим. `app` — это ID запущенного приложения; если параметр не указан, в фоновый режим переводится текущее приложение. В фоновый режим могут переводиться только приложения, находящиеся на переднем плане.
-
-### `exit` <decl type="(app?: string): Promise<void>" method />
-
-Завершает работу приложения. Параметр `app` представляет собой ID запущенного приложения; если параметр не указан, текущее приложение закрывается.
-
-### `getRunning` <decl type="(): string[]" method />
-
-Получает список имен пакетов запущенных приложений, включая те, которые находятся в фоновом режиме.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-calendar.md
-
-# Календарь
-
-## Импорт модуля
-
-``` js
-import calendar from '@system.calendar'
-```
-
-## Определение интерфейсов
-
-### `getLunar` <decl method type="(date: Date): LunarDate" />
-
-Получение информации о дате по лунному календарю для объекта `Date`. Возвращает описание даты по лунному календарю типа [`LunarDate`](#lunardate).
-
-### `getLunar` <decl method type="(year: number, month: number, day: number): LunarDate" />
-
-Получение информации по лунному календарю для указанного года, месяца и дня григорианского календаря. Возвращает описание даты по лунному календарю типа [`LunarDate`](#lunardate). Параметры имеют следующие значения:
-- `year`: полный номер года, например `2024`;
-- `month`: номер месяца, начиная с `0` (ноябрь/12-й месяц имеет номер $11$);
-- `day`: номер дня, начиная с `1`.
-
-## Определение типов
-
-### `LunarDate`
-
-``` ts
-type LunarDate = {
-  month: string,    // Название месяца по лунному календарю
-  day: string,      // Название дня по лунному календарю
-  festival?: string // Название праздника, может быть не определено
-}
-```
-
-- `month`: название месяца по лунному календарю, например `'正月'` (первый месяц), `'二月'` (второй месяц).
-- `day`: название дня по лунному календарю, например `'初一'` (первый день лунного месяца), `'十五'` (пятнадцатый день).
-- `festival`: название праздника; если праздника нет, свойство не определено.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-interconnect.md
-
-# Взаимодействие устройств
-
-## Импорт модуля
-
-``` ts
-import interconnect from '@system.interconnect'
-```
-
-## Определение интерфейсов
-
-### `instance` <decl type="(options: {package: string, fingerprint: string}): Connect" method/>
-
-Создает экземпляр [`Connect`](#connect-интерфейс).
-
-```js
-const connect = interconnect.instance({
-  package: "com.xxxx.xxx",
-  fingerprint: "xxxxx"
-})
-```
-
-- package: имя пакета мобильного приложения.
-- fingerprint: информация об отпечатке, должна совпадать с информацией об отпечатке, переданной при создании соединения мобильным приложением.
-
-## Интерфейс `Connect`
-
-### `onopen` <decl type="?: () => void" set />
-
-Используется для указания обратного вызова (callback) при открытии соединения.
-
-```js
-connect.onopen = () => {
-  console.info("onopen")
-}
-```
-
-### `onclose` <decl type="?: () => void" set />
-
-Используется для указания обратного вызова при закрытии соединения.
-
-```js
-connect.onclose = () => {
-  console.info("onclose")
-}
-```
-
-### `onerror` <decl type="?: () => void" set />
-
-Используется для указания обратного вызова при сбое соединения.
-
-```js
-connect.onerror = (data: any) => {
-  console.info("onerror", data)
-}
-```
-
-### `onmessage` <decl type="?: () => " set />
-
-Используется для указания обратного вызова при получении данных от мобильного приложения.
-
-```js
-connect.onmessage = (msg => {
-  if (msg.isFileType) {
-    this.msg = "recv a file " + msg.fileUri
-  } else {
-    this.msg = "recv a text message " + msg.data
-  }
-})
-```
-
-### `send` <decl type="(options: {data: any}): Promise<any>" method />
-
-Отправка данных на сторону мобильного приложения.
-
-```js
-connect.send({
-  data: {
-    name: "zhangsan"
-  }
-})
-```
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-sensor.md
-
-# Датчики
-
-## Импорт модуля
-
-```js
-import sensor from '@system.sensor';
-```
-
-Разработчикам необходимо объявить разрешение на доступ приложения к `watch.permission.ACCESS_SENSORS` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-## Определение интерфейсов
-
-### `subscribeAccelerometer`
-<decl method><pre>
-(options: { 
-  interval?: 'game' | 'ui' | 'normal', 
-  callback: (data: AccelerometerValue) => void,
+  type: number,
+  timeout: number,
+  triggerMethod: String,
+  interval?: number,
+  params?: Object,
 }): number
 </pre></decl>
 
-Прослушивание изменений данных акселерометра. Назначение полей параметра `options`:
-- `interval`：частота опроса, по умолчанию `'normal'`, возможные значения:
-  - `'game'`：игровой режим, частота 20 мс/раз;
-  - `'ui'`：режим пользовательского интерфейса, частота 60 мс/раз;
-  - `'normal'`：обычный режим, частота 200 мс/раз.
-- `callback`：обратный вызов при обновлении данных акселерометра. Сигнатура типа данных акселерометра `AccelerometerValue`:
-  ``` ts
-  type AccelerometerValue = {
-    x: number   // ускорение по оси x
-    y: number   // ускорение по оси y
-    z: number   // ускорение по оси z
-  }
-  ```
-
-Пример:
-```js
-const id = sensor.subscribeAccelerometer({
-  interval: 'normal',
-  callback(ret) {
-    console.log(`gyroscope data, x = ${ret.x}, y = ${ret.y}, z = ${ret.z}`)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeAccelerometer(id)
-```
-
-### `unsubscribeAccelerometer` <decl type="(id: number): void" method/>
-
-Отмена прослушивания данных акселерометра. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeAccelerometer`](#subscribeaccelerometer).
-
-### `subscribeCompass`
-<decl method><pre>
-(options: { 
-  callback: (data: CompassValue) => void,
-}): number
-</pre></decl>
-
-Прослушивание изменений данных компаса. Возвращает идентификатор подписки, который используется для ее отмены. Назначение полей параметра `options`:
-- `callback`：обратный вызов при изменении данных компаса.
-
-Сигнатура `CompassValue`:
-``` ts
-  type CompassValue = {
-    direction: number   // угол между осью y и магнитным северным полюсом (в радианах)
-    accuracy: number    // точность
-  }
-```
-- `direction`：угол в радианах между осью Y устройства и магнитным северным полюсом Земли. Диапазон значений: $(-\pi,\pi]$, где:
-  - `0`：направление на север
-  - $\pi$` / 2` (около 1.57)：направление на восток
-  - $\pi$ (около 3.14)：направление на юг
-  - -$\pi$` / 2` (около -1.57)：направление на запад
-- `accuracy`：уровень точности данных компаса
-  - `3`：высокая точность
-  - `2`：средняя точность
-  - `1`：низкая точность
-  - `0`：недоступно (причина неизвестна)
-  - `-1`：недоступно (датчик потерял соединение)
-
-Пример:
-```js
-const id = sensor.subscribeCompass({
-  callback(ret) {
-    console.log(`direction=${ret.direction}, accuracy=${ret.accuracy}`)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeCompass(id)
-```
-
-### `unsubscribeCompass`<decl type="(id: number): void" method/>
-
-Отмена прослушивания данных компаса. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeCompass`](#subscribecompass).
-
-### `calibrationCompass` <decl type="(): Promise<void>" method/>
-
-Запуск процесса калибровки компаса. Когда точность компаса низкая, направьте пользователя выполнить действия и вызовите этот метод для калибровки компаса.
-
-Функция возвращает объект Promise без результата, который разрешается после завершения калибровки системой.
-
-### `getCompassValue` <decl type="(): Promise<CompassValue>" method/>
-
-Получение текущих данных компаса. Возвращает асинхронный результат — объект Promise, содержащий направление компаса и информацию о точности типа `CompassValue`.
-
-### `subscribeStepCounter`
-<decl method><pre>
-(options: { 
-  callback: (data: StepCounterValue) => void,
-}): number
-</pre></decl>
-
-Прослушивание изменений данных шагомера. Назначение полей параметра `options`:
-- `callback`：обратный вызов при изменении данных шагов. Сигнатура типа данных шагомера `StepCounterValue`:
-  ``` ts
-  type StepCounterValue = {
-    steps: number     // текущее количество шагов (начинается с 0 после перезагрузки)
-  }
-  ```
-
-Пример:
-```js
-const id = sensor.subscribeStepCounter({
-  callback(ret) {
-    console.log(`steps=${ret.steps}`)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeStepCounter(id)
-```
-
-### `unsubscribeStepCounter` <decl type="(id: number): void" method/>
-
-Отмена прослушивания данных шагомера. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeStepCounter`](#subscribestepcounter).
-
-### `subscribeOnBodyState`
-<decl method><pre>
-(options: { 
-  callback: (data: OnBodyStateValue) => void,
-}): number
-</pre></decl>
-
-Прослушивание изменений состояния ношения устройства. Назначение полей параметра `options`:
-- `callback`：обратный вызов при изменении состояния ношения устройства. Сигнатура типа данных состояния ношения `OnBodyStateValue`:
-  ``` ts
-  type OnBodyStateValue = {
-    value: boolean  // надето ли устройство
-  }
-  ```
-
-Пример:
-```js
-const id = sensor.subscribeOnBodyState({
-  callback(ret) {
-    console.log(`onBody=${ret.value}`)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeOnBodyState(id)
-```
-
-### `unsubscribeOnBodyState` <decl type="(): void" method/>
-
-Отмена прослушивания состояния ношения. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeOnBodyState`](#subscribeonbodystate).
-
-### `getOnBodyState` <decl type="(): Promise<OnBodyStateValue>" method/>
-
-Получение текущего состояния ношения устройства.
-
-Пример:
-``` js
-async function getOnBodyStat() {
-  const data = await sensor.getOnBodyState()
-  console.log(`onBody: ${data.value}`)
-}
-```
-
-### `subscribeGyroscope`
-<decl method><pre>
-(options: { 
-  callback: (data: GyroscopeValue) => void,
-}): number
-</pre></decl>
-
-Прослушивание изменений данных гироскопа. Назначение полей параметра `options`:
-- `callback`：обратный вызов при изменении данных гироскопа. Сигнатура типа данных гироскопа `GyroscopeValue`:
-  ``` ts
-  type GyroscopeValue = {
-    x: number   // угловая скорость по оси x
-    y: number   // угловая скорость по оси y
-    z: number   // угловая скорость по оси z
-  }
-  ```
-
-Пример:
-```js
-const id = sensor.subscribeGyroscope({
-  callback(ret) {
-    console.log(`gyroscope data, x = ${ret.x}, y = ${ret.y}, z = ${ret.z}`)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeGyroscope(id)
-```
-
-### `unsubscribeGyroscope` <decl type="(id: number): void" method/>
-
-Отмена прослушивания данных гироскопа. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeGyroscope`](#subscribegyroscope).
-
-### `subscribeBarometer`
-<decl method><pre>
-(options: { 
-  callback: (data: BarometerValue) => void,
-}): number
-</pre></decl>
-
-Прослушивание изменений данных датчика атмосферного давления. Назначение полей параметра `options`:
-- `callback`：обратный вызов при изменении данных давления. Сигнатура типа данных давления `BarometerValue`:
-  ``` ts
-  type BarometerValue = {
-    pressure: number   // значение атмосферного давления, единица: Па (Pa)
-  }
-  ```
-
-Пример:
-```js
-sensor.subscribeBarometer({
-  callback(ret) {
-    console.log("get barometer:", ret.pressure)
-  }
-})
-
-// Отмена подписки
-sensor.unsubscribeBarometer(id)
-```
-
-### `unsubscribeBarometer` <decl type="(id: number): void" method/>
-
-Отмена прослушивания барометра. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeBarometer`](#subscribebarometer).
-
-### `subscribeWristLift`
-<decl method><pre>
-(options: { 
-  callback: () => void,
-}): number
-</pre></decl>
-
-Прослушивание события поднятия запястья. Назначение полей параметра `options`:
-- `callback`：обратный вызов для прослушивания события поднятия запястья.
-
-Пример:
-```js
-const id = sensor.subscribeWristLift({
-  callback: () => {
-    console.log('wrist lift')
-  }
-});
-
-// Отмена подписки
-sensor.unsubscribeWristLift(id)
-```
-
-### `unsubscribeWristLift` <decl type="(id: number): void" method/>
-
-Отмена прослушивания поднятия запястья. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeWristLift()`](#subscribewristlift).
-
-## Ограничения использования
-
-Если текущее устройство не поддерживает соответствующие возможности датчиков, вызов интерфейса приведет к выбросу исключения, и прослушивание не будет активировано.
-Пример лога с информацией об исключении: `the device does not support accelerometer sensor`
-
-Пример перехвата исключения:
-
-```js
-try {
-  const id = sensor.subscribeCompass({
-    callback(ret) {
-      console.log(`direction=${ret.direction}, accuracy=${ret.accuracy}`)
-    }
-  })
-} catch (e) {
-  console.error(e.message)
-}
-```
-
-## Рекомендации
-
-Рекомендуется своевременно отменять подписку, когда данные датчиков больше не нужны. В частности, следует отменять подписку при уничтожении страницы (в обратном вызове `onDestroy`), чтобы избежать излишнего потребления ресурсов и разряда батареи.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-compass.md
-
-# Компас
-
-Модуль `@system.compass` предоставляет доступ к датчику компаса устройства и позволяет получать информацию о направлении устройства относительно магнитного северного полюса Земли.
-
-## Импорт модуля
-
-``` js
-import compass from '@system.compass'
-```
-
-## Определение интерфейсов
-
-### `subscribe` <decl type="(callback: (data: Value) => void): number" method/>
-
-Подписка на изменение данных компаса. При изменении ориентации устройства функция обратного вызова вызывается автоматически. Функция обратного вызова `callback` принимает данные компаса типа [`Value`](#value).
-
-Возвращает идентификатор подписки, который используется для ее отмены.
-
-### `unsubscribe` <decl type="(subscribeId: number): void" method/>
-
-Отмена подписки на данные компаса. Параметр `subscribeId` — это идентификатор подписки, возвращаемый методом [`subscribe()`](#subscribe).
-
-Этот метод следует вызывать при уничтожении страницы или компонента для отмены подписки `subscribe()`:
-``` js
-const subscribeId = compass.subscribe((data) => {
-  console.log(`Направление: ${data.direction} радиан`)
-  console.log(`Точность: ${data.accuracy}`)
-})
-
-// Отмена подписки
-compass.unsubscribe(subscribeId)
-```
-
-
-### `calibration` <decl type="(): Promise<void>" method/>
-
-Запуск процесса калибровки компаса. Когда точность компаса низкая, это помогает пользователю выполнить необходимые действия и вызывает этот метод для калибровки компаса.
-
-Функция возвращает объект Promise без результата, который разрешается после завершения калибровки системой.
-
-### `getValue` <decl type="(): Promise<Value>" method/>
-
-Получение текущих данных компаса. Возвращает асинхронный результат в виде объекта Promise, содержащего информацию о направлении компаса и точности (тип [`Value`](#value)).
-
-Пример:
-``` js
-// Использование Promise
-compass.getValue().then((data) => {
-  console.log(`Направление: ${data.direction} радиан`)
-  console.log(`Уровень точности: ${data.accuracy}`)
-})
-
-// Использование async/await
-async function getCompassData() {
-  const data = await compass.getValue()
-  console.log(`Направление: ${data.direction} радиан`)
-  console.log(`Уровень точности: ${data.accuracy}`)
-}
-```
-
-::: note
-Из-за особенностей реализации этот метод не поддерживает вызовы в стиле callback (например, `{ success: (data) => {...} }`), пожалуйста, используйте Promise или async/await.
-:::
-
-## Определения типов
-
-### `Value`
-
-Сигнатура типа данных компаса `Value` выглядит следующим образом:
-``` ts
-type Value = {
-  direction: number  // Направление компаса (в радианах)
-  accuracy: number   // Уровень точности компаса
-}
-```
-Описание свойств:
-- `direction`: угол в радианах между осью Y устройства и магнитным северным полюсом Земли, диапазон значений составляет $[0,2\pi]$, где:
-  - `0`: строго на север
-  - `Math.PI / 2` (около 1.57): строго на восток
-  - `Math.PI` (около 3.14): строго на юг
-  - `3 * Math.PI / 2` (около 4.71): строго на запад
-- `accuracy`: уровень точности данных компаса
-  - `3`: высокая точность
-  - `2`: средняя точность
-  - `1`: низкая точность
-  - `0`: ненадежно (причина неизвестна)
-  - `-1`: ненадежно (теряется связь с датчиком)
-
-Пример:
-``` js
-// Определение направления
-const data = await compass.getValue()
-const degrees = data.direction * 180 / Math.PI // Перевод в градусы
-
-console.log(`Направление: ${degrees}°`)
-if (degrees >= 337.5 || degrees < 22.5) {
-  console.log('На север')
-} else if (degrees >= 22.5 && degrees < 67.5) {
-  console.log('На северо-восток')
-} else if (degrees >= 67.5 && degrees < 112.5) {
-  console.log('На восток')
-}
-// ... определение других направлений
-
-// Проверка точности
-if (data.accuracy >= 2) {
-  console.log('Точность компаса хорошая')
-} else if (data.accuracy === 1) {
-  console.log('Точность компаса низкая, рекомендуется калибровка')
-  compass.calibration()
-} else {
-  console.log('Данные компаса ненадежны')
-}
-```
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-device.md
-
-# Информация об устройстве
-
-## Импорт модуля
-
-``` js
-import device from '@system.device'
-```
-
-Разработчикам необходимо заявить о доступе приложения к权限 `watch.permission.DEVICE_INFO` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-## Определение интерфейсов
-
-### `getInfo`
-<decl method><pre>
-(): Promise<{
-  brand: string,
-  manufacturer: string,
-  model: string,
-  product: string,
-  osType: string,
-  osVersionName: string,
-  platformVersionName: string,
-  platformVersionCode: number,
-  language: string,
-  region: string,
-  deviceName: string
-}>
-</pre></decl>
-
-Получение базовой информации об устройстве. Значения полей возвращаемого объекта:
-- `brand`: бренд устройства.
-- `manufacturer`: производитель устройства.
-- `model`: модель устройства.
-- `product`: кодовое имя устройства.
-- `osType`: название операционной системы.
-- `osVersionName`: название версии операционной системы.
-- `platformVersionName`: название версии платформы выполнения.
-- `platformVersionCode`: номер версии платформы выполнения.
-- `language`: системный язык.
-- `region`: системный регион.
-- `deviceName`: имя устройства.
-
-### `getId`
-<decl method><pre>
-(types: ('device' | 'mac' | 'user' | 'advertising')[])
-: Promise<{
-  device?: string,
-  mac?: string,
-  user?: string,
-  advertising?: string
-}>
-</pre></decl>
-
-Пакетное получение информации об идентификаторах устройства. Параметр `types` задает категории запрашиваемой информации и представляет собой объект Array, состоящий из элементов `'device'`, `'mac'`, `'user'` или `'advertising'`. В зависимости от значений `types`, поля возвращаемого объекта имеют следующие значения:
-- `type`: .
-- `device`: уникальный идентификатор устройства, присутствует только в том случае, если `types` содержит элемент `'device'`.
-- `mac`: MAC-адрес устройства, присутствует только в том случае, если `types` содержит элемент `'mac'`.
-- `user`: уникальный идентификатор пользователя, присутствует только в том случае, если `types` содержит элемент `'user'`.
-- `advertising`: уникальный рекламный идентификатор, присутствует только в том случае, если `types` содержит элемент `'advertising'`.
-
-### `getDeviceId` <decl type="(): Promise<{deviceId: string}>" method />
-
-Получение уникального идентификатора устройства.
-
-### `getSerial` <decl type="(): Promise<{serial: string}>" method />
-
-Получение серийного номера устройства.
-
-### `getTotalStorage` <decl type="(): Promise<{totalStorage: number}>" method />
-
-Получение общего объема памяти в байтах.
-
-### `getAvailableStorage` <decl type="(): Promise<{availableStorage: number}>" method />
-
-Получение доступного объема памяти в байтах.
+Установка задачи по расписанию. Назначение полей параметра `options`:
+- `type`:	
+  - 1: Аппаратное время, `triggerMethod` может быть вызван путем изменения системного времени;
+  - 2: Реальное течение времени, время рассчитывается даже в спящем режиме;
+- `timeout`:
+  - Если `type` равен 1, это метка времени (timestamp) первого выполнения, то есть количество миллисекунд от 1970/01/01 00:00:00 GMT до текущего момента;
+  - Если `type` равен 2, это интервал от текущего времени до первого выполнения в миллисекундах;
+- `triggerMethod`: имя метода, определенного в `app.js`, который вызывается фоновым сервисом при достижении времени тайм-аута;
+- `interval`: интервал периодического выполнения в миллисекундах; если не передан, задача не повторяется;
+- `params`: параметры задачи.
 
 ::: tip
-Значения, возвращаемые методами `getTotalStorage()` и `getAvailableStorage()` на эмуляторе, могут быть неточными и не изменяются по мере изменения свободного пространства памяти.
+Хотя точность `timeout` и `interval` составляет миллисекунды, таймер срабатывает с точностью до секунды. Интервал времени до первого выполнения и период повторения не могут быть менее 60 секунд, в противном случае интерфейс выбросит исключение.
 :::
 
-### `screenWidth` <decl type="number" get />
-
-Ширина экрана устройства в пикселях.
-
-### `screenHeight` <decl type="number" get />
-
-Высота экрана устройства в пикселях.
-
-### `screenDensity` <decl type="number" get />
-
-Плотность пикселей экрана устройства в $\rm PPI$.
-
-### `screenShape` <decl type="'rect' | 'circle'" get />
-
-Форма экрана устройства, возможные значения:
-- `'rect'`: устройство имеет прямоугольный экран.
-- `'circle'`: устройство имеет круглый экран.
-
-### `memoryProfile` <decl type="number" get />
-
-Получение свойства профиля памяти устройства. Это свойство представляет собой JavaScript API версию свойства медиа-запроса [`memory-profile`](/framework/render/media-query.md#memory-profile), подробности см. в документации по медиа-запросам.
-
-В отличие от свойства медиа-запроса `memory-profile`, значение свойства `memoryProfile` представляет собой целое число, а единица измерения фиксирована в $\rm KiB$.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-app.md
-
-# Контекст приложения
-
-## Импорт модуля
-
-```js
-import app from '@system.app'
-```
-
-## Определение интерфейсов
-
-### `getInfo` <decl type="(): Manifest" method/>
-
-Получает информацию о контексте текущего приложения, возвращает [`Manifest` объект](./system-package.md#manifest-объект), содержащий базовую информацию о приложении, такую как имя пакета, номер версии и т.д.
-
-### `terminate` <decl type="(): void" method version="0.8"/>
-
-Завершает работу текущего приложения. После вызова этого метода приложение будет закрыто, и для продолжения работы пользователю потребуется перезапустить его.
-
-::: note Риск совместимости
-Этот API поддерживается не на всех платформах; в качестве временной альтернативы можно использовать метод [`launch.exit()`](./system-launch.md#exit).
-:::
-
-### `loadLibrary` <decl type="(name: string): object | undefined" method/>
-
-Загружает по имени загрузчик библиотек (Library Loader), зарегистрированный нативной реализацией, и возвращает соответствующий объект библиотеки. Если библиотека с указанным именем не зарегистрирована, возвращается `undefined`.
-
-В типичных случаях рекомендуется привязывать объект библиотеки к объекту APP:
-```js
-// app.js
-import app from '@system.app'
-
-export default {
-  customLib: app.loadLibrary('custom-library'),
-  onCreate() {
-    if (!this.customLib) {
-      // Обработка сбоя загрузки библиотеки, например, откат к реализации на скрипте
-      this.customLib = someStubImplementation();
-    } else {
-      // Нормальное использование объекта библиотеки
-      this.customLib.someFunction()
-    }
-  }
-}
-```
-Таким образом, компоненты могут напрямую использовать `this.$app.customLib` для доступа к объекту библиотеки.
-
-Метод `loadLibrary()` подходит для подключения нестандартных системных функций. Приложение может проверить, является ли возвращаемое значение `undefined`, чтобы определить, поддерживает ли текущая платформа данную библиотеку, что позволяет выполнить деградацию (fallback) до заглушки на скрипте в среде общего симулятора, не полагаясь на специальную обработку путей к конкретным модулям в симуляторе.
-
-Если приложение должно одновременно поддерживать стандартные API QuickApp и кастомные системные функции, оно может принять решение об откате на основе результатов выполнения `loadLibrary()`.
-
-### `keepForeground` <decl type="(options: { enable: boolean }): void" method/>
-
-Устанавливает, должно ли приложение оставаться на переднем плане. Если свойство `enable` в параметре `options` имеет значение `true`, приложение попытается остаться на переднем плане.
-
-Для использования этого метода необходимо заявить разрешение приложения для `watch.permission.FOREGROUND_SERVICE` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-Этот метод является лишь подсказкой для системного поведения, а не жестким требованием. Приложение может быть переведено в фоновый режим из-за действий пользователя или других политик с более высоким приоритетом. При использовании этого метода для удержания приложения на переднем плане устройство все же может переходить в режим пониженного энергопотребления:
-
-- Если включен режим AOD (Always on Display), частота обновления пользовательского интерфейса снижается.
-- В противном случае экран через некоторое время выключится, но приложение останется работать на переднем плане.
-
-Когда устройство переходит в режим пониженного энергопотребления (включая выключение экрана), приложение на переднем плане по-прежнему планируется и выполняется с более низкой частотой, а не полностью уходит в спящий режим. Поэтому его можно использовать для навигационных или фитнес-приложений.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-fetch.md
-
-# Запрос данных fetch
-
-## Импорт модуля
+Возвращаемое значение — это ID задачи, который используется для ее отмены. Возвращаемое значение `-1` означает сбой при создании.
 
 ``` js
-import fetch from '@system.fetch'
-```
-
-## API
-
-### `fetch`
-<decl method><pre>
-(options: {
-  url: string,
-  method?: 'GET' | 'POST' | 'PUT',
-  header?: {[key: string]: string},
-  params?: {[key: string]: string | number},
-  data?: string | ArrayBuffer | {[key: string]: any},
-  responseType?: 'text' | 'json' | 'arraybuffer',
-  timeout?: number
-}): Promise<{
-  code: number,
-  headers: {[key: string]: string},
-  data: string | ArrayBuffer | any,
-}>
-</pre></decl>
-
-Инициирует асинхронный сетевой запрос данных. Назначение полей параметра `options`:
-- `url`: URL-адрес веб-сайта, к которому необходимо обратиться.
-- `method`: Поддерживаются значения `'GET'`, `'POST'` и `'PUT'`, по умолчанию — `'GET'`.
-- `header`: Объект, содержащий информацию о заголовках HTTP-запроса, ключи и значения — строки. Типичными полями заголовков HTTP могут быть `Authorization`, `Content-Type` и т. д.
-- `params`: Параметры запроса, все свойства которых будут добавлены к URL-адресу запроса.
-- `data`: Содержимое тела (body) в HTTP-запросе POST.
-- `responseType`: Тип данных ответа в HTTP-запросе, по умолчанию — `'text'`, может принимать следующие значения:
-  - `'text'`: Ответ возвращает текстовые данные, то есть свойство `data` возвращаемых данных имеет тип `string`.
-  - `'json'`: Ответ возвращает данные JSON, причем возвращаемое свойство `data` преобразует эти данные JSON в соответствующие значения JavaScript.
-  - `arraybuffer`: Ответ возвращает бинарные данные, то есть возвращаемые данные сохраняются в виде объекта `ArrayBuffer`.
-- `timeout`: Время ожидания ответа на запрос в миллисекундах, значение по умолчанию — $6000 \rm ms$.
-
-#### Параметр `data`
-
-`data` представляет собой тело запроса (body) и используется только в POST-запросах. Обычно оно имеет один из трех типов: строка, объект `ArrayBuffer` или объект JSON. Когда `data` является строкой или объектом `ArrayBuffer`, телом запроса будут соответственно текстовые или бинарные данные. Когда тело представляет собой объект JSON, оно сериализуется в текстовый формат. Формат сериализации определяется полем `Content-Type` метода запроса (параметр `method`):
-- Если `Content-Type` равен `application/json`, объект параметра `data` сериализуется в строку JSON и используется в качестве тела запроса;
-- в остальных случаях объект параметра `data` сериализуется в формат `application/x-www-form-urlencoded`.
-
-::: warning
-Многие HTTP API используют тела POST-запросов в формате JSON. Обратите внимание, что необходимо правильно установить заголовок `Content-Type` равным `application/json`. Подробности см. в этом [примере](#post-запрос-json-body).
-:::
-
-#### Возвращаемое значение
-
-Возвращает объект `Promise`, свойства значения которого после завершения запроса выглядят следующим образом:
-- [`code`](#code-код-ответа) — это код ответа сервера, код ответа при успешном запросе обычно равен `200`.
-- `header` — заголовки ответа сервера.
-- `data` — возвращаемое значение запрашиваемых данных, конкретное содержимое определяется параметром `options.responseType`.
-
-В случае сбоя запроса возвращаемый объект `Promise` будет отклонен (rejected).
-
-## Инструкции по использованию
-
-### `code` Код ответа
-
-Значения кодов ответа, возвращаемых сервером:
-- `200`: запрос выполнен успешно;
-- `1002`: ошибка проверки параметров;
-- `1005`: введенные параметры неполные;
-- `5000`: ошибка запроса, ошибка ответа;
-- `5001`: ошибка чтения буфера данных;
-- `5002`: ошибка запроса, ошибка ответа;
-- Другие: другие коды ответов HTTP/HTTPS, такие как `404` и т. д.
-
-Когда код ответа, возвращаемый [`fetch`](#fetch), равен `200`, это означает, что сетевой запрос прошел успешно; другие значения указывают на ошибку запроса.
-
-### Меры предосторожности
-
-## Примеры
-
-### GET-запрос
-
-Это пример базового GET-запроса:
-
-``` js
-const res = await fetch.fetch({
-  url: 'http://www.rt-thread.com/service/rt-thread.txt',
-  method: 'GET', // Поскольку режимом по умолчанию является GET, в данном случае method является необязательным
-  responseType: 'text'
-})
-console.log(`the status code of the response: ${res.code}`)
-console.log(`the data of the response: ${res.data}`)
-```
-
-### POST-запрос
-
-``` js
-const res = await fetch.fetch({
-  url: 'https://www.rt-thread.com/service/echo',
-  method: 'POST',
-  data: {
-    key1: 'hello',
-    key2: 'world'
+let id = schedule.scheduleJob({
+  type: 1,
+  timeout: new Date('2025-03-14T23:00:00').getTime(),  // Метка времени первого выполнения
+  interval: 60000,     // Интервал периодического выполнения не менее 60 секунд
+  triggerMethod: 'scheduleFunc',
+  params: {
+    food: 'apple',
   },
-  responseType: 'text'
 })
-console.log(`the status code of the response: ${res.code}`)
-console.log(`the data of the response: ${res.data}`)
+
+// app.js
+export default {
+  scheduleFunc(params) {
+    console.log('scheduleFunc', params)
+  },
+}
 ```
 
-### POST-запрос (JSON Body)
+### `cancel` <decl type="(id: number): void" method/>
+
+Отмена запланированной задачи.
+
+``` js
+schedule.cancel(id)
+```
 
 ============================================================
-FILE_PATH: src/transl/RU/api/system-path.md
+FILE_PATH: src/transl/RU/api/system-configuration.md
 
-# Операции с путями
-
-Данный модуль предоставляет интерфейсы для работы с путями, включая объединение, разделение, нормализацию путей и другие функции.
+# Конфигурация приложения
 
 ## Импорт модуля
 
-``` js
-import path from '@system.path'
+```js
+import configuration from '@system.configuration'
 ```
 
 ## Определение интерфейсов
 
-#### `path.basename` <decl type="(path: string, suffix?: string): string" method />
-
-Возвращает имя файла из пути `path`. Указание параметра `suffix` позволяет удалить определенное расширение файла. Например:
-``` js
-path.basename('/foo/bar/baz.txt') // 'baz.txt'
-path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
-```
-
-#### `path.dirname` <decl type="(path:string): string" method />
-
-Возвращает директорию пути `path` (в отличие от `basename()`, эта функция отбрасывает имя файла). Например:
-``` js
-path.dirname('/foo/bar/baz') // '/foo/bar'
-```
-
-#### `path.extname` <decl type="(path: string): string" method />
-
-Возвращает расширение файла из пути `path`. Например:
-``` js
-path.extname('table.json') // '.json'
-path.extname('/images/icon.png') // '.png'
-```
-
-#### `path.isAbsolute` <decl type="(path: string): boolean" method />
-
-Определяет, является ли путь `path` абсолютным. Например:
-``` js
-path.isAbsolute('/foo/bar'); // true
-path.isAbsolute('/baz/..');  // true
-path.isAbsolute('qux/');     // false
-path.isAbsolute('.');        // false
-```
-
-#### `path.join` <decl type="(...paths: string[]): string" method />
-
-Объединяет несколько путей и нормализует результат. Например:
-``` js
-path.join('/foo', 'bar', 'baz/asdf', 'quux', '..') // '/foo/bar/baz/asdf'
-```
-
-#### `path.normalize` <decl type="(path: string): string" method />
-
-Приводит путь `path` к наиболее лаконичному виду, разрешая сегменты `..` и `.` и удаляя лишние разделители пути `/`.
-
-``` js
-path.normalize('/foo///bar/.././/baz') // '/foo/baz'
-```
-
-#### `path.relative` <decl type="(from: string, to: string): string" method />
-
-Вычисляет относительный путь от `from` до `to`.
-
-``` js
-path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb') // '../../impl/bbb'
-```
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-audiokit.md
-
-# Менеджер аудиоплеера
-
-## Импорт модуля
-
-``` ts
-import audiokit from '@system.audiokit'
-```
-
-## Определение интерфейсов
-
-### `getPlayers` <decl type="(): AudioPlayer" method />
-
-Запрос списка объектов [`AudioPlayer`](#AudioPlayer) аудиоплееров, доступных в системе.
-
-### `getActivePlayer` <decl type="(): AudioPlayer" method />
-
-Запрос объекта [`AudioPlayer`](#AudioPlayer) аудиоплеера, который находится в активном состоянии в системе.
-
-### `subscribe` <decl type="(callback: (PlayerEvent) => void): number" method/>
-
-Прослушивание изменений аудиоплееров в системе. Параметр `callback` типа `PlayerEvent` является [событием уведомления](#PlayerEvent). ID, возвращаемый этим методом, можно использовать с методом [`unsubscribe()`](#unsubscribe) для отмены подписки.
-
-Сигнатура типа `PlayerEvent`:
-
-```ts
-type PlayerEvent = {
-  notify: string; // Тип события изменения
-  player: string; // Имя изменившегося плеера
-}
-```
-
-Типы событий изменения:
-
-- `active`: изменился текущий активный плеер системы  
-- `append`: в систему добавлен плеер
-- `remove`: из системы удален плеер
-
-### `unsubscribe` <decl type="(subscribeID: number): void" method/>
-
-Отмена прослушивания изменений плеера. `subscribeID` — это значение ID, возвращаемое методом [`subscribe()`](#subscribe).
-
-## Объект `AudioPlayer`
-
-::: details Сигнатура типа
-``` ts
-interface AudioPlayer {
-  src: string,
-  name: string,
-  icon: string,
-  mode: string,
-  status: string,
-  duration: number,
-  position: number,
-  songAttribute: object,
-  volume: number,
-  nextAvailable: bool,
-  prevAvailable: bool,
-
-  play(): void,
-  pause(): void,
-  stop(): void,
-  release(): void,
-  next(): void,
-  previous(): void,
-  requestFocus({acquireType: string, volumeType: string}): void,
-  releaseFocus(): void,
-
-  onplay?: () => void,
-  onpause?: () => void,
-  onstop?: () => void,
-  onended?: () => void,
-  onerror?: (err: {msg: string})=> void,
-  ontimeupdate?: () => void,
-  oninterrupt?: (action: {interruptHint: number}) => void,
-  onnext?: () => void,
-  onprevious?: () => void,
-  onrequestplay?: () => void,
-  onrequestpause?: () => void,
-  onrequeststop?: () => void,
-  onsongattribute?: () => void,
-  onposition?: () => void,
-  onrequestfocus?: () => void,
-  onreleasefocus?: () => void,
-  onmodechanged?: () => void,
-  onvolumechange?: () => void,
-}
-```
-:::
-
-- Объект `AudioPlayer` (далее: `audiokit.Player`) и объект `AudioPlayer`, созданный в модуле `system.media` (далее: `media.Player`), являются разными JS-объектами, но они управляют одним и тем же плеером. При этом объект `audiokit.Player` обладает дополнительными функциями по сравнению с `media.Player`, такими как методы `next()`, `previous()` и др. Операции вроде `play()`, выполняемые пользователем через объект `audiokit.Player`, также передаются в прослушиватели объекта `media.Player`.
-
-### `src` <decl type="string" set get />
-
-Установка или чтение URL воспроизводимого аудио. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径) и пути к сетевым ресурсам с использованием протоколов http и https (например: `https://www.rt-thread.com/service/test/001.mp3`). Ниже приведен простой пример установки src и запуска воспроизведения:
-
-```ts
-import audiokit from '@system.audiokit'
-// Запрос активного в данный момент аудиоплеера в системе
-let player = audiokit.getActivePlayer()
-if (player != null) {
-  // Сначала остановим текущее воспроизводимое аудио
-  player.stop()
-  // Установим URL аудио для воспроизведения
-  player.src = 'https://www.rt-thread.com/service/test/001.mp3'
-  // Запустим воспроизведение аудио
-  player.play()
-}
-```
-
-### `name` <decl type="string" set get />
-
-Имя объекта плеера. Если не задано, по умолчанию используется имя приложения, создавшего плеер. Стоит отметить, что имя объекта плеера не является глобально уникальным, и его нельзя использовать для идентификации объекта плеера.
-
-### `icon` <decl type="string" set get />
-
-URL иконки объекта плеера. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径).
-
-### `mode` <decl type="string" set get />
-
-Режим воспроизведения. Функция, соответствующая данному свойству, должна быть реализована приложением плеера; сам объект плеера не обрабатывает её по умолчанию, а лишь предоставляет это свойство.
-
-- `sequential`: последовательное воспроизведение  
-- `random`: случайное воспроизведение  
-- `singleloop`: повтор одной композиции  
-- `listloop`: повтор списка  
-
-### `status` <decl type="string" get />
-
-Чтение текущего состояния воспроизведения:
-
-- `play`: состояние воспроизведения  
-- `pause`: состояние паузы  
-- `stop`: состояние остановки 
-- `ended`: состояние окончания воспроизведения  
-- `error`: состояние ошибки воспроизведения  
-
-### `duration` <decl type="number" get />
-
-Общая продолжительность аудио в секундах.
-
-### `position` <decl type="number" set get />
-
-Текущая временная позиция воспроизведения аудио в секундах.
-
-### `songAttribute` <decl type="songAttribute" set get />
-
-Объект атрибутов песни.
-
-::: details Сигнатура типа
-```ts
-type songAttribute = {
-  title: string; // Название песни
-  artist: string; // Имя исполнителя, может быть сольным артистом или группой
-  album: string; // Название альбома, которому принадлежит песня
-  year: string; // Год выпуска песни
-  genre: string; // Жанр песни, например, поп, рок, классика и т.д.
-  track: string; // Номер текущей песни в альбоме, например: "1/12" означает 1-я из 12
-  coverArt: string; // URL обложки песни
-  lyrics: string; // URL текста песни
-  comments: string; // Дополнительная информация, например, примечания об авторских правах
-}
-```
-:::
-
-Объект songAttribute, как и объект AudioPlayer, является Proxy-объектом, то есть его нельзя сериализовать и десериализовать с помощью JSON, а также ссылаться на него в реактивных фреймворках. Ниже приведен простой пример использования:
-
-```ts
-// Установка названия песни
-this.player.songAttribute.title = "Неизвестно"
-// Установка исполнителя песни
-this.player.songAttribute.artist = "Неизвестно"
-// Просмотр названия песни
-console.dir(this.player.songAttribute.title)
-```
-
-### `volume` <decl type="number" set get />
-
-Громкость текущего плеера, диапазон: [0.0, 1.0].
-
-### `nextAvailable` <decl type="bool" set get />
-
-Установка или запрос возможности переключения на следующий трек.
-
-### `prevAvailable` <decl type="bool" set get />
-
-Установка или запрос возможности переключения на предыдущий трек.
-
-### `play` <decl type="(): void" method />
-
-Начало воспроизведения аудио, указанного в свойстве src.
-
-- Если свойство src не было задано до вызова этого метода, воспроизведение завершится ошибкой и вызовет событие onerror;
-- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onplay или onerror для определения успешности или неуспешности воспроизведения. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
-
-Ниже приведен простой пример вызова интерфейса play():
-
-```ts
-import audiokit from '@system.audiokit'
-// Запрос активного в данный момент аудиоплеера в системе
-let player = audiokit.getActivePlayer()
-if (player != null) {
-  // Сначала остановим текущее воспроизводимое аудио
-  player.stop()
-  // Установим URL аудио для воспроизведения
-  player.src = 'https://www.rt-thread.com/service/test/001.mp3'
-  // Установим событие onplay
-  player.onplay = () => { console.dir("Начало воспроизведения") }
-  // Установим событие onerror
-  player.onerror = () => { console.dir("Ошибка воспроизведения") }
-  // Запустим воспроизведение аудио
-  player.play()
-}
-```
-
-### `pause` <decl type="(): void" method />
-
-Приостановка воспроизведения текущего аудио.
-
-- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onpause или onerror для определения успешности или неуспешности паузы. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
-
-### `stop` <decl type="(): void" method />
-
-Остановка воспроизведения аудио. Возобновить воспроизведение можно с помощью метода play.
-
-- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onstop или onerror для определения успешности или неуспешности остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
-
-### `release` <decl type="(): void" method />
-
-Освобождение аудиоресурсов.
-
-- Выполнение этого интерфейса остановит воспроизведение текущего аудио. Необходимо дождаться события onstop или onerror для определения успешности или неуспешности остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы.   
-
-### `next` <decl type="(): void" method />
-
-Уведомление приложения плеера о воспроизведении следующего трека. После выполнения этого интерфейса будет сгенерировано событие onnext, уведомляющее приложение плеера, подписанное на это событие, которое выполнит логику переключения песни.
-
-### `previous` <decl type="(): void" method />
-
-Уведомление приложения плеера о воспроизведении предыдущего трека. После выполнения этого интерфейса будет сгенерировано событие onprevious, уведомляющее приложение плеера, подписанное на это событие, которое выполнит логику переключения песни.
-
-### `requestFocus` <decl type="({acquireType: string，volumeType: string}): void" method />
-
-Запрос фокуса аудио. После выполнения этого интерфейса будет отправлено уведомление системному уровню о запросе или освобождении фокуса аудио, и системный уровень будет управлять логикой переключения и прерывания различных типов аудио.
-
-Параметр `acquireType` указывает тип запроса:
-- `gain`: запрос фокуса аудио
-- `loss`: освобождение фокуса аудио
-
-Параметр `volumeType` указывает тип аудио:
-- `system`: системные подсказки
-- `media`: медиамузыка
-- `tts`: голосовое вещание
-
-Следующий пример демонстрирует метод запроса фокуса аудио с помощью функции `requestFocus`:
-``` ts
-import audiokit from '@system.audiokit'
-// Запрос активного в данный момент аудиоплеера в системе
-let player = audiokit.getActivePlayer()
-if (player != null) {
-  // Получить фокус аудио типа "медиамузыка"
-  player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
-}
-```
-
-### `releaseFocus` <decl type="(): void" method />
-
-Освобождение фокуса аудио. После выполнения этого интерфейса будет отправлено уведомление системному уровню об освобождении фокуса аудио, и системный уровень будет управлять логикой переключения и прерывания различных типов аудио.
-
-### `onplay` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном запуске воспроизведения аудио (play).
-
-### `onpause` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешной приостановке аудио (pause).
-
-### `onstop` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешной остановке аудио (stop).
-
-### `onended` <decl type="?: () => void" set />
-
-Событие обратного вызова по окончании воспроизведения аудио.
-
-### `onerror` <decl type="?: () => void" set />
-
-Событие обратного вызова при возникновении ошибки во время выполнения интерфейсов `play`, `pause`, `stop`, `position` и др. При возникновении ошибки соответствующие события вроде onplay вызываться не будут.
-
-### `ontimeupdate` <decl type="?: () => void" set />
-
-Событие обратного вызова, которое срабатывает при обновлении свойства position. Это событие срабатывает только тогда, когда приложение находится на переднем плане, и прекращает генерироваться, когда приложение уходит в фоновый режим.
-
-### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
-
-Функция обратного вызова при возникновении события прерывания аудио. Уведомление о временном или полном прерывании, когда текущее аудио вытесняется аудио того же или другого типа.
-
-Параметр `interruptHint` параметра `action` указывает тип события прерывания:
-- `1`: короткое прерывание (может быть восстановлено автоматически, например, прерывание музыки звонком)
-- `2`: полное прерывание (не может быть восстановлено автоматически, например, плеер NetEase прерывается приложением Himalaya)
-
-Следующий пример демонстрирует метод регистрации обратного вызова `oninterrupt`, который будет вызываться при возникновении события:
-``` js
-player.oninterrupt = (action) => {
-  console.log(action.interruptHint)
-}
-```
-
-### `onnext` <decl type="?: () => void" set />
-
-Событие обратного вызова при необходимости воспроизведения следующего трека.
-
-### `onprevious` <decl type="?: () => void" set />
-
-Событие обратного вызова при необходимости воспроизведения предыдущего трека.
-
-### `onrequestplay` <decl type="?: () => void" set />
-
-Событие обратного вызова, которое срабатывает, когда системному уровню требуется запустить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику запуска воспроизведения.
-
-### `onrequestpause` <decl type="?: () => void" set />
-
-Событие обратного вызова, которое срабатывает, когда системному уровню требуется приостановить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику приостановки воспроизведения.
-
-### `onrequeststop` <decl type="?: () => void" set />
-
-Событие обратного вызова, которое срабатывает, когда системному уровню требуется остановить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику остановки воспроизведения.
-
-### `onsongattribute` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении объекта атрибутов песни.
-
-### `onposition` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном выполнении установки текущей временной позиции воспроизведения аудио с помощью метода `position`.
-
-### `onrequestfocus` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном запросе фокуса аудио.
-
-### `onreleasefocus` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном освобождении фокуса аудио.
-
-### `onmodechanged` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении режима воспроизведения.
-
-### `onvolumechange` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении громкости плеера.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-brightness.md
-
-# Управление яркостью
-
-## Импорт модуля
-
-``` js
-import brightness from '@system.brightness'
-```
-
-## API
-
-### `getValue` <decl type="(): number" method />
-
-Получение значения яркости экрана, диапазон составляет $[0, 1]$.
-
-### `setValue` <decl type="(value: number): void" method />
-
-Установка значения яркости экрана. Диапазон `value` составляет $[0, 1]$.
-
-### `getMode` <decl type="(): string" method />
-
-Получение режима яркости экрана.
-
-### `setMode` <decl type="(mode: number): void" method />
-
-Установка режима яркости экрана. Если `number` установлен в `0`, это стандартный режим; если `number` установлен в $1$, это автоматический режим.
-
-### `setKeepScreenOn` <decl type="(mode: Boolean): void" method />
-
-Установка параметра поддержания экрана во включенном состоянии. Если `mode` равен `true`, экран постоянно включен; если `mode` равен `false`, постоянное включение экрана отменяется.
-
-### `wakeScreenOn`
+### `getLocale`
 <decl method><pre>
-(options: { 
-  screenOn: boolean, 
-  timeout?: number,
-}): void
+(): {
+  language: string,
+  countryOrRegion: string,
+}
 </pre></decl>
 
-Включение или выключение экрана. Назначение полей параметра `options`:
-- `screenOn`: включать ли экран
-- `timeout`: время до автоматического выключения, если не указано, время не ограничено
+Получает текущую локаль приложения. По умолчанию используется системная локаль, которая может изменяться при изменении настроек или системного языка.
+ - `language` указывает текущий язык, например 'zh', 'en' и т. д.
+ - `countryOrRegion` указывает текущую страну или регион, например 'CN', 'US' и т. д.
 
 ============================================================
 FILE_PATH: src/transl/RU/api/system-ble.md
@@ -2601,6 +1301,1832 @@ export default {
 ```
 
 ============================================================
+FILE_PATH: src/transl/RU/api/system-test.md
+
+# Тестирующий фреймворк
+
+## Импорт модуля
+
+``` js
+import test from '@system.test'
+```
+
+## Введение
+
+Модуль `system.test` представляет собой фреймворк для сквозного (end-to-end) тестирования, который позволяет программно симулировать действия пользователя и проверять, соответствует ли поведение интерфейса ожиданиям.
+
+Пример простого кода для симуляции действий пользователя:
+``` js
+await test.getByClass('play-button').click()
+await test.getByClass('more-button').click()
+await test.getByClass('download-button').click()
+await test.getByClass('close-button').click()
+await test.getByClass('menu-button').click()
+await test.getHasText('下载列表').click()
+await test.getByTag('Scroll').scroll(0, -200, 0.3)
+await test.getHasText(/[a-z]/).click()
+```
+Этот код автоматически ожидает рендеринга элементов в интерфейсе, с помощью жестов прокрутки переводит скрытые элементы в видимую область, а затем выполняет над ними такие жесты, как клик или прокрутка.
+
+## API
+
+### Вспомогательные функции
+
+Эти функции предоставляют вспомогательные возможности в тестах, такие как задержка времени.
+
+#### `wait` <decl method type="(duration: number): Promise<void>" />
+
+Асинхронная задержка на указанное время, используемая для ожидания определенных операций в тесте или для симуляции пауз пользователя.
+
+### Локаторы
+
+Локаторы ищут элементы (нативные компоненты) с верхнего уровня страницы приложения, например, по тегу или ID элемента. Подробнее о локаторах см. в разделе [Объект `Locator`](#locator-объект).
+
+#### `getByTag` <decl method type="(tag: string): Locator" />
+
+Поиск элемента по `tag`. В настоящее время поддерживается только стиль именования UpperCamelCase, например `'P'`, `'Swiper'` и т. д.
+
+#### `getByClass` <decl method type="(class: string): Locator" />
+
+Поиск элемента по атрибуту `class`.
+
+#### `getById` <decl method type="(id: string): Locator" />
+
+Поиск элемента по атрибуту `id`.
+
+#### `getHasText` <decl method type="(text: RegExp | string): <Locator>" />
+
+Поиск элемента в зависимости от того, совпадает ли его атрибут `text` с параметром `text`. Параметр `text` является регулярным выражением, например:
+- `/hello/` проверяет, содержит ли значение атрибута `text` элемента подстроку `'hello'`;
+- `/^hello/` проверяет, начинается ли значение атрибута `text` элемента с `'hello'`;
+- `/^hello$/` проверяет, равно ли значение атрибута `text` элемента `'hello'`.
+
+Правила сопоставления параметра `text` такие же, как у [`RegExp.test()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test).
+
+### Объект `Locator`
+
+Объект `Locator` возвращается API локаторов и может использоваться для дальнейших операций. Все операции локатора автоматически пытаются дождаться появления элемента и переместить его в видимую зону.
+
+#### `click` <decl method type="(): Promise<void>" />
+
+Когда элемент существует и прокручен в видимую область, симулирует жест клика в позиции элемента.
+
+#### `scroll` <decl method type="(dx: number, dy: number, duration?: number): Promise<void>" />
+
+Когда элемент существует и прокручен в видимую область, симулирует жест прокрутки в позиции элемента. `dx` и `dy` — это смещения прокрутки $(x, y)$ в пикселях; необязательный параметр `duration` задает продолжительность жеста в секундах, значение по умолчанию составляет $0.5 \rm s$.
+
+Этот метод ожидает, пока атрибут `scrolled` элемента не станет равным `false`, прежде чем вернуть объект Promise. Таким образом, для таких компонентов, как `scroll` и `swiper`, метод `scroll()` вызовет следующий шаг только после того, как инерционная анимация этих компонентов полностью остановится.
+
+#### `wait` <decl method type="(): Promise<void>" />
+
+Ожидает появления элемента и его прокрутки в видимую область, но не симулирует никаких жестов или других операций.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-notification.md
+
+# 消息通知
+
+## 导入模块
+
+``` js
+import notification from '@system.notification'
+```
+
+开发者需要在 [`manifest.json`](/framework/application/manifest.md#permissions) 文件中声明应用对 `watch.permission.NOTIFICATION` 的访问权限。
+
+## API
+
+### `publish`
+<decl method><pre>
+(options: {
+  icon: string,
+  id?: number,
+  contentType: number,
+  content: object,
+  deliveryTime: number,
+  actionUri: string
+}): void
+</pre></decl>
+
+发布消息通知。`options` 参数的各字段功能为：
+- `icon`：消息图标的 URI；
+- `id`：应用通知的唯一 id；
+- `contentType`：正文类型。 1：普通文本通知类型。 2：图片通知类型；暂时不支持图片通知；
+- `content`：与 `contentType` 配合使用，表示通知的正文内容；
+  - 当 `contentType` 为 1 时，表示普通文本通知的正文内容；object 类型，包含以下字段：
+    - `title`：普通文本通知标题；string 类型；
+    - `text`：普通文本通知内容；string 类型；
+- `deliveryTime`：通知发送时间；
+- `actionUri`：点击通知时跳转的 URI。
+
+### `remove` 
+<decl method><pre>
+(options: {
+  query:{
+    id?: number
+  }
+}): void
+</pre></decl>
+
+清除消息通知。`options` 参数包含以下字段：
+- query：清除的查询条件，
+  - id：清除指定 id 的消息通知，如果不传入 id，则清除所有消息通知。
+
+============================================================
+FILE_PATH: src/transl/RU/api/i18n.md
+
+# Интернационализация
+
+Данный модуль предоставляет функции для работы с интернационализацией внутри приложения.
+
+## Импорт модуля
+
+``` js
+import i18n from '@system.i18n'
+```
+
+## API
+
+### `getLanguage` <decl type="(): string" method></decl>
+
+Получает языковые настройки текущего приложения. Возвращает строку, представляющую текущий код языка, например `'zh-CN'`, `'en-US'` и т. д.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-storage.md
+
+# Хранение данных
+
+Модуль хранения данных `system.storage` позволяет приложениям сохранять собственные данные. Эти данные персистентно сохраняются в объекте хранилища приложения и удаляются при деинсталляции приложения.
+
+`system.storage` хранит данные в виде пар ключ-значение, где ключ должен быть строкой, а значение — это значение JSON (или значение JavaScript, которое может быть сериализовано в JSON).
+
+## Импорт модуля
+
+``` js
+import storage from '@system.storage'
+```
+
+## API
+
+### `get` <decl type="(key: string): any" method />
+
+Получает значение, соответствующее ключу `key` в хранилище. Если пара ключ-значение не существует, возвращает `undefined`.
+
+### `set` <decl type="(key: string, value: any): void" method />
+
+Этот метод принимает имя ключа `key` и значение `value` в качестве параметров и добавляет эту пару ключ-значение в хранилище. Если ключ уже существует, его соответствующее значение обновляется.
+
+### `delete` <decl type="(key: string): boolean" method />
+
+Удаляет пару ключ-значение, соответствующую ключу `key` в хранилище. Возвращает `true`, если пара ключ-значение существовала и была успешно удалена.
+
+### `clear` <decl type="(): void" method />
+
+Очищает все сохраненные данные в приложении.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-interconnect.md
+
+# Взаимодействие устройств
+
+## Импорт модуля
+
+``` ts
+import interconnect from '@system.interconnect'
+```
+
+## Определение интерфейсов
+
+### `instance` <decl type="(options: {package: string, fingerprint: string}): Connect" method/>
+
+Создает экземпляр [`Connect`](#connect-интерфейс).
+
+```js
+const connect = interconnect.instance({
+  package: "com.xxxx.xxx",
+  fingerprint: "xxxxx"
+})
+```
+
+- package: имя пакета мобильного приложения.
+- fingerprint: информация об отпечатке, должна совпадать с информацией об отпечатке, переданной при создании соединения мобильным приложением.
+
+## Интерфейс `Connect`
+
+### `onopen` <decl type="?: () => void" set />
+
+Используется для указания обратного вызова (callback) при открытии соединения.
+
+```js
+connect.onopen = () => {
+  console.info("onopen")
+}
+```
+
+### `onclose` <decl type="?: () => void" set />
+
+Используется для указания обратного вызова при закрытии соединения.
+
+```js
+connect.onclose = () => {
+  console.info("onclose")
+}
+```
+
+### `onerror` <decl type="?: () => void" set />
+
+Используется для указания обратного вызова при сбое соединения.
+
+```js
+connect.onerror = (data: any) => {
+  console.info("onerror", data)
+}
+```
+
+### `onmessage` <decl type="?: () => " set />
+
+Используется для указания обратного вызова при получении данных от мобильного приложения.
+
+```js
+connect.onmessage = (msg => {
+  if (msg.isFileType) {
+    this.msg = "recv a file " + msg.fileUri
+  } else {
+    this.msg = "recv a text message " + msg.data
+  }
+})
+```
+
+### `send` <decl type="(options: {data: any}): Promise<any>" method />
+
+Отправка данных на сторону мобильного приложения.
+
+```js
+connect.send({
+  data: {
+    name: "zhangsan"
+  }
+})
+```
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-exchange.md
+
+# Обмен данными
+
+Модуль обмена данными `system.exchange` используется для хранения общих данных между приложениями. Эти данные не сохраняются персистентно и будут утеряны при выключении питания устройства. Данные, хранящиеся в `system.exchange`, доступны во всех приложениях, поэтому этот модуль можно использовать для хранения некоторой конфигурационной информации приложений, но он не подходит для хранения конфиденциальных данных.
+
+`system.exchange` хранит данные в виде пар «ключ-значение», где ключ должен быть строкой, а значение — значением JSON (или значением JavaScript, которое может быть сериализовано в JSON).
+
+## Импорт модуля
+
+``` js
+import exchange from '@system.exchange'
+```
+
+## API
+
+### `get` <decl type="(key: string): any" method />
+
+Получает значение, соответствующее ключу `key` в хранилище. Если пара «ключ-значение» не существует, возвращает `undefined`.
+
+### `set` <decl type="(key: string, value: any): void" method />
+
+Этот метод принимает в качестве параметров имя ключа `key` и значение `value` и добавляет эту пару «ключ-значение» в хранилище. Если ключ уже существует, его соответствующее значение обновляется.
+
+### `delete` <decl type="(key: string): boolean" method />
+
+Удаляет пару «ключ-значение», соответствующую ключу `key` в хранилище. Возвращает `true`, если пара «ключ-значение» существовала и была успешно удалена.
+
+### `watch` <decl type="(key: string, callback: (value: any) => void): number" method />
+
+Отслеживает изменения значения данных с именем ключа `key` в хранилище и вызывает функцию обратного вызова `callback`, когда значение изменяется. Параметр `value` функции обратного вызова представляет собой новое значение данных. Метод `watch()` возвращает `wtacher ID`, который может быть использован в методе [`unwatch()`](#unwatch) для отмены отслеживания.
+
+::: tip
+Когда отслеживание больше не нужно, следует использовать метод [`unwatch()`](#unwatch) для его отмены, в противном случае это может привести к утечке памяти.
+:::
+
+### `unwatch` <decl type="(watcherID: number): void" method />
+
+Отменяет определенное отслеживание для ключа в хранилище. Параметр `watcherID` — это `wtacher ID`, возвращаемый методом [`watch()`](#watch) при создании отслеживания.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-path.md
+
+# Операции с путями
+
+Данный модуль предоставляет интерфейсы для работы с путями, включая объединение, разделение, нормализацию путей и другие функции.
+
+## Импорт модуля
+
+``` js
+import path from '@system.path'
+```
+
+## Определение интерфейсов
+
+#### `path.basename` <decl type="(path: string, suffix?: string): string" method />
+
+Возвращает имя файла из пути `path`. Указание параметра `suffix` позволяет удалить определенное расширение файла. Например:
+``` js
+path.basename('/foo/bar/baz.txt') // 'baz.txt'
+path.basename('/foo/bar/baz.txt', '.txt') // 'baz'
+```
+
+#### `path.dirname` <decl type="(path:string): string" method />
+
+Возвращает директорию пути `path` (в отличие от `basename()`, эта функция отбрасывает имя файла). Например:
+``` js
+path.dirname('/foo/bar/baz') // '/foo/bar'
+```
+
+#### `path.extname` <decl type="(path: string): string" method />
+
+Возвращает расширение файла из пути `path`. Например:
+``` js
+path.extname('table.json') // '.json'
+path.extname('/images/icon.png') // '.png'
+```
+
+#### `path.isAbsolute` <decl type="(path: string): boolean" method />
+
+Определяет, является ли путь `path` абсолютным. Например:
+``` js
+path.isAbsolute('/foo/bar'); // true
+path.isAbsolute('/baz/..');  // true
+path.isAbsolute('qux/');     // false
+path.isAbsolute('.');        // false
+```
+
+#### `path.join` <decl type="(...paths: string[]): string" method />
+
+Объединяет несколько путей и нормализует результат. Например:
+``` js
+path.join('/foo', 'bar', 'baz/asdf', 'quux', '..') // '/foo/bar/baz/asdf'
+```
+
+#### `path.normalize` <decl type="(path: string): string" method />
+
+Приводит путь `path` к наиболее лаконичному виду, разрешая сегменты `..` и `.` и удаляя лишние разделители пути `/`.
+
+``` js
+path.normalize('/foo///bar/.././/baz') // '/foo/baz'
+```
+
+#### `path.relative` <decl type="(from: string, to: string): string" method />
+
+Вычисляет относительный путь от `from` до `to`.
+
+``` js
+path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb') // '../../impl/bbb'
+```
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-devtools.md
+
+# Отладка (Debugging)
+
+## Импорт модуля
+
+``` js
+import devtools from '@system.devtools'
+```
+
+## API
+
+### `command` <decl type="(cmd: string, fn: (argv: string[]) => void): void" method />
+
+Регистрирует функцию `fn` в качестве shell-команды с именем `cmd`. После регистрации её можно вызывать из терминала устройства с помощью команды `dev`. Например:
+``` bash
+dev cmd arg1 arg2
+```
+вызовет команду с именем `'cmd'` и передаст ей список аргументов `['arg1', 'arg2']`.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-sensor.md
+
+# Датчики
+
+## Импорт модуля
+
+```js
+import sensor from '@system.sensor';
+```
+
+Разработчикам необходимо объявить разрешение на доступ приложения к `watch.permission.ACCESS_SENSORS` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
+
+## Определение интерфейсов
+
+### `subscribeAccelerometer`
+<decl method><pre>
+(options: { 
+  interval?: 'game' | 'ui' | 'normal', 
+  callback: (data: AccelerometerValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений данных акселерометра. Назначение полей параметра `options`:
+- `interval`：частота опроса, по умолчанию `'normal'`, возможные значения:
+  - `'game'`：игровой режим, частота 20 мс/раз;
+  - `'ui'`：режим пользовательского интерфейса, частота 60 мс/раз;
+  - `'normal'`：обычный режим, частота 200 мс/раз.
+- `callback`：обратный вызов при обновлении данных акселерометра. Сигнатура типа данных акселерометра `AccelerometerValue`:
+  ``` ts
+  type AccelerometerValue = {
+    x: number   // ускорение по оси x
+    y: number   // ускорение по оси y
+    z: number   // ускорение по оси z
+  }
+  ```
+
+Пример:
+```js
+const id = sensor.subscribeAccelerometer({
+  interval: 'normal',
+  callback(ret) {
+    console.log(`gyroscope data, x = ${ret.x}, y = ${ret.y}, z = ${ret.z}`)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeAccelerometer(id)
+```
+
+### `unsubscribeAccelerometer` <decl type="(id: number): void" method/>
+
+Отмена прослушивания данных акселерометра. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeAccelerometer`](#subscribeaccelerometer).
+
+### `subscribeCompass`
+<decl method><pre>
+(options: { 
+  callback: (data: CompassValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений данных компаса. Возвращает идентификатор подписки, который используется для ее отмены. Назначение полей параметра `options`:
+- `callback`：обратный вызов при изменении данных компаса.
+
+Сигнатура `CompassValue`:
+``` ts
+  type CompassValue = {
+    direction: number   // угол между осью y и магнитным северным полюсом (в радианах)
+    accuracy: number    // точность
+  }
+```
+- `direction`：угол в радианах между осью Y устройства и магнитным северным полюсом Земли. Диапазон значений: $(-\pi,\pi]$, где:
+  - `0`：направление на север
+  - $\pi$` / 2` (около 1.57)：направление на восток
+  - $\pi$ (около 3.14)：направление на юг
+  - -$\pi$` / 2` (около -1.57)：направление на запад
+- `accuracy`：уровень точности данных компаса
+  - `3`：высокая точность
+  - `2`：средняя точность
+  - `1`：низкая точность
+  - `0`：недоступно (причина неизвестна)
+  - `-1`：недоступно (датчик потерял соединение)
+
+Пример:
+```js
+const id = sensor.subscribeCompass({
+  callback(ret) {
+    console.log(`direction=${ret.direction}, accuracy=${ret.accuracy}`)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeCompass(id)
+```
+
+### `unsubscribeCompass`<decl type="(id: number): void" method/>
+
+Отмена прослушивания данных компаса. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeCompass`](#subscribecompass).
+
+### `calibrationCompass` <decl type="(): Promise<void>" method/>
+
+Запуск процесса калибровки компаса. Когда точность компаса низкая, направьте пользователя выполнить действия и вызовите этот метод для калибровки компаса.
+
+Функция возвращает объект Promise без результата, который разрешается после завершения калибровки системой.
+
+### `getCompassValue` <decl type="(): Promise<CompassValue>" method/>
+
+Получение текущих данных компаса. Возвращает асинхронный результат — объект Promise, содержащий направление компаса и информацию о точности типа `CompassValue`.
+
+### `subscribeStepCounter`
+<decl method><pre>
+(options: { 
+  callback: (data: StepCounterValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений данных шагомера. Назначение полей параметра `options`:
+- `callback`：обратный вызов при изменении данных шагов. Сигнатура типа данных шагомера `StepCounterValue`:
+  ``` ts
+  type StepCounterValue = {
+    steps: number     // текущее количество шагов (начинается с 0 после перезагрузки)
+  }
+  ```
+
+Пример:
+```js
+const id = sensor.subscribeStepCounter({
+  callback(ret) {
+    console.log(`steps=${ret.steps}`)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeStepCounter(id)
+```
+
+### `unsubscribeStepCounter` <decl type="(id: number): void" method/>
+
+Отмена прослушивания данных шагомера. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeStepCounter`](#subscribestepcounter).
+
+### `subscribeOnBodyState`
+<decl method><pre>
+(options: { 
+  callback: (data: OnBodyStateValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений состояния ношения устройства. Назначение полей параметра `options`:
+- `callback`：обратный вызов при изменении состояния ношения устройства. Сигнатура типа данных состояния ношения `OnBodyStateValue`:
+  ``` ts
+  type OnBodyStateValue = {
+    value: boolean  // надето ли устройство
+  }
+  ```
+
+Пример:
+```js
+const id = sensor.subscribeOnBodyState({
+  callback(ret) {
+    console.log(`onBody=${ret.value}`)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeOnBodyState(id)
+```
+
+### `unsubscribeOnBodyState` <decl type="(): void" method/>
+
+Отмена прослушивания состояния ношения. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeOnBodyState`](#subscribeonbodystate).
+
+### `getOnBodyState` <decl type="(): Promise<OnBodyStateValue>" method/>
+
+Получение текущего состояния ношения устройства.
+
+Пример:
+``` js
+async function getOnBodyStat() {
+  const data = await sensor.getOnBodyState()
+  console.log(`onBody: ${data.value}`)
+}
+```
+
+### `subscribeGyroscope`
+<decl method><pre>
+(options: { 
+  callback: (data: GyroscopeValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений данных гироскопа. Назначение полей параметра `options`:
+- `callback`：обратный вызов при изменении данных гироскопа. Сигнатура типа данных гироскопа `GyroscopeValue`:
+  ``` ts
+  type GyroscopeValue = {
+    x: number   // угловая скорость по оси x
+    y: number   // угловая скорость по оси y
+    z: number   // угловая скорость по оси z
+  }
+  ```
+
+Пример:
+```js
+const id = sensor.subscribeGyroscope({
+  callback(ret) {
+    console.log(`gyroscope data, x = ${ret.x}, y = ${ret.y}, z = ${ret.z}`)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeGyroscope(id)
+```
+
+### `unsubscribeGyroscope` <decl type="(id: number): void" method/>
+
+Отмена прослушивания данных гироскопа. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeGyroscope`](#subscribegyroscope).
+
+### `subscribeBarometer`
+<decl method><pre>
+(options: { 
+  callback: (data: BarometerValue) => void,
+}): number
+</pre></decl>
+
+Прослушивание изменений данных датчика атмосферного давления. Назначение полей параметра `options`:
+- `callback`：обратный вызов при изменении данных давления. Сигнатура типа данных давления `BarometerValue`:
+  ``` ts
+  type BarometerValue = {
+    pressure: number   // значение атмосферного давления, единица: Па (Pa)
+  }
+  ```
+
+Пример:
+```js
+sensor.subscribeBarometer({
+  callback(ret) {
+    console.log("get barometer:", ret.pressure)
+  }
+})
+
+// Отмена подписки
+sensor.unsubscribeBarometer(id)
+```
+
+### `unsubscribeBarometer` <decl type="(id: number): void" method/>
+
+Отмена прослушивания барометра. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeBarometer`](#subscribebarometer).
+
+### `subscribeWristLift`
+<decl method><pre>
+(options: { 
+  callback: () => void,
+}): number
+</pre></decl>
+
+Прослушивание события поднятия запястья. Назначение полей параметра `options`:
+- `callback`：обратный вызов для прослушивания события поднятия запястья.
+
+Пример:
+```js
+const id = sensor.subscribeWristLift({
+  callback: () => {
+    console.log('wrist lift')
+  }
+});
+
+// Отмена подписки
+sensor.unsubscribeWristLift(id)
+```
+
+### `unsubscribeWristLift` <decl type="(id: number): void" method/>
+
+Отмена прослушивания поднятия запястья. Параметр `id` — это идентификатор подписки, возвращаемый методом [`subscribeWristLift()`](#subscribewristlift).
+
+## Ограничения использования
+
+Если текущее устройство не поддерживает соответствующие возможности датчиков, вызов интерфейса приведет к выбросу исключения, и прослушивание не будет активировано.
+Пример лога с информацией об исключении: `the device does not support accelerometer sensor`
+
+Пример перехвата исключения:
+
+```js
+try {
+  const id = sensor.subscribeCompass({
+    callback(ret) {
+      console.log(`direction=${ret.direction}, accuracy=${ret.accuracy}`)
+    }
+  })
+} catch (e) {
+  console.error(e.message)
+}
+```
+
+## Рекомендации
+
+Рекомендуется своевременно отменять подписку, когда данные датчиков больше не нужны. В частности, следует отменять подписку при уничтожении страницы (в обратном вызове `onDestroy`), чтобы избежать излишнего потребления ресурсов и разряда батареи.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-request.md
+
+# Загрузка и выгрузка request
+
+## Импорт модуля
+
+``` js
+import request from '@system.request'
+```
+
+## API
+
+### `download`
+<decl method><pre>
+(options: {
+  url: string,
+  header?: {[key: string]: string},
+  filename?: string,
+  callback: (progress: number) => void
+}): DownloadTask
+</pre></decl>
+
+Загружает файл по протоколу HTTP/HTTPS. Назначение полей параметра `options`:
+- `url`： URL-адрес веб-сайта для доступа;
+- `header`：объект, содержащий информацию о заголовках HTTP-запроса, где ключи и значения являются строками. Типичными полями заголовка HTTP могут быть `Authorization`, `Content-Type` и т. д.;
+- `filename`： URI для сохранения загружаемого файла, например: `internal://files/download.txt`;
+- `callback`：функция обратного вызова для отслеживания прогресса загрузки. Эта функция вызывается несколько раз во время загрузки, где `progress` — это значение прогресса загрузки в диапазоне от $[0, 100]$.
+
+Метод `download()` возвращает объект [`DownloadTask`](#downloadtask), который можно использовать для ожидания завершения загрузки или управления задачей загрузки.
+
+::: warning
+Пожалуйста, не используйте достижение прогресса загрузки до $100\%$ в функции `callback` в качестве триггера для действий после завершения загрузки. Подробности см. в разделе [Ожидание завершения загрузки](#ожидание-завершения-загрузки).
+
+Текущая реализация не производит автоматический разбор параметра `filename` на основе `url`, поэтому обязательно указывайте `filename`.
+:::
+
+## Типы
+
+### `DownloadTask`
+
+`DownloadTask` — это возвращаемый тип метода `download`, его сигнатура выглядит следующим образом:
+
+``` ts
+interface DownloadTask {
+  complete: Promise<void>,
+  cancel(): void
+}
+```
+
+Свойство `complete` представляет собой объект `Promise`, который можно использовать для ожидания завершения загрузки. Метод `cancel()` используется для отмены выполняющейся задачи загрузки; если загрузка уже завершена, метод `cancel()` не производит никакого эффекта.
+
+#### Ожидание завершения загрузки
+
+Используйте `DownloadTask.complete` для ожидания завершения загрузки. Когда этот `Promise` переходит в состояние выполнения (fulfilled), гарантируется, что файл полностью записан, поэтому можно безопасно переходить к следующему шагу. В отличие от этого, достижение прогресса загрузки в $100\%$ в `callback` не означает, что файл записан на диск — оно подходит только для отображения прогресса в пользовательском интерфейсе (UI) и подобных задач.
+
+При реальном использовании, учитывая возможность сбоя загрузки, рекомендуется использовать конструкцию `try...catch` для обработки ошибок загрузки. В примере ниже показано, как это делается.
+
+## Пример
+
+Это простой пример загрузки файла из сети:
+
+``` js
+request.download({
+  url: "http://www.rt-thread.com/service/rt-thread.txt",
+  filename: "internal://tmp/rt-thread.txt",
+})
+```
+
+Вы можете дождаться завершения загрузки с помощью свойства `complete`, возвращаемого методом `download()`:
+``` js
+try {
+  await request.download({
+    url: "http://www.rt-thread.com/service/rt-thread.txt",
+    filename: "internal://tmp/rt-thread.txt"
+  }).complete // Отклонение (rejected) complete означает сбой загрузки
+  console.log('download finished.')
+} catch (e) {
+  console.error('download failed:', e)
+}
+```
+
+Блок `try...catch` здесь используется для перехвата исключения при сбое загрузки. Это исключение на самом деле является ошибкой, выбрасываемой при отклонении `DownloadTask.complete`, поэтому вы должны использовать `await` для ожидания свойства `complete`, иначе исключение не удастся перехватить.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-media.md
+
+# Мультимедиа
+
+## Импорт модуля
+
+``` ts
+import media from '@system.media'
+```
+
+## Определение интерфейсов
+
+### `createAudioPlayer` <decl type="(): AudioPlayer" method />
+
+Создает объект [`AudioPlayer`](#audioplayer-объект).
+
+### `createAudioRecord` <decl type="(): AudioRecorder" method />
+
+Создает объект [`AudioRecorder`](#audiorecorder-объект).
+
+Разработчики должны объявить разрешение приложения на доступ к `watch.permission.RECORD` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
+
+### `setVolume` <decl type="volume: number): void" method />
+
+Устанавливает системную громкость мультимедиа. Параметр `volume` представляет собой значение громкости в диапазоне $[0.0, 1.0]$. Это свойство используется для управления системной громкостью мультимедиа, и его конкретные функции зависят от реализации платформы. Для регулировки громкости следует в первую очередь использовать свойство `volume` объекта `AudioPlayer`.
+
+### `getVolume` <decl type="(): number" method />
+
+Получает системную громкость мультимедиа. Результатом является значение громкости в диапазоне $[0.0, 1.0]$. Это свойство используется для получения системной громкости мультимедиа, и его конкретные функции зависят от реализации платформы. Для получения громкости следует в первую очередь использовать свойство `volume` объекта `AudioPlayer`.
+
+## Объект `AudioPlayer`
+
+::: details Сигнатура типа
+``` ts
+interface AudioPlayer {
+  src: string,
+  name: string,
+  icon: string,
+  mode: string,
+  status: string,
+  duration: number,
+  position: number,
+  openSystemNotification: bool,
+  songAttribute: object,
+  volume: number,
+  nextAvailable: bool,
+  prevAvailable: bool,
+
+  play(): void,
+  pause(): void,
+  stop(): void,
+  release(): void,
+  next(): void,
+  previous(): void,
+  requestFocus({acquireType: string, volumeType: string}): void,
+  releaseFocus(): void,
+
+  onplay?: () => void,
+  onpause?: () => void,
+  onstop?: () => void,
+  onended?: () => void,
+  onerror?: (err: {msg: string})=> void,
+  ontimeupdate?: () => void,
+  oninterrupt?: (action: {interruptHint: number}) => void,
+  onnext?: () => void,
+  onprevious?: () => void,
+  onrequestplay?: () => void,
+  onrequestpause?: () => void,
+  onrequeststop?: () => void,
+  onsongattribute?: () => void,
+  onposition?: () => void,
+  onrequestfocus?: () => void,
+  onreleasefocus?: () => void,
+  onmodechanged?: () => void,
+  onvolumechange?: () => void,
+}
+```
+:::
+
+### `src` <decl type="string" set get />
+
+Устанавливает или считывает URL воспроизводимого аудио. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径) и сетевые пути ресурсов, использующие протоколы http и https (например: `https://www.rt-thread.com/service/test/001.mp3`). Ниже приведен простой пример установки src и запуска воспроизведения:
+
+```ts
+import media from '@system.media'
+// Создание аудиоплеера
+let player = media.createAudioPlayer()
+// Установка URL воспроизводимого аудио
+player.src = 'https://www.rt-thread.com/service/test/001.mp3'
+// Запуск воспроизведения аудио
+player.play()
+```
+
+### `name` <decl type="string" set get />
+
+Имя объекта плеера. Если не задано, по умолчанию используется имя приложения, создавшего плеер. Стоит отметить, что имя объекта плеера не является глобально уникальным, и имя нельзя использовать для идентификации конкретного объекта плеера.
+
+### `icon` <decl type="string" set get />
+
+URL иконки объекта плеера. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径).
+
+### `mode` <decl type="string" set get />
+
+Режим воспроизведения. Функция, соответствующая этому свойству, должна быть реализована приложением плеера. Объект плеера по умолчанию не обрабатывает ее, а только предоставляет это свойство.
+
+- `sequential`: последовательное воспроизведение  
+- `random`: случайное воспроизведение  
+- `singleloop`: повтор одной трека  
+- `listloop`: повтор списка  
+
+### `status` <decl type="string" get />
+
+Чтение текущего состояния плеера
+
+- `play`: состояние воспроизведения  
+- `pause`: состояние паузы  
+- `stop`: состояние остановки 
+- `ended`: состояние окончания воспроизведения  
+- `error`: состояние ошибки воспроизведения  
+
+### `duration` <decl type="number" get />
+
+Общая продолжительность аудио в секундах
+
+### `position` <decl type="number" set get />
+
+Текущая позиция воспроизведения аудио в секундах
+
+### `openSystemNotification` <decl type="bool" set get />
+
+Включать ли системные уведомления, по умолчанию выключено. После включения этот объект плеера может быть обнаружен [менеджером аудиоплеера](/framework/application/system-audioPlayerManager.md#音频播放器管理器).
+
+### `songAttribute` <decl type="songAttribute" set get />
+
+Объект атрибутов песни
+
+::: details Сигнатура типа
+```ts
+type songAttribute = {
+  title: string; // Название песни
+  artist: string; // Имя исполнителя, может быть сольным артистом или группой
+  album: string; // Название альбома, которому принадлежит песня
+  year: string; // Год выпуска песни
+  genre: string; // Жанр песни, например, поп, рок, классика и т. д.
+  track: string; // Номер текущей песни в альбоме, например: "1/12" означает 1-я из 12
+  coverArt: string; // URL изображения обложки песни
+  lyrics: string; // URL текста песни
+  comments: string; // Дополнительная информация, например, примечания об авторских правах
+}
+```
+:::
+
+Объект `songAttribute`, как и объект `AudioPlayer`, является объектом Proxy, то есть его нельзя сериализовать и десериализовать с помощью JSON, а также ссылаться на него в реактивном фреймворке. Ниже приведен простой пример использования:
+
+```ts
+// Установка названия песни
+this.player.songAttribute.title = "Неизвестно"
+// Установка исполнителя песни
+this.player.songAttribute.artist = "Неизвестно"
+// Просмотр названия песни
+console.dir(this.player.songAttribute.title)
+```
+
+### `volume` <decl type="number" set get />
+
+Текущая громкость плеера, диапазон: $[0.0, 1.0]$
+
+### `nextAvailable` <decl type="bool" set get />
+
+Установка или запрос возможности переключения на следующий трек
+
+### `prevAvailable` <decl type="bool" set get />
+
+Установка или запрос возможности переключения на предыдущий трек
+
+### `play` <decl type="(): void" method />
+
+Начинает воспроизведение аудио, указанного в свойстве `src`
+
+- Если свойство `src` не было установлено до вызова этого метода, воспроизведение завершится ошибкой и вызовет событие `onerror`;
+- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onplay` или `onerror`, чтобы определить успех или неудачу воспроизведения. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
+
+Ниже приведен простой пример вызова интерфейса `play()`:
+
+```ts
+import media from '@system.media'
+// Создание аудиоплеера
+let player = media.createAudioPlayer()
+// Установка URL воспроизводимого аудио
+player.src = 'https://www.rt-thread.com/service/test/001.mp3'
+// Установка события onplay
+player.onplay = () => { console.dir("Начало воспроизведения") }
+// Установка события onerror
+player.onerror = () => { console.dir("Ошибка воспроизведения") }
+// Запуск воспроизведения аудио
+player.play()
+```
+
+### `pause` <decl type="(): void" method />
+
+Приостанавливает воспроизведение текущего аудио  
+
+- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onpause` или `onerror`, чтобы определить успех или неудачу паузы. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
+
+### `stop` <decl type="(): void" method />
+
+Останавливает воспроизведение аудио. Вы можете возобновить воспроизведение с помощью `play`  
+
+- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onstop` или `onerror`, чтобы определить успех или неудачу остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
+
+### `release` <decl type="(): void" method />
+
+Освобождает аудиоресурсы  
+
+- Выполнение этого интерфейса прекратит воспроизведение текущего аудио. Необходимо дождаться события `onstop` или `onerror`, чтобы определить успех или неудачу остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы;   
+
+### `next` <decl type="(): void" method />
+
+Уведомляет приложение плеера о воспроизведении следующего трека. После выполнения этого интерфейса будет вызвано событие `onnext`, уведомляющее приложение плеера, прослушивающее это событие, которое затем выполнит логику переключения песен.
+
+### `previous` <decl type="(): void" method />
+
+Уведомляет приложение плеера о воспроизведении предыдущего трека. После выполнения этого интерфейса будет вызвано событие `onprevious`, уведомляющее приложение плеера, прослушивающее это событие, которое затем выполнит логику переключения песен.
+
+### `requestFocus` <decl type="({acquireType: string, volumeType: string}): void" method />
+
+Запрашивает аудиофокус. После выполнения этого интерфейса система будет уведомлена о запросе или освобождении аудиофокуса, и низлежащий уровень будет управлять логикой переключения и прерывания различных типов аудио.
+
+Параметр `acquireType` указывает тип запроса:
+- `gain`: запросить аудиофокус
+- `loss`: освободить аудиофокус
+
+Параметр `volumeType` указывает тип аудио:
+- `system`: системные подсказки
+- `media`: медиамузыка
+- `tts`: голосовое вещание
+
+Следующий пример демонстрирует метод запроса аудиофокуса с помощью функции `requestFocus`:
+``` ts
+import media from '@system.media'
+// Создание аудиоплеера
+let player = media.createAudioPlayer()
+// Получение аудиофокуса для типа медиамузыки
+player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
+```
+
+### `releaseFocus` <decl type="(): void" method />
+
+Освобождает аудиофокус. После выполнения этого интерфейса система будет уведомлена об освобождении аудиофокуса, и низлежащий уровень будет управлять логикой переключения и прерывания различных типов аудио.
+
+### `onplay` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном запуске воспроизведения аудио (`play`)
+
+### `onpause` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешной паузе аудио (`pause`)
+
+### `onstop` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешной остановке аудио (`stop`)
+
+### `onended` <decl type="?: () => void" set />
+
+Событие обратного вызова по окончании воспроизведения аудио
+
+### `onerror` <decl type="?: () => void" set />
+
+Событие обратного вызова при возникновении ошибки во время выполнения таких интерфейсов, как `play`, `pause`, `stop`, `position`. При возникновении ошибки соответствующие события (например, `onplay`) не вызываются.
+
+### `ontimeupdate` <decl type="?: () => void" set />
+
+Событие обратного вызова, которое срабатывает при обновлении свойства `position`. Это событие срабатывает только тогда, когда приложение находится на переднем плане, и прекращает генерироваться, когда приложение находится в фоновом режиме.
+
+### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
+
+Функция обратного вызова при возникновении события прерывания аудио (уведомление о временном или полном прерывании текущего аудио, когда его вытесняет аудио того же или другого типа).
+
+Параметр `interruptHint` в объекте `action` указывает тип события прерывания:
+- `1`: Кратковременное прерывание (может восстановиться автоматически, например: музыка прервана)
+- `2`: Полное прерывание (не может восстановиться автоматически, например: NetEase Cloud прерван Himalaya)
+
+Следующий пример демонстрирует метод регистрации обратного вызова `oninterrupt`, который вызывается при наступлении события:
+``` js
+player.oninterrupt = (action) => {
+  console.log(action.interruptHint)
+}
+```
+
+### `onnext` <decl type="?: () => void" set />
+
+Событие обратного вызова при необходимости воспроизведения следующего трека
+
+### `onprevious` <decl type="?: () => void" set />
+
+Событие обратного вызова при необходимости воспроизведения предыдущего трека
+
+### `onrequestplay` <decl type="?: () => void" set />
+
+Событие обратного вызова, вызываемое, когда нижнему уровню необходимо запустить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику запуска воспроизведения.
+
+### `onrequestpause` <decl type="?: () => void" set />
+
+Событие обратного вызова, вызываемое, когда нижнему уровню необходимо приостановить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику приостановки воспроизведения.
+
+### `onrequeststop` <decl type="?: () => void" set />
+
+Событие обратного вызова, вызываемое, когда нижнему уровню необходимо остановить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику остановки воспроизведения.
+
+### `onsongattribute` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении объекта атрибутов песни
+
+### `onposition` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном выполнении установки текущей позиции воспроизведения аудио с помощью метода `position`
+
+### `onrequestfocus` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном запросе аудиофокуса
+
+### `onreleasefocus` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном освобождении аудиофокуса
+
+### `onmodechanged` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении режима воспроизведения
+
+### `onvolumechange` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении громкости плеера
+
+
+## Объект `AudioRecorder`
+
+::: details Сигнатура типа
+``` ts
+interface AudioRecorder {
+    start({
+      uri: string, 
+      sample?: 8000 | 16000 | 44100 | 48000,
+      layout?: 8 | 16 | 32,
+      channel?: 1 | 2,
+      bitrate?: 16 | 32 | 64,
+      codec?: "pcm" | "mp3" | "opus" | "silk",
+      format?: "ogg",
+    }): Promise<void>,
+    read({callback: (ArrayBuffer) => void}): void,
+    stop(): void,
+    release(): void,
+    onstart?: () => void,
+    onstop?: () => void,
+    onrelease?: () => void,
+    onavailable?: (ArrayBuffer) => void,
+    onerror?: ({error: string})=> void
+}
+```
+:::
+
+### `start`
+<decl method><pre>
+(options: {
+  uri: string,
+  sample?: 8000 | 16000 | 44100 | 48000,
+  layout?: 8 | 16 | 32,
+  channel?: 1 | 2,
+  bitrate?: 16 | 32 | 64,
+  codec?: "pcm" | "mp3" | "opus" | "silk",
+  format?: "ogg",
+}): Promise&lt;void>
+</pre></decl>
+
+Начинает запись аудио. Функции полей параметра `options`:
+- `uri`: URI файла записи для сохранения, поддерживается только протокол `internal`, директория будет создана автоматически;
+- `sample`: частота дискретизации аудио в $\rm Hz$, по умолчанию $8000$;
+- `layout`: разрядность аудиоданных, по умолчанию $16$;
+- `channel`: количество аудиоканалов, по умолчанию $1$;
+- `bitrate`: битрейт аудио в $\rm kbps$, по умолчанию $16$. Чем выше битрейт, тем лучше качество звука, но тем больше файл.
+- `codec`: формат кодирования аудио (строка). Если не указан, подходящий кодек подбирается автоматически на основе параметра `format`;
+- `format`: формат контейнера аудио (строка). Если не указан, подходящий контейнер подбирается автоматически на основе расширения в параметре `uri`;
+
+  Поддерживаемые отношения между распространенными форматами записи, кодеками и контейнерами показаны ниже (значение «Нет» в таблице означает, что соответствующий параметр можно не указывать):
+
+  | Распространенный формат записи | codec (кодек) | format (контейнер) |
+  | ------------------------------ | ------------- | ------------------ |
+  | pcm                            | Нет           | Нет                |
+  | mp3                            | mp3           | Нет                |
+  | opus                           | opus          | Нет                |
+  | opus-ogg                       | opus          | ogg                |
+  | silk                           | silk          | Нет                |
+
+Пример кода для запуска записи:
+
+``` js
+let recorder = media.createAudioRecord()
+recorder.start({
+  uri: "internal://tmp/media_test.mp3",
+  sample: 16000,
+  layout: 16,
+  channel: 1,
+  bitrate: 16
+})
+```
+
+::: info
+Дополнительные сведения о протоколе URI `internal` см. в документации по [доступу к ресурсам](/framework/application/resource.md).
+:::
+
+По завершении записи вызовите метод [stop()](#stop-1), чтобы остановить запись.
+
+### `read`
+<decl method><pre>
+(options: {
+  callback: (buffer: ArrayBuffer) => void,
+}): void
+</pre></decl>
+
+Считывает записанные аудиоданные (каждый раз считываются все доступные данные с момента окончания предыдущего чтения до текущего момента)
+
+### `stop` <decl type="(): void" method />
+
+Останавливает запись аудио. После вызова этого интерфейса записанный с помощью метода [`start()`](#start) аудиофайл (указанный параметром `uri`) может быть прочитан другими модулями.
+
+### `release` <decl type="(): void" method />
+
+Освобождает ресурсы записи аудио
+
+### `onstart` <decl type="?: () => void" set />
+
+Событие обратного вызова после запуска записи (`start`)
+
+### `onstop` <decl type="?: () => void" set />
+
+Событие обратного вызова после остановки записи (`stop`)
+
+### `onrelease` <decl type="?: () => void" set />
+
+Событие обратного вызова после освобождения ресурсов записи (`release`)
+
+### `onavailable` <decl type="(data: ArrayBuffer) => void" set />
+
+Событие обратного вызова при появлении новых данных после начала записи
+
+### `onerror` <decl type="?: () => void" set />
+
+Событие обратного вызова при ошибке во время событий `start`, `stop` или `release`. При возникновении ошибки соответствующие события (например, `onstart`) не вызываются.
+
+## Примеры
+
+### Запись аудио
+
+Следующий код демонстрирует простейший пример записи аудио в течение 3 секунд:
+``` js
+import media from "@system.media"
+
+async function record() {
+  // Создание объекта записи
+  let record = media.createAudioRecord()
+  console.log('start record')
+  // Указан только параметр uri, остальные параметры используют значения по умолчанию
+  await record.start({
+    uri: 'internal://tmp/test.mp3'
+  })
+  setTimeout(() => {
+    console.log('stop record')
+    record.stop() // Остановка записи через 3 секунды
+  }, 3000)
+}
+
+record()
+```
+
+При вызове функции `record()` создается объект записи, начинается запись, которая останавливается через 3 секунды. Запись будет сохранена в файл `internal://tmp/test.mp3` и закодирована в формате MP3.
+
+В этом примере для метода [`AudioPlayer.start()`](#start) передан только параметр `uri`, а `sample`, `layout`, `channel` и `bitrate` используют конфигурации по умолчанию.
+
+::: tip
+При использовании эмулятора вы можете найти файл записи в каталоге данных приложения и воспроизвести его. Путь к файлу, соответствующий `internal://tmp/test.mp3`: `.glyphix-work/image/{device}/data/temp/{app-id}/test.mp3`, где `{device}` и `{app-id}` — это имя устройства и имя приложения во время эмуляции.
+:::
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-package.md
+
+# Управление пакетами
+
+Этот модуль предоставляет функции для установки и удаления пакетов ресурсов.
+
+## Импорт модуля
+
+``` js
+import pkg from '@system.package'
+```
+
+Поскольку `package` является ключевым словом JavaScript и не может использоваться в качестве имени переменной, мы можем экспортировать модуль `"@system.package"` в переменную `pkg`.
+
+## Определение интерфейсов
+
+### `install` <decl function type="(options: { src: string }): Promise<void>" />
+
+Установка приложения или пакета циферблата из файловой системы. Свойство `src` параметра `options` представляет собой URI файла устанавливаемого пакета ресурсов.
+
+Если пакетом ресурсов является пакет приложения, то после его установки с помощью `pkg.install({ src: 'package-uri' })` его можно запустить с помощью [`launch()`](system-launch.md#launch-launch-app), а для доступа к содержимому пакета можно использовать URI-протокол [`app`](/framework/application/resource.md#app).
+
+`src` — это URI файла устанавливаемого пакета ресурсов. Устанавливаемый пакет должен быть действительным пакетом приложения или циферблата, то есть он должен содержать файл [`manifest.json`](/framework/application/manifest.md). Имя установленного пакета определяется полем [`manifest.package`](/framework/application/manifest.md#package).
+
+После установки для доступа к ресурсам внутри пакета можно использовать протокол [`prc`](/framework/application/resource.md#prc), а для пакетов приложений также можно использовать протокол `app`.
+
+Если устанавливаемый пакет уже существует, будет выполнена операция обновления. Если обновляемое приложение запущенно, оно будет сначала закрыто, после чего его можно будет снова запустить вызовом [`launch()`](system-launch.md#launch-launch-app).
+
+Установленный пакет можно удалить с помощью API [`remove()`](#remove).
+
+### `remove`<decl type="(options: { package: string }): Promise<void>" function />
+
+Удаление пакета ресурсов, установленного с помощью [`install()`](#install). Свойство `package` параметра `options` является именем удаляемого пакета ресурсов, то есть полем [`manifest.package`](/framework/application/manifest.md#package).
+
+Перед удалением пакета ресурсов следует закрыть связанные ресурсы, например, уничтожить соответствующие компоненты и закрыть соответствующие страницы. Функция `remove()` автоматически закроет приложение, соответствующее пакету ресурсов (если это пакет приложения).
+
+::: warning
+Вы должны использовать `remove()`, а не напрямую API файловой системы для удаления пакетов ресурсов, поскольку последний не очищает кэш ресурсов и не может правильно удалить информацию об установке.
+:::
+
+### `getInfo` <decl type="(query?: string | Query): Manifest | undefined" method/>
+
+Получение манифест-информации (manifest) пакета приложения. Необязательный параметр `query` может быть либо строкой с именем пакета, либо более сложным объектом `Query`:
+``` ts
+type Query = {
+  package: string,                 // Имя запрашиваемого пакета
+  options?: ('dial' | 'widgets')[] // Необязательные поля запроса
+}
+```
+Если пакет, указанный в поле `package`, существует, `getInfo()` вернет информацию `Manifest` этого пакета, в противном случае вернется `undefined`. Если параметр `query` не задан, `getInfo()` вернет манифест-информацию текущего приложения.
+
+#### Объект `Manifest`
+
+Возвращаемый объект `Manifest` по сути является подмножеством [`manifest.json`](/framework/application/manifest.md):
+``` ts
+type Query = {
+  type: 'app' | 'dial', // Тип пакета, может быть приложением или циферблатом
+  name: string,         // Имя пакета
+  versionName: string,  // Имя версии
+  versionCode: number,  // Код версии
+  icon?: string,        // Путь к изображению приложения, это поле существует только для пакетов приложений
+  dial?: {              // Необязательное поле: информация о циферблате, присутствует только у пакетов циферблатов
+    component: string,  // Путь к компоненту циферблата
+    preview: string     // Путь к изображению предварительного просмотра циферблата
+  },
+  widgets?: {           // Необязательное поле: информация о виджетах и мини-приложениях
+    name: string,       // Имя виджета / мини-приложения
+    component: string,  // Путь к виджету / мини-приложению
+    preview: string     // Путь к изображению предварительного просмотра виджета / мини-приложения
+  }[]
+}
+```
+Поля `dial` и `widgets` объекта `Manifest` являются необязательными, их наличие определяется содержимым `Query.options`. Например:
+``` js
+pkg.getInfo({
+  package: 'com.example.app',
+  options: ['dial', 'widgets']
+})
+```
+приведет к тому, что результирующий `Manifest` будет содержать поля `dial` и `widgets` (однако пакеты приложений никогда не содержат поле `dial`).
+
+Когда параметр `query` является строкой, это эквивалентно пустому значению опции `options`, то есть
+``` ts
+pkg.getInfo('com.example.app')
+pkg.getInfo({ package: 'com.example.app' })
+```
+дают одинаковый результат. В этом случае возвращаемый объект `Manifest` не содержит необязательных полей.
+
+Если параметр `query` не задан, вы можете получить информацию о текущем приложении с помощью `getInfo()`:
+``` js
+let manifest = pkg.getInfo()
+console.log(manifest)
+```
+
+### `list` <decl function type="(type?: 'app' | 'dial'): string[]" />
+
+Получение списка всех установленных имен пакетов приложений или циферблатов.
+
+### `countOf` <decl function type="(type?: 'app' | 'dial'): string[]" />
+
+Получение количества установленных приложений или циферблатов.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-audiokit.md
+
+# Менеджер аудиоплеера
+
+## Импорт модуля
+
+``` ts
+import audiokit from '@system.audiokit'
+```
+
+## Определение интерфейсов
+
+### `getPlayers` <decl type="(): AudioPlayer" method />
+
+Запрос списка объектов [`AudioPlayer`](#AudioPlayer) аудиоплееров, доступных в системе.
+
+### `getActivePlayer` <decl type="(): AudioPlayer" method />
+
+Запрос объекта [`AudioPlayer`](#AudioPlayer) аудиоплеера, который находится в активном состоянии в системе.
+
+### `subscribe` <decl type="(callback: (PlayerEvent) => void): number" method/>
+
+Прослушивание изменений аудиоплееров в системе. Параметр `callback` типа `PlayerEvent` является [событием уведомления](#PlayerEvent). ID, возвращаемый этим методом, можно использовать с методом [`unsubscribe()`](#unsubscribe) для отмены подписки.
+
+Сигнатура типа `PlayerEvent`:
+
+```ts
+type PlayerEvent = {
+  notify: string; // Тип события изменения
+  player: string; // Имя изменившегося плеера
+}
+```
+
+Типы событий изменения:
+
+- `active`: изменился текущий активный плеер системы  
+- `append`: в систему добавлен плеер
+- `remove`: из системы удален плеер
+
+### `unsubscribe` <decl type="(subscribeID: number): void" method/>
+
+Отмена прослушивания изменений плеера. `subscribeID` — это значение ID, возвращаемое методом [`subscribe()`](#subscribe).
+
+## Объект `AudioPlayer`
+
+::: details Сигнатура типа
+``` ts
+interface AudioPlayer {
+  src: string,
+  name: string,
+  icon: string,
+  mode: string,
+  status: string,
+  duration: number,
+  position: number,
+  songAttribute: object,
+  volume: number,
+  nextAvailable: bool,
+  prevAvailable: bool,
+
+  play(): void,
+  pause(): void,
+  stop(): void,
+  release(): void,
+  next(): void,
+  previous(): void,
+  requestFocus({acquireType: string, volumeType: string}): void,
+  releaseFocus(): void,
+
+  onplay?: () => void,
+  onpause?: () => void,
+  onstop?: () => void,
+  onended?: () => void,
+  onerror?: (err: {msg: string})=> void,
+  ontimeupdate?: () => void,
+  oninterrupt?: (action: {interruptHint: number}) => void,
+  onnext?: () => void,
+  onprevious?: () => void,
+  onrequestplay?: () => void,
+  onrequestpause?: () => void,
+  onrequeststop?: () => void,
+  onsongattribute?: () => void,
+  onposition?: () => void,
+  onrequestfocus?: () => void,
+  onreleasefocus?: () => void,
+  onmodechanged?: () => void,
+  onvolumechange?: () => void,
+}
+```
+:::
+
+- Объект `AudioPlayer` (далее: `audiokit.Player`) и объект `AudioPlayer`, созданный в модуле `system.media` (далее: `media.Player`), являются разными JS-объектами, но они управляют одним и тем же плеером. При этом объект `audiokit.Player` обладает дополнительными функциями по сравнению с `media.Player`, такими как методы `next()`, `previous()` и др. Операции вроде `play()`, выполняемые пользователем через объект `audiokit.Player`, также передаются в прослушиватели объекта `media.Player`.
+
+### `src` <decl type="string" set get />
+
+Установка или чтение URL воспроизводимого аудио. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径) и пути к сетевым ресурсам с использованием протоколов http и https (например: `https://www.rt-thread.com/service/test/001.mp3`). Ниже приведен простой пример установки src и запуска воспроизведения:
+
+```ts
+import audiokit from '@system.audiokit'
+// Запрос активного в данный момент аудиоплеера в системе
+let player = audiokit.getActivePlayer()
+if (player != null) {
+  // Сначала остановим текущее воспроизводимое аудио
+  player.stop()
+  // Установим URL аудио для воспроизведения
+  player.src = 'https://www.rt-thread.com/service/test/001.mp3'
+  // Запустим воспроизведение аудио
+  player.play()
+}
+```
+
+### `name` <decl type="string" set get />
+
+Имя объекта плеера. Если не задано, по умолчанию используется имя приложения, создавшего плеер. Стоит отметить, что имя объекта плеера не является глобально уникальным, и его нельзя использовать для идентификации объекта плеера.
+
+### `icon` <decl type="string" set get />
+
+URL иконки объекта плеера. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径).
+
+### `mode` <decl type="string" set get />
+
+Режим воспроизведения. Функция, соответствующая данному свойству, должна быть реализована приложением плеера; сам объект плеера не обрабатывает её по умолчанию, а лишь предоставляет это свойство.
+
+- `sequential`: последовательное воспроизведение  
+- `random`: случайное воспроизведение  
+- `singleloop`: повтор одной композиции  
+- `listloop`: повтор списка  
+
+### `status` <decl type="string" get />
+
+Чтение текущего состояния воспроизведения:
+
+- `play`: состояние воспроизведения  
+- `pause`: состояние паузы  
+- `stop`: состояние остановки 
+- `ended`: состояние окончания воспроизведения  
+- `error`: состояние ошибки воспроизведения  
+
+### `duration` <decl type="number" get />
+
+Общая продолжительность аудио в секундах.
+
+### `position` <decl type="number" set get />
+
+Текущая временная позиция воспроизведения аудио в секундах.
+
+### `songAttribute` <decl type="songAttribute" set get />
+
+Объект атрибутов песни.
+
+::: details Сигнатура типа
+```ts
+type songAttribute = {
+  title: string; // Название песни
+  artist: string; // Имя исполнителя, может быть сольным артистом или группой
+  album: string; // Название альбома, которому принадлежит песня
+  year: string; // Год выпуска песни
+  genre: string; // Жанр песни, например, поп, рок, классика и т.д.
+  track: string; // Номер текущей песни в альбоме, например: "1/12" означает 1-я из 12
+  coverArt: string; // URL обложки песни
+  lyrics: string; // URL текста песни
+  comments: string; // Дополнительная информация, например, примечания об авторских правах
+}
+```
+:::
+
+Объект songAttribute, как и объект AudioPlayer, является Proxy-объектом, то есть его нельзя сериализовать и десериализовать с помощью JSON, а также ссылаться на него в реактивных фреймворках. Ниже приведен простой пример использования:
+
+```ts
+// Установка названия песни
+this.player.songAttribute.title = "Неизвестно"
+// Установка исполнителя песни
+this.player.songAttribute.artist = "Неизвестно"
+// Просмотр названия песни
+console.dir(this.player.songAttribute.title)
+```
+
+### `volume` <decl type="number" set get />
+
+Громкость текущего плеера, диапазон: [0.0, 1.0].
+
+### `nextAvailable` <decl type="bool" set get />
+
+Установка или запрос возможности переключения на следующий трек.
+
+### `prevAvailable` <decl type="bool" set get />
+
+Установка или запрос возможности переключения на предыдущий трек.
+
+### `play` <decl type="(): void" method />
+
+Начало воспроизведения аудио, указанного в свойстве src.
+
+- Если свойство src не было задано до вызова этого метода, воспроизведение завершится ошибкой и вызовет событие onerror;
+- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onplay или onerror для определения успешности или неуспешности воспроизведения. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
+
+Ниже приведен простой пример вызова интерфейса play():
+
+```ts
+import audiokit from '@system.audiokit'
+// Запрос активного в данный момент аудиоплеера в системе
+let player = audiokit.getActivePlayer()
+if (player != null) {
+  // Сначала остановим текущее воспроизводимое аудио
+  player.stop()
+  // Установим URL аудио для воспроизведения
+  player.src = 'https://www.rt-thread.com/service/test/001.mp3'
+  // Установим событие onplay
+  player.onplay = () => { console.dir("Начало воспроизведения") }
+  // Установим событие onerror
+  player.onerror = () => { console.dir("Ошибка воспроизведения") }
+  // Запустим воспроизведение аудио
+  player.play()
+}
+```
+
+### `pause` <decl type="(): void" method />
+
+Приостановка воспроизведения текущего аудио.
+
+- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onpause или onerror для определения успешности или неуспешности паузы. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
+
+### `stop` <decl type="(): void" method />
+
+Остановка воспроизведения аудио. Возобновить воспроизведение можно с помощью метода play.
+
+- Данный метод является синхронным интерфейсом. После его выполнения необходимо дождаться события onstop или onerror для определения успешности или неуспешности остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы.  
+
+### `release` <decl type="(): void" method />
+
+Освобождение аудиоресурсов.
+
+- Выполнение этого интерфейса остановит воспроизведение текущего аудио. Необходимо дождаться события onstop или onerror для определения успешности или неуспешности остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы.   
+
+### `next` <decl type="(): void" method />
+
+Уведомление приложения плеера о воспроизведении следующего трека. После выполнения этого интерфейса будет сгенерировано событие onnext, уведомляющее приложение плеера, подписанное на это событие, которое выполнит логику переключения песни.
+
+### `previous` <decl type="(): void" method />
+
+Уведомление приложения плеера о воспроизведении предыдущего трека. После выполнения этого интерфейса будет сгенерировано событие onprevious, уведомляющее приложение плеера, подписанное на это событие, которое выполнит логику переключения песни.
+
+### `requestFocus` <decl type="({acquireType: string，volumeType: string}): void" method />
+
+Запрос фокуса аудио. После выполнения этого интерфейса будет отправлено уведомление системному уровню о запросе или освобождении фокуса аудио, и системный уровень будет управлять логикой переключения и прерывания различных типов аудио.
+
+Параметр `acquireType` указывает тип запроса:
+- `gain`: запрос фокуса аудио
+- `loss`: освобождение фокуса аудио
+
+Параметр `volumeType` указывает тип аудио:
+- `system`: системные подсказки
+- `media`: медиамузыка
+- `tts`: голосовое вещание
+
+Следующий пример демонстрирует метод запроса фокуса аудио с помощью функции `requestFocus`:
+``` ts
+import audiokit from '@system.audiokit'
+// Запрос активного в данный момент аудиоплеера в системе
+let player = audiokit.getActivePlayer()
+if (player != null) {
+  // Получить фокус аудио типа "медиамузыка"
+  player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
+}
+```
+
+### `releaseFocus` <decl type="(): void" method />
+
+Освобождение фокуса аудио. После выполнения этого интерфейса будет отправлено уведомление системному уровню об освобождении фокуса аудио, и системный уровень будет управлять логикой переключения и прерывания различных типов аудио.
+
+### `onplay` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном запуске воспроизведения аудио (play).
+
+### `onpause` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешной приостановке аудио (pause).
+
+### `onstop` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешной остановке аудио (stop).
+
+### `onended` <decl type="?: () => void" set />
+
+Событие обратного вызова по окончании воспроизведения аудио.
+
+### `onerror` <decl type="?: () => void" set />
+
+Событие обратного вызова при возникновении ошибки во время выполнения интерфейсов `play`, `pause`, `stop`, `position` и др. При возникновении ошибки соответствующие события вроде onplay вызываться не будут.
+
+### `ontimeupdate` <decl type="?: () => void" set />
+
+Событие обратного вызова, которое срабатывает при обновлении свойства position. Это событие срабатывает только тогда, когда приложение находится на переднем плане, и прекращает генерироваться, когда приложение уходит в фоновый режим.
+
+### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
+
+Функция обратного вызова при возникновении события прерывания аудио. Уведомление о временном или полном прерывании, когда текущее аудио вытесняется аудио того же или другого типа.
+
+Параметр `interruptHint` параметра `action` указывает тип события прерывания:
+- `1`: короткое прерывание (может быть восстановлено автоматически, например, прерывание музыки звонком)
+- `2`: полное прерывание (не может быть восстановлено автоматически, например, плеер NetEase прерывается приложением Himalaya)
+
+Следующий пример демонстрирует метод регистрации обратного вызова `oninterrupt`, который будет вызываться при возникновении события:
+``` js
+player.oninterrupt = (action) => {
+  console.log(action.interruptHint)
+}
+```
+
+### `onnext` <decl type="?: () => void" set />
+
+Событие обратного вызова при необходимости воспроизведения следующего трека.
+
+### `onprevious` <decl type="?: () => void" set />
+
+Событие обратного вызова при необходимости воспроизведения предыдущего трека.
+
+### `onrequestplay` <decl type="?: () => void" set />
+
+Событие обратного вызова, которое срабатывает, когда системному уровню требуется запустить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику запуска воспроизведения.
+
+### `onrequestpause` <decl type="?: () => void" set />
+
+Событие обратного вызова, которое срабатывает, когда системному уровню требуется приостановить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику приостановки воспроизведения.
+
+### `onrequeststop` <decl type="?: () => void" set />
+
+Событие обратного вызова, которое срабатывает, когда системному уровню требуется остановить воспроизведение, уведомляя JS-приложение о необходимости выполнить логику остановки воспроизведения.
+
+### `onsongattribute` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении объекта атрибутов песни.
+
+### `onposition` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном выполнении установки текущей временной позиции воспроизведения аудио с помощью метода `position`.
+
+### `onrequestfocus` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном запросе фокуса аудио.
+
+### `onreleasefocus` <decl type="?: () => void" set />
+
+Событие обратного вызова при успешном освобождении фокуса аудио.
+
+### `onmodechanged` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении режима воспроизведения.
+
+### `onvolumechange` <decl type="?: () => void" set />
+
+Событие обратного вызова при изменении громкости плеера.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-geolocation.md
+
+# Географическое положение
+
+## Импорт модуля
+
+```js
+import geolocation from '@system.geolocation';
+```
+
+Разработчикам необходимо запросить разрешение приложения на доступ к `watch.permission.LOCATION` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
+
+## Определение интерфейсов
+
+### `getLocation` 
+<decl method><pre>
+(options: {
+  mode?: string
+  timeout?: number
+}): Promise&lt;Location>
+</pre></decl>
+
+Однократно получает текущие географические координаты (широту и долготу) и возвращает асинхронную [информацию о местоположении](#location).
+
+Описание параметров `options`:
+- `mode` : указание точности позиционирования: `fine` — точное позиционирование, `coarse` — приблизительное позиционирование. Значение по умолчанию: `coarse`.
+- `timeout` : таймаут определения местоположения в миллисекундах (`ms`). Значение по умолчанию: `30000`.
+
+### `subscribe` <decl type="(callback: (location: Location) => void): number" method/>
+
+Подписка на изменение местоположения. Параметр `callback` принимает [информацию о местоположении](#location). Метод возвращает ID, который можно использовать в методе [`unsubscribe()`](#unsubscribe) для отмены подписки.
+
+### `unsubscribe` <decl type="(subscribeID: number): void" method/>
+
+Отмена подписки на изменение местоположения.
+
+## Определение типов
+
+### `Location`
+
+Используется для представления данных о местоположении.
+
+```ts
+type Location = {
+  code: number; // Код состояния позиционирования, указывает, действительна ли текущая информация о местоположении
+  msg: string; // Сообщение об ошибке позиционирования
+  data: {
+    // Данные о местоположении
+    longitude: number; // Долгота
+    latitude: number; // Широта
+    coordType: string; // Тип системы координат, например 'WGS84', 'GCJ02' и т.д.
+  };
+};
+```
+
+Коды состояния позиционирования для поля `code`:
+
+- `200`: текущая информация о местоположении действительна;
+- `1002`: телефон в данный момент не подключен к сети Bluetooth
+- `1300`: телефон не может получить службу геолокации
+- `1301`: службы геолокации на телефоне не включены
+- `1302`: приложению не предоставлено разрешение на геолокацию
+- `1399`: неизвестная ошибка
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-calendar.md
+
+# Календарь
+
+## Импорт модуля
+
+``` js
+import calendar from '@system.calendar'
+```
+
+## Определение интерфейсов
+
+### `getLunar` <decl method type="(date: Date): LunarDate" />
+
+Получение информации о дате по лунному календарю для объекта `Date`. Возвращает описание даты по лунному календарю типа [`LunarDate`](#lunardate).
+
+### `getLunar` <decl method type="(year: number, month: number, day: number): LunarDate" />
+
+Получение информации по лунному календарю для указанного года, месяца и дня григорианского календаря. Возвращает описание даты по лунному календарю типа [`LunarDate`](#lunardate). Параметры имеют следующие значения:
+- `year`: полный номер года, например `2024`;
+- `month`: номер месяца, начиная с `0` (ноябрь/12-й месяц имеет номер $11$);
+- `day`: номер дня, начиная с `1`.
+
+## Определение типов
+
+### `LunarDate`
+
+``` ts
+type LunarDate = {
+  month: string,    // Название месяца по лунному календарю
+  day: string,      // Название дня по лунному календарю
+  festival?: string // Название праздника, может быть не определено
+}
+```
+
+- `month`: название месяца по лунному календарю, например `'正月'` (первый месяц), `'二月'` (второй месяц).
+- `day`: название дня по лунному календарю, например `'初一'` (первый день лунного месяца), `'十五'` (пятнадцатый день).
+- `festival`: название праздника; если праздника нет, свойство не определено.
+
+============================================================
 FILE_PATH: src/transl/RU/api/system-router.md
 
 # Маршрутизация страниц (Page Routing)
@@ -2914,29 +3440,1192 @@ export default {
 :::
 
 ============================================================
-FILE_PATH: src/transl/RU/api/system-configuration.md
+FILE_PATH: src/transl/RU/api/system-prompt.md
 
-# Конфигурация приложения
+# В팝-ап окно (Toast/Popup)
 
 ## Импорт модуля
 
-```js
-import configuration from '@system.configuration'
+``` js
+import prompt from '@system.prompt'
 ```
 
 ## Определение интерфейсов
 
-### `getLocale`
+#### `showToast`
 <decl method><pre>
-(): {
-  language: string,
-  countryOrRegion: string,
-}
+(options: {
+  message: string,
+  duration?: number,
+  important?: boolean
+}): void
 </pre></decl>
 
-Получает текущую локаль приложения. По умолчанию используется системная локаль, которая может изменяться при изменении настроек или системного языка.
- - `language` указывает текущий язык, например 'zh', 'en' и т. д.
- - `countryOrRegion` указывает текущую страну или регион, например 'CN', 'US' и т. д.
+Отображает текстовое всплывающее окно (toast), которое располагается на верхнем уровне интерфейса. В интерфейсе одновременно отображается только один экземпляр toast; если имеется несколько сообщений, они будут выводиться в очередь по порядку.
+
+Описание полей параметра `options`:
+- `message`: текст, который необходимо отобразить.
+- `duration`: длительность отображения toast в миллисекундах. По истечении этого времени toast автоматически скрывается.
+- `important`: является ли toast важным, по умолчанию `false`. Если установлено значение `true`, разрешается отображение этого toast, когда приложение находится в фоновом режиме.
+
+Стиль отображения toast (шрифт, цвет и т. д.) определяется прошивкой и не может быть изменен в приложении. Длительность отображения toast также ограничена и составляет от $200$ до $5000$ миллисекунд.
+
+#### `showPopup` <decl type="(options: { uri: string, params?: Object }): Promise<any>" method />
+
+Отображает плавающее окно страницы. Описание полей параметра `options`:
+- `uri`: имя целевой страницы, которое должно быть зарегистрировано в секции `router` файла `manifest.json`.
+- `params`: данные, которые необходимо передать при переходе. Свойства параметра `params` заменят значения свойств `data` целевой страницы.
+
+Плавающая страница — это системное всплывающее окно (подобное toast или диалоговому окну), но оно представляет собой полнофункциональную страницу с максимальными возможностями настройки. В отличие от обычных страниц, плавающая страница отображается в системном стеке плавающих страниц, а не в стеке страниц самого приложения. Поэтому такие API механизма [маршрутизации страниц](api/system-router), как `router.back()`, не могут управлять плавающей страницей. Чтобы закрыть плавающую страницу, вы можете использовать метод [`router.close()`](system-router.md#close).
+
+Уровень отображения всплывающего окна выше, чем у приложения, поэтому плавающая страница будет отображаться поверх страниц всех приложений. Все приложения используют один и тот же стек плавающих страниц. Уровень отображения плавающих страниц определяется порядком их появления, то есть страницы, появившиеся раньше, находятся на верхнем уровне. Уровень отображения плавающих страниц совпадает с диалоговыми окнами и ниже, чем у toast.
+
+Как и `router.push()`, метод `showPopup()` возвращает объект Promise, который разрешается после закрытия плавающей страницы и возвращает пользовательский результат. Подробнее см. в разделах [`router.push()`](system-router.md#push) и [`router.close()`](system-router.md#close).
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-launch.md
+
+# Переход между приложениями
+
+## Импорт модуля
+
+``` js
+import launch from '@system.launch'
+```
+
+## Определение интерфейсов
+
+### `launch` <decl type="(app: string): Promise<bool>" method/>
+
+Запускает указанное приложение и переводит его на передний план. `app` — это строка с идентификатором уже установленного приложения. Возвращаемый Promise указывает, успешно ли загружено приложение.
+
+### `inactive` <decl type="(app?: string): Promise<void>" method/>
+
+Переводит приложение в фоновый режим. `app` — это ID запущенного приложения; если параметр не указан, в фоновый режим переводится текущее приложение. В фоновый режим могут переводиться только приложения, находящиеся на переднем плане.
+
+### `exit` <decl type="(app?: string): Promise<void>" method />
+
+Завершает работу приложения. Параметр `app` представляет собой ID запущенного приложения; если параметр не указан, текущее приложение закрывается.
+
+### `getRunning` <decl type="(): string[]" method />
+
+Получает список имен пакетов запущенных приложений, включая те, которые находятся в фоновом режиме.
+
+============================================================
+FILE_PATH: src/transl/RU/api/console.md
+
+# Модуль Console
+
+Функционал модуля `console` аналогичен объекту `console` в браузере и используется для логирования. Данный модуль можно использовать напрямую без предварительного импорта, все его свойства привязаны к глобальной переменной `console`, например:
+``` js
+console.log('Hello world!')
+```
+
+
+## Определение интерфейсов
+
+### `backtrace` <decl type="boolean" />
+
+Если установить `backtrace` в значение `true`, все вызовы логирования будут содержать информацию о стеке вызовов. По умолчанию значение равно `false`. В этом случае стек вызовов выводят только `console.warn()` и более высокие уровни API.
+
+### `log` <decl type="(...data: any[]): void" method />
+
+### `dir` <decl type="(...data: any[]): void" method />
+
+### `debug` <decl type="(...data: any[]): void" method />
+
+### `info` <decl type="(...data: any[]): void" method />
+
+### `warn` <decl type="(...data: any[]): void" method />
+
+### `error` <decl type="(...data: any[]): void" method />
+
+## Уровни фильтрации логов
+
+Уровень фильтрации логов модуля `console` определяется низкоуровневым механизмом фильтрации системы и не может быть настроен в коде JavaScript.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-internal.md
+
+# Внутренние интерфейсы
+
+Модуль `system.internal` предоставляет некоторые внутренние интерфейсы для использования системой. Этот модуль может применяться только в приложении launcher.
+
+## Импорт модуля
+
+``` js
+import internal from '@system.internal'
+```
+
+## API
+
+### `globalComponent` <decl type="(name: string, uri: string): void" method />
+
+Регистрирует [глобальный компонент](/framework/component/README.md#全局组件). Глобальные компоненты могут импортироваться во всех приложениях. Параметр `name` — это имя глобального компонента, а `uri` — путь или URI UX-файла глобального компонента относительно текущего исходного файла. Например:
+``` js
+internal.globalComponent('TopBar', '/global/TopBar.ux')
+```
+После этого глобальный компонент `TopBar` можно импортировать во всех приложениях с помощью `<import name="TopBar" />`.
+
+Метод `globalComponent()` лучше всего выполнять на этапе выполнения `app.js` приложения launcher, чтобы зарегистрировать информацию о глобальном компоненте до загрузки любого интерфейса.
+
+### `setDefaultKeyHandler` <decl type="(handler: (event: KeyEvent) => void): void" method />
+
+Регистрирует системный обработчик нажатий клавиш по умолчанию. Параметр `handler` представляет собой функцию обратного вызова. Прототип типа `KeyEvent`:
+``` ts
+interface KeyEvent  {
+  type: 'keydown' | 'keyup', // Тип события нажатия клавиши
+  key: string, // Имя клавиши
+  timestamp: number, // Временная метка (timestamp) отправки события нажатия клавиши в миллисекундах
+}
+```
+Обработчик нажатий клавиш по умолчанию может быть зарегистрирован только один раз, так как многократная регистрация перезапишет предыдущие действия.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-battery.md
+
+# 电池状态
+
+## 导入模块
+
+``` js
+import battery from '@system.battery'
+```
+
+## API
+
+### `getStatus` <decl type="(): Promise<{charge: ChargeState, level: number}>" method />
+
+获取电池的充电状态 `charge` （[`ChargeState`](#chargestate) 类型）和电量值 `level`。电量值是 $[0, 100]$ 间的整数。
+
+## 类型
+
+### `ChargeState`
+
+`ChargeState` 枚举所有的电池充电状态，其定义如下：
+``` ts
+type ChargeState = 'charging' | 'discharging' | 'not-charging' | 'full'
+```
+各个值的含义为：
+- `'charging'`：电池处于充电状态；
+- `'discharging'`：断开充电状态；
+- `'not-charging'`：未处于充电状态；
+- `'full'`：电池已经充满电。
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-device.md
+
+# Информация об устройстве
+
+## Импорт модуля
+
+``` js
+import device from '@system.device'
+```
+
+Разработчикам необходимо заявить о доступе приложения к权限 `watch.permission.DEVICE_INFO` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
+
+## Определение интерфейсов
+
+### `getInfo`
+<decl method><pre>
+(): Promise<{
+  brand: string,
+  manufacturer: string,
+  model: string,
+  product: string,
+  osType: string,
+  osVersionName: string,
+  platformVersionName: string,
+  platformVersionCode: number,
+  language: string,
+  region: string,
+  deviceName: string
+}>
+</pre></decl>
+
+Получение базовой информации об устройстве. Значения полей возвращаемого объекта:
+- `brand`: бренд устройства.
+- `manufacturer`: производитель устройства.
+- `model`: модель устройства.
+- `product`: кодовое имя устройства.
+- `osType`: название операционной системы.
+- `osVersionName`: название версии операционной системы.
+- `platformVersionName`: название версии платформы выполнения.
+- `platformVersionCode`: номер версии платформы выполнения.
+- `language`: системный язык.
+- `region`: системный регион.
+- `deviceName`: имя устройства.
+
+### `getId`
+<decl method><pre>
+(types: ('device' | 'mac' | 'user' | 'advertising')[])
+: Promise<{
+  device?: string,
+  mac?: string,
+  user?: string,
+  advertising?: string
+}>
+</pre></decl>
+
+Пакетное получение информации об идентификаторах устройства. Параметр `types` задает категории запрашиваемой информации и представляет собой объект Array, состоящий из элементов `'device'`, `'mac'`, `'user'` или `'advertising'`. В зависимости от значений `types`, поля возвращаемого объекта имеют следующие значения:
+- `type`: .
+- `device`: уникальный идентификатор устройства, присутствует только в том случае, если `types` содержит элемент `'device'`.
+- `mac`: MAC-адрес устройства, присутствует только в том случае, если `types` содержит элемент `'mac'`.
+- `user`: уникальный идентификатор пользователя, присутствует только в том случае, если `types` содержит элемент `'user'`.
+- `advertising`: уникальный рекламный идентификатор, присутствует только в том случае, если `types` содержит элемент `'advertising'`.
+
+### `getDeviceId` <decl type="(): Promise<{deviceId: string}>" method />
+
+Получение уникального идентификатора устройства.
+
+### `getSerial` <decl type="(): Promise<{serial: string}>" method />
+
+Получение серийного номера устройства.
+
+### `getTotalStorage` <decl type="(): Promise<{totalStorage: number}>" method />
+
+Получение общего объема памяти в байтах.
+
+### `getAvailableStorage` <decl type="(): Promise<{availableStorage: number}>" method />
+
+Получение доступного объема памяти в байтах.
+
+::: tip
+Значения, возвращаемые методами `getTotalStorage()` и `getAvailableStorage()` на эмуляторе, могут быть неточными и не изменяются по мере изменения свободного пространства памяти.
+:::
+
+### `screenWidth` <decl type="number" get />
+
+Ширина экрана устройства в пикселях.
+
+### `screenHeight` <decl type="number" get />
+
+Высота экрана устройства в пикселях.
+
+### `screenDensity` <decl type="number" get />
+
+Плотность пикселей экрана устройства в $\rm PPI$.
+
+### `screenShape` <decl type="'rect' | 'circle'" get />
+
+Форма экрана устройства, возможные значения:
+- `'rect'`: устройство имеет прямоугольный экран.
+- `'circle'`: устройство имеет круглый экран.
+
+### `memoryProfile` <decl type="number" get />
+
+Получение свойства профиля памяти устройства. Это свойство представляет собой JavaScript API версию свойства медиа-запроса [`memory-profile`](/framework/render/media-query.md#memory-profile), подробности см. в документации по медиа-запросам.
+
+В отличие от свойства медиа-запроса `memory-profile`, значение свойства `memoryProfile` представляет собой целое число, а единица измерения фиксирована в $\rm KiB$.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-cipher.md
+
+# Алгоритмы шифрования
+
+## Импорт модуля
+
+``` js
+import cipher from '@system.cipher'
+```
+
+## API
+
+### `aes`
+<decl method><pre>
+(options: {
+  action: string,
+  text: string,
+  key: string,
+  transformation?: string,
+  iv?: string,
+  ivOffset?: number,
+  ivLen?: number
+  }): Promise&lt;{ text: string }>
+</pre></decl>
+
+Шифрование и дешифрование `aes`. Описание полей объекта `options`:
+- `action`：тип операции, два возможных значения: `'encrypt'` — шифрование, `'decrypt'` — дешифрование;
+- `text`：текстовое содержимое для шифрования или дешифрования. Текст для шифрования должен быть обычным текстом, а текст для дешифрования должен представлять собой бинарное значение, закодированное в формате `base64`;
+- `key`：ключ, используемый для шифрования или дешифрования, представленный в виде строки, сгенерированной после кодирования в `base64`. До дешифрования в формате `base64` длина ключа должна быть кратна $16$ байтам;
+- `transformation`：режим шифрования алгоритма `AES` (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) и элемент дополнения (padding), по умолчанию `'AES/CBC/PKCS5Padding'`. Возможные элементы дополнения AES:
+  - `'PKCS5Padding'`
+  - `'PKCS7Padding'`
+  - `'NoPadding'`
+  - `'OneAndZerosPadding'`
+  - `'ZerosAndLenPadding'`
+  - `'ZerosPadding'` 
+- `iv`：вектор инициализации для шифрования и дешифрования AES, строка в кодировке Base64, по умолчанию равен значению поля `key`;
+- `ivOffset`：мещение вектора инициализации для шифрования и дешифрования AES, по умолчанию $0$;
+- `ivLen`：длина вектора инициализации AES в байтах, по умолчанию $16$;
+
+::: details Пример кода
+
+``` js
+let signKey = "TkQRXv9xfAU65sxGmx4Xz2tQP7fwwdyxAGIZ9HMtc+c="
+
+async function AesTest() {
+  const encrypt = await cipher.aes({
+    action: "encrypt",
+    text: "this is a test project!",
+    key: signKey,
+    iv: "MTIzNDU2NzgxMjM0NTY3OA==",
+    transformation:"AES/CBC/ZerosAndLenPadding",
+    ivOffset: 0,
+    ivLen: 16
+  })
+  console.log(`encrypt text: ${encrypt.text}`)
+
+  const decrypt = await cipher.aes({
+    action: "decrypt",
+    text: encrypt.text,
+    key: signKey,
+    iv: "MTIzNDU2NzgxMjM0NTY3OA==",
+    transformation:"AES/CBC/ZerosAndLenPadding",
+    ivOffset: 0,
+    ivLen: 16
+  })
+  console.log(`decrypto text: ${decrypt.text}`)
+}
+
+AesTest() // Вывод зашифрованного и расшифрованного текста в консоль
+// encrypt text: yI4dWJzQNCQfXq5P8du1dtYWZuBvbl9F9Vh15Fh9qjg=
+// decrypto text: this is a test project!
+```
+:::
+
+### `rsa`
+<decl method><pre>
+(options: {
+  action: string,
+  text: string,
+  key: string,
+  transformation?: string
+}): Promise&lt;{ text: string }>
+</pre></decl>
+
+Шифрование и дешифрование `rsa`. Описание полей объекта `options`:
+- `action`：тип операции, два возможных значения: `'encrypt'` — шифрование, `'decrypt'` — дешифрование;
+- `text`：текстовое содержимое для шифрования или дешифрования. Текст для дешифрования должен представлять собой бинарное значение, закодированное в формате Base64;
+- `key`：ключ `RSA`, строка, сгенерированная после кодирования в `base64`. При шифровании `key` является публичным ключом, при дешифровании — приватным ключом;
+- `transformation`：элемент дополнения алгоритма RSA, по умолчанию `RSA/None/OAEPwithSHA-256andMGF1Padding`. Доступные элементы дополнения RSA:
+  - `'PKCS_v15andMGF1Padding'`
+  - `'OAEPwithMD5andMGF1Padding'`
+  - `'OAEPwithSHA-1andMGF1Padding'`
+  - `'OAEPwithSHA-256andMGF1Padding'`
+
+::: details Пример кода
+``` js
+let publicKey =
+  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCirfSt9f49F/BtPqextDlyoUEQ' +
+  'qN+NUNxkYB5DY4FmJuI0gQSaK8hlGvnoA5T/seTGylHn95/PPTl5hW+riYtWaKfM' +
+  'CXI2scstXA0S5vcYfc9917tRsrFzrDfJW+WD/HmmcvgI6rcbivokDikep3gVX0df' +
+  'ktYtsAs158kMs4bBpwIDAQAB'
+
+let privateKey = 
+  'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKKt9K31/j0X8G0+' +
+  'p7G0OXKhQRCo341Q3GRgHkNjgWYm4jSBBJoryGUa+egDlP+x5MbKUef3n889OXmF' +
+  'b6uJi1Zop8wJcjaxyy1cDRLm9xh9z33Xu1GysXOsN8lb5YP8eaZy+AjqtxuK+iQO' +
+  'KR6neBVfR1+S1i2wCzXnyQyzhsGnAgMBAAECgYAuH23w6H7FqYTkJFB9RKDJDEkb' +
+  'RRXkxhlGaC4MYyjr4nhd9Hpuj51IdSaHjoRvHmvDpNcmEoH/ytcBykBH/T5As68M' +
+  'L1OmzuJsD3BYMZpOOSFC9m7o6VMRf/T/ZTG6EDMtQekxlBV66QpiFmhQMjDs3jJY' +
+  'TyR3OnZN9BWNBNotWQJBAOnLUpMT53HbFtw9vCRtVgAJ8JFjL4ZzYzrHj4mloKF3' +
+  'P/r6faYUjgULoaHiD+BZB/Avru2h74Ghhr26CD3gMR0CQQCyIXzjSCrQiyCEdg1I' +
+  '//IWLAALsfVITrlCN0rVeMkjTbc0KFEDUKG9y6MGAGX4AJNnos7y+zLpi6PcgwlU' +
+  'zWaTAkBx5+fRVK88n5uhrkpODR8LYcxdaU+sV+eOqc/bJmD+ihUX+JbjJbyT5LjZ' +
+  'IETP71CYywKVMIJ6S/JT2aFOVD5ZAkEAsfqFtu2fYbjw54iwY3TfpEmYThcj9Xg6' +
+  '4C8wxTQm+/AlkaaKs144DNPPciqpt26T2WOxlNNqHjFYqvX+N832owJAaM5d4x2a' +
+  'SDfC5GQFNfZ3WjATXkDE86q3m/88RBFFy8fWByyGiXtp4z5LCtMzI63X3ao0asVK' +
+  'mjZxB+T+lMqa3w=='
+
+async function rsaTest() {
+  const res = await cipher.rsa({
+    action: "encrypt",
+    text: "this is a Rsa test.",
+    key: publicKey,
+    transformation: "RSA/None/OAEPwithSHA-256andMGF1Padding"
+  })
+  console.log(`encrypt text: ${res.text}`)
+
+  const decrypt = await cipher.rsa({
+    action: "decrypt",
+    text: res.text,
+    key: privateKey,
+    transformation: "RSA/None/OAEPwithSHA-256andMGF1Padding"
+  })
+  console.log(`decrypt text: ${decrypt.text}`)
+}
+
+rsaTest() // Вывод примера результатов шифрования и дешифрования в консоль
+// encrypt text: FF+4R3iJ9pjeozZ6/Oulz9LUBH/uGQbIesJ7JbYRWvxGIHpJKNiEB+4MT/JcKs8ddN/ZQ4ts+YWMgUeglRBugRx+T4kqq0rKBdQrYdiMP58deCViSJjXJS+joPppwLDPL1Lg0VxpW89B+gA1jfC+9N8tvEHPhcX+nF8uAKRcW0M=
+// decrypt text: this is a Rsa test.
+```
+:::
+
+### `sign`
+<decl method><pre>
+(options: {
+  text: string,
+  key: string,
+  algorithm?: string,
+}): Promise&lt;{ sign: string }>
+</pre></decl>
+
+Создание цифровой подписи `sign`. Описание полей объекта `options`:
+- `text`：содержимое для подписи;
+- `key`：приватный ключ RSA;
+- `algorithm`：алгоритм подписи, по умолчанию `'SHA256withRSA'`. Доступные алгоритмы подписи:
+  - `'MD5withRSA'`
+  - `'SHA1withRSA'`
+  - `'SHA256withRSA'`
+  - `'SHA512withRSA'`
+
+::: details Пример кода
+
+``` js
+let signKey1 = "-----BEGIN RSA PRIVATE KEY-----\n" +
+  "MIIEpAIBAAKCAQEA5hoGkpvqxJdssvqAYuvCWdTRrOdzZyx/ZyMev5Qyt2JKLy1C\n" +
+  "7DuKrFGF5T5BDxN81o/OK+AQ6G1ASmwWfv5C1mk7sv6/glibPt9Gyr1OFMxviauy\n" +
+  "ZMF8sgHVGkFyy1GsCsaM9anT1OEPoNeqrTHt+xB3Pq6FdH9RLMVbY0QNem5zv816\n" +
+  "Hb6AJvMSnbGqMdd9fI1ARithrqnr9p+achP+Hc2Pj61PRviKJpFGLzBrU1BgBEbN\n" +
+  "hscGRPebn4kTSy8flYau9lnDyLs5yyy0MHKBhot5Ja3tWTKhaqymFyJL2K6gE6Xn\n" +
+  "bDAT6YFvo1TE9R7r9y+8prOR8oznJP19yxEWCQIDAQABAoIBAEbolkXvznUuxMyS\n" +
+  "7aWOSaItN0A1Qxb0W36JEByxqr9ghsPrCsiJwL5BkSWH/byLoNjuD/btYch+gmVs\n" +
+  "0bHo4Of6He+XGaUtcQn6/HHVzI4UQfsG8j6ica7ZabZhnOKTFJVtglriLulXQd2r\n" +
+  "GGmvDUtlU5n5Zh70bSuC1hrNCepEMbJWqRZ4dvrdVqZ5RtARd3PYUAiPzwisQF9q\n" +
+  "ZPAayyqmDUBReXS71RKRGn47RST+d50fZ3USP1jTAXMxf+X41ml3l7G1zd90IsWL\n" +
+  "aIeHIaxi8BVkQogxqfZH8PAzmqtgLEWDfMgWU879qicBW4FB/PoBkP0P6Qlis/50\n" +
+  "yY/80UECgYEA+zAkOshLUSJ4MDRMpkpf1WIZABH2lZhhIFw2A/VYnrmCJj3kxJYJ\n" +
+  "ELNm82nFVIJGadSarOpownKUteHcJ7Zzv65WoEEZwZBO453I9tL6Fbh64hPp8VdB\n" +
+  "4WMvK+0XqhzBL67ehghFNXc9ud4ZIQOXz6KUASxb+Iz0L02iqWIj+RUCgYEA6oJ5\n" +
+  "Sh6Ez1lnWDKI5ZEQ1jn+kgcVHObV1o8sB5/5V0/Lihgma+Lpkei333sQsYImWQMD\n" +
+  "8BT4JMCpPph5AwM0ZehUF7d2RCtQ+r0A/pUyiXjtMYHDrmAX94zDtf35QUJOL17z\n" +
+  "don0weI/vZ71VYX3saa3EvVJLERwpSr0TswfPiUCgYEArLo8D5fwAsjbMPqlwqve\n" +
+  "HpOocV3o3JG+KEyAcFRkLjGOh9GD4JLzhOJ45uVS5nv3A4tJGaLPivbTwAaiJ0TV\n" +
+  "b3fo5aYemfYr6WV07hXCFvGWvqPG+UhxaxWTOHd/EGFZjvqG1lAVl2B5t7g8O3GH\n" +
+  "ESbQ88WXMOFsgKK4OhXceskCgYEA0W/JJvruncg41bn8LRpLsSeGRaBxqKg33jFr\n" +
+  "nzuuEd4/54r99WhoNVljrgFYvU+BNAnPYIE5xIkUHcVKffhEuaauQ6gjxWnyHpzh\n" +
+  "4Hwa8E/Bdm9v9bH4dauPtl+mVjQDY6cnRHyczPNk/dKTRNgqiMxdwF60BQbym3Ar\n" +
+  "VJxUYskCgYA6HWzf+9uHS98Hhr9zW0akjSZbcZclKR53wFMOjE1mFIxp/dC+d6mf\n" +
+  "uVcUDTyo/LygzRBA5sd1euBhm5lXPyEHxIHZvwfBhIZWKlCZWlio1UvDbUp1f32u\n" +
+  "JMT6q3KeJFJXp7nf5YmrPOKlh1Lm53hiXLSKF/q6Lcnn2lzRD2JDFw==\n" +
+  "-----END RSA PRIVATE KEY-----"
+
+async function signTest() {
+  let res = await cipher.sign({
+    text: "this is a sign test project.",
+    key: signKey1
+  })
+
+  console.log(`sign text: ${res.sign}`)
+}
+
+signTest() 
+
+```
+:::
+
+### `hash`
+<decl method><pre>
+(options: {
+  data: string | ArrayBuffer,
+  algorithm: string,
+  encode?: string
+}): Promise&lt;string | ArrayBuffer>
+</pre></decl>
+
+Хеширование `hash`. Описание полей объекта `options`:
+- `data`：исходные данные для генерации дайджеста;
+- `algorithm`：алгоритм хеширования, доступные значения: `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
+- `encode`：кодирование и тип возвращаемых данных, возможные значения:
+  - `'hex'`：значение по умолчанию, возвращает строку в шестнадцатеричной (hex) кодировке;
+  - `'base64'`：возвращает строку результата хеширования, закодированную в Base64;
+  - `'arraybuffer'`：возвращает данные типа ArrayBuffer;
+
+::: details Пример кода
+
+``` js
+async function md5Test(){
+  const res = await cipher.hash({
+    algorithm: 'md5',
+    data: 'hello'
+  })
+  console.log(res)
+}
+md5Test() // Вывод сгенерированного дайджеста в консоль
+// output：5d41402abc4b2a76b9719d911017c592
+```
+:::
+
+### `hmac`
+<decl method><pre>
+(options: {
+  data: string | ArrayBuffer,
+  algorithm: string,
+  key: string | ArrayBuffer,
+  encode?: string
+}): Promise&lt;string | ArrayBuffer>
+</pre></decl>
+
+Генерация кода аутентификации сообщения (MAC) с использованием ключа по алгоритму HMAC. Описание полей объекта `options`:
+- `data`：исходные данные для генерации дайджеста;
+- `algorithm`：алгоритм хеширования, доступны значения `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
+- `key`：ключ;
+- `encode`：кодирование и тип возвращаемых данных, возможные значения:
+  - `'hex'`：значение по умолчанию, возвращает строку в шестнадцатеричной (hex) кодировке;
+  - `'base64'`：возвращает строку результата хеширования, закодированную в Base64;
+  - `'arraybuffer'`：возвращает данные типа `ArrayBuffer`;
+
+::: details Пример кода
+
+``` js
+async function hmacTest() {
+  let res = await cipher.hmac({
+    data: 'hello',
+    algorithm: 'sha1',
+    key: '1234567890'
+  })
+  console.log(res)
+}
+hmacTest() // Вывод сгенерированного дайджеста в консоль
+// output：6fce0a55cf8bae80e2cf479b50035f773491c5ad
+```
+:::
+
+### `base64Encode` <decl type="(data: string | ArrayBuffer): Promise&lt;string>" method />
+
+Кодирование входных данных в формат Base64.
+
+### `base64Decode` <decl type="(data: string | ArrayBuffer): Promise&lt;ArrayBuffer>" method />
+
+Декодирование входных данных из формата Base64.
+
+::: details Пример кода
+
+``` js
+async function base64Test() {
+  const originalData = 'Hello, World!';
+  const encodedData = await cipher.base64Encode(originalData); // Кодирование данных
+
+  console.log('Encoded Data:', encodedData);
+
+  const decodedArrayBuffer = await cipher.base64Decode(encodedData); // Декодирование данных
+
+  const uint8Array = new Uint8Array(decodedArrayBuffer);
+  let decodedData = '';
+
+  for (let i = 0; i < uint8Array.length; i++) {
+    decodedData += String.fromCharCode(uint8Array[i]);
+  }
+
+  console.log('Decoded Data:', decodedData);
+}
+
+base64Test()  // Вывод результатов кодирования и декодирования
+// Encoded Data: SGVsbG8sIFdvcmxkIQ==
+// Decoded Data: Hello, World!
+```
+:::
+
+============================================================
+FILE_PATH: src/transl/RU/api/README.md
+
+# API
+
+Glyphix предоставляет полный набор исполняемых JavaScript API, включая такие API, аналогичные браузерному окружению, как [`setInterval`](timer.md) и [`console`](console.md), а также различные интерфейсы системных возможностей, необходимых для реализации работы приложения в целом.
+
+Однако, в отличие от браузерного окружения, Glyphix не предоставляет DOM-интерфейсы, поэтому здесь отсутствуют такие объекты, как `window`, `document`, а также невозможно выполнять какие-либо операции с DOM.
+
+## Асинхронные интерфейсы QuickApp (快应用)
+
+Glyphix поддерживает стандарт часов QuickApp, но мы в основном используем асинхронные интерфейсы в стиле Promise, а не в стиле функций обратного вызова (callback). Например, режим callback для интерфейса `file.readText()` в QuickApp для часов используется следующим образом:
+``` js
+import file from '@system.file'
+
+file.readText({
+  uri: 'internal://files/test.txt',
+  success(data) {
+    console.log(data)
+  },
+  fail(data, code) {
+    console.log(`read text failed: ${code}`)
+  }
+})
+```
+Однако в Glyphix обычно используется стиль Promise:
+``` js
+import file from '@system.file'
+
+// Предположим, что это происходит внутри какой-либо асинхронной функции
+try {
+  const content = await file.readText({ uri: 'internal://files/test.txt' })
+  console.log(content)
+} catch (e) {
+  console.error('read text read failed:', e)
+}
+```
+Поскольку API в стиле Promise больше соответствуют привычкам использования после стандарта ES6, в данной документации приводятся сигнатуры типов только для версий с Promise.
+
+### Promise против интерфейсов с callback
+
+Если не указано иное, все интерфейсы с типом возвращаемого значения `Promise<...>` поддерживают как стиль функций обратного вызова (для старых версий стандарта QuickApp), так и оба стиля асинхронных интерфейсов Promise. Асинхронные интерфейсы в стиле callback обычно имеют следующий тип:
+``` ts
+type CallbackAPI = (options: {
+  success: (data: any) => void,
+  fail: (data: any, code: number) => void,
+  complete: () => void,
+  // Другие параметры...
+}) => void
+```
+В то время как асинхронные интерфейсы в стиле Promise имеют следующий тип:
+``` ts
+type PromiseAPI = (options: any) => Promise<any>
+```
+
+Когда в параметре `options` присутствуют любые из свойств `success`, `fail` или `complete`, API автоматически использует стиль функции обратного вызова (без возвращаемого значения), в противном случае используется стиль с возвратом Promise.
+
+::: warning
+При использовании стиля функций обратного вызова асинхронный API ничего не возвращает, поэтому использование синтаксиса `await` невозможно. Поэтому убедитесь, что при использовании синтаксиса Promise/`await` вы не передаете никаких функций обратного вызова `success`, `fail` или `complete`.
+:::
+
+### Пример использования API
+
+На примере модуля [`system.file`](system-file.md): все функции одновременно поддерживают режимы асинхронного вызова как в стиле Promise, так и в стиле callback. В приведенном ниже фрагменте кода показано сравнение двух вариантов использования API.
+
+::: code-tabs#js
+
+@tab async/await
+
+``` js
+import file from '@system.file'
+
+// async/await по сути является синтаксическим сахаром для Promise
+async function readFile() {
+  let text = await file.readText({ uri: '/app.js' })
+  console.log(text)
+}
+
+readFile()
+```
+
+@tab Promise
+
+``` js
+import file from '@system.file'
+
+file.readText({ uri: '/app.js' })
+  .then(console.log) // Подсказка: типы console.log() и Promise.then() совпадают, использовать стрелочную функцию не нужно
+  .fail((error) => console.log(`${error.message}: ${error.code}`))
+```
+
+@tab callback
+
+``` js
+import file from '@system.file'
+
+file.readText({
+  uri: '/app.js',
+  success(data) {
+    console.log(data)
+  },
+  fail(msg, code) {
+    console.log(`${msg}: ${code}`)
+  },
+  complete() {
+    console.log("complete")
+  }
+})
+```
+
+:::
+
+В данной документации будут приведены типы API только в стиле Promise, а в примерах асинхронных операций будет использоваться исключительно синтаксис await/async.
+
+::: tip
+Разработчикам не рекомендуется дополнительно оборачивать API Glyphix, особенно вручную адаптировать их к стилю Promise из совместимости с callback-функциями. Такой подход требует написания избыточного кода и снижает производительность.
+:::
+
+## Интерфейсы подписки
+
+API подписок регистрируют функцию обратного вызова для определенного модуля вместо того, чтобы напрямую возвращать результат. В отличие от обычных асинхронных интерфейсов, функции обратного вызова подписки могут выполняться многократно. Все интерфейсы подписок поддерживают регистрацию нескольких функций обратного вызова подписки, возвращают ID подписки и предоставляют возможность отписки с помощью соответствующего интерфейса.
+
+В настоящее время Glyphix не поддерживает callback-функции `fail` для подписок в стиле QuickApp, однако при сбое подписки может напрямую выбрасывать исключение.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-fetch.md
+
+# Запрос данных fetch
+
+## Импорт модуля
+
+``` js
+import fetch from '@system.fetch'
+```
+
+## API
+
+### `fetch`
+<decl method><pre>
+(options: {
+  url: string,
+  method?: 'GET' | 'POST' | 'PUT',
+  header?: {[key: string]: string},
+  params?: {[key: string]: string | number},
+  data?: string | ArrayBuffer | {[key: string]: any},
+  responseType?: 'text' | 'json' | 'arraybuffer',
+  timeout?: number
+}): Promise<{
+  code: number,
+  headers: {[key: string]: string},
+  data: string | ArrayBuffer | any,
+}>
+</pre></decl>
+
+Инициирует асинхронный сетевой запрос данных. Назначение полей параметра `options`:
+- `url`: URL-адрес веб-сайта, к которому необходимо обратиться.
+- `method`: Поддерживаются значения `'GET'`, `'POST'` и `'PUT'`, по умолчанию — `'GET'`.
+- `header`: Объект, содержащий информацию о заголовках HTTP-запроса, ключи и значения — строки. Типичными полями заголовков HTTP могут быть `Authorization`, `Content-Type` и т. д.
+- `params`: Параметры запроса, все свойства которых будут добавлены к URL-адресу запроса.
+- `data`: Содержимое тела (body) в HTTP-запросе POST.
+- `responseType`: Тип данных ответа в HTTP-запросе, по умолчанию — `'text'`, может принимать следующие значения:
+  - `'text'`: Ответ возвращает текстовые данные, то есть свойство `data` возвращаемых данных имеет тип `string`.
+  - `'json'`: Ответ возвращает данные JSON, причем возвращаемое свойство `data` преобразует эти данные JSON в соответствующие значения JavaScript.
+  - `arraybuffer`: Ответ возвращает бинарные данные, то есть возвращаемые данные сохраняются в виде объекта `ArrayBuffer`.
+- `timeout`: Время ожидания ответа на запрос в миллисекундах, значение по умолчанию — $6000 \rm ms$.
+
+#### Параметр `data`
+
+`data` представляет собой тело запроса (body) и используется только в POST-запросах. Обычно оно имеет один из трех типов: строка, объект `ArrayBuffer` или объект JSON. Когда `data` является строкой или объектом `ArrayBuffer`, телом запроса будут соответственно текстовые или бинарные данные. Когда тело представляет собой объект JSON, оно сериализуется в текстовый формат. Формат сериализации определяется полем `Content-Type` метода запроса (параметр `method`):
+- Если `Content-Type` равен `application/json`, объект параметра `data` сериализуется в строку JSON и используется в качестве тела запроса;
+- в остальных случаях объект параметра `data` сериализуется в формат `application/x-www-form-urlencoded`.
+
+::: warning
+Многие HTTP API используют тела POST-запросов в формате JSON. Обратите внимание, что необходимо правильно установить заголовок `Content-Type` равным `application/json`. Подробности см. в этом [примере](#post-запрос-json-body).
+:::
+
+#### Возвращаемое значение
+
+Возвращает объект `Promise`, свойства значения которого после завершения запроса выглядят следующим образом:
+- [`code`](#code-код-ответа) — это код ответа сервера, код ответа при успешном запросе обычно равен `200`.
+- `header` — заголовки ответа сервера.
+- `data` — возвращаемое значение запрашиваемых данных, конкретное содержимое определяется параметром `options.responseType`.
+
+В случае сбоя запроса возвращаемый объект `Promise` будет отклонен (rejected).
+
+## Инструкции по использованию
+
+### `code` Код ответа
+
+Значения кодов ответа, возвращаемых сервером:
+- `200`: запрос выполнен успешно;
+- `1002`: ошибка проверки параметров;
+- `1005`: введенные параметры неполные;
+- `5000`: ошибка запроса, ошибка ответа;
+- `5001`: ошибка чтения буфера данных;
+- `5002`: ошибка запроса, ошибка ответа;
+- Другие: другие коды ответов HTTP/HTTPS, такие как `404` и т. д.
+
+Когда код ответа, возвращаемый [`fetch`](#fetch), равен `200`, это означает, что сетевой запрос прошел успешно; другие значения указывают на ошибку запроса.
+
+### Меры предосторожности
+
+## Примеры
+
+### GET-запрос
+
+Это пример базового GET-запроса:
+
+``` js
+const res = await fetch.fetch({
+  url: 'http://www.rt-thread.com/service/rt-thread.txt',
+  method: 'GET', // Поскольку режимом по умолчанию является GET, в данном случае method является необязательным
+  responseType: 'text'
+})
+console.log(`the status code of the response: ${res.code}`)
+console.log(`the data of the response: ${res.data}`)
+```
+
+### POST-запрос
+
+``` js
+const res = await fetch.fetch({
+  url: 'https://www.rt-thread.com/service/echo',
+  method: 'POST',
+  data: {
+    key1: 'hello',
+    key2: 'world'
+  },
+  responseType: 'text'
+})
+console.log(`the status code of the response: ${res.code}`)
+console.log(`the data of the response: ${res.data}`)
+```
+
+### POST-запрос (JSON Body)
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-compass.md
+
+# Компас
+
+Модуль `@system.compass` предоставляет доступ к датчику компаса устройства и позволяет получать информацию о направлении устройства относительно магнитного северного полюса Земли.
+
+## Импорт модуля
+
+``` js
+import compass from '@system.compass'
+```
+
+## Определение интерфейсов
+
+### `subscribe` <decl type="(callback: (data: Value) => void): number" method/>
+
+Подписка на изменение данных компаса. При изменении ориентации устройства функция обратного вызова вызывается автоматически. Функция обратного вызова `callback` принимает данные компаса типа [`Value`](#value).
+
+Возвращает идентификатор подписки, который используется для ее отмены.
+
+### `unsubscribe` <decl type="(subscribeId: number): void" method/>
+
+Отмена подписки на данные компаса. Параметр `subscribeId` — это идентификатор подписки, возвращаемый методом [`subscribe()`](#subscribe).
+
+Этот метод следует вызывать при уничтожении страницы или компонента для отмены подписки `subscribe()`:
+``` js
+const subscribeId = compass.subscribe((data) => {
+  console.log(`Направление: ${data.direction} радиан`)
+  console.log(`Точность: ${data.accuracy}`)
+})
+
+// Отмена подписки
+compass.unsubscribe(subscribeId)
+```
+
+
+### `calibration` <decl type="(): Promise<void>" method/>
+
+Запуск процесса калибровки компаса. Когда точность компаса низкая, это помогает пользователю выполнить необходимые действия и вызывает этот метод для калибровки компаса.
+
+Функция возвращает объект Promise без результата, который разрешается после завершения калибровки системой.
+
+### `getValue` <decl type="(): Promise<Value>" method/>
+
+Получение текущих данных компаса. Возвращает асинхронный результат в виде объекта Promise, содержащего информацию о направлении компаса и точности (тип [`Value`](#value)).
+
+Пример:
+``` js
+// Использование Promise
+compass.getValue().then((data) => {
+  console.log(`Направление: ${data.direction} радиан`)
+  console.log(`Уровень точности: ${data.accuracy}`)
+})
+
+// Использование async/await
+async function getCompassData() {
+  const data = await compass.getValue()
+  console.log(`Направление: ${data.direction} радиан`)
+  console.log(`Уровень точности: ${data.accuracy}`)
+}
+```
+
+::: note
+Из-за особенностей реализации этот метод не поддерживает вызовы в стиле callback (например, `{ success: (data) => {...} }`), пожалуйста, используйте Promise или async/await.
+:::
+
+## Определения типов
+
+### `Value`
+
+Сигнатура типа данных компаса `Value` выглядит следующим образом:
+``` ts
+type Value = {
+  direction: number  // Направление компаса (в радианах)
+  accuracy: number   // Уровень точности компаса
+}
+```
+Описание свойств:
+- `direction`: угол в радианах между осью Y устройства и магнитным северным полюсом Земли, диапазон значений составляет $[0,2\pi]$, где:
+  - `0`: строго на север
+  - `Math.PI / 2` (около 1.57): строго на восток
+  - `Math.PI` (около 3.14): строго на юг
+  - `3 * Math.PI / 2` (около 4.71): строго на запад
+- `accuracy`: уровень точности данных компаса
+  - `3`: высокая точность
+  - `2`: средняя точность
+  - `1`: низкая точность
+  - `0`: ненадежно (причина неизвестна)
+  - `-1`: ненадежно (теряется связь с датчиком)
+
+Пример:
+``` js
+// Определение направления
+const data = await compass.getValue()
+const degrees = data.direction * 180 / Math.PI // Перевод в градусы
+
+console.log(`Направление: ${degrees}°`)
+if (degrees >= 337.5 || degrees < 22.5) {
+  console.log('На север')
+} else if (degrees >= 22.5 && degrees < 67.5) {
+  console.log('На северо-восток')
+} else if (degrees >= 67.5 && degrees < 112.5) {
+  console.log('На восток')
+}
+// ... определение других направлений
+
+// Проверка точности
+if (data.accuracy >= 2) {
+  console.log('Точность компаса хорошая')
+} else if (data.accuracy === 1) {
+  console.log('Точность компаса низкая, рекомендуется калибровка')
+  compass.calibration()
+} else {
+  console.log('Данные компаса ненадежны')
+}
+```
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-brightness.md
+
+# Управление яркостью
+
+## Импорт модуля
+
+``` js
+import brightness from '@system.brightness'
+```
+
+## API
+
+### `getValue` <decl type="(): number" method />
+
+Получение значения яркости экрана, диапазон составляет $[0, 1]$.
+
+### `setValue` <decl type="(value: number): void" method />
+
+Установка значения яркости экрана. Диапазон `value` составляет $[0, 1]$.
+
+### `getMode` <decl type="(): string" method />
+
+Получение режима яркости экрана.
+
+### `setMode` <decl type="(mode: number): void" method />
+
+Установка режима яркости экрана. Если `number` установлен в `0`, это стандартный режим; если `number` установлен в $1$, это автоматический режим.
+
+### `setKeepScreenOn` <decl type="(mode: Boolean): void" method />
+
+Установка параметра поддержания экрана во включенном состоянии. Если `mode` равен `true`, экран постоянно включен; если `mode` равен `false`, постоянное включение экрана отменяется.
+
+### `wakeScreenOn`
+<decl method><pre>
+(options: { 
+  screenOn: boolean, 
+  timeout?: number,
+}): void
+</pre></decl>
+
+Включение или выключение экрана. Назначение полей параметра `options`:
+- `screenOn`: включать ли экран
+- `timeout`: время до автоматического выключения, если не указано, время не ограничено
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-network.md
+
+# Состояние сети
+
+## Импорт модуля
+
+```js
+import network from '@system.network';
+```
+
+## Определение интерфейсов
+
+### `subscribe` <decl type="(callback: (status: NetworkState) => void): number" method/>
+
+Прослушивание изменений состояния сети. Параметр `status` функции `callback` представляет собой новое [состояние сети](#networkstate). ID, возвращаемый этим методом, можно использовать в методе [`unsubscribe()`](#unsubscribe) для отмены подписки.
+
+### `unsubscribe` <decl type="(subscribeID: number): void" method/>
+
+Отмена прослушивания состояния сети. `subscribeID` — это значение ID, возвращаемое методом [`subscribe()`](#subscribe).
+
+### `getType` <decl type="(): Promise<NetworkState>" method/>
+
+Получение текущего состояния сети, возвращает значение [`NetworkState`](#networkstate).
+
+## Определения типов
+
+### `NetworkState`
+
+Этот объект используется для представления текущего состояния сети, сигнатура типа выглядит следующим образом:
+
+```ts
+type NetworkState = {
+  device: string; // Имя сетевого устройства
+  type: string; // Тип сетевого устройства
+  linkUp: boolean; // Включено ли сетевое устройство
+  online: boolean; // В сети ли устройство (доступен ли интернет)
+};
+```
+
+Обычно для проверки подключения устройства к интернету используется свойство `online` объекта `NetworkState`.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-app.md
+
+# Контекст приложения
+
+## Импорт модуля
+
+```js
+import app from '@system.app'
+```
+
+## Определение интерфейсов
+
+### `getInfo` <decl type="(): Manifest" method/>
+
+Получает информацию о контексте текущего приложения, возвращает [`Manifest` объект](./system-package.md#manifest-объект), содержащий базовую информацию о приложении, такую как имя пакета, номер версии и т.д.
+
+### `terminate` <decl type="(): void" method version="0.8"/>
+
+Завершает работу текущего приложения. После вызова этого метода приложение будет закрыто, и для продолжения работы пользователю потребуется перезапустить его.
+
+::: note Риск совместимости
+Этот API поддерживается не на всех платформах; в качестве временной альтернативы можно использовать метод [`launch.exit()`](./system-launch.md#exit).
+:::
+
+### `loadLibrary` <decl type="(name: string): object | undefined" method/>
+
+Загружает по имени загрузчик библиотек (Library Loader), зарегистрированный нативной реализацией, и возвращает соответствующий объект библиотеки. Если библиотека с указанным именем не зарегистрирована, возвращается `undefined`.
+
+В типичных случаях рекомендуется привязывать объект библиотеки к объекту APP:
+```js
+// app.js
+import app from '@system.app'
+
+export default {
+  customLib: app.loadLibrary('custom-library'),
+  onCreate() {
+    if (!this.customLib) {
+      // Обработка сбоя загрузки библиотеки, например, откат к реализации на скрипте
+      this.customLib = someStubImplementation();
+    } else {
+      // Нормальное использование объекта библиотеки
+      this.customLib.someFunction()
+    }
+  }
+}
+```
+Таким образом, компоненты могут напрямую использовать `this.$app.customLib` для доступа к объекту библиотеки.
+
+Метод `loadLibrary()` подходит для подключения нестандартных системных функций. Приложение может проверить, является ли возвращаемое значение `undefined`, чтобы определить, поддерживает ли текущая платформа данную библиотеку, что позволяет выполнить деградацию (fallback) до заглушки на скрипте в среде общего симулятора, не полагаясь на специальную обработку путей к конкретным модулям в симуляторе.
+
+Если приложение должно одновременно поддерживать стандартные API QuickApp и кастомные системные функции, оно может принять решение об откате на основе результатов выполнения `loadLibrary()`.
+
+### `keepForeground` <decl type="(options: { enable: boolean }): void" method/>
+
+Устанавливает, должно ли приложение оставаться на переднем плане. Если свойство `enable` в параметре `options` имеет значение `true`, приложение попытается остаться на переднем плане.
+
+Для использования этого метода необходимо заявить разрешение приложения для `watch.permission.FOREGROUND_SERVICE` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
+
+Этот метод является лишь подсказкой для системного поведения, а не жестким требованием. Приложение может быть переведено в фоновый режим из-за действий пользователя или других политик с более высоким приоритетом. При использовании этого метода для удержания приложения на переднем плане устройство все же может переходить в режим пониженного энергопотребления:
+
+- Если включен режим AOD (Always on Display), частота обновления пользовательского интерфейса снижается.
+- В противном случае экран через некоторое время выключится, но приложение останется работать на переднем плане.
+
+Когда устройство переходит в режим пониженного энергопотребления (включая выключение экрана), приложение на переднем плане по-прежнему планируется и выполняется с более низкой частотой, а не полностью уходит в спящий режим. Поэтому его можно использовать для навигационных или фитнес-приложений.
+
+============================================================
+FILE_PATH: src/transl/RU/api/system-vibrator.md
+
+# Вибрация
+
+## Импорт модуля
+
+``` js
+import vibrator from '@system.vibrator'
+```
+
+## API
+
+### `vibrate`
+<decl method><pre>
+(options: {
+  mode: string
+}): bool
+</pre></decl> 
+
+Запуск вибрации. Назначение полей параметра `options`:
+- `mode`: режим вибрации, `long` означает длинную вибрацию, `short` — короткую. Значение по умолчанию — `long`.
+
+============================================================
+FILE_PATH: src/transl/RU/api/global.md
+
+# Глобальный объект
+
+## Глобальные функции
+
+### `encodeURIComponent` <decl type="(str: string): string" function />
+
+Глобальная функция `encodeURIComponent()` используется для кодирования компонента URI `str`. Она экранирует определенные специальные символы в соответствующие шестнадцатеричные escape-последовательности с символом процента (`%`) в кодировке UTF-8, что гарантирует правильную интерпретацию компонента при использовании его в составе URL, особенно в параметрах строки запроса, путях или фрагментах. 
+
+Буквы, цифры и `- _ . ! ~ * ' ( )` не кодируются. Остальные символы кодируются в escape-последовательности с процентом (например, пробел кодируется как `%20`).
+
+Поведение `encodeURIComponent()` идентично [одноименной функции](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) в веб-среде.
+
+Пример:
+```js
+console.log(encodeURIComponent("https://example.com/page?id=100"));
+// output: https%3A%2F%2Fexample.com%2Fpage%3Fid%3D100
+```
+
+### `decodeURIComponent` <decl type="(str: string): string" function />
+
+Глобальная функция `decodeURIComponent()` используется для декодирования компонента URI `str`, закодированного с помощью `encodeURIComponent()`. Она преобразует escape-последовательности с символом процента (`%`) обратно в их исходную форму символов, восстанавливая оригинальный компонент URI. Например, она преобразует `%20` обратно в пробел.
+
+Поведение `decodeURIComponent()` идентично [одноименной функции](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) в веб-среде.
+
+Пример:
+```js
+console.log(decodeURIComponent("https%3A%2F%2Fexample.com%2Fpage%3Fid%3D100"));
+// output: https://example.com/page?id=100
+```
+
+### `URI` <decl type="(uri: string | Uri): Uri" function />
+
+Эта функция принимает строку и преобразует ее в объект `Uri` для дальнейшей обработки. Параметр `uri` — это строка URI, которую необходимо распарсить.
+
+Возвращаемое значение представляет собой объект, содержащий следующие поля:
+- `scheme: string` — поле scheme, извлеченное из параметра;
+- `authority: string` — поле authority, извлеченное из параметра;
+- `path: string` — поле path, извлеченное из параметра;
+- `query: string` — поле query, извлеченное из параметра;
+- `origin: string` — исходная строка URI из параметра;
+- `toString: ( string` — этот метод позволяет перекодировать данный объект обратно в строку URI.
+
+Пример:
+``` js
+console.log(URI("https://app-name/icon.png"))
+// {
+//   scheme: 'https',
+//   authority: 'app-name',
+//   path: '/icon.png',
+//   query: '',
+//   origin: 'https://app-name/icon.png',
+//   toString: <function>
+// }
+```
+
+Функция `URI` также принимает в качестве параметра объект. В этом случае функция `URI` добавляет к объекту-параметру метод `toString`, с помощью которого объект URI можно закодировать в строку:
+``` js
+let uri = {
+  scheme: 'https',
+  authority: 'app-name',
+  path: '/icon.png',
+  query: ''
+}
+console.log(URI(uri).toString()) // 'https://app-name/icon.png'
+```
 
 ============================================================
 FILE_PATH: src/transl/RU/api/system-file.md
@@ -3605,1342 +5294,6 @@ async function atomicWriteText(uri, text) {
 ```
 
 ============================================================
-FILE_PATH: src/transl/RU/api/system-media.md
-
-# Мультимедиа
-
-## Импорт модуля
-
-``` ts
-import media from '@system.media'
-```
-
-## Определение интерфейсов
-
-### `createAudioPlayer` <decl type="(): AudioPlayer" method />
-
-Создает объект [`AudioPlayer`](#audioplayer-объект).
-
-### `createAudioRecord` <decl type="(): AudioRecorder" method />
-
-Создает объект [`AudioRecorder`](#audiorecorder-объект).
-
-Разработчики должны объявить разрешение приложения на доступ к `watch.permission.RECORD` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-### `setVolume` <decl type="volume: number): void" method />
-
-Устанавливает системную громкость мультимедиа. Параметр `volume` представляет собой значение громкости в диапазоне $[0.0, 1.0]$. Это свойство используется для управления системной громкостью мультимедиа, и его конкретные функции зависят от реализации платформы. Для регулировки громкости следует в первую очередь использовать свойство `volume` объекта `AudioPlayer`.
-
-### `getVolume` <decl type="(): number" method />
-
-Получает системную громкость мультимедиа. Результатом является значение громкости в диапазоне $[0.0, 1.0]$. Это свойство используется для получения системной громкости мультимедиа, и его конкретные функции зависят от реализации платформы. Для получения громкости следует в первую очередь использовать свойство `volume` объекта `AudioPlayer`.
-
-## Объект `AudioPlayer`
-
-::: details Сигнатура типа
-``` ts
-interface AudioPlayer {
-  src: string,
-  name: string,
-  icon: string,
-  mode: string,
-  status: string,
-  duration: number,
-  position: number,
-  openSystemNotification: bool,
-  songAttribute: object,
-  volume: number,
-  nextAvailable: bool,
-  prevAvailable: bool,
-
-  play(): void,
-  pause(): void,
-  stop(): void,
-  release(): void,
-  next(): void,
-  previous(): void,
-  requestFocus({acquireType: string, volumeType: string}): void,
-  releaseFocus(): void,
-
-  onplay?: () => void,
-  onpause?: () => void,
-  onstop?: () => void,
-  onended?: () => void,
-  onerror?: (err: {msg: string})=> void,
-  ontimeupdate?: () => void,
-  oninterrupt?: (action: {interruptHint: number}) => void,
-  onnext?: () => void,
-  onprevious?: () => void,
-  onrequestplay?: () => void,
-  onrequestpause?: () => void,
-  onrequeststop?: () => void,
-  onsongattribute?: () => void,
-  onposition?: () => void,
-  onrequestfocus?: () => void,
-  onreleasefocus?: () => void,
-  onmodechanged?: () => void,
-  onvolumechange?: () => void,
-}
-```
-:::
-
-### `src` <decl type="string" set get />
-
-Устанавливает или считывает URL воспроизводимого аудио. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径) и сетевые пути ресурсов, использующие протоколы http и https (например: `https://www.rt-thread.com/service/test/001.mp3`). Ниже приведен простой пример установки src и запуска воспроизведения:
-
-```ts
-import media from '@system.media'
-// Создание аудиоплеера
-let player = media.createAudioPlayer()
-// Установка URL воспроизводимого аудио
-player.src = 'https://www.rt-thread.com/service/test/001.mp3'
-// Запуск воспроизведения аудио
-player.play()
-```
-
-### `name` <decl type="string" set get />
-
-Имя объекта плеера. Если не задано, по умолчанию используется имя приложения, создавшего плеер. Стоит отметить, что имя объекта плеера не является глобально уникальным, и имя нельзя использовать для идентификации конкретного объекта плеера.
-
-### `icon` <decl type="string" set get />
-
-URL иконки объекта плеера. Поддерживаются [пути к локальным ресурсам](/framework/application/resource.md#uri-和路径).
-
-### `mode` <decl type="string" set get />
-
-Режим воспроизведения. Функция, соответствующая этому свойству, должна быть реализована приложением плеера. Объект плеера по умолчанию не обрабатывает ее, а только предоставляет это свойство.
-
-- `sequential`: последовательное воспроизведение  
-- `random`: случайное воспроизведение  
-- `singleloop`: повтор одной трека  
-- `listloop`: повтор списка  
-
-### `status` <decl type="string" get />
-
-Чтение текущего состояния плеера
-
-- `play`: состояние воспроизведения  
-- `pause`: состояние паузы  
-- `stop`: состояние остановки 
-- `ended`: состояние окончания воспроизведения  
-- `error`: состояние ошибки воспроизведения  
-
-### `duration` <decl type="number" get />
-
-Общая продолжительность аудио в секундах
-
-### `position` <decl type="number" set get />
-
-Текущая позиция воспроизведения аудио в секундах
-
-### `openSystemNotification` <decl type="bool" set get />
-
-Включать ли системные уведомления, по умолчанию выключено. После включения этот объект плеера может быть обнаружен [менеджером аудиоплеера](/framework/application/system-audioPlayerManager.md#音频播放器管理器).
-
-### `songAttribute` <decl type="songAttribute" set get />
-
-Объект атрибутов песни
-
-::: details Сигнатура типа
-```ts
-type songAttribute = {
-  title: string; // Название песни
-  artist: string; // Имя исполнителя, может быть сольным артистом или группой
-  album: string; // Название альбома, которому принадлежит песня
-  year: string; // Год выпуска песни
-  genre: string; // Жанр песни, например, поп, рок, классика и т. д.
-  track: string; // Номер текущей песни в альбоме, например: "1/12" означает 1-я из 12
-  coverArt: string; // URL изображения обложки песни
-  lyrics: string; // URL текста песни
-  comments: string; // Дополнительная информация, например, примечания об авторских правах
-}
-```
-:::
-
-Объект `songAttribute`, как и объект `AudioPlayer`, является объектом Proxy, то есть его нельзя сериализовать и десериализовать с помощью JSON, а также ссылаться на него в реактивном фреймворке. Ниже приведен простой пример использования:
-
-```ts
-// Установка названия песни
-this.player.songAttribute.title = "Неизвестно"
-// Установка исполнителя песни
-this.player.songAttribute.artist = "Неизвестно"
-// Просмотр названия песни
-console.dir(this.player.songAttribute.title)
-```
-
-### `volume` <decl type="number" set get />
-
-Текущая громкость плеера, диапазон: $[0.0, 1.0]$
-
-### `nextAvailable` <decl type="bool" set get />
-
-Установка или запрос возможности переключения на следующий трек
-
-### `prevAvailable` <decl type="bool" set get />
-
-Установка или запрос возможности переключения на предыдущий трек
-
-### `play` <decl type="(): void" method />
-
-Начинает воспроизведение аудио, указанного в свойстве `src`
-
-- Если свойство `src` не было установлено до вызова этого метода, воспроизведение завершится ошибкой и вызовет событие `onerror`;
-- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onplay` или `onerror`, чтобы определить успех или неудачу воспроизведения. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
-
-Ниже приведен простой пример вызова интерфейса `play()`:
-
-```ts
-import media from '@system.media'
-// Создание аудиоплеера
-let player = media.createAudioPlayer()
-// Установка URL воспроизводимого аудио
-player.src = 'https://www.rt-thread.com/service/test/001.mp3'
-// Установка события onplay
-player.onplay = () => { console.dir("Начало воспроизведения") }
-// Установка события onerror
-player.onerror = () => { console.dir("Ошибка воспроизведения") }
-// Запуск воспроизведения аудио
-player.play()
-```
-
-### `pause` <decl type="(): void" method />
-
-Приостанавливает воспроизведение текущего аудио  
-
-- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onpause` или `onerror`, чтобы определить успех или неудачу паузы. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
-
-### `stop` <decl type="(): void" method />
-
-Останавливает воспроизведение аудио. Вы можете возобновить воспроизведение с помощью `play`  
-
-- Этот метод является синхронным интерфейсом. После его выполнения необходимо дождаться события `onstop` или `onerror`, чтобы определить успех или неудачу остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы;  
-
-### `release` <decl type="(): void" method />
-
-Освобождает аудиоресурсы  
-
-- Выполнение этого интерфейса прекратит воспроизведение текущего аудио. Необходимо дождаться события `onstop` или `onerror`, чтобы определить успех или неудачу остановки. До срабатывания события любые другие выполняемые операции будут проигнорированы;   
-
-### `next` <decl type="(): void" method />
-
-Уведомляет приложение плеера о воспроизведении следующего трека. После выполнения этого интерфейса будет вызвано событие `onnext`, уведомляющее приложение плеера, прослушивающее это событие, которое затем выполнит логику переключения песен.
-
-### `previous` <decl type="(): void" method />
-
-Уведомляет приложение плеера о воспроизведении предыдущего трека. После выполнения этого интерфейса будет вызвано событие `onprevious`, уведомляющее приложение плеера, прослушивающее это событие, которое затем выполнит логику переключения песен.
-
-### `requestFocus` <decl type="({acquireType: string, volumeType: string}): void" method />
-
-Запрашивает аудиофокус. После выполнения этого интерфейса система будет уведомлена о запросе или освобождении аудиофокуса, и низлежащий уровень будет управлять логикой переключения и прерывания различных типов аудио.
-
-Параметр `acquireType` указывает тип запроса:
-- `gain`: запросить аудиофокус
-- `loss`: освободить аудиофокус
-
-Параметр `volumeType` указывает тип аудио:
-- `system`: системные подсказки
-- `media`: медиамузыка
-- `tts`: голосовое вещание
-
-Следующий пример демонстрирует метод запроса аудиофокуса с помощью функции `requestFocus`:
-``` ts
-import media from '@system.media'
-// Создание аудиоплеера
-let player = media.createAudioPlayer()
-// Получение аудиофокуса для типа медиамузыки
-player.requestFocus({ volumeType: 'media', acquireType: 'gain' });
-```
-
-### `releaseFocus` <decl type="(): void" method />
-
-Освобождает аудиофокус. После выполнения этого интерфейса система будет уведомлена об освобождении аудиофокуса, и низлежащий уровень будет управлять логикой переключения и прерывания различных типов аудио.
-
-### `onplay` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном запуске воспроизведения аудио (`play`)
-
-### `onpause` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешной паузе аудио (`pause`)
-
-### `onstop` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешной остановке аудио (`stop`)
-
-### `onended` <decl type="?: () => void" set />
-
-Событие обратного вызова по окончании воспроизведения аудио
-
-### `onerror` <decl type="?: () => void" set />
-
-Событие обратного вызова при возникновении ошибки во время выполнения таких интерфейсов, как `play`, `pause`, `stop`, `position`. При возникновении ошибки соответствующие события (например, `onplay`) не вызываются.
-
-### `ontimeupdate` <decl type="?: () => void" set />
-
-Событие обратного вызова, которое срабатывает при обновлении свойства `position`. Это событие срабатывает только тогда, когда приложение находится на переднем плане, и прекращает генерироваться, когда приложение находится в фоновом режиме.
-
-### `oninterrupt` <decl type="?: (action: {interruptHint: number}) => void" set />
-
-Функция обратного вызова при возникновении события прерывания аудио (уведомление о временном или полном прерывании текущего аудио, когда его вытесняет аудио того же или другого типа).
-
-Параметр `interruptHint` в объекте `action` указывает тип события прерывания:
-- `1`: Кратковременное прерывание (может восстановиться автоматически, например: музыка прервана)
-- `2`: Полное прерывание (не может восстановиться автоматически, например: NetEase Cloud прерван Himalaya)
-
-Следующий пример демонстрирует метод регистрации обратного вызова `oninterrupt`, который вызывается при наступлении события:
-``` js
-player.oninterrupt = (action) => {
-  console.log(action.interruptHint)
-}
-```
-
-### `onnext` <decl type="?: () => void" set />
-
-Событие обратного вызова при необходимости воспроизведения следующего трека
-
-### `onprevious` <decl type="?: () => void" set />
-
-Событие обратного вызова при необходимости воспроизведения предыдущего трека
-
-### `onrequestplay` <decl type="?: () => void" set />
-
-Событие обратного вызова, вызываемое, когда нижнему уровню необходимо запустить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику запуска воспроизведения.
-
-### `onrequestpause` <decl type="?: () => void" set />
-
-Событие обратного вызова, вызываемое, когда нижнему уровню необходимо приостановить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику приостановки воспроизведения.
-
-### `onrequeststop` <decl type="?: () => void" set />
-
-Событие обратного вызова, вызываемое, когда нижнему уровню необходимо остановить воспроизведение, для уведомления JS-приложения. JS-приложение выполняет логику остановки воспроизведения.
-
-### `onsongattribute` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении объекта атрибутов песни
-
-### `onposition` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном выполнении установки текущей позиции воспроизведения аудио с помощью метода `position`
-
-### `onrequestfocus` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном запросе аудиофокуса
-
-### `onreleasefocus` <decl type="?: () => void" set />
-
-Событие обратного вызова при успешном освобождении аудиофокуса
-
-### `onmodechanged` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении режима воспроизведения
-
-### `onvolumechange` <decl type="?: () => void" set />
-
-Событие обратного вызова при изменении громкости плеера
-
-
-## Объект `AudioRecorder`
-
-::: details Сигнатура типа
-``` ts
-interface AudioRecorder {
-    start({
-      uri: string, 
-      sample?: 8000 | 16000 | 44100 | 48000,
-      layout?: 8 | 16 | 32,
-      channel?: 1 | 2,
-      bitrate?: 16 | 32 | 64,
-      codec?: "pcm" | "mp3" | "opus" | "silk",
-      format?: "ogg",
-    }): Promise<void>,
-    read({callback: (ArrayBuffer) => void}): void,
-    stop(): void,
-    release(): void,
-    onstart?: () => void,
-    onstop?: () => void,
-    onrelease?: () => void,
-    onavailable?: (ArrayBuffer) => void,
-    onerror?: ({error: string})=> void
-}
-```
-:::
-
-### `start`
-<decl method><pre>
-(options: {
-  uri: string,
-  sample?: 8000 | 16000 | 44100 | 48000,
-  layout?: 8 | 16 | 32,
-  channel?: 1 | 2,
-  bitrate?: 16 | 32 | 64,
-  codec?: "pcm" | "mp3" | "opus" | "silk",
-  format?: "ogg",
-}): Promise&lt;void>
-</pre></decl>
-
-Начинает запись аудио. Функции полей параметра `options`:
-- `uri`: URI файла записи для сохранения, поддерживается только протокол `internal`, директория будет создана автоматически;
-- `sample`: частота дискретизации аудио в $\rm Hz$, по умолчанию $8000$;
-- `layout`: разрядность аудиоданных, по умолчанию $16$;
-- `channel`: количество аудиоканалов, по умолчанию $1$;
-- `bitrate`: битрейт аудио в $\rm kbps$, по умолчанию $16$. Чем выше битрейт, тем лучше качество звука, но тем больше файл.
-- `codec`: формат кодирования аудио (строка). Если не указан, подходящий кодек подбирается автоматически на основе параметра `format`;
-- `format`: формат контейнера аудио (строка). Если не указан, подходящий контейнер подбирается автоматически на основе расширения в параметре `uri`;
-
-  Поддерживаемые отношения между распространенными форматами записи, кодеками и контейнерами показаны ниже (значение «Нет» в таблице означает, что соответствующий параметр можно не указывать):
-
-  | Распространенный формат записи | codec (кодек) | format (контейнер) |
-  | ------------------------------ | ------------- | ------------------ |
-  | pcm                            | Нет           | Нет                |
-  | mp3                            | mp3           | Нет                |
-  | opus                           | opus          | Нет                |
-  | opus-ogg                       | opus          | ogg                |
-  | silk                           | silk          | Нет                |
-
-Пример кода для запуска записи:
-
-``` js
-let recorder = media.createAudioRecord()
-recorder.start({
-  uri: "internal://tmp/media_test.mp3",
-  sample: 16000,
-  layout: 16,
-  channel: 1,
-  bitrate: 16
-})
-```
-
-::: info
-Дополнительные сведения о протоколе URI `internal` см. в документации по [доступу к ресурсам](/framework/application/resource.md).
-:::
-
-По завершении записи вызовите метод [stop()](#stop-1), чтобы остановить запись.
-
-### `read`
-<decl method><pre>
-(options: {
-  callback: (buffer: ArrayBuffer) => void,
-}): void
-</pre></decl>
-
-Считывает записанные аудиоданные (каждый раз считываются все доступные данные с момента окончания предыдущего чтения до текущего момента)
-
-### `stop` <decl type="(): void" method />
-
-Останавливает запись аудио. После вызова этого интерфейса записанный с помощью метода [`start()`](#start) аудиофайл (указанный параметром `uri`) может быть прочитан другими модулями.
-
-### `release` <decl type="(): void" method />
-
-Освобождает ресурсы записи аудио
-
-### `onstart` <decl type="?: () => void" set />
-
-Событие обратного вызова после запуска записи (`start`)
-
-### `onstop` <decl type="?: () => void" set />
-
-Событие обратного вызова после остановки записи (`stop`)
-
-### `onrelease` <decl type="?: () => void" set />
-
-Событие обратного вызова после освобождения ресурсов записи (`release`)
-
-### `onavailable` <decl type="(data: ArrayBuffer) => void" set />
-
-Событие обратного вызова при появлении новых данных после начала записи
-
-### `onerror` <decl type="?: () => void" set />
-
-Событие обратного вызова при ошибке во время событий `start`, `stop` или `release`. При возникновении ошибки соответствующие события (например, `onstart`) не вызываются.
-
-## Примеры
-
-### Запись аудио
-
-Следующий код демонстрирует простейший пример записи аудио в течение 3 секунд:
-``` js
-import media from "@system.media"
-
-async function record() {
-  // Создание объекта записи
-  let record = media.createAudioRecord()
-  console.log('start record')
-  // Указан только параметр uri, остальные параметры используют значения по умолчанию
-  await record.start({
-    uri: 'internal://tmp/test.mp3'
-  })
-  setTimeout(() => {
-    console.log('stop record')
-    record.stop() // Остановка записи через 3 секунды
-  }, 3000)
-}
-
-record()
-```
-
-При вызове функции `record()` создается объект записи, начинается запись, которая останавливается через 3 секунды. Запись будет сохранена в файл `internal://tmp/test.mp3` и закодирована в формате MP3.
-
-В этом примере для метода [`AudioPlayer.start()`](#start) передан только параметр `uri`, а `sample`, `layout`, `channel` и `bitrate` используют конфигурации по умолчанию.
-
-::: tip
-При использовании эмулятора вы можете найти файл записи в каталоге данных приложения и воспроизвести его. Путь к файлу, соответствующий `internal://tmp/test.mp3`: `.glyphix-work/image/{device}/data/temp/{app-id}/test.mp3`, где `{device}` и `{app-id}` — это имя устройства и имя приложения во время эмуляции.
-:::
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-cipher.md
-
-# Алгоритмы шифрования
-
-## Импорт модуля
-
-``` js
-import cipher from '@system.cipher'
-```
-
-## API
-
-### `aes`
-<decl method><pre>
-(options: {
-  action: string,
-  text: string,
-  key: string,
-  transformation?: string,
-  iv?: string,
-  ivOffset?: number,
-  ivLen?: number
-  }): Promise&lt;{ text: string }>
-</pre></decl>
-
-Шифрование и дешифрование `aes`. Описание полей объекта `options`:
-- `action`：тип операции, два возможных значения: `'encrypt'` — шифрование, `'decrypt'` — дешифрование;
-- `text`：текстовое содержимое для шифрования или дешифрования. Текст для шифрования должен быть обычным текстом, а текст для дешифрования должен представлять собой бинарное значение, закодированное в формате `base64`;
-- `key`：ключ, используемый для шифрования или дешифрования, представленный в виде строки, сгенерированной после кодирования в `base64`. До дешифрования в формате `base64` длина ключа должна быть кратна $16$ байтам;
-- `transformation`：режим шифрования алгоритма `AES` (`'ECB'`, `'CBC'`, `'CFB'`, `'CTR'`, `'OFB'`) и элемент дополнения (padding), по умолчанию `'AES/CBC/PKCS5Padding'`. Возможные элементы дополнения AES:
-  - `'PKCS5Padding'`
-  - `'PKCS7Padding'`
-  - `'NoPadding'`
-  - `'OneAndZerosPadding'`
-  - `'ZerosAndLenPadding'`
-  - `'ZerosPadding'` 
-- `iv`：вектор инициализации для шифрования и дешифрования AES, строка в кодировке Base64, по умолчанию равен значению поля `key`;
-- `ivOffset`：мещение вектора инициализации для шифрования и дешифрования AES, по умолчанию $0$;
-- `ivLen`：длина вектора инициализации AES в байтах, по умолчанию $16$;
-
-::: details Пример кода
-
-``` js
-let signKey = "TkQRXv9xfAU65sxGmx4Xz2tQP7fwwdyxAGIZ9HMtc+c="
-
-async function AesTest() {
-  const encrypt = await cipher.aes({
-    action: "encrypt",
-    text: "this is a test project!",
-    key: signKey,
-    iv: "MTIzNDU2NzgxMjM0NTY3OA==",
-    transformation:"AES/CBC/ZerosAndLenPadding",
-    ivOffset: 0,
-    ivLen: 16
-  })
-  console.log(`encrypt text: ${encrypt.text}`)
-
-  const decrypt = await cipher.aes({
-    action: "decrypt",
-    text: encrypt.text,
-    key: signKey,
-    iv: "MTIzNDU2NzgxMjM0NTY3OA==",
-    transformation:"AES/CBC/ZerosAndLenPadding",
-    ivOffset: 0,
-    ivLen: 16
-  })
-  console.log(`decrypto text: ${decrypt.text}`)
-}
-
-AesTest() // Вывод зашифрованного и расшифрованного текста в консоль
-// encrypt text: yI4dWJzQNCQfXq5P8du1dtYWZuBvbl9F9Vh15Fh9qjg=
-// decrypto text: this is a test project!
-```
-:::
-
-### `rsa`
-<decl method><pre>
-(options: {
-  action: string,
-  text: string,
-  key: string,
-  transformation?: string
-}): Promise&lt;{ text: string }>
-</pre></decl>
-
-Шифрование и дешифрование `rsa`. Описание полей объекта `options`:
-- `action`：тип операции, два возможных значения: `'encrypt'` — шифрование, `'decrypt'` — дешифрование;
-- `text`：текстовое содержимое для шифрования или дешифрования. Текст для дешифрования должен представлять собой бинарное значение, закодированное в формате Base64;
-- `key`：ключ `RSA`, строка, сгенерированная после кодирования в `base64`. При шифровании `key` является публичным ключом, при дешифровании — приватным ключом;
-- `transformation`：элемент дополнения алгоритма RSA, по умолчанию `RSA/None/OAEPwithSHA-256andMGF1Padding`. Доступные элементы дополнения RSA:
-  - `'PKCS_v15andMGF1Padding'`
-  - `'OAEPwithMD5andMGF1Padding'`
-  - `'OAEPwithSHA-1andMGF1Padding'`
-  - `'OAEPwithSHA-256andMGF1Padding'`
-
-::: details Пример кода
-``` js
-let publicKey =
-  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCirfSt9f49F/BtPqextDlyoUEQ' +
-  'qN+NUNxkYB5DY4FmJuI0gQSaK8hlGvnoA5T/seTGylHn95/PPTl5hW+riYtWaKfM' +
-  'CXI2scstXA0S5vcYfc9917tRsrFzrDfJW+WD/HmmcvgI6rcbivokDikep3gVX0df' +
-  'ktYtsAs158kMs4bBpwIDAQAB'
-
-let privateKey = 
-  'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKKt9K31/j0X8G0+' +
-  'p7G0OXKhQRCo341Q3GRgHkNjgWYm4jSBBJoryGUa+egDlP+x5MbKUef3n889OXmF' +
-  'b6uJi1Zop8wJcjaxyy1cDRLm9xh9z33Xu1GysXOsN8lb5YP8eaZy+AjqtxuK+iQO' +
-  'KR6neBVfR1+S1i2wCzXnyQyzhsGnAgMBAAECgYAuH23w6H7FqYTkJFB9RKDJDEkb' +
-  'RRXkxhlGaC4MYyjr4nhd9Hpuj51IdSaHjoRvHmvDpNcmEoH/ytcBykBH/T5As68M' +
-  'L1OmzuJsD3BYMZpOOSFC9m7o6VMRf/T/ZTG6EDMtQekxlBV66QpiFmhQMjDs3jJY' +
-  'TyR3OnZN9BWNBNotWQJBAOnLUpMT53HbFtw9vCRtVgAJ8JFjL4ZzYzrHj4mloKF3' +
-  'P/r6faYUjgULoaHiD+BZB/Avru2h74Ghhr26CD3gMR0CQQCyIXzjSCrQiyCEdg1I' +
-  '//IWLAALsfVITrlCN0rVeMkjTbc0KFEDUKG9y6MGAGX4AJNnos7y+zLpi6PcgwlU' +
-  'zWaTAkBx5+fRVK88n5uhrkpODR8LYcxdaU+sV+eOqc/bJmD+ihUX+JbjJbyT5LjZ' +
-  'IETP71CYywKVMIJ6S/JT2aFOVD5ZAkEAsfqFtu2fYbjw54iwY3TfpEmYThcj9Xg6' +
-  '4C8wxTQm+/AlkaaKs144DNPPciqpt26T2WOxlNNqHjFYqvX+N832owJAaM5d4x2a' +
-  'SDfC5GQFNfZ3WjATXkDE86q3m/88RBFFy8fWByyGiXtp4z5LCtMzI63X3ao0asVK' +
-  'mjZxB+T+lMqa3w=='
-
-async function rsaTest() {
-  const res = await cipher.rsa({
-    action: "encrypt",
-    text: "this is a Rsa test.",
-    key: publicKey,
-    transformation: "RSA/None/OAEPwithSHA-256andMGF1Padding"
-  })
-  console.log(`encrypt text: ${res.text}`)
-
-  const decrypt = await cipher.rsa({
-    action: "decrypt",
-    text: res.text,
-    key: privateKey,
-    transformation: "RSA/None/OAEPwithSHA-256andMGF1Padding"
-  })
-  console.log(`decrypt text: ${decrypt.text}`)
-}
-
-rsaTest() // Вывод примера результатов шифрования и дешифрования в консоль
-// encrypt text: FF+4R3iJ9pjeozZ6/Oulz9LUBH/uGQbIesJ7JbYRWvxGIHpJKNiEB+4MT/JcKs8ddN/ZQ4ts+YWMgUeglRBugRx+T4kqq0rKBdQrYdiMP58deCViSJjXJS+joPppwLDPL1Lg0VxpW89B+gA1jfC+9N8tvEHPhcX+nF8uAKRcW0M=
-// decrypt text: this is a Rsa test.
-```
-:::
-
-### `sign`
-<decl method><pre>
-(options: {
-  text: string,
-  key: string,
-  algorithm?: string,
-}): Promise&lt;{ sign: string }>
-</pre></decl>
-
-Создание цифровой подписи `sign`. Описание полей объекта `options`:
-- `text`：содержимое для подписи;
-- `key`：приватный ключ RSA;
-- `algorithm`：алгоритм подписи, по умолчанию `'SHA256withRSA'`. Доступные алгоритмы подписи:
-  - `'MD5withRSA'`
-  - `'SHA1withRSA'`
-  - `'SHA256withRSA'`
-  - `'SHA512withRSA'`
-
-::: details Пример кода
-
-``` js
-let signKey1 = "-----BEGIN RSA PRIVATE KEY-----\n" +
-  "MIIEpAIBAAKCAQEA5hoGkpvqxJdssvqAYuvCWdTRrOdzZyx/ZyMev5Qyt2JKLy1C\n" +
-  "7DuKrFGF5T5BDxN81o/OK+AQ6G1ASmwWfv5C1mk7sv6/glibPt9Gyr1OFMxviauy\n" +
-  "ZMF8sgHVGkFyy1GsCsaM9anT1OEPoNeqrTHt+xB3Pq6FdH9RLMVbY0QNem5zv816\n" +
-  "Hb6AJvMSnbGqMdd9fI1ARithrqnr9p+achP+Hc2Pj61PRviKJpFGLzBrU1BgBEbN\n" +
-  "hscGRPebn4kTSy8flYau9lnDyLs5yyy0MHKBhot5Ja3tWTKhaqymFyJL2K6gE6Xn\n" +
-  "bDAT6YFvo1TE9R7r9y+8prOR8oznJP19yxEWCQIDAQABAoIBAEbolkXvznUuxMyS\n" +
-  "7aWOSaItN0A1Qxb0W36JEByxqr9ghsPrCsiJwL5BkSWH/byLoNjuD/btYch+gmVs\n" +
-  "0bHo4Of6He+XGaUtcQn6/HHVzI4UQfsG8j6ica7ZabZhnOKTFJVtglriLulXQd2r\n" +
-  "GGmvDUtlU5n5Zh70bSuC1hrNCepEMbJWqRZ4dvrdVqZ5RtARd3PYUAiPzwisQF9q\n" +
-  "ZPAayyqmDUBReXS71RKRGn47RST+d50fZ3USP1jTAXMxf+X41ml3l7G1zd90IsWL\n" +
-  "aIeHIaxi8BVkQogxqfZH8PAzmqtgLEWDfMgWU879qicBW4FB/PoBkP0P6Qlis/50\n" +
-  "yY/80UECgYEA+zAkOshLUSJ4MDRMpkpf1WIZABH2lZhhIFw2A/VYnrmCJj3kxJYJ\n" +
-  "ELNm82nFVIJGadSarOpownKUteHcJ7Zzv65WoEEZwZBO453I9tL6Fbh64hPp8VdB\n" +
-  "4WMvK+0XqhzBL67ehghFNXc9ud4ZIQOXz6KUASxb+Iz0L02iqWIj+RUCgYEA6oJ5\n" +
-  "Sh6Ez1lnWDKI5ZEQ1jn+kgcVHObV1o8sB5/5V0/Lihgma+Lpkei333sQsYImWQMD\n" +
-  "8BT4JMCpPph5AwM0ZehUF7d2RCtQ+r0A/pUyiXjtMYHDrmAX94zDtf35QUJOL17z\n" +
-  "don0weI/vZ71VYX3saa3EvVJLERwpSr0TswfPiUCgYEArLo8D5fwAsjbMPqlwqve\n" +
-  "HpOocV3o3JG+KEyAcFRkLjGOh9GD4JLzhOJ45uVS5nv3A4tJGaLPivbTwAaiJ0TV\n" +
-  "b3fo5aYemfYr6WV07hXCFvGWvqPG+UhxaxWTOHd/EGFZjvqG1lAVl2B5t7g8O3GH\n" +
-  "ESbQ88WXMOFsgKK4OhXceskCgYEA0W/JJvruncg41bn8LRpLsSeGRaBxqKg33jFr\n" +
-  "nzuuEd4/54r99WhoNVljrgFYvU+BNAnPYIE5xIkUHcVKffhEuaauQ6gjxWnyHpzh\n" +
-  "4Hwa8E/Bdm9v9bH4dauPtl+mVjQDY6cnRHyczPNk/dKTRNgqiMxdwF60BQbym3Ar\n" +
-  "VJxUYskCgYA6HWzf+9uHS98Hhr9zW0akjSZbcZclKR53wFMOjE1mFIxp/dC+d6mf\n" +
-  "uVcUDTyo/LygzRBA5sd1euBhm5lXPyEHxIHZvwfBhIZWKlCZWlio1UvDbUp1f32u\n" +
-  "JMT6q3KeJFJXp7nf5YmrPOKlh1Lm53hiXLSKF/q6Lcnn2lzRD2JDFw==\n" +
-  "-----END RSA PRIVATE KEY-----"
-
-async function signTest() {
-  let res = await cipher.sign({
-    text: "this is a sign test project.",
-    key: signKey1
-  })
-
-  console.log(`sign text: ${res.sign}`)
-}
-
-signTest() 
-
-```
-:::
-
-### `hash`
-<decl method><pre>
-(options: {
-  data: string | ArrayBuffer,
-  algorithm: string,
-  encode?: string
-}): Promise&lt;string | ArrayBuffer>
-</pre></decl>
-
-Хеширование `hash`. Описание полей объекта `options`:
-- `data`：исходные данные для генерации дайджеста;
-- `algorithm`：алгоритм хеширования, доступные значения: `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `encode`：кодирование и тип возвращаемых данных, возможные значения:
-  - `'hex'`：значение по умолчанию, возвращает строку в шестнадцатеричной (hex) кодировке;
-  - `'base64'`：возвращает строку результата хеширования, закодированную в Base64;
-  - `'arraybuffer'`：возвращает данные типа ArrayBuffer;
-
-::: details Пример кода
-
-``` js
-async function md5Test(){
-  const res = await cipher.hash({
-    algorithm: 'md5',
-    data: 'hello'
-  })
-  console.log(res)
-}
-md5Test() // Вывод сгенерированного дайджеста в консоль
-// output：5d41402abc4b2a76b9719d911017c592
-```
-:::
-
-### `hmac`
-<decl method><pre>
-(options: {
-  data: string | ArrayBuffer,
-  algorithm: string,
-  key: string | ArrayBuffer,
-  encode?: string
-}): Promise&lt;string | ArrayBuffer>
-</pre></decl>
-
-Генерация кода аутентификации сообщения (MAC) с использованием ключа по алгоритму HMAC. Описание полей объекта `options`:
-- `data`：исходные данные для генерации дайджеста;
-- `algorithm`：алгоритм хеширования, доступны значения `'md5'`, `'sha1'`, `'sha224'`, `'sha256'`, `'sha384'`, `'sha512'`;
-- `key`：ключ;
-- `encode`：кодирование и тип возвращаемых данных, возможные значения:
-  - `'hex'`：значение по умолчанию, возвращает строку в шестнадцатеричной (hex) кодировке;
-  - `'base64'`：возвращает строку результата хеширования, закодированную в Base64;
-  - `'arraybuffer'`：возвращает данные типа `ArrayBuffer`;
-
-::: details Пример кода
-
-``` js
-async function hmacTest() {
-  let res = await cipher.hmac({
-    data: 'hello',
-    algorithm: 'sha1',
-    key: '1234567890'
-  })
-  console.log(res)
-}
-hmacTest() // Вывод сгенерированного дайджеста в консоль
-// output：6fce0a55cf8bae80e2cf479b50035f773491c5ad
-```
-:::
-
-### `base64Encode` <decl type="(data: string | ArrayBuffer): Promise&lt;string>" method />
-
-Кодирование входных данных в формат Base64.
-
-### `base64Decode` <decl type="(data: string | ArrayBuffer): Promise&lt;ArrayBuffer>" method />
-
-Декодирование входных данных из формата Base64.
-
-::: details Пример кода
-
-``` js
-async function base64Test() {
-  const originalData = 'Hello, World!';
-  const encodedData = await cipher.base64Encode(originalData); // Кодирование данных
-
-  console.log('Encoded Data:', encodedData);
-
-  const decodedArrayBuffer = await cipher.base64Decode(encodedData); // Декодирование данных
-
-  const uint8Array = new Uint8Array(decodedArrayBuffer);
-  let decodedData = '';
-
-  for (let i = 0; i < uint8Array.length; i++) {
-    decodedData += String.fromCharCode(uint8Array[i]);
-  }
-
-  console.log('Decoded Data:', decodedData);
-}
-
-base64Test()  // Вывод результатов кодирования и декодирования
-// Encoded Data: SGVsbG8sIFdvcmxkIQ==
-// Decoded Data: Hello, World!
-```
-:::
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-package.md
-
-# Управление пакетами
-
-Этот модуль предоставляет функции для установки и удаления пакетов ресурсов.
-
-## Импорт модуля
-
-``` js
-import pkg from '@system.package'
-```
-
-Поскольку `package` является ключевым словом JavaScript и не может использоваться в качестве имени переменной, мы можем экспортировать модуль `"@system.package"` в переменную `pkg`.
-
-## Определение интерфейсов
-
-### `install` <decl function type="(options: { src: string }): Promise<void>" />
-
-Установка приложения или пакета циферблата из файловой системы. Свойство `src` параметра `options` представляет собой URI файла устанавливаемого пакета ресурсов.
-
-Если пакетом ресурсов является пакет приложения, то после его установки с помощью `pkg.install({ src: 'package-uri' })` его можно запустить с помощью [`launch()`](system-launch.md#launch-launch-app), а для доступа к содержимому пакета можно использовать URI-протокол [`app`](/framework/application/resource.md#app).
-
-`src` — это URI файла устанавливаемого пакета ресурсов. Устанавливаемый пакет должен быть действительным пакетом приложения или циферблата, то есть он должен содержать файл [`manifest.json`](/framework/application/manifest.md). Имя установленного пакета определяется полем [`manifest.package`](/framework/application/manifest.md#package).
-
-После установки для доступа к ресурсам внутри пакета можно использовать протокол [`prc`](/framework/application/resource.md#prc), а для пакетов приложений также можно использовать протокол `app`.
-
-Если устанавливаемый пакет уже существует, будет выполнена операция обновления. Если обновляемое приложение запущенно, оно будет сначала закрыто, после чего его можно будет снова запустить вызовом [`launch()`](system-launch.md#launch-launch-app).
-
-Установленный пакет можно удалить с помощью API [`remove()`](#remove).
-
-### `remove`<decl type="(options: { package: string }): Promise<void>" function />
-
-Удаление пакета ресурсов, установленного с помощью [`install()`](#install). Свойство `package` параметра `options` является именем удаляемого пакета ресурсов, то есть полем [`manifest.package`](/framework/application/manifest.md#package).
-
-Перед удалением пакета ресурсов следует закрыть связанные ресурсы, например, уничтожить соответствующие компоненты и закрыть соответствующие страницы. Функция `remove()` автоматически закроет приложение, соответствующее пакету ресурсов (если это пакет приложения).
-
-::: warning
-Вы должны использовать `remove()`, а не напрямую API файловой системы для удаления пакетов ресурсов, поскольку последний не очищает кэш ресурсов и не может правильно удалить информацию об установке.
-:::
-
-### `getInfo` <decl type="(query?: string | Query): Manifest | undefined" method/>
-
-Получение манифест-информации (manifest) пакета приложения. Необязательный параметр `query` может быть либо строкой с именем пакета, либо более сложным объектом `Query`:
-``` ts
-type Query = {
-  package: string,                 // Имя запрашиваемого пакета
-  options?: ('dial' | 'widgets')[] // Необязательные поля запроса
-}
-```
-Если пакет, указанный в поле `package`, существует, `getInfo()` вернет информацию `Manifest` этого пакета, в противном случае вернется `undefined`. Если параметр `query` не задан, `getInfo()` вернет манифест-информацию текущего приложения.
-
-#### Объект `Manifest`
-
-Возвращаемый объект `Manifest` по сути является подмножеством [`manifest.json`](/framework/application/manifest.md):
-``` ts
-type Query = {
-  type: 'app' | 'dial', // Тип пакета, может быть приложением или циферблатом
-  name: string,         // Имя пакета
-  versionName: string,  // Имя версии
-  versionCode: number,  // Код версии
-  icon?: string,        // Путь к изображению приложения, это поле существует только для пакетов приложений
-  dial?: {              // Необязательное поле: информация о циферблате, присутствует только у пакетов циферблатов
-    component: string,  // Путь к компоненту циферблата
-    preview: string     // Путь к изображению предварительного просмотра циферблата
-  },
-  widgets?: {           // Необязательное поле: информация о виджетах и мини-приложениях
-    name: string,       // Имя виджета / мини-приложения
-    component: string,  // Путь к виджету / мини-приложению
-    preview: string     // Путь к изображению предварительного просмотра виджета / мини-приложения
-  }[]
-}
-```
-Поля `dial` и `widgets` объекта `Manifest` являются необязательными, их наличие определяется содержимым `Query.options`. Например:
-``` js
-pkg.getInfo({
-  package: 'com.example.app',
-  options: ['dial', 'widgets']
-})
-```
-приведет к тому, что результирующий `Manifest` будет содержать поля `dial` и `widgets` (однако пакеты приложений никогда не содержат поле `dial`).
-
-Когда параметр `query` является строкой, это эквивалентно пустому значению опции `options`, то есть
-``` ts
-pkg.getInfo('com.example.app')
-pkg.getInfo({ package: 'com.example.app' })
-```
-дают одинаковый результат. В этом случае возвращаемый объект `Manifest` не содержит необязательных полей.
-
-Если параметр `query` не задан, вы можете получить информацию о текущем приложении с помощью `getInfo()`:
-``` js
-let manifest = pkg.getInfo()
-console.log(manifest)
-```
-
-### `list` <decl function type="(type?: 'app' | 'dial'): string[]" />
-
-Получение списка всех установленных имен пакетов приложений или циферблатов.
-
-### `countOf` <decl function type="(type?: 'app' | 'dial'): string[]" />
-
-Получение количества установленных приложений или циферблатов.
-
-============================================================
-FILE_PATH: src/transl/RU/api/README.md
-
-# API
-
-Glyphix предоставляет полный набор исполняемых JavaScript API, включая такие API, аналогичные браузерному окружению, как [`setInterval`](timer.md) и [`console`](console.md), а также различные интерфейсы системных возможностей, необходимых для реализации работы приложения в целом.
-
-Однако, в отличие от браузерного окружения, Glyphix не предоставляет DOM-интерфейсы, поэтому здесь отсутствуют такие объекты, как `window`, `document`, а также невозможно выполнять какие-либо операции с DOM.
-
-## Асинхронные интерфейсы QuickApp (快应用)
-
-Glyphix поддерживает стандарт часов QuickApp, но мы в основном используем асинхронные интерфейсы в стиле Promise, а не в стиле функций обратного вызова (callback). Например, режим callback для интерфейса `file.readText()` в QuickApp для часов используется следующим образом:
-``` js
-import file from '@system.file'
-
-file.readText({
-  uri: 'internal://files/test.txt',
-  success(data) {
-    console.log(data)
-  },
-  fail(data, code) {
-    console.log(`read text failed: ${code}`)
-  }
-})
-```
-Однако в Glyphix обычно используется стиль Promise:
-``` js
-import file from '@system.file'
-
-// Предположим, что это происходит внутри какой-либо асинхронной функции
-try {
-  const content = await file.readText({ uri: 'internal://files/test.txt' })
-  console.log(content)
-} catch (e) {
-  console.error('read text read failed:', e)
-}
-```
-Поскольку API в стиле Promise больше соответствуют привычкам использования после стандарта ES6, в данной документации приводятся сигнатуры типов только для версий с Promise.
-
-### Promise против интерфейсов с callback
-
-Если не указано иное, все интерфейсы с типом возвращаемого значения `Promise<...>` поддерживают как стиль функций обратного вызова (для старых версий стандарта QuickApp), так и оба стиля асинхронных интерфейсов Promise. Асинхронные интерфейсы в стиле callback обычно имеют следующий тип:
-``` ts
-type CallbackAPI = (options: {
-  success: (data: any) => void,
-  fail: (data: any, code: number) => void,
-  complete: () => void,
-  // Другие параметры...
-}) => void
-```
-В то время как асинхронные интерфейсы в стиле Promise имеют следующий тип:
-``` ts
-type PromiseAPI = (options: any) => Promise<any>
-```
-
-Когда в параметре `options` присутствуют любые из свойств `success`, `fail` или `complete`, API автоматически использует стиль функции обратного вызова (без возвращаемого значения), в противном случае используется стиль с возвратом Promise.
-
-::: warning
-При использовании стиля функций обратного вызова асинхронный API ничего не возвращает, поэтому использование синтаксиса `await` невозможно. Поэтому убедитесь, что при использовании синтаксиса Promise/`await` вы не передаете никаких функций обратного вызова `success`, `fail` или `complete`.
-:::
-
-### Пример использования API
-
-На примере модуля [`system.file`](system-file.md): все функции одновременно поддерживают режимы асинхронного вызова как в стиле Promise, так и в стиле callback. В приведенном ниже фрагменте кода показано сравнение двух вариантов использования API.
-
-::: code-tabs#js
-
-@tab async/await
-
-``` js
-import file from '@system.file'
-
-// async/await по сути является синтаксическим сахаром для Promise
-async function readFile() {
-  let text = await file.readText({ uri: '/app.js' })
-  console.log(text)
-}
-
-readFile()
-```
-
-@tab Promise
-
-``` js
-import file from '@system.file'
-
-file.readText({ uri: '/app.js' })
-  .then(console.log) // Подсказка: типы console.log() и Promise.then() совпадают, использовать стрелочную функцию не нужно
-  .fail((error) => console.log(`${error.message}: ${error.code}`))
-```
-
-@tab callback
-
-``` js
-import file from '@system.file'
-
-file.readText({
-  uri: '/app.js',
-  success(data) {
-    console.log(data)
-  },
-  fail(msg, code) {
-    console.log(`${msg}: ${code}`)
-  },
-  complete() {
-    console.log("complete")
-  }
-})
-```
-
-:::
-
-В данной документации будут приведены типы API только в стиле Promise, а в примерах асинхронных операций будет использоваться исключительно синтаксис await/async.
-
-::: tip
-Разработчикам не рекомендуется дополнительно оборачивать API Glyphix, особенно вручную адаптировать их к стилю Promise из совместимости с callback-функциями. Такой подход требует написания избыточного кода и снижает производительность.
-:::
-
-## Интерфейсы подписки
-
-API подписок регистрируют функцию обратного вызова для определенного модуля вместо того, чтобы напрямую возвращать результат. В отличие от обычных асинхронных интерфейсов, функции обратного вызова подписки могут выполняться многократно. Все интерфейсы подписок поддерживают регистрацию нескольких функций обратного вызова подписки, возвращают ID подписки и предоставляют возможность отписки с помощью соответствующего интерфейса.
-
-В настоящее время Glyphix не поддерживает callback-функции `fail` для подписок в стиле QuickApp, однако при сбое подписки может напрямую выбрасывать исключение.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-request.md
-
-# Загрузка и выгрузка request
-
-## Импорт модуля
-
-``` js
-import request from '@system.request'
-```
-
-## API
-
-### `download`
-<decl method><pre>
-(options: {
-  url: string,
-  header?: {[key: string]: string},
-  filename?: string,
-  callback: (progress: number) => void
-}): DownloadTask
-</pre></decl>
-
-Загружает файл по протоколу HTTP/HTTPS. Назначение полей параметра `options`:
-- `url`： URL-адрес веб-сайта для доступа;
-- `header`：объект, содержащий информацию о заголовках HTTP-запроса, где ключи и значения являются строками. Типичными полями заголовка HTTP могут быть `Authorization`, `Content-Type` и т. д.;
-- `filename`： URI для сохранения загружаемого файла, например: `internal://files/download.txt`;
-- `callback`：функция обратного вызова для отслеживания прогресса загрузки. Эта функция вызывается несколько раз во время загрузки, где `progress` — это значение прогресса загрузки в диапазоне от $[0, 100]$.
-
-Метод `download()` возвращает объект [`DownloadTask`](#downloadtask), который можно использовать для ожидания завершения загрузки или управления задачей загрузки.
-
-::: warning
-Пожалуйста, не используйте достижение прогресса загрузки до $100\%$ в функции `callback` в качестве триггера для действий после завершения загрузки. Подробности см. в разделе [Ожидание завершения загрузки](#ожидание-завершения-загрузки).
-
-Текущая реализация не производит автоматический разбор параметра `filename` на основе `url`, поэтому обязательно указывайте `filename`.
-:::
-
-## Типы
-
-### `DownloadTask`
-
-`DownloadTask` — это возвращаемый тип метода `download`, его сигнатура выглядит следующим образом:
-
-``` ts
-interface DownloadTask {
-  complete: Promise<void>,
-  cancel(): void
-}
-```
-
-Свойство `complete` представляет собой объект `Promise`, который можно использовать для ожидания завершения загрузки. Метод `cancel()` используется для отмены выполняющейся задачи загрузки; если загрузка уже завершена, метод `cancel()` не производит никакого эффекта.
-
-#### Ожидание завершения загрузки
-
-Используйте `DownloadTask.complete` для ожидания завершения загрузки. Когда этот `Promise` переходит в состояние выполнения (fulfilled), гарантируется, что файл полностью записан, поэтому можно безопасно переходить к следующему шагу. В отличие от этого, достижение прогресса загрузки в $100\%$ в `callback` не означает, что файл записан на диск — оно подходит только для отображения прогресса в пользовательском интерфейсе (UI) и подобных задач.
-
-При реальном использовании, учитывая возможность сбоя загрузки, рекомендуется использовать конструкцию `try...catch` для обработки ошибок загрузки. В примере ниже показано, как это делается.
-
-## Пример
-
-Это простой пример загрузки файла из сети:
-
-``` js
-request.download({
-  url: "http://www.rt-thread.com/service/rt-thread.txt",
-  filename: "internal://tmp/rt-thread.txt",
-})
-```
-
-Вы можете дождаться завершения загрузки с помощью свойства `complete`, возвращаемого методом `download()`:
-``` js
-try {
-  await request.download({
-    url: "http://www.rt-thread.com/service/rt-thread.txt",
-    filename: "internal://tmp/rt-thread.txt"
-  }).complete // Отклонение (rejected) complete означает сбой загрузки
-  console.log('download finished.')
-} catch (e) {
-  console.error('download failed:', e)
-}
-```
-
-Блок `try...catch` здесь используется для перехвата исключения при сбое загрузки. Это исключение на самом деле является ошибкой, выбрасываемой при отклонении `DownloadTask.complete`, поэтому вы должны использовать `await` для ожидания свойства `complete`, иначе исключение не удастся перехватить.
-
-============================================================
-FILE_PATH: src/transl/RU/api/console.md
-
-# Модуль Console
-
-Функционал модуля `console` аналогичен объекту `console` в браузере и используется для логирования. Данный модуль можно использовать напрямую без предварительного импорта, все его свойства привязаны к глобальной переменной `console`, например:
-``` js
-console.log('Hello world!')
-```
-
-
-## Определение интерфейсов
-
-### `backtrace` <decl type="boolean" />
-
-Если установить `backtrace` в значение `true`, все вызовы логирования будут содержать информацию о стеке вызовов. По умолчанию значение равно `false`. В этом случае стек вызовов выводят только `console.warn()` и более высокие уровни API.
-
-### `log` <decl type="(...data: any[]): void" method />
-
-### `dir` <decl type="(...data: any[]): void" method />
-
-### `debug` <decl type="(...data: any[]): void" method />
-
-### `info` <decl type="(...data: any[]): void" method />
-
-### `warn` <decl type="(...data: any[]): void" method />
-
-### `error` <decl type="(...data: any[]): void" method />
-
-## Уровни фильтрации логов
-
-Уровень фильтрации логов модуля `console` определяется низкоуровневым механизмом фильтрации системы и не может быть настроен в коде JavaScript.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-storage.md
-
-# Хранение данных
-
-Модуль хранения данных `system.storage` позволяет приложениям сохранять собственные данные. Эти данные персистентно сохраняются в объекте хранилища приложения и удаляются при деинсталляции приложения.
-
-`system.storage` хранит данные в виде пар ключ-значение, где ключ должен быть строкой, а значение — это значение JSON (или значение JavaScript, которое может быть сериализовано в JSON).
-
-## Импорт модуля
-
-``` js
-import storage from '@system.storage'
-```
-
-## API
-
-### `get` <decl type="(key: string): any" method />
-
-Получает значение, соответствующее ключу `key` в хранилище. Если пара ключ-значение не существует, возвращает `undefined`.
-
-### `set` <decl type="(key: string, value: any): void" method />
-
-Этот метод принимает имя ключа `key` и значение `value` в качестве параметров и добавляет эту пару ключ-значение в хранилище. Если ключ уже существует, его соответствующее значение обновляется.
-
-### `delete` <decl type="(key: string): boolean" method />
-
-Удаляет пару ключ-значение, соответствующую ключу `key` в хранилище. Возвращает `true`, если пара ключ-значение существовала и была успешно удалена.
-
-### `clear` <decl type="(): void" method />
-
-Очищает все сохраненные данные в приложении.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-prompt.md
-
-# В팝-ап окно (Toast/Popup)
-
-## Импорт модуля
-
-``` js
-import prompt from '@system.prompt'
-```
-
-## Определение интерфейсов
-
-#### `showToast`
-<decl method><pre>
-(options: {
-  message: string,
-  duration?: number,
-  important?: boolean
-}): void
-</pre></decl>
-
-Отображает текстовое всплывающее окно (toast), которое располагается на верхнем уровне интерфейса. В интерфейсе одновременно отображается только один экземпляр toast; если имеется несколько сообщений, они будут выводиться в очередь по порядку.
-
-Описание полей параметра `options`:
-- `message`: текст, который необходимо отобразить.
-- `duration`: длительность отображения toast в миллисекундах. По истечении этого времени toast автоматически скрывается.
-- `important`: является ли toast важным, по умолчанию `false`. Если установлено значение `true`, разрешается отображение этого toast, когда приложение находится в фоновом режиме.
-
-Стиль отображения toast (шрифт, цвет и т. д.) определяется прошивкой и не может быть изменен в приложении. Длительность отображения toast также ограничена и составляет от $200$ до $5000$ миллисекунд.
-
-#### `showPopup` <decl type="(options: { uri: string, params?: Object }): Promise<any>" method />
-
-Отображает плавающее окно страницы. Описание полей параметра `options`:
-- `uri`: имя целевой страницы, которое должно быть зарегистрировано в секции `router` файла `manifest.json`.
-- `params`: данные, которые необходимо передать при переходе. Свойства параметра `params` заменят значения свойств `data` целевой страницы.
-
-Плавающая страница — это системное всплывающее окно (подобное toast или диалоговому окну), но оно представляет собой полнофункциональную страницу с максимальными возможностями настройки. В отличие от обычных страниц, плавающая страница отображается в системном стеке плавающих страниц, а не в стеке страниц самого приложения. Поэтому такие API механизма [маршрутизации страниц](api/system-router), как `router.back()`, не могут управлять плавающей страницей. Чтобы закрыть плавающую страницу, вы можете использовать метод [`router.close()`](system-router.md#close).
-
-Уровень отображения всплывающего окна выше, чем у приложения, поэтому плавающая страница будет отображаться поверх страниц всех приложений. Все приложения используют один и тот же стек плавающих страниц. Уровень отображения плавающих страниц определяется порядком их появления, то есть страницы, появившиеся раньше, находятся на верхнем уровне. Уровень отображения плавающих страниц совпадает с диалоговыми окнами и ниже, чем у toast.
-
-Как и `router.push()`, метод `showPopup()` возвращает объект Promise, который разрешается после закрытия плавающей страницы и возвращает пользовательский результат. Подробнее см. в разделах [`router.push()`](system-router.md#push) и [`router.close()`](system-router.md#close).
-
-============================================================
-FILE_PATH: src/transl/RU/api/global.md
-
-# Глобальный объект
-
-## Глобальные функции
-
-### `encodeURIComponent` <decl type="(str: string): string" function />
-
-Глобальная функция `encodeURIComponent()` используется для кодирования компонента URI `str`. Она экранирует определенные специальные символы в соответствующие шестнадцатеричные escape-последовательности с символом процента (`%`) в кодировке UTF-8, что гарантирует правильную интерпретацию компонента при использовании его в составе URL, особенно в параметрах строки запроса, путях или фрагментах. 
-
-Буквы, цифры и `- _ . ! ~ * ' ( )` не кодируются. Остальные символы кодируются в escape-последовательности с процентом (например, пробел кодируется как `%20`).
-
-Поведение `encodeURIComponent()` идентично [одноименной функции](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) в веб-среде.
-
-Пример:
-```js
-console.log(encodeURIComponent("https://example.com/page?id=100"));
-// output: https%3A%2F%2Fexample.com%2Fpage%3Fid%3D100
-```
-
-### `decodeURIComponent` <decl type="(str: string): string" function />
-
-Глобальная функция `decodeURIComponent()` используется для декодирования компонента URI `str`, закодированного с помощью `encodeURIComponent()`. Она преобразует escape-последовательности с символом процента (`%`) обратно в их исходную форму символов, восстанавливая оригинальный компонент URI. Например, она преобразует `%20` обратно в пробел.
-
-Поведение `decodeURIComponent()` идентично [одноименной функции](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent) в веб-среде.
-
-Пример:
-```js
-console.log(decodeURIComponent("https%3A%2F%2Fexample.com%2Fpage%3Fid%3D100"));
-// output: https://example.com/page?id=100
-```
-
-### `URI` <decl type="(uri: string | Uri): Uri" function />
-
-Эта функция принимает строку и преобразует ее в объект `Uri` для дальнейшей обработки. Параметр `uri` — это строка URI, которую необходимо распарсить.
-
-Возвращаемое значение представляет собой объект, содержащий следующие поля:
-- `scheme: string` — поле scheme, извлеченное из параметра;
-- `authority: string` — поле authority, извлеченное из параметра;
-- `path: string` — поле path, извлеченное из параметра;
-- `query: string` — поле query, извлеченное из параметра;
-- `origin: string` — исходная строка URI из параметра;
-- `toString: ( string` — этот метод позволяет перекодировать данный объект обратно в строку URI.
-
-Пример:
-``` js
-console.log(URI("https://app-name/icon.png"))
-// {
-//   scheme: 'https',
-//   authority: 'app-name',
-//   path: '/icon.png',
-//   query: '',
-//   origin: 'https://app-name/icon.png',
-//   toString: <function>
-// }
-```
-
-Функция `URI` также принимает в качестве параметра объект. В этом случае функция `URI` добавляет к объекту-параметру метод `toString`, с помощью которого объект URI можно закодировать в строку:
-``` js
-let uri = {
-  scheme: 'https',
-  authority: 'app-name',
-  path: '/icon.png',
-  query: ''
-}
-console.log(URI(uri).toString()) // 'https://app-name/icon.png'
-```
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-internal.md
-
-# Внутренние интерфейсы
-
-Модуль `system.internal` предоставляет некоторые внутренние интерфейсы для использования системой. Этот модуль может применяться только в приложении launcher.
-
-## Импорт модуля
-
-``` js
-import internal from '@system.internal'
-```
-
-## API
-
-### `globalComponent` <decl type="(name: string, uri: string): void" method />
-
-Регистрирует [глобальный компонент](/framework/component/README.md#全局组件). Глобальные компоненты могут импортироваться во всех приложениях. Параметр `name` — это имя глобального компонента, а `uri` — путь или URI UX-файла глобального компонента относительно текущего исходного файла. Например:
-``` js
-internal.globalComponent('TopBar', '/global/TopBar.ux')
-```
-После этого глобальный компонент `TopBar` можно импортировать во всех приложениях с помощью `<import name="TopBar" />`.
-
-Метод `globalComponent()` лучше всего выполнять на этапе выполнения `app.js` приложения launcher, чтобы зарегистрировать информацию о глобальном компоненте до загрузки любого интерфейса.
-
-### `setDefaultKeyHandler` <decl type="(handler: (event: KeyEvent) => void): void" method />
-
-Регистрирует системный обработчик нажатий клавиш по умолчанию. Параметр `handler` представляет собой функцию обратного вызова. Прототип типа `KeyEvent`:
-``` ts
-interface KeyEvent  {
-  type: 'keydown' | 'keyup', // Тип события нажатия клавиши
-  key: string, // Имя клавиши
-  timestamp: number, // Временная метка (timestamp) отправки события нажатия клавиши в миллисекундах
-}
-```
-Обработчик нажатий клавиш по умолчанию может быть зарегистрирован только один раз, так как многократная регистрация перезапишет предыдущие действия.
-
-============================================================
-FILE_PATH: src/transl/RU/api/i18n.md
-
-# Интернационализация
-
-Данный модуль предоставляет функции для работы с интернационализацией внутри приложения.
-
-## Импорт модуля
-
-``` js
-import i18n from '@system.i18n'
-```
-
-## API
-
-### `getLanguage` <decl type="(): string" method></decl>
-
-Получает языковые настройки текущего приложения. Возвращает строку, представляющую текущий код языка, например `'zh-CN'`, `'en-US'` и т. д.
-
-============================================================
 FILE_PATH: src/transl/RU/api/timer.md
 
 # Таймеры
@@ -5266,357 +5619,4 @@ export default {
 ```
 
 Это особенно важно для периодических таймеров, созданных с помощью `setInterval()`, так как они будут работать непрерывно, пока не будут явно отменены.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-battery.md
-
-# 电池状态
-
-## 导入模块
-
-``` js
-import battery from '@system.battery'
-```
-
-## API
-
-### `getStatus` <decl type="(): Promise<{charge: ChargeState, level: number}>" method />
-
-获取电池的充电状态 `charge` （[`ChargeState`](#chargestate) 类型）和电量值 `level`。电量值是 $[0, 100]$ 间的整数。
-
-## 类型
-
-### `ChargeState`
-
-`ChargeState` 枚举所有的电池充电状态，其定义如下：
-``` ts
-type ChargeState = 'charging' | 'discharging' | 'not-charging' | 'full'
-```
-各个值的含义为：
-- `'charging'`：电池处于充电状态；
-- `'discharging'`：断开充电状态；
-- `'not-charging'`：未处于充电状态；
-- `'full'`：电池已经充满电。
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-exchange.md
-
-# Обмен данными
-
-Модуль обмена данными `system.exchange` используется для хранения общих данных между приложениями. Эти данные не сохраняются персистентно и будут утеряны при выключении питания устройства. Данные, хранящиеся в `system.exchange`, доступны во всех приложениях, поэтому этот модуль можно использовать для хранения некоторой конфигурационной информации приложений, но он не подходит для хранения конфиденциальных данных.
-
-`system.exchange` хранит данные в виде пар «ключ-значение», где ключ должен быть строкой, а значение — значением JSON (или значением JavaScript, которое может быть сериализовано в JSON).
-
-## Импорт модуля
-
-``` js
-import exchange from '@system.exchange'
-```
-
-## API
-
-### `get` <decl type="(key: string): any" method />
-
-Получает значение, соответствующее ключу `key` в хранилище. Если пара «ключ-значение» не существует, возвращает `undefined`.
-
-### `set` <decl type="(key: string, value: any): void" method />
-
-Этот метод принимает в качестве параметров имя ключа `key` и значение `value` и добавляет эту пару «ключ-значение» в хранилище. Если ключ уже существует, его соответствующее значение обновляется.
-
-### `delete` <decl type="(key: string): boolean" method />
-
-Удаляет пару «ключ-значение», соответствующую ключу `key` в хранилище. Возвращает `true`, если пара «ключ-значение» существовала и была успешно удалена.
-
-### `watch` <decl type="(key: string, callback: (value: any) => void): number" method />
-
-Отслеживает изменения значения данных с именем ключа `key` в хранилище и вызывает функцию обратного вызова `callback`, когда значение изменяется. Параметр `value` функции обратного вызова представляет собой новое значение данных. Метод `watch()` возвращает `wtacher ID`, который может быть использован в методе [`unwatch()`](#unwatch) для отмены отслеживания.
-
-::: tip
-Когда отслеживание больше не нужно, следует использовать метод [`unwatch()`](#unwatch) для его отмены, в противном случае это может привести к утечке памяти.
-:::
-
-### `unwatch` <decl type="(watcherID: number): void" method />
-
-Отменяет определенное отслеживание для ключа в хранилище. Параметр `watcherID` — это `wtacher ID`, возвращаемый методом [`watch()`](#watch) при создании отслеживания.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-network.md
-
-# Состояние сети
-
-## Импорт модуля
-
-```js
-import network from '@system.network';
-```
-
-## Определение интерфейсов
-
-### `subscribe` <decl type="(callback: (status: NetworkState) => void): number" method/>
-
-Прослушивание изменений состояния сети. Параметр `status` функции `callback` представляет собой новое [состояние сети](#networkstate). ID, возвращаемый этим методом, можно использовать в методе [`unsubscribe()`](#unsubscribe) для отмены подписки.
-
-### `unsubscribe` <decl type="(subscribeID: number): void" method/>
-
-Отмена прослушивания состояния сети. `subscribeID` — это значение ID, возвращаемое методом [`subscribe()`](#subscribe).
-
-### `getType` <decl type="(): Promise<NetworkState>" method/>
-
-Получение текущего состояния сети, возвращает значение [`NetworkState`](#networkstate).
-
-## Определения типов
-
-### `NetworkState`
-
-Этот объект используется для представления текущего состояния сети, сигнатура типа выглядит следующим образом:
-
-```ts
-type NetworkState = {
-  device: string; // Имя сетевого устройства
-  type: string; // Тип сетевого устройства
-  linkUp: boolean; // Включено ли сетевое устройство
-  online: boolean; // В сети ли устройство (доступен ли интернет)
-};
-```
-
-Обычно для проверки подключения устройства к интернету используется свойство `online` объекта `NetworkState`.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-geolocation.md
-
-# Географическое положение
-
-## Импорт модуля
-
-```js
-import geolocation from '@system.geolocation';
-```
-
-Разработчикам необходимо запросить разрешение приложения на доступ к `watch.permission.LOCATION` в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-## Определение интерфейсов
-
-### `getLocation` 
-<decl method><pre>
-(options: {
-  mode?: string
-  timeout?: number
-}): Promise&lt;Location>
-</pre></decl>
-
-Однократно получает текущие географические координаты (широту и долготу) и возвращает асинхронную [информацию о местоположении](#location).
-
-Описание параметров `options`:
-- `mode` : указание точности позиционирования: `fine` — точное позиционирование, `coarse` — приблизительное позиционирование. Значение по умолчанию: `coarse`.
-- `timeout` : таймаут определения местоположения в миллисекундах (`ms`). Значение по умолчанию: `30000`.
-
-### `subscribe` <decl type="(callback: (location: Location) => void): number" method/>
-
-Подписка на изменение местоположения. Параметр `callback` принимает [информацию о местоположении](#location). Метод возвращает ID, который можно использовать в методе [`unsubscribe()`](#unsubscribe) для отмены подписки.
-
-### `unsubscribe` <decl type="(subscribeID: number): void" method/>
-
-Отмена подписки на изменение местоположения.
-
-## Определение типов
-
-### `Location`
-
-Используется для представления данных о местоположении.
-
-```ts
-type Location = {
-  code: number; // Код состояния позиционирования, указывает, действительна ли текущая информация о местоположении
-  msg: string; // Сообщение об ошибке позиционирования
-  data: {
-    // Данные о местоположении
-    longitude: number; // Долгота
-    latitude: number; // Широта
-    coordType: string; // Тип системы координат, например 'WGS84', 'GCJ02' и т.д.
-  };
-};
-```
-
-Коды состояния позиционирования для поля `code`:
-
-- `200`: текущая информация о местоположении действительна;
-- `1002`: телефон в данный момент не подключен к сети Bluetooth
-- `1300`: телефон не может получить службу геолокации
-- `1301`: службы геолокации на телефоне не включены
-- `1302`: приложению не предоставлено разрешение на геолокацию
-- `1399`: неизвестная ошибка
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-test.md
-
-# Тестирующий фреймворк
-
-## Импорт модуля
-
-``` js
-import test from '@system.test'
-```
-
-## Введение
-
-Модуль `system.test` представляет собой фреймворк для сквозного (end-to-end) тестирования, который позволяет программно симулировать действия пользователя и проверять, соответствует ли поведение интерфейса ожиданиям.
-
-Пример простого кода для симуляции действий пользователя:
-``` js
-await test.getByClass('play-button').click()
-await test.getByClass('more-button').click()
-await test.getByClass('download-button').click()
-await test.getByClass('close-button').click()
-await test.getByClass('menu-button').click()
-await test.getHasText('下载列表').click()
-await test.getByTag('Scroll').scroll(0, -200, 0.3)
-await test.getHasText(/[a-z]/).click()
-```
-Этот код автоматически ожидает рендеринга элементов в интерфейсе, с помощью жестов прокрутки переводит скрытые элементы в видимую область, а затем выполняет над ними такие жесты, как клик или прокрутка.
-
-## API
-
-### Вспомогательные функции
-
-Эти функции предоставляют вспомогательные возможности в тестах, такие как задержка времени.
-
-#### `wait` <decl method type="(duration: number): Promise<void>" />
-
-Асинхронная задержка на указанное время, используемая для ожидания определенных операций в тесте или для симуляции пауз пользователя.
-
-### Локаторы
-
-Локаторы ищут элементы (нативные компоненты) с верхнего уровня страницы приложения, например, по тегу или ID элемента. Подробнее о локаторах см. в разделе [Объект `Locator`](#locator-объект).
-
-#### `getByTag` <decl method type="(tag: string): Locator" />
-
-Поиск элемента по `tag`. В настоящее время поддерживается только стиль именования UpperCamelCase, например `'P'`, `'Swiper'` и т. д.
-
-#### `getByClass` <decl method type="(class: string): Locator" />
-
-Поиск элемента по атрибуту `class`.
-
-#### `getById` <decl method type="(id: string): Locator" />
-
-Поиск элемента по атрибуту `id`.
-
-#### `getHasText` <decl method type="(text: RegExp | string): <Locator>" />
-
-Поиск элемента в зависимости от того, совпадает ли его атрибут `text` с параметром `text`. Параметр `text` является регулярным выражением, например:
-- `/hello/` проверяет, содержит ли значение атрибута `text` элемента подстроку `'hello'`;
-- `/^hello/` проверяет, начинается ли значение атрибута `text` элемента с `'hello'`;
-- `/^hello$/` проверяет, равно ли значение атрибута `text` элемента `'hello'`.
-
-Правила сопоставления параметра `text` такие же, как у [`RegExp.test()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test).
-
-### Объект `Locator`
-
-Объект `Locator` возвращается API локаторов и может использоваться для дальнейших операций. Все операции локатора автоматически пытаются дождаться появления элемента и переместить его в видимую зону.
-
-#### `click` <decl method type="(): Promise<void>" />
-
-Когда элемент существует и прокручен в видимую область, симулирует жест клика в позиции элемента.
-
-#### `scroll` <decl method type="(dx: number, dy: number, duration?: number): Promise<void>" />
-
-Когда элемент существует и прокручен в видимую область, симулирует жест прокрутки в позиции элемента. `dx` и `dy` — это смещения прокрутки $(x, y)$ в пикселях; необязательный параметр `duration` задает продолжительность жеста в секундах, значение по умолчанию составляет $0.5 \rm s$.
-
-Этот метод ожидает, пока атрибут `scrolled` элемента не станет равным `false`, прежде чем вернуть объект Promise. Таким образом, для таких компонентов, как `scroll` и `swiper`, метод `scroll()` вызовет следующий шаг только после того, как инерционная анимация этих компонентов полностью остановится.
-
-#### `wait` <decl method type="(): Promise<void>" />
-
-Ожидает появления элемента и его прокрутки в видимую область, но не симулирует никаких жестов или других операций.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-devtools.md
-
-# Отладка (Debugging)
-
-## Импорт модуля
-
-``` js
-import devtools from '@system.devtools'
-```
-
-## API
-
-### `command` <decl type="(cmd: string, fn: (argv: string[]) => void): void" method />
-
-Регистрирует функцию `fn` в качестве shell-команды с именем `cmd`. После регистрации её можно вызывать из терминала устройства с помощью команды `dev`. Например:
-``` bash
-dev cmd arg1 arg2
-```
-вызовет команду с именем `'cmd'` и передаст ей список аргументов `['arg1', 'arg2']`.
-
-============================================================
-FILE_PATH: src/transl/RU/api/system-schedule.md
-
-# Планировщик задач (定时任务)
-
-## Импорт модуля
-
-``` js
-import schedule from "@system.schedule"
-// Или
-const schedule = require("@system.schedule")
-```
-
-Разработчикам необходимо объявить разрешение на доступ к `watch.permission.SCHEDULE` для приложения в файле [`manifest.json`](/framework/application/manifest.md#permissions).
-
-## API
-
-### `scheduleJob`
-<decl method><pre>
-(options: {
-  type: number,
-  timeout: number,
-  triggerMethod: String,
-  interval?: number,
-  params?: Object,
-}): number
-</pre></decl>
-
-Установка задачи по расписанию. Назначение полей параметра `options`:
-- `type`:	
-  - 1: Аппаратное время, `triggerMethod` может быть вызван путем изменения системного времени;
-  - 2: Реальное течение времени, время рассчитывается даже в спящем режиме;
-- `timeout`:
-  - Если `type` равен 1, это метка времени (timestamp) первого выполнения, то есть количество миллисекунд от 1970/01/01 00:00:00 GMT до текущего момента;
-  - Если `type` равен 2, это интервал от текущего времени до первого выполнения в миллисекундах;
-- `triggerMethod`: имя метода, определенного в `app.js`, который вызывается фоновым сервисом при достижении времени тайм-аута;
-- `interval`: интервал периодического выполнения в миллисекундах; если не передан, задача не повторяется;
-- `params`: параметры задачи.
-
-::: tip
-Хотя точность `timeout` и `interval` составляет миллисекунды, таймер срабатывает с точностью до секунды. Интервал времени до первого выполнения и период повторения не могут быть менее 60 секунд, в противном случае интерфейс выбросит исключение.
-:::
-
-Возвращаемое значение — это ID задачи, который используется для ее отмены. Возвращаемое значение `-1` означает сбой при создании.
-
-``` js
-let id = schedule.scheduleJob({
-  type: 1,
-  timeout: new Date('2025-03-14T23:00:00').getTime(),  // Метка времени первого выполнения
-  interval: 60000,     // Интервал периодического выполнения не менее 60 секунд
-  triggerMethod: 'scheduleFunc',
-  params: {
-    food: 'apple',
-  },
-})
-
-// app.js
-export default {
-  scheduleFunc(params) {
-    console.log('scheduleFunc', params)
-  },
-}
-```
-
-### `cancel` <decl type="(id: number): void" method/>
-
-Отмена запланированной задачи.
-
-``` js
-schedule.cancel(id)
-```
 
