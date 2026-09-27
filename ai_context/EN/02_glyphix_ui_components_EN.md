@@ -2,44 +2,1221 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/div.md
+FILE_PATH: src/transl/EN/components/input.md
 
-# div
+# input
 
-`div` is the most basic container component. `div` supports child components and layout, but does not support scrolling (content exceeding the boundaries will be clipped directly). If you want the content to be scrollable, please use the [scroll](scroll) component.
+By default, it is an inline element that provides an interactive interface to receive user input.
 
-## Notes
+## Attributes
 
-### Text Display
+### `type` <decl type="'checkbox' | 'radio'" set />
 
-The `div` component cannot be used to display text directly; instead, text components like `p` must be used. For example:
+Can be set to the above value types. The actual form of the `input` component is determined based on the set type.
 
-```html
-<!-- Incorrect usage, text will not be displayed -->
-<div>text content.</div>
-<!-- Correct usage -->
-<p>text content.</p>
+### `name` <decl type="string" set />
+
+Sets the name of the `input` component.
+
+### `checked` <decl type="boolean" set />
+
+The current checked state of the component, which can trigger the checked pseudo-class. This is effective when the type is checkbox. Setting it to `on` checks the checkbox by default.
+
+### `value` <decl type="string" set />
+
+Sets the value of the `input` component.
+
+============================================================
+FILE_PATH: src/transl/EN/components/slider.md
+
+# slider
+
+Slider component, which defaults to a block-level element.
+
+## Attributes
+
+### `value` <decl type="number" get set listen />
+
+The current value, with a default of $10$.
+
+Setting the `value` attribute will change the current value of the component. You can listen for changes to the current value using the `on` directive, which is triggered every time the current value changes.
+
+### `min` <decl type="number" set />
+
+The minimum value, with a default of $0$.
+
+### `max` <decl type="number" set />
+
+The maximum value, with a default of $100$.
+
+### `vertical` <decl type="boolean" set />
+
+If the value of the `vertical` attribute is `true`, the `slider` component will be displayed vertically; otherwise, it will be displayed horizontally. The default value is `false`. 
+
+## CSS Specifications
+
+Developers can customize the appearance of the `slider` component using CSS.
+
+### Dimension Calculation
+
+The default width and height of a `slider` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) property (or inherited). You can customize the dimensions of the `progress` using the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) properties.
+
+### CSS Properties
+
+The following CSS properties may be very useful:
+- [`background-color`](/framework/generic/styles.md#background-color) controls the background color of the `slider`;
+- [`color`](/framework/generic/styles.md#color) controls the progress bar color of the `slider`;
+- [`border-radius`](/framework/generic/styles.md#border-radius) can set the `slider` to have rounded borders, for example, `50%` produces a semi-circular border;
+
+Other CSS properties may also be useful, such as setting border styles using the [`border`](/framework/generic/styles.md#border) property.
+
+### CSS Pseudo-elements
+
+#### `value`
+
+This pseudo-element can be used to style the `slider` progress bar independently of the background portion. For example, you can set the border-radius for the track background and the progress bar portion separately to achieve an effect where the outer border has rounded line caps while the progress bar has straight caps.
+
+``` css
+slider {
+  border-radius: 50%; /* Track background border-radius */
+}
+
+slider::value {
+  border-radius: 0; /* Progress bar of the track has no border-radius */
+}
 ```
 
-However, if the `div` contains multiple child elements, text can be included as its child element:
+#### `thumb` <experimental/>
 
-```html
+The `thumb` pseudo-element is used to define the style of the `slider` thumb. By default, the `slider` does not include a thumb; to display a thumb, you must specify the width and height of the `thumb` element:
+``` css
+slider::thumb {
+  width: 150%;
+  height: 150%;
+  border-radius: 50%;
+}
+```
+Percentage units for `width` and `height` are calculated relative to the element's own dimensions. For a horizontal `slider`, the thumb's width and height are calculated as a percentage based on the element's CSS `height`, while for a vertical `slider`, the thumb's width and height are calculated based on the element's CSS `width` property. For example, if the element's CSS is:
+``` css
+slider {
+  width: 200px;
+  height: 24px;
+}
+```
+Then the width and height of the thumb corresponding to `slider::thumb` above are both $24\rm{px} \times 150\% = 36\rm{px}$. The percentage-based border-radius of the thumb is calculated based on the thumb's own dimensions. In this example, the calculated border-radius for the `thumb` pseudo-element with `50%` is $36\rm{px} \times 50\%=18\rm{px}$.
+
+The `thumb` pseudo-element supports the `border` CSS property, but the border will not exceed the dimensions of the `thumb` pseudo-element.
+
+### CSS Example
+
+The following example demonstrates some ways to customize the appearance of the progress bar using CSS.
+<glyphix id="components-slider-styles" height="180" width="480" title="Slider Styles">
+
+``` html
 <div>
-  first element,
-  <span style="color: #f0f">second element.</span>
+  <!-- Default style -->
+  <slider ::value="value" />
+  <!-- Flat-ended progress bar style -->
+  <slider class="flat" ::value="value" />
+  <slider class="more-style" ::value="value" />
+  <p>value: {{value}}</p>
 </div>
 ```
 
-<Glyphix id="components-div-text-element" height="48" width="360" inline >
+``` css
+div > * {
+  margin: 8px;
+  padding: 6px;
+}
+
+.flat::value {
+  /* Setting the border-radius of the value pseudo-element to 0 achieves a flat-ended progress bar effect */
+  border-radius: 0;
+}
+
+.more-style {
+  /* Custom border-radius */
+  border-radius: 30%;
+  /* slider background color */
+  background-color: #b3c5d7;
+  /* slider foreground color */
+  color: #b5179e;
+  /* padding can adjust the margin of the slider foreground */
+  padding: 6px;
+  height: 1rem;
+}
+
+/* Define track thumb style */
+.more-style::thumb {
+  width: 300%; /* Capsule-shaped thumb with a 2:1 aspect ratio */
+  height: 150%;
+  background-color: white;
+  border: 4px solid #f3722c; /* Thumb border */
+  border-radius: 50%;
+}
+```
+
+``` js
+export default {
+  data: { value: 50 }
+}
+```
+
+</glyphix>
+
+============================================================
+FILE_PATH: src/transl/EN/components/scroll-bar.md
+
+# scroll-bar
+
+Scroll bar component. This component displays a scroll bar when there is a large amount of scrollable content, allowing users to control content scrolling through the scroll bar.
+
+## Attributes
+
+### `value` <decl type="number" set get listen />
+
+The current value of the scroll bar, which is a value between `min` and `max`. The default value is $0$.
+
+### `min` <decl type="number" set />
+
+The minimum value of the scroll bar, which should not be greater than `max`. The default value is $0$.
+
+### `max` <decl type="number" set />
+
+The maximum value of the scroll bar, which should not be less than `min`. The default value is $100$.
+
+### `pagestep` <decl type="number" set />
+
+The scroll step size of the scroll bar, which is the distance scrolled per step. The default value is $10$.
+
+============================================================
+FILE_PATH: src/transl/EN/components/a.md
+
+# a
+
+The anchor component, which is an inline element by default, is used to jump to a specified page.
+
+## Attributes
+
+### `href` <decl type="string" get set />
+
+Specifies the [page name](/framework/application/manifest.md#pages) or URI string to jump to.
+
+``` html
+<a href="page1">跳转到 page1 页面</a>
+``` 
+
+Unlike the `<a>` tag in Web, the `a` component only supports page navigation and does not support hyperlink navigation.
+
+The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings in the form of `PageName?key=value`, which consists of a page name (as the path field) and a query field. The query field of this URI will be parsed as navigation parameters for the page. For example, when clicking this `<a>` element:
+
+``` html
+<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+```
+
+It is equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
+
+``` js
+router.push({
+  uri: 'page1',
+  params: {text: 'test-text', message: 'hello'}
+})
+```
+
+::: tip
+Please note that the value of the query field in the URI will only be parsed as a string type. Therefore, `100` in `page1?size=100` will be parsed as the string `'100'` rather than the number `100`. If you need to pass parameters of a specific type, please use the [`router`](/api/system-router.md) API.
+:::
+
+============================================================
+FILE_PATH: src/transl/EN/components/list-item.md
+
+# list-item
+
+A subcomponent of `list` used to display specific items in a list. It supports subcomponents and layout, but does not support scrolling.
+
+::: tip
+Glyphix does not provide a `list` container component like the Quick App does; instead, it uses [`scroll`](scroll.md) to implement scrolling containers. Similarly, there is no need to use the `list-item` component—please directly use [`div`](div.md) or any other component as the list item element.
+:::
+
+============================================================
+FILE_PATH: src/transl/EN/components/button.md
+
+# button
+
+The button component is an inline element by default and can trigger corresponding events when touched.
+
+## Properties
+
+### `checkable`  <decl type="boolean" set />
+
+When set to `true`, it means a single touch only responds to one state change, i.e., from pressed to released, or from released to pressed. In this case, the listening value for the `press` state is `true` when pressed and `false` when released.
+
+### `toggleable` <decl type="boolean" set />
+
+When set to `true`, it means the `press` listening value can be changed, being `true` when pressed and `false` when released.
+
+### `press` <decl type="boolean" get set listen />
+
+When setting the `press` property, the component's state can be changed. You can also listen to the component's state via the `on` directive. By default, upon completing a touch, the callback parameter is `true`. You can use it with the `checkable` and `toggleable` properties to get different listening values and states.
+
+## Limitations
+
+### `click` Event Invalidation
+
+When not using the `button` component, you typically listen for click events on any native component via the [`click`](/framework/generic/properties.md#click) property. However, this method is generally not suitable for `button`. For example, consider the following code:
+```html
+<button on:click="onOuterClick">
+  <p on:click="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+```js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    // Prevent event bubbling to avoid the outer button responding to the click event
+    event.stopPropagation();
+    console.log('inner click');
+  }
+}
+```
+
+<glyphix id="components-button-click-1" height="48" width="360" inline>
+
+``` html
+<button on:click="onOuterClick">
+  <p on:click="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+``` css
+button {
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+p {
+  border: 2px solid #444;
+  padding: 0 10px;
+}
+```
+
+``` js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    event.stopPropagation();
+    console.log('inner click');
+  }
+}
+```
+
+</glyphix>
+
+You might expect that clicking the `"inner"` text would trigger the `onInnerClick` method and prevent `onOuterClick`. But you will find this is not the case (it is best to open the browser console to view the logs): the `onInnerClick` method is not triggered at all, and only the outer `button` component responds to the click, meaning:
+- When clicking the `inner` text, the `inner click` log does not appear, only the `outer click` log;
+- The `button`'s pressed interaction is triggered (opacity decreases).
+
+This is just like clicking the outer `outer text`. The reason for this is that the `button` component takes precedence in responding to the entire lifecycle of the press gesture (from pressing down to releasing), while the `click` event is triggered upon release. This means that regardless of whether the inner element's `click` event handler prevents bubbling, it cannot change this behavior.
+
+#### Solution
+
+To solve this problem, you should listen to the `press` event of the outer `button` and the `touchstart` event of the inner element:
 
 ```html
-<div>
-  first element,
-  <span style="color: #f0f">second element.</span>
+<button on:press="onOuterClick">
+  <p on:touchstart="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+```js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    // Prevent event bubbling to avoid the outer button responding to the click event
+    event.stopPropagation();
+    console.log('inner click');
+  }
+}
+```
+
+<glyphix id="components-button-click-2" height="48" width="360" inline>
+
+``` html
+<button on:press="onOuterClick">
+  <p on:touchstart="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+``` css
+button {
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+p {
+  border: 2px solid #444;
+  padding: 0 10px;
+}
+```
+
+``` js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    event.stopPropagation();
+    console.log('inner click');
+  }
+}
+```
+
+</glyphix>
+
+Try the example above, and you will find that clicking the `inner` text only triggers the `onInnerClick` method, while `onOuterClick` is not triggered, and the `button` does not render the pressed effect either.
+
+::: tip
+The `press` event is also typically triggered upon release, but it requires that the button's press event has never been prevented. Therefore, the inner element's `touchstart` event, which stops propagation, can prevent the outer button's `press` event from being triggered.
+:::
+
+#### Alternative Trigger Timing
+
+The limitation of this method is that the inner element's `touchstart` event is triggered upon pressing down. You can alternatively use the `touchend` event for triggering, but you must keep the event propagation-stopping functionality on the `touchstart` event. This ensures that the outer button's `press` event is not triggered when pressing down.
+
+```html
+<button on:press="onOuterClick">
+  <p on:touchstart="$event.stopPropagation()" on:touchend="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+```js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    // No need to stop propagation here, as it was already stopped in touchstart
+    console.log('inner click');
+  }
+}
+```
+
+<glyphix id="components-button-click-3" height="48" width="360" inline>
+
+``` html
+<button on:press="onOuterClick">
+  <p on:touchstart="$event.stopPropagation()" on:touchend="onInnerClick">inner</p>
+  outer button
+</button>
+```
+
+``` css
+button {
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+p {
+  border: 2px solid #444;
+  padding: 0 10px;
+}
+```
+
+``` js
+export default {
+  onOuterClick() {
+    console.log('outer click');
+  },
+  onInnerClick(event) {
+    console.log('inner click');
+  }
+}
+```
+
+</glyphix>
+
+Open the browser console and click the `inner` text again. You will find that the `onInnerClick` log is only printed upon release, and it successfully prevents the outer `button` from responding to the gesture as well.
+
+============================================================
+FILE_PATH: src/transl/EN/components/text-field.md
+
+# text-field
+
+A component used for entering single-line text content, which is an inline element by default. Unlike GUI elements on mobile phones or PCs, `text-field` currently does not respond to input devices such as keyboards, nor does it pop up an IME (Input Method Editor) interface, so you must manually edit its content. `text-field` supports operating the cursor through touch gestures (such as tapping and scrolling).
+
+`text-field` is suitable as the underlying component for single-line text input, allowing you to implement a soft keyboard according to your needs (such as a password keypad or even voice input). For details, please refer to the [Example](#basic-example).
+
+## Attributes
+
+### `value` <decl type="string" set get listen />
+
+The `value` property is a string, which is the currently edited content of the `text-field`. Reading or listening to this value can retrieve the entered text, and this property can also be set.
+
+Typically, `value` is two-way bound to a specific reactive property, such as:
+
+```html
+<text-field ::value="inputText" />
+```
+
+### `placeholder` <decl type="string" set get />
+
+When the content of the `text-field` is empty, `placeholder` can be used to provide the user with a short prompt, such as phrases like "Please enter text".
+
+`placeholder` is automatically displayed when the input text is empty, so it usually only requires a fixed content, such as:
+
+```html
+<text-field ::value="inputText" placeholder="type here" />
+```
+
+### `password` <decl type="boolean" set get />
+
+When this property is set, `text-field` will use "password mode", meaning each character is replaced with a "•" ([Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm)). You can turn the `password` property off or on at any time to switch between showing and hiding the password status.
+
+In newer versions <version-badge since="0.9" />, password mode delays the masking of entered characters. Users can see the newly entered characters for a short time before they are replaced with "•". Older versions mask input characters immediately.
+
+### `insert` <decl type="(text: string): void" method />
+
+Inserts a piece of text with the content `text` at the cursor position, and the cursor will automatically move after the inserted text. Calling this function will trigger the `value` listening event.
+
+### `backspace` <decl type="(): void" method />
+
+Deletes the character at the cursor position, and the cursor will automatically move forward. Calling this function will trigger the `value` listening event.
+
+## Usage Instructions
+
+### Basic Example
+
+The following example demonstrates the basic usage of `text-field`. You can click the keyboard buttons to enter numbers. Click the "×" button to delete the content at the cursor position, and click "A/*" to toggle between password mode and regular text input mode. In password mode, the entered content is hidden with `•`.
+
+<glyphix id="components-text-field-1" width="410" height="160">
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <!-- A simple matrix numeric keyboard -->
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
 </div>
 ```
 
-</Glyphix>
+```js
+export default {
+  data: {
+    inputText: "",
+    password: false,
+  },
+  keyboard: [
+    ['1', '2', '3', '4', '5'],
+    ['6', '7', '8', '9', '0'],
+  ],
+  textField: null,
+  onReady() {
+    // Get the TextField component object to easily call the insert() and backspace() methods.
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  text-align: center;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+In this example, the text of the `text-field` is centered, which is achieved through `text-align`:
+```css
+text-field {
+  text-align: center;
+}
+```
+
+We first obtain the `text-field` component object using the `$element` method within the component's `onReady()` lifecycle function, because we will need to use the [`insert()`](#insert) and [`backspace`](#backspace) methods to edit the content.
+
+Building on this, we can directly call the methods of `text-field` within the `click` event listener of the `button` component, for example:
+```html
+<button on:click="textField.backspace()">×</button>
+```
+
+Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. For educational purposes, this example only implements a 2-row by 5-column numeric keyboard. You need to insert the key value into the `text-field` in the `click` event listener function of each key:
+```html
+<div class="flex-row" for="rows in keyboard">
+  <button class="flex-1" for="key in rows"
+          on:click="textField.insert(key)">
+    {{key}}
+  </button>
+</div>
+```
+
+This example also demonstrates the standard method for toggling password mode.
+
+### Content Validation and Formatting
+
+You can achieve content validation and formatting by two-way binding the [`value`](#value) property of the `text-field` to a computed property. The following example demonstrates this approach, which allows you to enter a maximum of 9 digits (letters and other characters are not allowed) and adds a "," separator every three digits.
+
+<glyphix id="components-text-field-validator" title="Content Validator" width="410" height="200">
+
+```html
+<div class="flex-column">
+  <div class="flex-row align-baseline">
+    <text-field id="text-field"
+                ::value="inputText"
+                :password="password"
+                placeholder="type here" />
+    <button checkable ::press="password">A/*</button>
+    <button on:click="textField.backspace()">×</button>
+  </div>
+  <div class="flex-row" for="rows in keyboard">
+    <button class="flex-1" for="key in rows"
+            on:click="textField.insert(key)">
+      {{key}}
+    </button>
+  </div>
+</div>
+```
+
+```js
+export default {
+  data: {
+    password: false,
+    rawText: "",
+  },
+  computed: {
+    inputText: {
+      get() { return this.rawText },
+      set(text) {
+        if (text.length < 12 && /^[\d,]*$/.test(text)) {
+          this.rawText = text.replace(/[^\d]/g, '')
+                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        }
+      },
+    },
+  },
+  keyboard: [
+    ["1", "2", "3", "4", "5"],
+    ["6", "7", "8", "9", "0"],
+    ["A", "B", "C", "D", "E"],
+  ],
+  textField: null,
+  onReady() {
+    this.textField = this.$element("text-field")
+  },
+}
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+text-field {
+  flex: 1;
+  border-bottom: 2px solid #666;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+
+.flex-1 {
+  flex: 1;
+}
+```
+</glyphix>
+
+Content validation and formatting are implemented through two-way binding and computed properties. For the `text-field` component node:
+```html
+<text-field id="text-field"
+            ::value="inputText"
+            :password="password"
+            placeholder="type here" />
+```
+The `value` property is two-way bound to `inputText`, which is actually a computed property. Its `set()` method checks whether the input content complies with the rules (at most 11 characters, allowing only digits and commas), then filters the digits using regular expressions and formats them by adding commas every three digits:
+```js
+function set(text) {
+  if (text.length < 12 && /^[\d,]*$/.test(text)) {
+    this.rawText = text.replace(/[^\d]/g, '')
+                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+}
+```
+If the entered content does not meet the requirements, the `set()` method will ignore the input value, and the two-way binding mechanism will keep the content of the `text-field` consistent with the property value of `inputText` (obtained via the `get()` method). Therefore, you will find that letter keys cannot be entered.
+
+============================================================
+FILE_PATH: src/transl/EN/components/progress-arc.md
+
+# progress-arc
+
+The `progress-arc` component is used to display a circular progress bar and defaults to a block-level element.
+
+## Attributes
+
+### `max` <decl type="number" set />
+
+The maximum progress value. The [`value`](#value) attribute will not exceed it.
+
+### `min` <decl type="number" get setet />
+
+The minimum progress value. The [`value`](#value) attribute will not be less than it.
+
+### `value` <decl type="number" get set listen />
+
+Sets the progress value. The display proportion of the progress depends on the ratio of the `value` attribute within the interval from `min` to `max`, and the display proportion is restricted between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
+
+### `busy` <decl type="boolean" get set />
+
+Sets whether the `progress-arc` component is in a busy state. In the busy state, a loading animation is displayed instead of the value of the `value` attribute. The following example demonstrates how to use a circular progress bar to simulate a loading animation:
+
+<glyphix id="components-progress-arc-busy" height="100" width="300" title="Simulating a Loading Animation">
+
+``` html
+<progress-arc busy :startAngle="0" :stopAngle="360" />
+```
+
+</glyphix>
+
+In this example, the start angle and stop angle of the progress bar differ by $360^\circ$. At this point, the `busy` attribute can be used to display a typical loading animation effect.
+
+::: tip
+As long as the progress bar is circular, a fixed busy animation effect will be displayed; the start and end angles have no effect on this.
+:::
+
+### `startAngle` <decl type="number" get set />
+
+The starting angle of the arc progress bar, with a default value of $135$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
+
+### `stopAngle` <decl type="number" get set />
+
+The ending angle of the arc progress bar, with a default value of $405$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
+
+## Usage Instructions
+
+### Angle Configuration
+
+Unlike the linear [`progress`](progress.md), arc or circular progress bars require proper configuration of the `startAngle` and `stopAngle` attributes to display correctly. Both attributes use angular units. In the screen coordinate system, $0^\circ$ points horizontally to the right (i.e., the $3$ o'clock position on a clock) and increases in the clockwise direction, decreasing otherwise.
+
+The display of `progress-arc` linearly interpolates the angle range based on the proportion of `value` within $[\texttt{min}, \texttt{max}]$. Specifically, users will see the highlighted progress angle start at `startAngle` and end at `valueAngle`:
+
+$$
+\begin{aligned}
+  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
+  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
+\end{aligned}
+$$
+
+Therefore, to display a full-circle circular progress bar, the start and end angles must differ by $360^\circ$, even if the two angles appear visually identical. Additionally, the start angle can be greater than the end angle, which will reverse the direction of the progress.
+
+The following example shows the practical effects of various angle configurations. Note that the second example demonstrates the technique for reverse progress display.
+
+<glyphix id="components-progress-arc-angles" height="120" width="720" title="Angle Configuration Examples">
+
+``` html
+<div>
+  <p class="progress-label">{{value}}%</p>
+  <stack>
+    <p>default</p>
+    <progress-arc :value="value" />
+  </stack>
+  <stack>
+    <p>405~135</p>
+    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
+  </stack>
+  <stack>
+    <p>-45~225</p>
+    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
+  </stack>
+  <stack>
+    <p>0~360</p>
+    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
+  </stack>
+  <stack>
+    <p>-90~270</p>
+    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
+  </stack>
+</div>
+```
+
+``` js
+export default {
+  data: { value: 0 },
+  onInit() {
+    setInterval(() => {
+      this.value = this.value + 5
+      if (this.value > 100)
+        this.value = 0
+    }, 500)
+  }
+}
+```
+
+``` css
+div {
+  display: flex;
+}
+
+progress-arc {
+  width: 200px;
+  padding: 0 8px 0 8px;
+  stroke-width: 0.5rem;
+}
+
+p {
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+.progress-label {
+  width: 3.5rem;
+}
+```
+
+</glyphix>
+
+## CSS Specifications
+
+### Size Calculation
+
+The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will fill the shorter axis, and the center of the arc progress bar will be the center of the element. By default, the size of `progress-arc` may be close to a single character, resulting in a very strange display effect. Therefore, it is usually necessary to explicitly specify the width and height in CSS or use other reasonable layout strategies.
+
+::: tip
+It is best to specify a reasonable width and height for the `progress-arc` component, otherwise it may be unrecognizably small. At the very least, the `width` CSS property should be set, and the component's layout strategy will automatically use a $1:1$ aspect ratio.
+:::
+
+### CSS Properties
+
+The appearance of the `progress-arc` component can be adjusted via CSS.
+
+#### `stroke-width`
+
+This property specifies the arc outline width of the `progress-arc` component. The value type is [Length](/framework/render/style-and-layout.md#长度), and percentage units are not supported.
+
+::: tip
+If you want the rendering width of the `progress-arc` component to be proportional to the font size, it is recommended to use [`rem`](/framework/application/font-config.md#rem-字号单位) length units, such as `0.15rem`.
+:::
+
+#### `color`
+
+Sets the color of the highlighted progress bar of `progress-arc`. By default, the system theme color is used.
+
+#### `background-color`
+
+Sets the color of the background progress bar of `progress-arc`. By default, it is configured according to the system theme.
+
+### CSS Pseudo-elements
+
+#### `value`
+
+
+
+============================================================
+FILE_PATH: src/transl/EN/components/image-animator.md
+
+# image-animator
+
+The `image-animator` component is used to play a sequence of image frames as an animation. It is an inline element by default.
+
+<glyphix id="image-animator-1" height="190" width="360" >
+
+```html
+<div class="flex-column">
+  <div class="frame-box">
+    <image-animator :images="frames" :play="play" :duration="100" />
+  </div>
+  <div>
+    <button on:click="play = 'start'">start</button>
+    <button on:click="play = 'pause'">pause</button>
+    <button on:click="play = 'stop'">stop</button>
+  </div>
+</div>
+```
+
+```js
+export default {
+  data: {
+    play: "stop",
+  },
+  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
+};
+```
+
+```css
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frame-box {
+  border: 2px solid lightgray;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+button {
+  border-radius: 8px;
+  background-color: #dee2e6;
+  margin: 8px;
+  padding: auto 12px;
+}
+
+button:active {
+  opacity: 0.5;
+}
+```
+
+</glyphix>
+
+## Properties
+
+### `images` <decl type="string[]" set />
+
+Sets the collection of sequence frame images. Each element in `images` is the path or URI of that frame's image. Typically, the dimensions of each frame image are consistent.
+
+Supports PNG or JPEG format images.
+
+If the frame sequence does not change, it is recommended to define it as a non-reactive property to save memory:
+
+```js
+export default {
+  // frames is a non-reactive property of the component
+  frames: [
+    "/assets/sprite-1.png",
+    "/assets/sprite-2.png",
+    "/assets/sprite-3.png",
+  ],
+};
+```
+
+The advantage of doing this is that multiple component instances will share the same `frames` array object (reactive properties are copied to each component instance). You should only place it in the `data` object if the frame sequence truly requires reactivity.
+
+If the frame sequence is sequentially numbered, you can use this trick to simplify the creation of the frames array:
+
+```js
+export default {
+  // 4 frames numbered starting from 0
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
+  // Or, 4 frames numbered starting from 1
+  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
+};
+```
+
+Pass the `frames` array to the `images` property in the component template to specify the frame sequence and play the animation:
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+::: note
+The `images` property does not yet support Quick App's `ImageFrame` structure, so you cannot use frame collection definitions like `[{ src: '...' }, ...]`.
+:::
+
+### `duration` <decl type="number" get set />
+
+Specifies the playback duration of each frame in milliseconds.
+
+### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
+
+Sets the playback state, supporting start, pause, and stop states. `image-animator` is initially in the `stop` state, so it will automatically rest at the first frame position of [`images`](#images).
+
+|   Value   | Description                          |
+| :-------: | ------------------------------------ |
+| `'start'` | Starts playing from the current frame. |
+| `'pause'` | Pauses playback and displays the current frame. |
+| `'stop'`  | Stops playback and displays the first frame. |
+
+As shown above, `play` only supports three enumerated values: `'start'`, `'pause'`, or `'stop'`. However, the following trick can be used to automatically play the animation:
+
+```html
+<image-animator :images="frames" play :duration="100" />
+```
+
+Writing the `play` property without a value is equivalent to the [implicit property value](/framework/component/template.md#隐式属性值) syntax `:play="true"`. Boolean types like `true` are always converted to the default `'start'` enumerated value. This syntax is very useful for scenarios that require automatic playback of frame sequence animations.
+
+### `iteration` <decl type="number" set />
+
+Sets the number of repetitions for all frame sequences in `images`. When the maximum limit is reached, it will automatically switch to `'pause'` mode. `0` indicates infinite playback.
+
+## Inherited Properties
+
+`image-animator` shares the same [inherited property](/components/image.md#继承的属性) behavior as `image`.
+
+## CSS Notes
+
+`image-animator` shares the same [CSS behavior](/components/image.md#css-说明) as `image`.
+
+============================================================
+FILE_PATH: src/transl/EN/components/p.md
+
+# p
+
+Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text wrapping across lines even when set as an inline element. If rich text layout is required, you should consider using components like `span`.
+
+## Properties
+
+### `text` <decl type="string" get set/>
+
+Sets the text content. Supports the following two writing formats:
+
+``` html
+<p text="Hello Glyphix"></p>
+<p>Hello Glyphix</p>
+```
+
+<glyphix id="p" :height="70" inline>
+
+``` html
+<div>
+  <p text="Hello Glyphix"></p>
+  <p>Hello Glyphix</p>
+</div>
+```
+
+</glyphix>
+
+### `color` <decl type="string" get set/>
+
+Sets the text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shortcut for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
+
+### `lines` <decl type="number" get set/>
+
+Sets the maximum number of lines for the text. Text exceeding this number of lines will be truncated or elided. This property is a shortcut for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
+
+### `text-align` <decl type="string" set/>
+
+Sets the text alignment. Supports values such as `left`, `center`, `right`, etc. This property is a shortcut for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
+
+### `font-size` <decl type="string" set/>
+
+Sets the font size of the text. Supports CSS font size values like `12px`, `1.5em`, etc. This property is a shortcut for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
+
+### `font-weight` <decl type="number" set/>
+
+Sets the font weight of the text. Currently, only integer values are supported, such as `400`, `600`, etc. This property is a shortcut for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
+
+## Tips & Tricks
+
+### Size Control
+
+In general, avoid manually setting the height of the `p` component. For example:
+``` css
+p.my-paragraph {
+  height: 48px;
+  font-size: 32px;
+}
+```
+On the surface, this sets a height greater than the font size for the `p` component, but in reality:
+- For single-line text, the actual height of certain fonts may exceed the font size, and even a height of `48px` may result in vertical clipping.
+- For multi-line text, setting a fixed height will cause the multi-line text to be clipped, preventing it from displaying completely.
+
+If you want to control the number of displayed lines of text, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to achieve text truncation and ellipsis, rather than setting a fixed height.
+
+### Text Clipping Animation <version-badge since="0.9"/>
+
+You can use the [`width`](/framework/generic/styles.md#width) property in combination with the [`transition`](/framework/component/prop-modifier.md#transition-modifier) modifier to create a text clipping animation. For example:
+
+``` html
+<p :width="state ? 240 : 0"
+   width.transition="{duration: 2.0}">
+  Hello Glyphix!
+</p>
+```
+
+Combined with the `max-lines: 1` style, this can achieve a left-to-right text clipping animation. However, there is an issue with this animation: when the width is insufficient, the last character is directly discarded rather than clipped. The current workaround is to place the text content inside a child component and apply the width animation to the parent component:
+
+``` html
+<div :width="state ? 240 : 1"
+     width.transition="{duration: 2.0}">
+  <p style="max-lines: 1">Hello Glyphix!</p>
+</div>
+```
+
+<glyphix id="p-width-transition" title="Text Clipping Animation" height="120">
+
+``` html
+<div class="container">
+  <p class="animated-text"
+     :width="state ? 240 : 0"
+     width.transition="{duration: 2.0}">
+    Hello Glyphix!
+  </p>
+  <div class="animated-text"
+       :width="state ? 240 : 1"
+       width.transition="{duration: 2.0}">
+    <p>Hello Glyphix!</p>
+  </div>
+</div>
+```
+
+``` js
+export default {
+  data: {
+    state: false
+  },
+  onReady() {
+    setInterval(() => this.state = !this.state, 2500)
+  }
+}
+```
+
+```css
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.animated-text {
+  margin: 4px;
+  border: 1px solid #f00;
+}
+
+p {
+  max-lines: 1;
+  text-overflow: clip;
+}
+````
+
+</glyphix>
+
+However, when using a `div` element as the parent component, the animation has a side effect: when the width is `0`, the layout size is computed as `(width: 0, height: 0)`, which causes the element to occupy no vertical space and results in a vertical jump at the start of the animation. The solution is to set the width to a very small value (such as `1px`) instead of `0`, allowing the element to occupy vertical space and thus avoiding the jumping issue.
+
+============================================================
+FILE_PATH: src/transl/EN/components/stack.md
+
+# stack
+
+`stack` is a stacking layout component. In a stacking layout, each child component has the same size and position as the `stack` component, and they are stacked on top of each other in the order they are defined. The following example shows two text elements overlapping inside a `stack` component.
+
+<glyphix id="components-stack-layout" height="100" width="200" title="Stacking Layout">
+
+``` html
+<stack>
+  <p class="text1">Text 1</p>
+  <p class="text2">Text 2</p>
+</stack>
+```
+
+``` css
+* {
+  text-align: center;
+}
+
+.text1 {
+  font-size: 64px;
+  color: #fff;
+}
+
+.text2 {
+  font-size: 48px;
+  color: #f008;
+}
+
+stack {
+  background-color: gray;
+}
+```
+
+</glyphix>
+
+::: tip
+The `stack` component always uses the stacking layout strategy and cannot be changed to other layouts (such as flex layout or flow layout) via CSS properties like `display`.
+:::
+
+## Layout Behavior
+
+The `stack` component has a fixed stacking layout strategy. Its size is determined by the following constraints:
+1. The size of the `stack` is first specified by sizing CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
+2. The layout of the parent element may directly determine the layout of the `stack`, such as properties like `align-items: stretch` or `flex: 1` in a flex layout;
+3. Otherwise, the size of the `stack` component is determined by the maximum width and maximum height of its child elements.
+
+Once the size of the `stack` is determined, all of its child elements will have the same outer bounding box dimensions (i.e., the size of the child element including `border` and `margin`). This can sometimes be confusing; for example, if you use a `stack` to set an image as a background, an oversized element on top might prevent the image from filling the entire space.
 
 ============================================================
 FILE_PATH: src/transl/EN/components/drawer.md
@@ -328,124 +1505,224 @@ export default {
 Currently, there are some limitations to the `pullable` component. In addition to having to be used within a vertical `scroll` component, you also need to ensure that the number of list items exceeds the size of the `scroll` viewport, otherwise issues may occur. Furthermore, the interaction effects of `pullable` may feel somewhat rigid.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/radio.md
+FILE_PATH: src/transl/EN/components/qrcode.md
 
-# radio
+# qrcode
 
-Radio buttons are inline elements by default, commonly used in a **radio group**, which contains a set of radio buttons describing a series of related options. Only one radio button in the group can be selected at a time. Radio buttons are usually presented as small circles that are filled and highlighted when selected.
+The `qrcode` component is used to display a [QR Code](https://en.wikipedia.org/wiki/QR_code). This component can display arbitrary text data, making it suitable for displaying URLs, payment codes, login QR code links, and other information.
 
-<glyphix id="radio-1" :height="65" title="Radio Button">
-
-``` html
-<div>
-  <p>picked color: {{color}}</p>
-  <div>
-    <radio id="red" value="red" model:group="color" />
-    <label target="red">red</label>
-    <radio id="blue" value="blue" model:group="color" />
-    <label target="blue">blue</label>
-    <radio id="yellow" value="yellow" model:group="color" />
-    <label target="yellow">yellow</label>
-  </div>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    color: 'blue'
-  }
-}
-```
-
-``` css
-label {
-  margin-right: 0.5rem;
-}
-```
-
-</glyphix>
-
-::: tip
-Radio buttons are somewhat similar to [`checkbox`](checkbox.md), but a `radio` only allows selecting a single value from a group, whereas a `checkbox` allows selecting multiple values.
-:::
+In a fluid layout, the `qrcode` component defaults to a block-level element (`block`) and takes up a single line by itself.
 
 ## Attributes
 
-### `checked` <decl type="boolean" get set listen />
+### `value` <decl type="string" get set />
 
-This attribute indicates whether the radio button is checked. Setting the `checked` attribute toggles the selection state of the radio button: when the value is `true`, it is displayed as checked.
+Sets the text data to be displayed as a QR code. The `qrcode` component will automatically select the appropriate version based on the length of the data, currently supporting up to version $12$.
 
-When the user clicks the radio button and causes its selection state to change, the `checked` event is triggered.
+## CSS Notes
 
-::: tip
-Manipulating the `checked` attribute is not the recommended way to use `radio`; please use the [radio group](#group) method instead.
-:::
+To ensure the QR code is easily scannable, you should correctly set the CSS properties of the `qrcode` component, including:
+- `color`: The dot (module) color of the QR code, typically set to black (`black` or `#000`);
+- `background-color`: The background color of the QR code, which should usually be white (`white` or `#fff`);
+- `padding` / `margin`: Sufficient padding and margins prevent the QR code from blending with other elements and increase the scanning recognition rate;
+- `width` / `height`: The dimensions of the QR code must be large enough for easy capturing.
 
-### `value` <decl type="any" get set />
+By default, each module of the QR code component occupies a $4\rm{px}\times 4\rm{px}$ area, which might be barely scannable on a watch. However, layout strategies such as flex may reduce the size of the QR code. Therefore, developers are advised to manually set the `width` and `height` properties of the QR code component as needed and test them on the device.
 
-A JavaScript value that identifies the value of the radio button, typically a string or a number. This value is not displayed, but it can be used within a [radio group](#group).
+The example below demonstrates how to use the QR code component. Please note that various margins and paddings are set for the `qrcode` component in the CSS to ensure there is enough space between the QR code and other UI elements to avoid interfering with scanning.
 
-### `group` <decl type="any" get set listen />
-
-If there are multiple related `radio` components, you can combine the `group` and `value` attributes. Radio buttons in the same group are mutually exclusive: the value of the reactive property bound to `group` equals the `value` attribute of the currently selected radio button. For example:
-``` html
-<radio value="red" model:group="color" />
-<radio value="blue" model:group="color" />
-<radio value="yellow" model:group="color" />
-```
-Here, `color` is a reactive property. When the second radio button is selected, the value of `color` is `"blue"`. If the `value` of all radio buttons does not match `color`, no radio button will be selected. For example:
-``` html
-<p on:click="color = null">reset select</p>
-```
-This will clear the selection state:
-
-<glyphix id="radio-reset" :height="65" title="Clear Selection State">
+<glyphix id="qrcode-1" :height="450" :width="350">
 
 ``` html
 <div>
-  <p on:click="color = null">picked color: {{color}} (click to reset)</p>
-  <div>
-    <radio id="red" value="red" model:group="color" />
-    <label target="red">red</label>
-    <radio id="blue" value="blue" model:group="color" />
-    <label target="blue">blue</label>
-    <radio id="yellow" value="yellow" model:group="color" />
-    <label target="yellow">yellow</label>
-  </div>
+  <qrcode :value="text"/>
+  <p>{{ text }}</p>
 </div>
 ```
 
 ``` js
 export default {
   data: {
-    color: 'blue'
+    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
   }
 }
 ```
 
 ``` css
-label {
-  margin-right: 0.5rem;
+div {
+  background-color: black;
+  padding: 8px;
+}
+
+qrcode {
+  margin: 16px;
+  padding: 16px;
+  color: black; /* Set the QR code foreground color to black */
+  background-color: white; /* Set the QR code background color to white */
+  border-radius: 16px;
+}
+
+p {
+  color: white;
+  font-size: 0.75rem;
 }
 ```
 
 </glyphix>
 
-### CSS Behavior
+::: tip
+You should always explicitly set **high-contrast** dot color (`color`) and background (`background-color`) styles for the QR code component to prevent a decrease in recognizability caused by deviations in the device's default style themes and inherited style properties.
 
-Radio buttons are inline elements by default. Their display size is determined by the `font-size` CSS property, and they align with the text baseline. Please do not manually specify properties like `width` and `height`, as this may cause layout distortion.
+At the same time, please set a sufficiently large padding (`padding`) to ensure easy scanning and recognition.
+:::
 
 ============================================================
-FILE_PATH: src/transl/EN/components/list-item.md
+FILE_PATH: src/transl/EN/components/image.md
 
-# list-item
+# image
 
-A subcomponent of `list` used to display specific items in a list. It supports subcomponents and layout, but does not support scrolling.
+The image component is used to display image elements and is centered by default. The `image` component is an inline element by default.
+
+## Attributes
+
+### `src` <decl type="string" get set />
+
+Sets the [URI](/framework/application/resource.md) of the image. For asset images within the application package, both relative and absolute paths are supported. The `image` component supports common PNG and JPEG image formats.
 
 ::: tip
-Glyphix does not provide a `list` container component like the Quick App does; instead, it uses [`scroll`](scroll.md) to implement scrolling containers. Similarly, there is no need to use the `list-item` component—please directly use [`div`](div.md) or any other component as the list item element.
+The `image` component only supports local image resources, unlike the Web `img` element which can directly display network image resources. For details, please refer to how to [display network images](#display-network-images) in Glyphix.
 :::
+
+### `noCache` <decl type="boolean" get set />
+
+Sets whether the image should be cached. By default, caching is used to optimize image loading speed. When the `noCache` attribute is enabled, the `image` component will not use the cache, and changing the [`src`](#src) attribute will always reload the image from the file.
+
+Image caching is a technique to optimize loading speed and reduce memory usage. When an image with the same URI is already loaded in the system, an `image` component with caching enabled will directly use that resource. However, image files downloaded from the network with fixed names but potentially changing contents (such as user avatars like `internal://cache/avatar.png`) usually require the `noCache` attribute to be enabled to ensure correct behavior.
+
+Even if the `noCache` attribute is enabled, the `image` component still does not detect updates to the image file content. In this case, you need to manually change the [`src`](#src) attribute. Considering that the reactive framework filters out identical assignment operations, you must use a trick like this:
+``` html
+<!-- Assuming this is the image that needs to be updated and displayed, the no-cache attribute is mandatory. -->
+<image :src="avatarImage" no-cache />
+```
+
+``` js
+const avatarImage = 'internal://cache/avatar.png' // Assuming this is an image downloaded from the web
+
+export default {
+  data: {
+    avatarImage: avatarImage
+  },
+  // Call this method after the avatar download is complete to update the interface
+  onAvatarDownloaded() {
+    this.avatarImage = null // Must assign a new value first
+    this.avatarImage = avatarImage // Reassign to the correct URI
+  }
+}
+```
+In the example above, the reactive property `this.avatarImage` is first changed to `null` and then reassigned. This causes the value to change, thereby bypassing the reactive framework's optimization mechanism and achieving image updates.
+
+
+::: warning
+You must use this trick to update resources with a fixed URI, otherwise the displayed content may not change. To be safe, if the path of a resource obtained from the network may be duplicated, you also need to use this trick to ensure the interface updates.
+
+In addition, you must wait for the image download or file write to complete before updating the `src` attribute of the `image` component, otherwise the interface cannot be updated properly.
+:::
+
+### `async` <decl type="boolean" get set />
+
+Loads image resources asynchronously. This mode ensures that image loading does not block the UI thread, improving interface fluency. However, compared to the default synchronous loading mode, images in asynchronous loading will not display actual content immediately, so it is not suitable for all interfaces.
+
+Asynchronous loading mode is suitable for images downloaded from the network. Unlike image assets that are automatically optimized when the application is packaged, network images are usually slow-to-decode common formats such as PNG or JPEG. Synchronously decoding network images can be very stuttery, and such scenarios usually do not require the image to be displayed immediately.
+
+`async` can be used together with the [`noCache`](#nocache) attribute, as the latter is also mainly used for network images:
+``` html
+<image :src="avatarImage" no-cache async />
+```
+
+## Inherited Attributes
+
+These attributes are inherited from the [generic attributes](/framework/generic/properties.md) of native components, but the `image` component handles them specially.
+
+### `opacity` <decl type="number" set />
+
+Sets the opacity of the image, with a value range of $[0, 1]$, where $0$ means completely transparent and $1$ means completely opaque. The default value is $1$.
+
+### `transform` <decl type="string" set />
+
+Sets the transformation effect of the image, equivalent to the CSS [`transform`](/framework/generic/styles.md#transform) property.
+
+## CSS Notes
+
+### Unsupported Generic Attributes
+
+Compared to other native components, `image` is quite special as it does not support generic attributes such as `background-color` and `border`. This is also very different from web standards. Specifically, the following CSS properties are not supported:
+
+- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
+- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
+
+This means you cannot add a background color or image to the `image` component by setting CSS properties, nor can you set border styles for it. However, the `image` component does support the [`border-radius`](/framework/generic/styles.md#border-radius) property.
+
+### Special Attributes
+
+The `image` component supports other CSS properties available for non-container components, but a few properties can be used to achieve special effects.
+
+#### `transform`
+
+Sets the image transformation. When this CSS property is used on an `image`, its effect is similar to the [`transform`](/framework/generic/styles.md#transform) of other elements, but it can be displayed normally without setting the [`transparent`](/framework/generic/styles.md#transparent) property.
+
+#### `opacity`
+
+Sets the image opacity, which has the same effect as the [`opacity`](#opacity) attribute.
+
+#### `border-radius`
+
+Sets the corner radius of the image. You can use this property to add rounded corners to the image. The usage is the same as the generic [`border-radius`](/framework/generic/styles.md#border-radius). The `image` component always applies rounded corners to all four corners of the image, regardless of whether the aspect ratio of the image matches that of the `image` component itself.
+
+#### `object-fit`
+
+The default value of the `object-fit` property for the `image` component is `none`, which differs from the web standard (where it defaults to `fill`). By default, images are not automatically scaled, but are centered and displayed at their original size. If the size exceeds the container, it will be cropped. This design is based on the characteristics of MCU devices:
+- **Performance First**: Image scaling usually requires extra computation, and some devices even implement interpolated scaling via software, which significantly reduces the frame rate.
+- **Image Quality Consistency**: On certain devices, even proportional scaling can cause noticeable blurring or aliasing. Not scaling by default ensures that pixel-level rendering remains undistorted.
+- **Memory Constrained**: Default scaling may mask resource usage issues, leading to the accidental loading of oversized images, thereby wasting precious storage and memory space.
+
+It is recommended to provide image resources that match the display area during the design stage, allowing images to be displayed correctly in their default state as much as possible; only when truly necessary should the display effect be adjusted by explicitly setting `object-fit` (such as `contain`).
+
+## Usage Tips
+
+### Displaying Network Images
+
+#### Avatar Scenarios
+
+This section demonstrates a method for loading images from the network. This method is mainly used for occasions such as user avatars, where the image has a fixed storage location locally, but the content may change. Due to the caching strategy of the Glyphix runtime, you need to use the trick in this example to ensure that the displayed content is updated.
+
+``` html
+<template>
+  <image :src="avatar" no-cache />
+</template>
+```
+
+``` js
+import request from '@system.request'
+
+export default {
+  data: {
+    avatar: null
+  },
+  onInit() {
+    this.downloadAvatar()
+  },
+  async downloadAvatar() {
+    const saveFile = 'internal://files/avatar.png'
+    await request.download({
+      url: 'https://example.com/url/to/avatar.png',
+      filename: saveFile,
+    }).complete
+    // For details on the trick here, refer to the description of the noCache attribute
+    this.avatar = null
+    this.avatar = saveFile
+  }
+}
+```
 
 ============================================================
 FILE_PATH: src/transl/EN/components/swiper.md
@@ -815,322 +2092,24 @@ When `swiper` has a [horizontal layout](#vertical), you can use the `indicator-b
 See the related descriptions in the [scroll component](scroll.md#padding-和-overflow). The `padding` and `overflow` properties of the `swiper` component have the same behavioral specifications as the properties of the same name in the `scroll` component; for more explanations, please refer to the related documentation.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/image-animator.md
+FILE_PATH: src/transl/EN/components/drawer-navigation.md
 
-# image-animator
+# drawer-navigation
 
-The `image-animator` component is used to play a sequence of image frames as an animation. It is an inline element by default.
-
-<glyphix id="image-animator-1" height="190" width="360" >
-
-```html
-<div class="flex-column">
-  <div class="frame-box">
-    <image-animator :images="frames" :play="play" :duration="100" />
-  </div>
-  <div>
-    <button on:click="play = 'start'">start</button>
-    <button on:click="play = 'pause'">pause</button>
-    <button on:click="play = 'stop'">stop</button>
-  </div>
-</div>
-```
-
-```js
-export default {
-  data: {
-    play: "stop",
-  },
-  frames: Array.from({ length: 60 }, (_, i) => `/assets/planet-${i}.png`),
-};
-```
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.frame-box {
-  border: 2px solid lightgray;
-  border-radius: 8px;
-  padding: 8px;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-```
-
-</glyphix>
+A sub-component of [`drawer`](drawer) used to display the specific drawer content.
 
 ## Properties
 
-### `images` <decl type="string[]" set />
-
-Sets the collection of sequence frame images. Each element in `images` is the path or URI of that frame's image. Typically, the dimensions of each frame image are consistent.
-
-Supports PNG or JPEG format images.
-
-If the frame sequence does not change, it is recommended to define it as a non-reactive property to save memory:
-
-```js
-export default {
-  // frames is a non-reactive property of the component
-  frames: [
-    "/assets/sprite-1.png",
-    "/assets/sprite-2.png",
-    "/assets/sprite-3.png",
-  ],
-};
-```
-
-The advantage of doing this is that multiple component instances will share the same `frames` array object (reactive properties are copied to each component instance). You should only place it in the `data` object if the frame sequence truly requires reactivity.
-
-If the frame sequence is sequentially numbered, you can use this trick to simplify the creation of the frames array:
-
-```js
-export default {
-  // 4 frames numbered starting from 0
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i}.png`),
-  // Or, 4 frames numbered starting from 1
-  frames: Array.from({ length: 4 }, (_, i) => `/assets/sprite-${i + 1}.png`),
-};
-```
-
-Pass the `frames` array to the `images` property in the component template to specify the frame sequence and play the animation:
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-::: note
-The `images` property does not yet support Quick App's `ImageFrame` structure, so you cannot use frame collection definitions like `[{ src: '...' }, ...]`.
-:::
-
-### `duration` <decl type="number" get set />
-
-Specifies the playback duration of each frame in milliseconds.
-
-### `play` <decl type="'start' | 'pause' | 'stop'" get set listen />
-
-Sets the playback state, supporting start, pause, and stop states. `image-animator` is initially in the `stop` state, so it will automatically rest at the first frame position of [`images`](#images).
-
-|   Value   | Description                          |
-| :-------: | ------------------------------------ |
-| `'start'` | Starts playing from the current frame. |
-| `'pause'` | Pauses playback and displays the current frame. |
-| `'stop'`  | Stops playback and displays the first frame. |
-
-As shown above, `play` only supports three enumerated values: `'start'`, `'pause'`, or `'stop'`. However, the following trick can be used to automatically play the animation:
-
-```html
-<image-animator :images="frames" play :duration="100" />
-```
-
-Writing the `play` property without a value is equivalent to the [implicit property value](/framework/component/template.md#隐式属性值) syntax `:play="true"`. Boolean types like `true` are always converted to the default `'start'` enumerated value. This syntax is very useful for scenarios that require automatic playback of frame sequence animations.
-
-### `iteration` <decl type="number" set />
-
-Sets the number of repetitions for all frame sequences in `images`. When the maximum limit is reached, it will automatically switch to `'pause'` mode. `0` indicates infinite playback.
-
-## Inherited Properties
-
-`image-animator` shares the same [inherited property](/components/image.md#继承的属性) behavior as `image`.
-
-## CSS Notes
-
-`image-animator` shares the same [CSS behavior](/components/image.md#css-说明) as `image`.
-
-============================================================
-FILE_PATH: src/transl/EN/components/progress-arc.md
-
-# progress-arc
-
-The `progress-arc` component is used to display a circular progress bar and defaults to a block-level element.
-
-## Attributes
-
-### `max` <decl type="number" set />
-
-The maximum progress value. The [`value`](#value) attribute will not exceed it.
-
-### `min` <decl type="number" get setet />
-
-The minimum progress value. The [`value`](#value) attribute will not be less than it.
-
-### `value` <decl type="number" get set listen />
-
-Sets the progress value. The display proportion of the progress depends on the ratio of the `value` attribute within the interval from `min` to `max`, and the display proportion is restricted between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
-
-### `busy` <decl type="boolean" get set />
-
-Sets whether the `progress-arc` component is in a busy state. In the busy state, a loading animation is displayed instead of the value of the `value` attribute. The following example demonstrates how to use a circular progress bar to simulate a loading animation:
-
-<glyphix id="components-progress-arc-busy" height="100" width="300" title="Simulating a Loading Animation">
-
-``` html
-<progress-arc busy :startAngle="0" :stopAngle="360" />
-```
-
-</glyphix>
-
-In this example, the start angle and stop angle of the progress bar differ by $360^\circ$. At this point, the `busy` attribute can be used to display a typical loading animation effect.
-
-::: tip
-As long as the progress bar is circular, a fixed busy animation effect will be displayed; the start and end angles have no effect on this.
-:::
-
-### `startAngle` <decl type="number" get set />
-
-The starting angle of the arc progress bar, with a default value of $135$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
-
-### `stopAngle` <decl type="number" get set />
-
-The ending angle of the arc progress bar, with a default value of $405$. For more information, please refer to the [Angle Configuration](#angle-configuration) section.
-
-## Usage Instructions
-
-### Angle Configuration
-
-Unlike the linear [`progress`](progress.md), arc or circular progress bars require proper configuration of the `startAngle` and `stopAngle` attributes to display correctly. Both attributes use angular units. In the screen coordinate system, $0^\circ$ points horizontally to the right (i.e., the $3$ o'clock position on a clock) and increases in the clockwise direction, decreasing otherwise.
-
-The display of `progress-arc` linearly interpolates the angle range based on the proportion of `value` within $[\texttt{min}, \texttt{max}]$. Specifically, users will see the highlighted progress angle start at `startAngle` and end at `valueAngle`:
-
-$$
-\begin{aligned}
-  k &= \frac{\texttt{value} - \texttt{min}}{\texttt{max}-\texttt{min}}\\
-  \texttt{valueAngle} &= (1-k)\texttt{startAngle} + k\cdot\texttt{stopAngle}
-\end{aligned}
-$$
-
-Therefore, to display a full-circle circular progress bar, the start and end angles must differ by $360^\circ$, even if the two angles appear visually identical. Additionally, the start angle can be greater than the end angle, which will reverse the direction of the progress.
-
-The following example shows the practical effects of various angle configurations. Note that the second example demonstrates the technique for reverse progress display.
-
-<glyphix id="components-progress-arc-angles" height="120" width="720" title="Angle Configuration Examples">
-
-``` html
-<div>
-  <p class="progress-label">{{value}}%</p>
-  <stack>
-    <p>default</p>
-    <progress-arc :value="value" />
-  </stack>
-  <stack>
-    <p>405~135</p>
-    <progress-arc :startAngle="405" :stopAngle="135" :value="value" />
-  </stack>
-  <stack>
-    <p>-45~225</p>
-    <progress-arc :startAngle="-45" :stopAngle="225" :value="value" />
-  </stack>
-  <stack>
-    <p>0~360</p>
-    <progress-arc :startAngle="0" :stopAngle="360" :value="value" />
-  </stack>
-  <stack>
-    <p>-90~270</p>
-    <progress-arc :startAngle="-90" :stopAngle="270" :value="value" />
-  </stack>
-</div>
-```
-
-``` js
-export default {
-  data: { value: 0 },
-  onInit() {
-    setInterval(() => {
-      this.value = this.value + 5
-      if (this.value > 100)
-        this.value = 0
-    }, 500)
-  }
-}
-```
-
-``` css
-div {
-  display: flex;
-}
-
-progress-arc {
-  width: 200px;
-  padding: 0 8px 0 8px;
-  stroke-width: 0.5rem;
-}
-
-p {
-  text-align: center;
-  font-size: 0.7rem;
-}
-
-.progress-label {
-  width: 3.5rem;
-}
-```
-
-</glyphix>
-
-## CSS Specifications
-
-### Size Calculation
-
-The display size of `progress-arc` is determined by its `width` and `height` attributes. `progress-arc` will fill the shorter axis, and the center of the arc progress bar will be the center of the element. By default, the size of `progress-arc` may be close to a single character, resulting in a very strange display effect. Therefore, it is usually necessary to explicitly specify the width and height in CSS or use other reasonable layout strategies.
-
-::: tip
-It is best to specify a reasonable width and height for the `progress-arc` component, otherwise it may be unrecognizably small. At the very least, the `width` CSS property should be set, and the component's layout strategy will automatically use a $1:1$ aspect ratio.
-:::
-
-### CSS Properties
-
-The appearance of the `progress-arc` component can be adjusted via CSS.
-
-#### `stroke-width`
-
-This property specifies the arc outline width of the `progress-arc` component. The value type is [Length](/framework/render/style-and-layout.md#长度), and percentage units are not supported.
-
-::: tip
-If you want the rendering width of the `progress-arc` component to be proportional to the font size, it is recommended to use [`rem`](/framework/application/font-config.md#rem-字号单位) length units, such as `0.15rem`.
-:::
-
-#### `color`
-
-Sets the color of the highlighted progress bar of `progress-arc`. By default, the system theme color is used.
-
-#### `background-color`
-
-Sets the color of the background progress bar of `progress-arc`. By default, it is configured according to the system theme.
-
-### CSS Pseudo-elements
-
-#### `value`
-
-
-
-============================================================
-FILE_PATH: src/transl/EN/components/marquee.md
-
-# marquee
-
-The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any child components, including `span`.
-
-`marquee` supports general CSS properties, but due to implementation reasons, the `text-align` property may not be supported at the moment. Since `marquee` only displays a single line of text and scrolls it when the content is too long, properties like `max-lines` have no effect.
-
-## Attributes
-
-### `text` <decl type="string" get set/>
-
-Sets the text content, which is used in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of the `marquee`, the text will automatically scroll.
+### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
+
+The `direction` property is used to set the direction of the `drawer-navigation`. Available values are `'left'`, `'right'`, `'up'`, and `'down'`.
+
+|   Value   | Description                                              |
+| :-------: | -------------------------------------------------------- |
+| `'left'`  | A drawer-navigation on the left side of the screen, used to respond to gestures swiping from left to right. |
+| `'right'` | A drawer-navigation on the right side of the screen, used to respond to gestures swiping from right to left. |
+|  `'up'`   | A drawer-navigation on the bottom of the screen, used to respond to gestures swiping from bottom to top. |
+| `'down'`  | A drawer-navigation on the top of the screen, used to respond to gestures swiping from top to bottom. |
 
 ============================================================
 FILE_PATH: src/transl/EN/components/picker.md
@@ -1182,331 +2161,542 @@ Sets the damping coefficient for the `picker` scrolling animation. The valid val
 The damping coefficient should be set as a constant rather than modified; modifying the damping coefficient will not affect the animation during the rebound.
 
 ============================================================
-FILE_PATH: src/transl/EN/components/canvas.md
+FILE_PATH: src/transl/EN/components/label.md
 
-# canvas
+# label
 
-The canvas component allows drawing graphics and more on the `canvas` using scripts in JavaScript.
+The `label` component is used to display text or tag information, and is an inline element by default. `label` can be used in conjunction with the following form components to display tag information:
+- [input](input)
+- [radio](radio)
+- [switch](switch)
+- [checkbox](checkbox)
 
-### `context`
+When a `label` is associated with a supported form component, clicking the `label` component will also trigger a value update for the form component.
 
-**Value Type**: Context content obtained from the canvas API
+## Properties
 
-**Operation**: Set
+### `text` <decl type="string" set get />
 
-Sets the context for drawing graphics on the canvas.
-
-============================================================
-FILE_PATH: src/transl/EN/components/a.md
-
-# a
-
-The anchor component, which is an inline element by default, is used to jump to a specified page.
-
-## Attributes
-
-### `href` <decl type="string" get set />
-
-Specifies the [page name](/framework/application/manifest.md#pages) or URI string to jump to.
-
+The text content of the label, supporting either attribute syntax or text child element syntax:
 ``` html
-<a href="page1">跳转到 page1 页面</a>
-``` 
-
-Unlike the `<a>` tag in Web, the `a` component only supports page navigation and does not support hyperlink navigation.
-
-The `href` attribute also supports [URI](/framework/application/resource.md#uri) strings in the form of `PageName?key=value`, which consists of a page name (as the path field) and a query field. The query field of this URI will be parsed as navigation parameters for the page. For example, when clicking this `<a>` element:
-
-``` html
-<a href="page1?text=test-text&message=hello">跳转到 page1 页面</a>
+<label text="label text"></label>
+<label>label text</label>
 ```
 
-It is equivalent to calling the following [`router.push()`](/api/system-router.md#push) method:
+### `target` <decl type="string" set get />
 
-``` js
-router.push({
-  uri: 'page1',
-  params: {text: 'test-text', message: 'hello'}
-})
+The ID of the target component. For example:
+```html
+<radio id="red" /><label target="red">red</label>
 ```
+Clicking the `label` component in the example will also trigger an update for the `radio` component with the ID `red`, but clicking the `label` component will not trigger touch events such as `click` on the target component.
 
-::: tip
-Please note that the value of the query field in the URI will only be parsed as a string type. Therefore, `100` in `page1?size=100` will be parsed as the string `'100'` rather than the number `100`. If you need to pass parameters of a specific type, please use the [`router`](/api/system-router.md) API.
+Due to performance considerations, only target components that are siblings of the `label` component (i.e., sharing the same parent component) are supported.
+
+::: warning
+Changing the target component dynamically is currently not supported.
 :::
 
 ============================================================
-FILE_PATH: src/transl/EN/components/span.md
+FILE_PATH: src/transl/EN/components/marquee.md
 
-# span
+# marquee
 
-`span` is also a text component. Unlike the [`p` component](p), the `span` component is an inline element by default and can span across multiple lines, similar to the [`label`](label) and [`a`](a) components. Text spanning across lines means the element can be laid out across multiple lines instead of occupying an entire "box".
+The `marquee` component is used to display scrolling text content and only supports single-line display. The `marquee` component does not support any child components, including `span`.
 
-The `span` component can be used to implement [rich text typography](/framework/render/rich-text.md#富文本显示).
+`marquee` supports general CSS properties, but due to implementation reasons, the `text-align` property may not be supported at the moment. Since `marquee` only displays a single line of text and scrolls it when the content is too long, properties like `max-lines` have no effect.
 
-<glyphix id="span" :height="36">
+## Attributes
 
-``` html
-<div>
-  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
-</div>
+### `text` <decl type="string" get set/>
+
+Sets the text content, which is used in the same way as the [`text`](p.md#text) attribute of the `p` component. When the length of the text content exceeds the width of the `marquee`, the text will automatically scroll.
+
+============================================================
+FILE_PATH: src/transl/EN/components/text.md
+
+# text
+
+The text component, the `text` component and the [`p` component](p) are identical except for their component names.
+
+============================================================
+FILE_PATH: src/transl/EN/components/collapsible-header.md
+
+# collapsible-header
+
+The `collapsible-header` component is used to add a collapsible title bar to a scrolling list. This effect provides a view-saving interaction for watch-like devices, enhancing the user experience.
+
+::: warning
+<experimental /> This is an experimental component. Do not use methods other than those demonstrated in this documentation.
+:::
+
+## Attributes
+
+This component supports [Generic Attributes](/framework/generic/properties.md) and has no dedicated attributes.
+
+## Usage
+
+The `collapsible-header` component must contain two child components, otherwise unexpected behavior may occur. A specific example is as follows:
+
+```html
+<collapsible-header>
+  <p>This is a collapsible title</p>
+  <scroll> ... </scroll>
+</collapsible-header>
+```
+
+The first child element is a collapsible title, while the second element must be a scrollable container such as [`scroll`](/components/scroll.md). Below is a concrete example:
+
+<glyphix id="components-collapsible-header-1" height="360" width="360" title="Collapsible Title Bar">
+
+```html
+<collapsible-header>
+  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
+  <scroll scroll-snap="center" deformation="fisheye">
+    <p for="x in 20" class="item">item {{ x + 1 }}</p>
+  </scroll>
+</collapsible-header>
+```
+
+```js
+import prompt from "@system.prompt";
+
+export default {
+  clickTitle() {
+    prompt.showToast({ message: "title clicked" });
+  }
+}
+```
+
+```css
+.title-bar {
+  margin: 56px auto auto;
+  transparent: true;
+  font-size: 1.5rem;
+}
+
+.item {
+  height: 33.3%;
+  background-color: #ddd;
+  border-radius: 20%;
+  margin: 8px;
+  transparent: true;
+  padding: 12px;
+  text-align: center;
+}
 ```
 
 </glyphix>
 
+### Principle Explanation
+
+`collapsible-header` accepts two child components: the first one is the collapsible title bar, and the second one must be a scrollable component similar to `scroll`. `collapsible-header` combines these two components and manipulates the display effect of the collapsible title bar as the list scrolls.
+
+You can use a flow-layout-like approach to control the position of the title bar, for example:
+
+```css
+/* The top margin of the element is 48px, centered horizontally, suitable for circular screens. */
+margin: 48px auto auto;
+/* The left and top margins of the element are 12px, suitable for square screens. */
+margin: 12px auto auto 12px;
+```
+
+Applying the above styles to the title bar element according to actual needs can achieve specific alignment effects. You can also use complex components containing child elements as the title bar, such as using a component that includes a back button and page title text. However, note that when clicking the title bar, the click event can be sent to both the scrolling list and the title bar simultaneously. If conflicts occur, they can be resolved by stopping event propagation.
+
+### Precautions
+
+You must provide two child components for `collapsible-header` according to the above requirements, and make sure not to get the order wrong. In addition, since the collapsible title bar and the underlying scrolling list are displayed stacked on top of each other, this may cause the first element of the list to overlap with the title bar. When necessary, developers should consider some placeholder method to avoid overlapping, and the centering [snap mode](/components/scroll.md#scrollsnap) of `scroll` (`scroll-snap="center"`) can also help avoid overlapping.
+
 ============================================================
-FILE_PATH: src/transl/EN/components/slider.md
+FILE_PATH: src/transl/EN/components/progress.md
 
-# slider
+# progress
 
-Slider component, which defaults to a block-level element.
+The `progress` component is used to display a progress bar and is a block-level element by default.
 
 ## Attributes
 
-### `value` <decl type="number" get set listen />
+### `max` <decl type="number" set />
 
-The current value, with a default of $10$.
-
-Setting the `value` attribute will change the current value of the component. You can listen for changes to the current value using the `on` directive, which is triggered every time the current value changes.
+The maximum progress value. The [`value`](#value) attribute will not exceed it.
 
 ### `min` <decl type="number" set />
 
-The minimum value, with a default of $0$.
+The minimum progress value. The [`value`](#value) attribute will not be less than it.
 
-### `max` <decl type="number" set />
+### `value` <decl type="number" set get listen />
 
-The maximum value, with a default of $100$.
+Sets the progress value. The display proportion of the progress depends on the ratio of the `value` attribute within the range from `min` to `max`, and the display proportion is limited between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
 
 ### `vertical` <decl type="boolean" set />
 
-If the value of the `vertical` attribute is `true`, the `slider` component will be displayed vertically; otherwise, it will be displayed horizontally. The default value is `false`. 
+If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise horizontally. The default value is `false`. 
 
-## CSS Specifications
+## CSS Specification
 
-Developers can customize the appearance of the `slider` component using CSS.
+Developers can customize the appearance of the `progress` component using CSS.
 
 ### Dimension Calculation
 
-The default width and height of a `slider` are the same as the element's font size, which is set by the [`font-size`](/framework/generic/styles.md#font-size) property (or inherited). You can customize the dimensions of the `progress` using the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) properties.
+By default, the width and height of `progress` are the same as the font size of the element, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (or inherited). The dimensions of `progress` can be customized via the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
 
 ### CSS Properties
 
 The following CSS properties may be very useful:
-- [`background-color`](/framework/generic/styles.md#background-color) controls the background color of the `slider`;
-- [`color`](/framework/generic/styles.md#color) controls the progress bar color of the `slider`;
-- [`border-radius`](/framework/generic/styles.md#border-radius) can set the `slider` to have rounded borders, for example, `50%` produces a semi-circular border;
+- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `progress`;
+- [`color`](/framework/generic/styles.md#color) can control the progress bar color of `progress`;
+- [`border-radius`](/framework/generic/styles.md#border-radius) can set `progress` to have rounded borders, for example, `50%` will produce semi-circular borders;
 
-Other CSS properties may also be useful, such as setting border styles using the [`border`](/framework/generic/styles.md#border) property.
+Other CSS properties may also be useful, such as using the [`border`](/framework/generic/styles.md#border) property to set border styles.
 
 ### CSS Pseudo-elements
 
 #### `value`
 
-This pseudo-element can be used to style the `slider` progress bar independently of the background portion. For example, you can set the border-radius for the track background and the progress bar portion separately to achieve an effect where the outer border has rounded line caps while the progress bar has straight caps.
+This pseudo-element can be used to style the progress bar part of `progress` separately from the background part. For example, you can set the border-radius of the scrollbar background and the progress bar part separately to achieve an effect where the outer border has rounded caps while the progress bar has straight caps.
 
 ``` css
-slider {
-  border-radius: 50%; /* Track background border-radius */
+progress {
+  border-radius: 50%; /* Scrollbar background border-radius */
 }
 
-slider::value {
-  border-radius: 0; /* Progress bar of the track has no border-radius */
-}
-```
-
-#### `thumb` <experimental/>
-
-The `thumb` pseudo-element is used to define the style of the `slider` thumb. By default, the `slider` does not include a thumb; to display a thumb, you must specify the width and height of the `thumb` element:
-``` css
-slider::thumb {
-  width: 150%;
-  height: 150%;
-  border-radius: 50%;
+progress::value {
+  border-radius: 0; /* Progress bar has no border-radius */
 }
 ```
-Percentage units for `width` and `height` are calculated relative to the element's own dimensions. For a horizontal `slider`, the thumb's width and height are calculated as a percentage based on the element's CSS `height`, while for a vertical `slider`, the thumb's width and height are calculated based on the element's CSS `width` property. For example, if the element's CSS is:
-``` css
-slider {
-  width: 200px;
-  height: 24px;
-}
-```
-Then the width and height of the thumb corresponding to `slider::thumb` above are both $24\rm{px} \times 150\% = 36\rm{px}$. The percentage-based border-radius of the thumb is calculated based on the thumb's own dimensions. In this example, the calculated border-radius for the `thumb` pseudo-element with `50%` is $36\rm{px} \times 50\%=18\rm{px}$.
-
-The `thumb` pseudo-element supports the `border` CSS property, but the border will not exceed the dimensions of the `thumb` pseudo-element.
 
 ### CSS Example
 
 The following example demonstrates some ways to customize the appearance of the progress bar using CSS.
-<glyphix id="components-slider-styles" height="180" width="480" title="Slider Styles">
+
+<glyphix id="components-progress-styles" height="140" width="480" title="Progress Bar Style">
 
 ``` html
 <div>
   <!-- Default style -->
-  <slider ::value="value" />
-  <!-- Flat-ended progress bar style -->
-  <slider class="flat" ::value="value" />
-  <slider class="more-style" ::value="value" />
-  <p>value: {{value}}</p>
+  <progress :value="40" />
+  <!-- Flat-head progress bar style -->
+  <progress class="flat" :value="50" />
+  <progress class="more-style" :value="60" />
 </div>
 ```
 
 ``` css
 div > * {
   margin: 8px;
-  padding: 6px;
 }
 
 .flat::value {
-  /* Setting the border-radius of the value pseudo-element to 0 achieves a flat-ended progress bar effect */
+  /* Set the border-radius of the value pseudo-element to 0 to achieve a flat-head effect on the progress bar */
   border-radius: 0;
 }
 
 .more-style {
   /* Custom border-radius */
   border-radius: 30%;
-  /* slider background color */
+  /* Progress bar background color */
   background-color: #b3c5d7;
-  /* slider foreground color */
+  /* Progress bar foreground color */
   color: #b5179e;
-  /* padding can adjust the margin of the slider foreground */
+  /* padding can adjust the margin of the progress bar foreground */
   padding: 6px;
-  height: 1rem;
-}
-
-/* Define track thumb style */
-.more-style::thumb {
-  width: 300%; /* Capsule-shaped thumb with a 2:1 aspect ratio */
-  height: 150%;
-  background-color: white;
-  border: 4px solid #f3722c; /* Thumb border */
-  border-radius: 50%;
-}
-```
-
-``` js
-export default {
-  data: { value: 50 }
+  height: 1.25rem;
 }
 ```
 
 </glyphix>
 
 ============================================================
-FILE_PATH: src/transl/EN/components/qrcode.md
+FILE_PATH: src/transl/EN/components/slider-arc.md
 
-# qrcode
+# slider-arc
 
-The `qrcode` component is used to display a [QR Code](https://en.wikipedia.org/wiki/QR_code). This component can display arbitrary text data, making it suitable for displaying URLs, payment codes, login QR code links, and other information.
-
-In a fluid layout, the `qrcode` component defaults to a block-level element (`block`) and takes up a single line by itself.
+An arc-shaped slider selector. It is a block-level element by default, and style customization is currently not supported.
 
 ## Attributes
 
-### `value` <decl type="string" get set />
+Inherits attributes from the [slider](slider) component.
 
-Sets the text data to be displayed as a QR code. The `qrcode` component will automatically select the appropriate version based on the length of the data, currently supporting up to version $12$.
+### `arc-center` <decl type="{ x: number, y: number }" set />
 
-## CSS Notes
+Sets the position of the arc's center.
 
-To ensure the QR code is easily scannable, you should correctly set the CSS properties of the `qrcode` component, including:
-- `color`: The dot (module) color of the QR code, typically set to black (`black` or `#000`);
-- `background-color`: The background color of the QR code, which should usually be white (`white` or `#fff`);
-- `padding` / `margin`: Sufficient padding and margins prevent the QR code from blending with other elements and increase the scanning recognition rate;
-- `width` / `height`: The dimensions of the QR code must be large enough for easy capturing.
+### `start-angle` <decl type="number" set />
 
-By default, each module of the QR code component occupies a $4\rm{px}\times 4\rm{px}$ area, which might be barely scannable on a watch. However, layout strategies such as flex may reduce the size of the QR code. Therefore, developers are advised to manually set the `width` and `height` properties of the QR code component as needed and test them on the device.
+Sets the starting angle of the arc. Default value: $-90$.
 
-The example below demonstrates how to use the QR code component. Please note that various margins and paddings are set for the `qrcode` component in the CSS to ensure there is enough space between the QR code and other UI elements to avoid interfering with scanning.
+### `progress-angle` <decl type="number" set />
 
-<glyphix id="qrcode-1" :height="450" :width="350">
+Sets the maximum rotation angle of the arc. Default value: $360$ (a full circle).
 
-``` html
-<div>
-  <qrcode :value="text"/>
-  <p>{{ text }}</p>
-</div>
-```
+### `arc-width` <decl type="number" set />
 
-``` js
-export default {
-  data: {
-    text: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array'
-  }
-}
-```
+Sets the width of the arc.
 
-``` css
-div {
-  background-color: black;
-  padding: 8px;
-}
+### `arc-radius` <decl type="number" set />
 
-qrcode {
-  margin: 16px;
-  padding: 16px;
-  color: black; /* Set the QR code foreground color to black */
-  background-color: white; /* Set the QR code background color to white */
-  border-radius: 16px;
-}
+Sets the radius of the arc.
 
-p {
-  color: white;
-  font-size: 0.75rem;
-}
-```
+============================================================
+FILE_PATH: src/transl/EN/components/textarea.md
 
-</glyphix>
+# textarea
 
-::: tip
-You should always explicitly set **high-contrast** dot color (`color`) and background (`background-color`) styles for the QR code component to prevent a decrease in recognizability caused by deviations in the device's default style themes and inherited style properties.
+`textarea` <experimental/><version-badge since="0.9" /> is a multi-line text input component, which defaults to displaying as a block-level element. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up an input method editor (IME) interface; therefore, you must manually edit its content. `textarea` supports operating the cursor via touch gestures (such as tapping and scrolling) and provides methods to move the cursor up, down, left, and right.
 
-At the same time, please set a sufficiently large padding (`padding`) to ensure easy scanning and recognition.
+`textarea` is suitable as a low-level component for multi-line text input, allowing you to implement your own soft keyboard and cursor control according to your needs. For details, please refer to the [Example](#basic-example).
+
+::: important Compatibility
+`textarea` is an experimental extended component currently available only in Glyphix version 0.9 and above, and is supported on only some devices.
 :::
 
-============================================================
-FILE_PATH: src/transl/EN/components/drawer-navigation.md
-
-# drawer-navigation
-
-A sub-component of [`drawer`](drawer) used to display the specific drawer content.
-
-## Properties
-
-### `direction` <decl type=" 'left' | 'right' | 'up' | 'down' " set />
-
-The `direction` property is used to set the direction of the `drawer-navigation`. Available values are `'left'`, `'right'`, `'up'`, and `'down'`.
-
-|   Value   | Description                                              |
-| :-------: | -------------------------------------------------------- |
-| `'left'`  | A drawer-navigation on the left side of the screen, used to respond to gestures swiping from left to right. |
-| `'right'` | A drawer-navigation on the right side of the screen, used to respond to gestures swiping from right to left. |
-|  `'up'`   | A drawer-navigation on the bottom of the screen, used to respond to gestures swiping from bottom to top. |
-| `'down'`  | A drawer-navigation on the top of the screen, used to respond to gestures swiping from top to bottom. |
-
-============================================================
-FILE_PATH: src/transl/EN/components/input.md
-
-# input
-
-By default, it is an inline element that provides an interactive interface to receive user input.
-
 ## Attributes
 
-### `type` <decl type="'checkbox' | 'radio'" set />
+### `text` <decl type="string" get set listen />
 
-Can be set to the above value types. The actual form of the `input` component is determined based on the set type.
+The `text` attribute is a string representing the currently edited text content of the `textarea`. Reading or listening to this value retrieves the input text, and this attribute can also be set.
 
-### `name` <decl type="string" set />
+Typically, `text` is two-way bound to a specific reactive property, or text can be set using the content inside the element, such as:
 
-Sets the name of the `input` component.
+```html
+<textarea ::text="inputText" />
+```
 
-### `checked` <decl type="boolean" set />
+Or
 
-The current checked state of the component, which can trigger the checked pseudo-class. This is effective when the type is checkbox. Setting it to `on` checks the checkbox by default.
+```html
+<textarea @text="onTextChanged">{{ inputText }}</textarea>
+```
 
-### `value` <decl type="string" set />
+:::tip
+The `text` attribute of `textarea` functions similarly to the [`value`](text-field.md#value) attribute of [`text-field`](text-field.md).
+:::
 
-Sets the value of the `input` component.
+### `placeholder` <decl type="string" set get />
+
+When the content of the `textarea` is empty, `placeholder` can be used to provide a brief prompt to the user, such as phrases like "Please enter text".
+
+`placeholder` automatically appears when the input text is empty, so it usually only requires fixed content, such as:
+
+```html
+<textarea ::text="inputText" placeholder="type here" />
+```
+
+### `insert` <decl type="(text: string): void" method />
+
+Inserts a piece of text with the content `text` at the cursor position, and the cursor automatically moves after the inserted text. Calling this function triggers a `text` listening event.
+
+### `backspace` <decl type="(): void" method />
+
+Deletes the character at the cursor position, and the cursor automatically moves forward. Calling this function triggers a `text` listening event.
+
+### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
+
+Moves the cursor one position in the specified direction. Valid values for the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, corresponding to the four directions: up, down, left, and right.
+
+## Usage Instructions
+
+### Basic Example
+
+The following example demonstrates the basic usage of `textarea`. Users can input multi-line text directly in the text box, or use the virtual keyboard below to edit the content: tap letter/symbol keys to insert characters; the "`×`" key deletes content at the cursor position; the "`Aa`" key toggles letter case; the "`1#`" key switches to the symbol keyboard; the "`Enter`" key inserts a newline character; and arrow keys move the cursor.
+
+<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea Basic Example">
+
+```html
+  <div class="window">
+    <textarea
+      id="textarea"
+      :placeholder="placeholder"
+      @text="onTextChanged"
+    >
+      {{ text }}
+    </textarea>
+    <div class="keyboard">
+      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
+        <button
+          class="kb-key"
+          for="key in row.keys"
+          :width="key.width ? key.width : null"
+          on:touchstart="onKeyEvent(key, 'down')"
+          on:touchend="onKeyEvent(key, 'up')"
+          on:touchcancel="onKeyEvent(key, 'up')"
+        >
+          {{ key.code ? key.code : key }}
+        </button>
+      </div>
+    </div>
+  </div>
+```
+
+```js
+const keyboardQwert = [
+  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
+  {
+    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboardQwertUpper = [
+  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
+  {
+    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+const keyboard123 = [
+  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
+  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
+  {
+    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
+    margin: ["14%", "52px"],
+  },
+  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
+];
+
+export default {
+  data: {
+    placeholder: "Enter your text here...",
+    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
+    keyboard: keyboardQwert,
+  },
+  keyboardType: "qwerty",
+
+  ta: null,
+  onReady() {
+    this.ta = this.$element("textarea");
+  },
+
+  onTextChanged() {
+    console.log("You have edited the text");
+  },
+  toggleCase() {
+    if (this.keyboardType == "qwerty") {
+      this.keyboard = keyboardQwertUpper;
+      this.keyboardType = "qwertyUpper";
+    } else if (this.keyboardType == "qwertyUpper") {
+      this.keyboard = keyboardQwert;
+      this.keyboardType = "qwerty";
+    }
+  },
+  keyboardRowStyle(row) {
+    if (row.margin)
+      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
+    return "";
+  },
+  backspaceTimer: null,
+  onKeyEvent(key, event) {
+    if (event !== "down") {
+      clearInterval(this.backspaceTimer);
+      this.backspaceTimer = null;
+      return; // skip if the key is released
+    }
+
+    if (key.code) key = key.code;
+    switch (key) {
+      case "Aa": this.toggleCase(); break;
+      case "1#":
+        this.keyboard = keyboard123;
+        this.keyboardType = "123";
+        break;
+      case "abc":
+        this.keyboard = keyboardQwert;
+        this.keyboardType = "qwerty";
+        break;
+      case "×":
+        this.ta.backspace();
+        if (event == "down") {
+          this.backspaceTimer = setTimeout(() => {
+            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
+            this.ta.backspace();
+          }, 500);
+        }
+        break;
+      case "Enter": this.ta.insert("\n"); break;
+      case "Space": this.ta.insert(" "); break;
+      case "↑": this.ta.moveCaret("up"); break;
+      case "↓": this.ta.moveCaret("down"); break;
+      case "←": this.ta.moveCaret("left"); break; 
+      case "→": this.ta.moveCaret("right"); break;
+      default: this.ta.insert(key); break;
+    }
+  },
+};
+```
+
+```css
+.window {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+textarea {
+  flex-grow: 1;
+  padding: 6px;
+  border: 2px solid #aaa6;
+  border-radius: 12px;
+  max-height: 160px;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.kb-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.kb-key {
+  flex-grow: 1;
+  background-color: #f0f0f080;
+  border: 2px solid #999;
+  border-radius: 16px;
+  text-align: center;
+  padding: 6px auto;
+  margin: 2px;
+  font-size: 0.85rem;
+  min-width: 40px;
+}
+
+.kb-key:active {
+  background-color: #0003;
+  border-color: #6663;
+}
+```
+
+</glyphix>
+
+We first obtain the `textarea` component object via the `$element` method in the component's `onReady()` lifecycle function, because we subsequently need to edit content and move the cursor using the [`insert()`](#insert), [`backspace`](#backspace), and [`moveCaret`](#movecaret) methods.
+
+Building on this, we can call the methods of `textarea` within the touch event listeners of the `button` component, for example:
+
+```html
+<button on:touchstart="ta.insert('A')">A</button>
+```
+
+Since there is no physical keyboard, developers typically need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout supporting case switching and a symbol keyboard. The corresponding methods are called in the touch event listener function of each key to edit the text. The arrow keys move the cursor using the [`moveCaret()`](#movecaret) method (in the four directions: up, down, left, and right), and the newline key inserts a newline character `\n` via [`insert()`](#insert).
+
+### Differences from text-field
+
+Both `textarea` and `text-field` are text input components. The main differences are as follows:
+
+| Feature | `textarea` | `text-field` |
+|------|-----------|-------------|
+| Text lines | Single or multi-line | Single line |
+| Newline support | Supports `\n` newlines | Does not support newlines |
+| Cursor movement | Up and down | Left and right |
+| Content property | `text` | `value` |
+| Password mode | Not supported | Supports `password` attribute |
+| Default display | Block-level element | Inline element |
 
 ============================================================
 FILE_PATH: src/transl/EN/components/switch.md
@@ -1654,252 +2844,72 @@ Please define the `color` and `background-color` properties for both the normal 
 :::
 
 ============================================================
-FILE_PATH: src/transl/EN/components/image.md
+FILE_PATH: src/transl/EN/components/checkbox.md
 
-# image
+# checkbox
 
-The image component is used to display image elements and is centered by default. The `image` component is an inline element by default.
+The `checkbox` element displays a checked box when activated, indicating that an item has been selected.
 
-## Attributes
-
-### `src` <decl type="string" get set />
-
-Sets the [URI](/framework/application/resource.md) of the image. For asset images within the application package, both relative and absolute paths are supported. The `image` component supports common PNG and JPEG image formats.
-
-::: tip
-The `image` component only supports local image resources, unlike the Web `img` element which can directly display network image resources. For details, please refer to how to [display network images](#display-network-images) in Glyphix.
-:::
-
-### `noCache` <decl type="boolean" get set />
-
-Sets whether the image should be cached. By default, caching is used to optimize image loading speed. When the `noCache` attribute is enabled, the `image` component will not use the cache, and changing the [`src`](#src) attribute will always reload the image from the file.
-
-Image caching is a technique to optimize loading speed and reduce memory usage. When an image with the same URI is already loaded in the system, an `image` component with caching enabled will directly use that resource. However, image files downloaded from the network with fixed names but potentially changing contents (such as user avatars like `internal://cache/avatar.png`) usually require the `noCache` attribute to be enabled to ensure correct behavior.
-
-Even if the `noCache` attribute is enabled, the `image` component still does not detect updates to the image file content. In this case, you need to manually change the [`src`](#src) attribute. Considering that the reactive framework filters out identical assignment operations, you must use a trick like this:
-``` html
-<!-- Assuming this is the image that needs to be updated and displayed, the no-cache attribute is mandatory. -->
-<image :src="avatarImage" no-cache />
-```
-
-``` js
-const avatarImage = 'internal://cache/avatar.png' // Assuming this is an image downloaded from the web
-
-export default {
-  data: {
-    avatarImage: avatarImage
-  },
-  // Call this method after the avatar download is complete to update the interface
-  onAvatarDownloaded() {
-    this.avatarImage = null // Must assign a new value first
-    this.avatarImage = avatarImage // Reassign to the correct URI
-  }
-}
-```
-In the example above, the reactive property `this.avatarImage` is first changed to `null` and then reassigned. This causes the value to change, thereby bypassing the reactive framework's optimization mechanism and achieving image updates.
-
-
-::: warning
-You must use this trick to update resources with a fixed URI, otherwise the displayed content may not change. To be safe, if the path of a resource obtained from the network may be duplicated, you also need to use this trick to ensure the interface updates.
-
-In addition, you must wait for the image download or file write to complete before updating the `src` attribute of the `image` component, otherwise the interface cannot be updated properly.
-:::
-
-### `async` <decl type="boolean" get set />
-
-Loads image resources asynchronously. This mode ensures that image loading does not block the UI thread, improving interface fluency. However, compared to the default synchronous loading mode, images in asynchronous loading will not display actual content immediately, so it is not suitable for all interfaces.
-
-Asynchronous loading mode is suitable for images downloaded from the network. Unlike image assets that are automatically optimized when the application is packaged, network images are usually slow-to-decode common formats such as PNG or JPEG. Synchronously decoding network images can be very stuttery, and such scenarios usually do not require the image to be displayed immediately.
-
-`async` can be used together with the [`noCache`](#nocache) attribute, as the latter is also mainly used for network images:
-``` html
-<image :src="avatarImage" no-cache async />
-```
-
-## Inherited Attributes
-
-These attributes are inherited from the [generic attributes](/framework/generic/properties.md) of native components, but the `image` component handles them specially.
-
-### `opacity` <decl type="number" set />
-
-Sets the opacity of the image, with a value range of $[0, 1]$, where $0$ means completely transparent and $1$ means completely opaque. The default value is $1$.
-
-### `transform` <decl type="string" set />
-
-Sets the transformation effect of the image, equivalent to the CSS [`transform`](/framework/generic/styles.md#transform) property.
-
-## CSS Notes
-
-### Unsupported Generic Attributes
-
-Compared to other native components, `image` is quite special as it does not support generic attributes such as `background-color` and `border`. This is also very different from web standards. Specifically, the following CSS properties are not supported:
-
-- [`background-color`](/framework/generic/styles.md#background-color), [`background-image`](/framework/generic/styles.md#background-image)
-- [`border`](/framework/generic/styles.md#border), [`border-top`](/framework/generic/styles.md#border-top), [`border-right`](/framework/generic/styles.md#border-right), [`border-bottom`](/framework/generic/styles.md#border-bottom), [`border-left`](/framework/generic/styles.md#border-left)
-
-This means you cannot add a background color or image to the `image` component by setting CSS properties, nor can you set border styles for it. However, the `image` component does support the [`border-radius`](/framework/generic/styles.md#border-radius) property.
-
-### Special Attributes
-
-The `image` component supports other CSS properties available for non-container components, but a few properties can be used to achieve special effects.
-
-#### `transform`
-
-Sets the image transformation. When this CSS property is used on an `image`, its effect is similar to the [`transform`](/framework/generic/styles.md#transform) of other elements, but it can be displayed normally without setting the [`transparent`](/framework/generic/styles.md#transparent) property.
-
-#### `opacity`
-
-Sets the image opacity, which has the same effect as the [`opacity`](#opacity) attribute.
-
-#### `border-radius`
-
-Sets the corner radius of the image. You can use this property to add rounded corners to the image. The usage is the same as the generic [`border-radius`](/framework/generic/styles.md#border-radius). The `image` component always applies rounded corners to all four corners of the image, regardless of whether the aspect ratio of the image matches that of the `image` component itself.
-
-#### `object-fit`
-
-The default value of the `object-fit` property for the `image` component is `none`, which differs from the web standard (where it defaults to `fill`). By default, images are not automatically scaled, but are centered and displayed at their original size. If the size exceeds the container, it will be cropped. This design is based on the characteristics of MCU devices:
-- **Performance First**: Image scaling usually requires extra computation, and some devices even implement interpolated scaling via software, which significantly reduces the frame rate.
-- **Image Quality Consistency**: On certain devices, even proportional scaling can cause noticeable blurring or aliasing. Not scaling by default ensures that pixel-level rendering remains undistorted.
-- **Memory Constrained**: Default scaling may mask resource usage issues, leading to the accidental loading of oversized images, thereby wasting precious storage and memory space.
-
-It is recommended to provide image resources that match the display area during the design stage, allowing images to be displayed correctly in their default state as much as possible; only when truly necessary should the display effect be adjusted by explicitly setting `object-fit` (such as `contain`).
-
-## Usage Tips
-
-### Displaying Network Images
-
-#### Avatar Scenarios
-
-This section demonstrates a method for loading images from the network. This method is mainly used for occasions such as user avatars, where the image has a fixed storage location locally, but the content may change. Due to the caching strategy of the Glyphix runtime, you need to use the trick in this example to ensure that the displayed content is updated.
-
-``` html
-<template>
-  <image :src="avatar" no-cache />
-</template>
-```
-
-``` js
-import request from '@system.request'
-
-export default {
-  data: {
-    avatar: null
-  },
-  onInit() {
-    this.downloadAvatar()
-  },
-  async downloadAvatar() {
-    const saveFile = 'internal://files/avatar.png'
-    await request.download({
-      url: 'https://example.com/url/to/avatar.png',
-      filename: saveFile,
-    }).complete
-    // For details on the trick here, refer to the description of the noCache attribute
-    this.avatar = null
-    this.avatar = saveFile
-  }
-}
-```
-
-============================================================
-FILE_PATH: src/transl/EN/components/p.md
-
-# p
-
-Text component. `p` is a block-level element by default. Unlike [`span`](span), the `p` component does not support text wrapping across lines even when set as an inline element. If rich text layout is required, you should consider using components like `span`.
-
-## Properties
-
-### `text` <decl type="string" get set/>
-
-Sets the text content. Supports the following two writing formats:
-
-``` html
-<p text="Hello Glyphix"></p>
-<p>Hello Glyphix</p>
-```
-
-<glyphix id="p" :height="70" inline>
+<glyphix id="checkbox-1" :height="65" title="Single Checkbox">
 
 ``` html
 <div>
-  <p text="Hello Glyphix"></p>
-  <p>Hello Glyphix</p>
+  <checkbox id="checkbox" ::checked="checked" />
+  <label target="checkbox">Check me!</label>
+  <p>checked: {{ checked }}</p>
 </div>
 ```
 
-</glyphix>
-
-### `color` <decl type="string" get set/>
-
-Sets the text color. Only hexadecimal color codes are supported, such as `#f00`, `#e8bb80ff`, etc. This property is a shortcut for modifying the CSS inline property [`color`](/framework/generic/styles.md#color).
-
-### `lines` <decl type="number" get set/>
-
-Sets the maximum number of lines for the text. Text exceeding this number of lines will be truncated or elided. This property is a shortcut for modifying the CSS inline property [`max-lines`](/framework/generic/styles.md#max-lines).
-
-### `text-align` <decl type="string" set/>
-
-Sets the text alignment. Supports values such as `left`, `center`, `right`, etc. This property is a shortcut for modifying the CSS inline property [`text-align`](/framework/generic/styles.md#text-align).
-
-### `font-size` <decl type="string" set/>
-
-Sets the font size of the text. Supports CSS font size values like `12px`, `1.5em`, etc. This property is a shortcut for modifying the CSS inline property [`font-size`](/framework/generic/styles.md#font-size).
-
-### `font-weight` <decl type="number" set/>
-
-Sets the font weight of the text. Currently, only integer values are supported, such as `400`, `600`, etc. This property is a shortcut for modifying the CSS inline property [`font-weight`](/framework/generic/styles.md#font-weight).
-
-## Tips & Tricks
-
-### Size Control
-
-In general, avoid manually setting the height of the `p` component. For example:
-``` css
-p.my-paragraph {
-  height: 48px;
-  font-size: 32px;
+``` js
+export default {
+  data: {
+    checked: true
+  }
 }
 ```
-On the surface, this sets a height greater than the font size for the `p` component, but in reality:
-- For single-line text, the actual height of certain fonts may exceed the font size, and even a height of `48px` may result in vertical clipping.
-- For multi-line text, setting a fixed height will cause the multi-line text to be clipped, preventing it from displaying completely.
+</glyphix>
 
-If you want to control the number of displayed lines of text, you should use [`max-lines`](/framework/generic/styles.md#max-lines) and [`text-overflow`](/framework/generic/styles.md#text-overflow) to achieve text truncation and ellipsis, rather than setting a fixed height.
+::: note
+A `checkbox` is typically a square that can be ticked, but the exact appearance depends on the device. Developers currently cannot modify the color and other styles of a `checkbox` using CSS.
+:::
 
-### Text Clipping Animation <version-badge since="0.9"/>
+## Properties
 
-You can use the [`width`](/framework/generic/styles.md#width) property in combination with the [`transition`](/framework/component/prop-modifier.md#transition-modifier) modifier to create a text clipping animation. For example:
+### `checked` <decl type="boolean" get set listen />
 
+This property indicates whether the checkbox is selected. Setting the `checked` property toggles the selection state of the checkbox: when the value is `true`, it appears in the checked state. You can also operate on a single checkbox via two-way binding:
 ``` html
-<p :width="state ? 240 : 0"
-   width.transition="{duration: 2.0}">
-  Hello Glyphix!
-</p>
+<checkbox model:checked="yes" />
 ```
 
-Combined with the `max-lines: 1` style, this can achieve a left-to-right text clipping animation. However, there is an issue with this animation: when the width is insufficient, the last character is directly discarded rather than clipped. The current workaround is to place the text content inside a child component and apply the width animation to the parent component:
+The previous example in this article demonstrates the usage of this binding. Note that you should bind to `checked` rather than the [`value`](#value) property.
+
+Events are triggered only when the user clicks the checkbox, causing the `checked` property to change.
+
+::: warning
+Do not set the `checked` property in a [checkbox group](#group) to avoid confusion.
+:::
+
+### `value` <decl type="any" get set />
+
+A JavaScript value that identifies the checkbox, typically a string or a number. This value is not displayed, but it can be used in [group operations](#group).
+
+### `group` <decl type="any[]" get set listen />
+
+If there are multiple related `checkbox` components, you can combine the `group` and `value` properties; checkboxes within the same group will form an array of selected values. Please refer to the example below:
+
+<glyphix id="checkbox-group" :height="65" title="Checkbox Group" >
 
 ``` html
-<div :width="state ? 240 : 1"
-     width.transition="{duration: 2.0}">
-  <p style="max-lines: 1">Hello Glyphix!</p>
-</div>
-```
-
-<glyphix id="p-width-transition" title="Text Clipping Animation" height="120">
-
-``` html
-<div class="container">
-  <p class="animated-text"
-     :width="state ? 240 : 0"
-     width.transition="{duration: 2.0}">
-    Hello Glyphix!
-  </p>
-  <div class="animated-text"
-       :width="state ? 240 : 1"
-       width.transition="{duration: 2.0}">
-    <p>Hello Glyphix!</p>
+<div>
+  <p>selected colors: {{selected.join(', ')}}</p>
+  <div>
+    <checkbox id="red" value="red" model:group="selected" />
+    <label target="red">red</label>
+    <checkbox id="blue" value="blue" model:group="selected" />
+    <label target="blue">blue</label>
+    <checkbox id="yellow" value="yellow" model:group="selected" />
+    <label target="yellow">yellow</label>
   </div>
 </div>
 ```
@@ -1907,263 +2917,98 @@ Combined with the `max-lines: 1` style, this can achieve a left-to-right text cl
 ``` js
 export default {
   data: {
-    state: false
-  },
-  onReady() {
-    setInterval(() => this.state = !this.state, 2500)
+    selected: ['yellow']
   }
 }
-```
-
-```css
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-}
-
-.animated-text {
-  margin: 4px;
-  border: 1px solid #f00;
-}
-
-p {
-  max-lines: 1;
-  text-overflow: clip;
-}
-````
-
-</glyphix>
-
-However, when using a `div` element as the parent component, the animation has a side effect: when the width is `0`, the layout size is computed as `(width: 0, height: 0)`, which causes the element to occupy no vertical space and results in a vertical jump at the start of the animation. The solution is to set the width to a very small value (such as `1px`) instead of `0`, allowing the element to occupy vertical space and thus avoiding the jumping issue.
-
-============================================================
-FILE_PATH: src/transl/EN/components/button.md
-
-# button
-
-The button component is an inline element by default and can trigger corresponding events when touched.
-
-## Properties
-
-### `checkable`  <decl type="boolean" set />
-
-When set to `true`, it means a single touch only responds to one state change, i.e., from pressed to released, or from released to pressed. In this case, the listening value for the `press` state is `true` when pressed and `false` when released.
-
-### `toggleable` <decl type="boolean" set />
-
-When set to `true`, it means the `press` listening value can be changed, being `true` when pressed and `false` when released.
-
-### `press` <decl type="boolean" get set listen />
-
-When setting the `press` property, the component's state can be changed. You can also listen to the component's state via the `on` directive. By default, upon completing a touch, the callback parameter is `true`. You can use it with the `checkable` and `toggleable` properties to get different listening values and states.
-
-## Limitations
-
-### `click` Event Invalidation
-
-When not using the `button` component, you typically listen for click events on any native component via the [`click`](/framework/generic/properties.md#click) property. However, this method is generally not suitable for `button`. For example, consider the following code:
-```html
-<button on:click="onOuterClick">
-  <p on:click="onInnerClick">inner</p>
-  outer button
-</button>
-```
-
-```js
-export default {
-  onOuterClick() {
-    console.log('outer click');
-  },
-  onInnerClick(event) {
-    // Prevent event bubbling to avoid the outer button responding to the click event
-    event.stopPropagation();
-    console.log('inner click');
-  }
-}
-```
-
-<glyphix id="components-button-click-1" height="48" width="360" inline>
-
-``` html
-<button on:click="onOuterClick">
-  <p on:click="onInnerClick">inner</p>
-  outer button
-</button>
 ```
 
 ``` css
-button {
-  background-color: #f0f0f0;
-  display: flex;
-  align-items: center;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-p {
-  border: 2px solid #444;
-  padding: 0 10px;
-}
-```
-
-``` js
-export default {
-  onOuterClick() {
-    console.log('outer click');
-  },
-  onInnerClick(event) {
-    event.stopPropagation();
-    console.log('inner click');
-  }
+label {
+  margin-right: 0.5rem;
 }
 ```
 
 </glyphix>
 
-You might expect that clicking the `"inner"` text would trigger the `onInnerClick` method and prevent `onOuterClick`. But you will find this is not the case (it is best to open the browser console to view the logs): the `onInnerClick` method is not triggered at all, and only the outer `button` component responds to the click, meaning:
-- When clicking the `inner` text, the `inner click` log does not appear, only the `outer click` log;
-- The `button`'s pressed interaction is triggered (opacity decreases).
+This can be achieved by using `model:group` or `::group` to two-way bind the `group` property to a reactive array (`selected` in the example):
+- After a user interacts with a checkbox in the group, the value of the reactive array is updated;
+- Changes to the elements of the reactive array are reflected in the appearance of the `checkbox`.
 
-This is just like clicking the outer `outer text`. The reason for this is that the `button` component takes precedence in responding to the entire lifecycle of the press gesture (from pressing down to releasing), while the `click` event is triggered upon release. This means that regardless of whether the inner element's `click` event handler prevents bubbling, it cannot change this behavior.
-
-#### Solution
-
-To solve this problem, you should listen to the `press` event of the outer `button` and the `touchstart` event of the inner element:
-
-```html
-<button on:press="onOuterClick">
-  <p on:touchstart="onInnerClick">inner</p>
-  outer button
-</button>
-```
-
-```js
-export default {
-  onOuterClick() {
-    console.log('outer click');
-  },
-  onInnerClick(event) {
-    // Prevent event bubbling to avoid the outer button responding to the click event
-    event.stopPropagation();
-    console.log('inner click');
-  }
-}
-```
-
-<glyphix id="components-button-click-2" height="48" width="360" inline>
-
+As shown in the example above: in the initial state, the selection status of the grouped checkboxes is determined by the value of the `group` property. Specifically, for a checkbox like:
 ``` html
-<button on:press="onOuterClick">
-  <p on:touchstart="onInnerClick">inner</p>
-  outer button
-</button>
+<checkbox value="red" model:group="selected" />
 ```
-
-``` css
-button {
-  background-color: #f0f0f0;
-  display: flex;
-  align-items: center;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-p {
-  border: 2px solid #444;
-  padding: 0 10px;
-}
-```
-
-``` js
-export default {
-  onOuterClick() {
-    console.log('outer click');
-  },
-  onInnerClick(event) {
-    event.stopPropagation();
-    console.log('inner click');
-  }
-}
-```
-
-</glyphix>
-
-Try the example above, and you will find that clicking the `inner` text only triggers the `onInnerClick` method, while `onOuterClick` is not triggered, and the `button` does not render the pressed effect either.
+Since the `value` property specifies `"red"`, when the value of the reactive property `selected` contains `"red"` (such as `["red"]`), the checkbox will be checked. Clicking this checkbox again causes it to become unchecked, and the `"red"` element is removed from the `selected` array.
 
 ::: tip
-The `press` event is also typically triggered upon release, but it requires that the button's press event has never been prevented. Therefore, the inner element's `touchstart` event, which stops propagation, can prevent the outer button's `press` event from being triggered.
+If you do not want to group checkboxes, you can use the [`checked`](#checked) property to operate them individually. However, do not use `checked` and `group` at the same time, as Glyphix does not account for this scenario.
 :::
 
-#### Alternative Trigger Timing
+### `indeterminate` <decl type="boolean" get set />
 
-The limitation of this method is that the inner element's `touchstart` event is triggered upon pressing down. You can alternatively use the `touchend` event for triggering, but you must keep the event propagation-stopping functionality on the `touchstart` event. This ensures that the outer button's `press` event is not triggered when pressing down.
+The `indeterminate` property indicates that the checkbox is in an **indeterminate** state. When this property is `true`, the checkbox displays a horizontal line resembling a minus sign in the middle to indicate that its state is uncertain.
 
-```html
-<button on:press="onOuterClick">
-  <p on:touchstart="$event.stopPropagation()" on:touchend="onInnerClick">inner</p>
-  outer button
-</button>
-```
+The indeterminate state can be used when an item has multiple sub-items: if all sub-items are selected, the parent is also selected; if all are unselected, the parent is also unselected. If some sub-items are selected, the parent will be in an indeterminate state.
 
-```js
-export default {
-  onOuterClick() {
-    console.log('outer click');
-  },
-  onInnerClick(event) {
-    // No need to stop propagation here, as it was already stopped in touchstart
-    console.log('inner click');
-  }
-}
-```
+The following example demonstrates this usage. It shows a list for crafting an enchantment table; when you select some of the recipes, the "Enchantment table" checkbox enters a partially selected state. As you can see, this example allows you to use the parent checkbox to select or deselect all sub-items.
 
-<glyphix id="components-button-click-3" height="48" width="360" inline>
+<glyphix id="checkbox-indeterminate" :height="140" title="Tri-state Checkbox" >
 
 ``` html
-<button on:press="onOuterClick">
-  <p on:touchstart="$event.stopPropagation()" on:touchend="onInnerClick">inner</p>
-  outer button
-</button>
-```
-
-``` css
-button {
-  background-color: #f0f0f0;
-  display: flex;
-  align-items: center;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-p {
-  border: 2px solid #444;
-  padding: 0 10px;
-}
+<div>
+  <div>
+    <!--
+      When selected.length == 3, entirety is checked, otherwise:
+      - If selected.length == 0, it is unchecked;
+      - Otherwise, it means some recipes are selected, so it is in the indeterminate state. 
+      -->
+    <checkbox id="entirety"
+              :indeterminate="selected.length && selected.length < 3"
+              :checked="selected.length == 3"
+              on:checked="selectEntirety" />
+    <label target="entirety">
+      &nbsp;Enchantment table:
+    </label>
+  </div>
+  <div class="group">
+    <div for="x in parts">
+      •
+      <checkbox :id="x" :value="x" model:group="selected" />
+      <label :target="x">&nbsp;{{x}}</label>
+    </div>
+  </div>
+</div>
 ```
 
 ``` js
 export default {
-  onOuterClick() {
-    console.log('outer click');
+  data: {
+    selected: ['Diamonds'],
   },
-  onInnerClick(event) {
-    console.log('inner click');
-  }
+  parts: ['Book', 'Diamonds', 'Obsidian'],
+  // Called when clicking the entirety checkbox to set the selection state of all recipes
+  selectEntirety(status) {
+    // Use [...this.parts] to copy the list to avoid mutating it in place
+    this.selected = status ? [...this.parts] : []
+  },
+}
+```
+
+``` css
+.group {
+  margin-left: 0.4rem;
 }
 ```
 
 </glyphix>
 
-Open the browser console and click the `inner` text again. You will find that the `onInnerClick` log is only printed upon release, and it successfully prevents the outer `button` from responding to the gesture as well.
+::: tip
+When the `checked` property is set (note: not cleared), the `indeterminate` property is automatically cleared. Even if the checkbox has both properties, it will be displayed in the checked state rather than the indeterminate state.
+:::
+
+### CSS Behavior
+
+By default, a checkbox is an inline element. Its display size is determined by the `font-size` CSS property, and it aligns with the text baseline. Please do not manually specify properties like `width` and `height`, as this may cause layout distortion.
 
 ============================================================
 FILE_PATH: src/transl/EN/components/mapview.md
@@ -2510,1111 +3355,9 @@ export default {
 ```
 
 ============================================================
-FILE_PATH: src/transl/EN/components/slider-arc.md
-
-# slider-arc
-
-An arc-shaped slider selector. It is a block-level element by default, and style customization is currently not supported.
-
-## Attributes
-
-Inherits attributes from the [slider](slider) component.
-
-### `arc-center` <decl type="{ x: number, y: number }" set />
-
-Sets the position of the arc's center.
-
-### `start-angle` <decl type="number" set />
-
-Sets the starting angle of the arc. Default value: $-90$.
-
-### `progress-angle` <decl type="number" set />
-
-Sets the maximum rotation angle of the arc. Default value: $360$ (a full circle).
-
-### `arc-width` <decl type="number" set />
-
-Sets the width of the arc.
-
-### `arc-radius` <decl type="number" set />
-
-Sets the radius of the arc.
-
-============================================================
-FILE_PATH: src/transl/EN/components/text-field.md
-
-# text-field
-
-A component used for entering single-line text content, which is an inline element by default. Unlike GUI elements on mobile phones or PCs, `text-field` currently does not respond to input devices such as keyboards, nor does it pop up an IME (Input Method Editor) interface, so you must manually edit its content. `text-field` supports operating the cursor through touch gestures (such as tapping and scrolling).
-
-`text-field` is suitable as the underlying component for single-line text input, allowing you to implement a soft keyboard according to your needs (such as a password keypad or even voice input). For details, please refer to the [Example](#basic-example).
-
-## Attributes
-
-### `value` <decl type="string" set get listen />
-
-The `value` property is a string, which is the currently edited content of the `text-field`. Reading or listening to this value can retrieve the entered text, and this property can also be set.
-
-Typically, `value` is two-way bound to a specific reactive property, such as:
-
-```html
-<text-field ::value="inputText" />
-```
-
-### `placeholder` <decl type="string" set get />
-
-When the content of the `text-field` is empty, `placeholder` can be used to provide the user with a short prompt, such as phrases like "Please enter text".
-
-`placeholder` is automatically displayed when the input text is empty, so it usually only requires a fixed content, such as:
-
-```html
-<text-field ::value="inputText" placeholder="type here" />
-```
-
-### `password` <decl type="boolean" set get />
-
-When this property is set, `text-field` will use "password mode", meaning each character is replaced with a "•" ([Bullet, U+2022](http://www.fileformat.info/info/unicode/char/2022/index.htm)). You can turn the `password` property off or on at any time to switch between showing and hiding the password status.
-
-In newer versions <version-badge since="0.9" />, password mode delays the masking of entered characters. Users can see the newly entered characters for a short time before they are replaced with "•". Older versions mask input characters immediately.
-
-### `insert` <decl type="(text: string): void" method />
-
-Inserts a piece of text with the content `text` at the cursor position, and the cursor will automatically move after the inserted text. Calling this function will trigger the `value` listening event.
-
-### `backspace` <decl type="(): void" method />
-
-Deletes the character at the cursor position, and the cursor will automatically move forward. Calling this function will trigger the `value` listening event.
-
-## Usage Instructions
-
-### Basic Example
-
-The following example demonstrates the basic usage of `text-field`. You can click the keyboard buttons to enter numbers. Click the "×" button to delete the content at the cursor position, and click "A/*" to toggle between password mode and regular text input mode. In password mode, the entered content is hidden with `•`.
-
-<glyphix id="components-text-field-1" width="410" height="160">
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <!-- A simple matrix numeric keyboard -->
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
-```
-
-```js
-export default {
-  data: {
-    inputText: "",
-    password: false,
-  },
-  keyboard: [
-    ['1', '2', '3', '4', '5'],
-    ['6', '7', '8', '9', '0'],
-  ],
-  textField: null,
-  onReady() {
-    // Get the TextField component object to easily call the insert() and backspace() methods.
-    this.textField = this.$element("text-field")
-  },
-}
-```
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  text-align: center;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-In this example, the text of the `text-field` is centered, which is achieved through `text-align`:
-```css
-text-field {
-  text-align: center;
-}
-```
-
-We first obtain the `text-field` component object using the `$element` method within the component's `onReady()` lifecycle function, because we will need to use the [`insert()`](#insert) and [`backspace`](#backspace) methods to edit the content.
-
-Building on this, we can directly call the methods of `text-field` within the `click` event listener of the `button` component, for example:
-```html
-<button on:click="textField.backspace()">×</button>
-```
-
-Since there is no physical keyboard, developers usually need to provide a custom keyboard implementation. For educational purposes, this example only implements a 2-row by 5-column numeric keyboard. You need to insert the key value into the `text-field` in the `click` event listener function of each key:
-```html
-<div class="flex-row" for="rows in keyboard">
-  <button class="flex-1" for="key in rows"
-          on:click="textField.insert(key)">
-    {{key}}
-  </button>
-</div>
-```
-
-This example also demonstrates the standard method for toggling password mode.
-
-### Content Validation and Formatting
-
-You can achieve content validation and formatting by two-way binding the [`value`](#value) property of the `text-field` to a computed property. The following example demonstrates this approach, which allows you to enter a maximum of 9 digits (letters and other characters are not allowed) and adds a "," separator every three digits.
-
-<glyphix id="components-text-field-validator" title="Content Validator" width="410" height="200">
-
-```html
-<div class="flex-column">
-  <div class="flex-row align-baseline">
-    <text-field id="text-field"
-                ::value="inputText"
-                :password="password"
-                placeholder="type here" />
-    <button checkable ::press="password">A/*</button>
-    <button on:click="textField.backspace()">×</button>
-  </div>
-  <div class="flex-row" for="rows in keyboard">
-    <button class="flex-1" for="key in rows"
-            on:click="textField.insert(key)">
-      {{key}}
-    </button>
-  </div>
-</div>
-```
-
-```js
-export default {
-  data: {
-    password: false,
-    rawText: "",
-  },
-  computed: {
-    inputText: {
-      get() { return this.rawText },
-      set(text) {
-        if (text.length < 12 && /^[\d,]*$/.test(text)) {
-          this.rawText = text.replace(/[^\d]/g, '')
-                             .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        }
-      },
-    },
-  },
-  keyboard: [
-    ["1", "2", "3", "4", "5"],
-    ["6", "7", "8", "9", "0"],
-    ["A", "B", "C", "D", "E"],
-  ],
-  textField: null,
-  onReady() {
-    this.textField = this.$element("text-field")
-  },
-}
-```
-
-```css
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-}
-
-.align-baseline {
-  align-items: baseline;
-}
-
-text-field {
-  flex: 1;
-  border-bottom: 2px solid #666;
-}
-
-button {
-  border-radius: 8px;
-  background-color: #dee2e6;
-  margin: 8px;
-  padding: auto 12px;
-}
-
-button:active {
-  opacity: 0.5;
-}
-
-.flex-1 {
-  flex: 1;
-}
-```
-</glyphix>
-
-Content validation and formatting are implemented through two-way binding and computed properties. For the `text-field` component node:
-```html
-<text-field id="text-field"
-            ::value="inputText"
-            :password="password"
-            placeholder="type here" />
-```
-The `value` property is two-way bound to `inputText`, which is actually a computed property. Its `set()` method checks whether the input content complies with the rules (at most 11 characters, allowing only digits and commas), then filters the digits using regular expressions and formats them by adding commas every three digits:
-```js
-function set(text) {
-  if (text.length < 12 && /^[\d,]*$/.test(text)) {
-    this.rawText = text.replace(/[^\d]/g, '')
-                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  }
-}
-```
-If the entered content does not meet the requirements, the `set()` method will ignore the input value, and the two-way binding mechanism will keep the content of the `text-field` consistent with the property value of `inputText` (obtained via the `get()` method). Therefore, you will find that letter keys cannot be entered.
-
-============================================================
-FILE_PATH: src/transl/EN/components/textarea.md
-
-# textarea
-
-`textarea` <experimental/><version-badge since="0.9" /> is a multi-line text input component, which defaults to displaying as a block-level element. Unlike similar GUI elements on mobile phones or PCs, `textarea` currently does not respond to input devices such as keyboards, nor does it pop up an input method editor (IME) interface; therefore, you must manually edit its content. `textarea` supports operating the cursor via touch gestures (such as tapping and scrolling) and provides methods to move the cursor up, down, left, and right.
-
-`textarea` is suitable as a low-level component for multi-line text input, allowing you to implement your own soft keyboard and cursor control according to your needs. For details, please refer to the [Example](#basic-example).
-
-::: important Compatibility
-`textarea` is an experimental extended component currently available only in Glyphix version 0.9 and above, and is supported on only some devices.
-:::
-
-## Attributes
-
-### `text` <decl type="string" get set listen />
-
-The `text` attribute is a string representing the currently edited text content of the `textarea`. Reading or listening to this value retrieves the input text, and this attribute can also be set.
-
-Typically, `text` is two-way bound to a specific reactive property, or text can be set using the content inside the element, such as:
-
-```html
-<textarea ::text="inputText" />
-```
-
-Or
-
-```html
-<textarea @text="onTextChanged">{{ inputText }}</textarea>
-```
-
-:::tip
-The `text` attribute of `textarea` functions similarly to the [`value`](text-field.md#value) attribute of [`text-field`](text-field.md).
-:::
-
-### `placeholder` <decl type="string" set get />
-
-When the content of the `textarea` is empty, `placeholder` can be used to provide a brief prompt to the user, such as phrases like "Please enter text".
-
-`placeholder` automatically appears when the input text is empty, so it usually only requires fixed content, such as:
-
-```html
-<textarea ::text="inputText" placeholder="type here" />
-```
-
-### `insert` <decl type="(text: string): void" method />
-
-Inserts a piece of text with the content `text` at the cursor position, and the cursor automatically moves after the inserted text. Calling this function triggers a `text` listening event.
-
-### `backspace` <decl type="(): void" method />
-
-Deletes the character at the cursor position, and the cursor automatically moves forward. Calling this function triggers a `text` listening event.
-
-### `moveCaret` <decl type="(direction: 'up' | 'down' | 'left' | 'right'): void" method />
-
-Moves the cursor one position in the specified direction. Valid values for the `direction` parameter are `'up'`, `'down'`, `'left'`, and `'right'`, corresponding to the four directions: up, down, left, and right.
-
-## Usage Instructions
-
-### Basic Example
-
-The following example demonstrates the basic usage of `textarea`. Users can input multi-line text directly in the text box, or use the virtual keyboard below to edit the content: tap letter/symbol keys to insert characters; the "`×`" key deletes content at the cursor position; the "`Aa`" key toggles letter case; the "`1#`" key switches to the symbol keyboard; the "`Enter`" key inserts a newline character; and arrow keys move the cursor.
-
-<glyphix id="components-textarea-basic" width="560" height="360" title="Textarea Basic Example">
-
-```html
-  <div class="window">
-    <textarea
-      id="textarea"
-      :placeholder="placeholder"
-      @text="onTextChanged"
-    >
-      {{ text }}
-    </textarea>
-    <div class="keyboard">
-      <div class="kb-row" for="row in keyboard" :style="keyboardRowStyle(row)">
-        <button
-          class="kb-key"
-          for="key in row.keys"
-          :width="key.width ? key.width : null"
-          on:touchstart="onKeyEvent(key, 'down')"
-          on:touchend="onKeyEvent(key, 'up')"
-          on:touchcancel="onKeyEvent(key, 'up')"
-        >
-          {{ key.code ? key.code : key }}
-        </button>
-      </div>
-    </div>
-  </div>
-```
-
-```js
-const keyboardQwert = [
-  { keys: ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "a", "s", "d", "f", "g", "h", "j", "k", "l", "Enter"] },
-  {
-    keys: ["z", "x", "c", "v", "b", "n", "m", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboardQwertUpper = [
-  { keys: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Enter"] },
-  {
-    keys: ["Z", "X", "C", "V", "B", "N", "M", ".", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "1#", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-const keyboard123 = [
-  { keys: ["~", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", {code: "×", width: "13%"}] },
-  { keys: ["Aa", "@", "#", "$", "%", "&", "*", "-", "+", "=", "Enter"] },
-  {
-    keys: ["!", '"', "'", ";", ":", ",", ".", "/", "↑"],
-    margin: ["14%", "52px"],
-  },
-  { keys: [{code: "abc", width: "14%"}, {code: "Space", width: "55%"}, "←", "↓", "→"] },
-];
-
-export default {
-  data: {
-    placeholder: "Enter your text here...",
-    text: "Glyphix is a declarative GUI framework built for MCU devices.\n\nIt is lightweight, fast, and easy to use, offering rich UI components and development tools that help teams create modern, responsive graphical interfaces for embedded applications.",
-    keyboard: keyboardQwert,
-  },
-  keyboardType: "qwerty",
-
-  ta: null,
-  onReady() {
-    this.ta = this.$element("textarea");
-  },
-
-  onTextChanged() {
-    console.log("You have edited the text");
-  },
-  toggleCase() {
-    if (this.keyboardType == "qwerty") {
-      this.keyboard = keyboardQwertUpper;
-      this.keyboardType = "qwertyUpper";
-    } else if (this.keyboardType == "qwertyUpper") {
-      this.keyboard = keyboardQwert;
-      this.keyboardType = "qwerty";
-    }
-  },
-  keyboardRowStyle(row) {
-    if (row.margin)
-      return `margin-left: ${row.margin[0]}; margin-right: ${row.margin[1]};`;
-    return "";
-  },
-  backspaceTimer: null,
-  onKeyEvent(key, event) {
-    if (event !== "down") {
-      clearInterval(this.backspaceTimer);
-      this.backspaceTimer = null;
-      return; // skip if the key is released
-    }
-
-    if (key.code) key = key.code;
-    switch (key) {
-      case "Aa": this.toggleCase(); break;
-      case "1#":
-        this.keyboard = keyboard123;
-        this.keyboardType = "123";
-        break;
-      case "abc":
-        this.keyboard = keyboardQwert;
-        this.keyboardType = "qwerty";
-        break;
-      case "×":
-        this.ta.backspace();
-        if (event == "down") {
-          this.backspaceTimer = setTimeout(() => {
-            this.backspaceTimer = setInterval(() => this.ta.backspace(), 50);
-            this.ta.backspace();
-          }, 500);
-        }
-        break;
-      case "Enter": this.ta.insert("\n"); break;
-      case "Space": this.ta.insert(" "); break;
-      case "↑": this.ta.moveCaret("up"); break;
-      case "↓": this.ta.moveCaret("down"); break;
-      case "←": this.ta.moveCaret("left"); break; 
-      case "→": this.ta.moveCaret("right"); break;
-      default: this.ta.insert(key); break;
-    }
-  },
-};
-```
-
-```css
-.window {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-textarea {
-  flex-grow: 1;
-  padding: 6px;
-  border: 2px solid #aaa6;
-  border-radius: 12px;
-  max-height: 160px;
-}
-
-.keyboard {
-  display: flex;
-  flex-direction: column;
-}
-
-.kb-row {
-  display: flex;
-  flex-direction: row;
-}
-
-.kb-key {
-  flex-grow: 1;
-  background-color: #f0f0f080;
-  border: 2px solid #999;
-  border-radius: 16px;
-  text-align: center;
-  padding: 6px auto;
-  margin: 2px;
-  font-size: 0.85rem;
-  min-width: 40px;
-}
-
-.kb-key:active {
-  background-color: #0003;
-  border-color: #6663;
-}
-```
-
-</glyphix>
-
-We first obtain the `textarea` component object via the `$element` method in the component's `onReady()` lifecycle function, because we subsequently need to edit content and move the cursor using the [`insert()`](#insert), [`backspace`](#backspace), and [`moveCaret`](#movecaret) methods.
-
-Building on this, we can call the methods of `textarea` within the touch event listeners of the `button` component, for example:
-
-```html
-<button on:touchstart="ta.insert('A')">A</button>
-```
-
-Since there is no physical keyboard, developers typically need to provide a custom keyboard implementation. This example implements a complete QWERTY keyboard layout supporting case switching and a symbol keyboard. The corresponding methods are called in the touch event listener function of each key to edit the text. The arrow keys move the cursor using the [`moveCaret()`](#movecaret) method (in the four directions: up, down, left, and right), and the newline key inserts a newline character `\n` via [`insert()`](#insert).
-
-### Differences from text-field
-
-Both `textarea` and `text-field` are text input components. The main differences are as follows:
-
-| Feature | `textarea` | `text-field` |
-|------|-----------|-------------|
-| Text lines | Single or multi-line | Single line |
-| Newline support | Supports `\n` newlines | Does not support newlines |
-| Cursor movement | Up and down | Left and right |
-| Content property | `text` | `value` |
-| Password mode | Not supported | Supports `password` attribute |
-| Default display | Block-level element | Inline element |
-
-============================================================
-FILE_PATH: src/transl/EN/components/barcode.md
-
-# barcode
-
-The `barcode` component is used to display [Code 128](https://en.wikipedia.org/wiki/Code_128) barcodes. The `barcode` component can display any ASCII string, making it suitable for showing product barcodes, payment codes, and other information.
-
-In flow layouts, the `barcode` component defaults to a block-level element (`block`) and will occupy a single line by itself.
-
-## Attributes
-
-### `value` <decl type="string" get set />
-
-Sets the content to be displayed by the barcode. Supports any ASCII string.
-
-## CSS Notes
-
-To make the barcode easily scannable, the CSS properties of the `barcode` component should be set correctly. These include:
-- `color`: The color of the barcode bars, generally set to black (`black` or `#000`);
-- `background-color`: The background color of the barcode should typically be white (`white` or `#fff`);
-- `padding` / `margin`: Sufficient inner and outer margins help prevent the barcode from blending with other elements, increasing the scanning recognition rate;
-- `width` / `height`: The dimensions of the barcode must be large enough to be easily captured by a camera.
-
-By default, each bar of the barcode component occupies a width of $2\rm px$ and a height of $32\rm px$. This may be too small on small-screen devices such as smartwatches. Developers are advised to manually set the `width` / `height` properties of the barcode component as needed and test them on actual devices.
-
-The following example demonstrates how to use the barcode component. Note that various margins are set for the `barcode` component in the CSS to ensure there is enough spacing between the barcode and other UI elements to avoid scanning interference.
-
-<glyphix id="barcode-1" :height="150" :width="350">
-
-``` html
-<div>
-  <barcode :value="text"/>
-  <p>{{ text }}</p>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    text: '9787111407010'
-  }
-}
-```
-
-``` css
-div {
-  background-color: black;
-  padding: 8px;
-}
-
-barcode {
-  margin: 8px;
-  padding: 8px;
-  color: black; /* Set the barcode foreground color to black */
-  background-color: white; /* Set the barcode background color to white */
-  border-radius: 16px;
-  height: 80px;
-}
-
-p {
-  color: white;
-  font-size: 0.75rem;
-  text-align: center;
-}
-```
-
-</glyphix>
-
-::: tip
-You should always explicitly set **high-contrast** colors for the barcode component's bar color (`color`) and background (`background-color`) styles to prevent reduced scannability caused by deviations in the device's default style themes or inherited style properties.
-
-At the same time, please set a sufficiently large padding (`padding`) to ensure easy scanning and recognition.
-:::
-
-============================================================
-FILE_PATH: src/transl/EN/components/collapsible-header.md
-
-# collapsible-header
-
-The `collapsible-header` component is used to add a collapsible title bar to a scrolling list. This effect provides a view-saving interaction for watch-like devices, enhancing the user experience.
-
-::: warning
-<experimental /> This is an experimental component. Do not use methods other than those demonstrated in this documentation.
-:::
-
-## Attributes
-
-This component supports [Generic Attributes](/framework/generic/properties.md) and has no dedicated attributes.
-
-## Usage
-
-The `collapsible-header` component must contain two child components, otherwise unexpected behavior may occur. A specific example is as follows:
-
-```html
-<collapsible-header>
-  <p>This is a collapsible title</p>
-  <scroll> ... </scroll>
-</collapsible-header>
-```
-
-The first child element is a collapsible title, while the second element must be a scrollable container such as [`scroll`](/components/scroll.md). Below is a concrete example:
-
-<glyphix id="components-collapsible-header-1" height="360" width="360" title="Collapsible Title Bar">
-
-```html
-<collapsible-header>
-  <p class="title-bar" on:click="clickTitle">TITLE BAR</p>
-  <scroll scroll-snap="center" deformation="fisheye">
-    <p for="x in 20" class="item">item {{ x + 1 }}</p>
-  </scroll>
-</collapsible-header>
-```
-
-```js
-import prompt from "@system.prompt";
-
-export default {
-  clickTitle() {
-    prompt.showToast({ message: "title clicked" });
-  }
-}
-```
-
-```css
-.title-bar {
-  margin: 56px auto auto;
-  transparent: true;
-  font-size: 1.5rem;
-}
-
-.item {
-  height: 33.3%;
-  background-color: #ddd;
-  border-radius: 20%;
-  margin: 8px;
-  transparent: true;
-  padding: 12px;
-  text-align: center;
-}
-```
-
-</glyphix>
-
-### Principle Explanation
-
-`collapsible-header` accepts two child components: the first one is the collapsible title bar, and the second one must be a scrollable component similar to `scroll`. `collapsible-header` combines these two components and manipulates the display effect of the collapsible title bar as the list scrolls.
-
-You can use a flow-layout-like approach to control the position of the title bar, for example:
-
-```css
-/* The top margin of the element is 48px, centered horizontally, suitable for circular screens. */
-margin: 48px auto auto;
-/* The left and top margins of the element are 12px, suitable for square screens. */
-margin: 12px auto auto 12px;
-```
-
-Applying the above styles to the title bar element according to actual needs can achieve specific alignment effects. You can also use complex components containing child elements as the title bar, such as using a component that includes a back button and page title text. However, note that when clicking the title bar, the click event can be sent to both the scrolling list and the title bar simultaneously. If conflicts occur, they can be resolved by stopping event propagation.
-
-### Precautions
-
-You must provide two child components for `collapsible-header` according to the above requirements, and make sure not to get the order wrong. In addition, since the collapsible title bar and the underlying scrolling list are displayed stacked on top of each other, this may cause the first element of the list to overlap with the title bar. When necessary, developers should consider some placeholder method to avoid overlapping, and the centering [snap mode](/components/scroll.md#scrollsnap) of `scroll` (`scroll-snap="center"`) can also help avoid overlapping.
-
-============================================================
-FILE_PATH: src/transl/EN/components/checkbox.md
-
-# checkbox
-
-The `checkbox` element displays a checked box when activated, indicating that an item has been selected.
-
-<glyphix id="checkbox-1" :height="65" title="Single Checkbox">
-
-``` html
-<div>
-  <checkbox id="checkbox" ::checked="checked" />
-  <label target="checkbox">Check me!</label>
-  <p>checked: {{ checked }}</p>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    checked: true
-  }
-}
-```
-</glyphix>
-
-::: note
-A `checkbox` is typically a square that can be ticked, but the exact appearance depends on the device. Developers currently cannot modify the color and other styles of a `checkbox` using CSS.
-:::
-
-## Properties
-
-### `checked` <decl type="boolean" get set listen />
-
-This property indicates whether the checkbox is selected. Setting the `checked` property toggles the selection state of the checkbox: when the value is `true`, it appears in the checked state. You can also operate on a single checkbox via two-way binding:
-``` html
-<checkbox model:checked="yes" />
-```
-
-The previous example in this article demonstrates the usage of this binding. Note that you should bind to `checked` rather than the [`value`](#value) property.
-
-Events are triggered only when the user clicks the checkbox, causing the `checked` property to change.
-
-::: warning
-Do not set the `checked` property in a [checkbox group](#group) to avoid confusion.
-:::
-
-### `value` <decl type="any" get set />
-
-A JavaScript value that identifies the checkbox, typically a string or a number. This value is not displayed, but it can be used in [group operations](#group).
-
-### `group` <decl type="any[]" get set listen />
-
-If there are multiple related `checkbox` components, you can combine the `group` and `value` properties; checkboxes within the same group will form an array of selected values. Please refer to the example below:
-
-<glyphix id="checkbox-group" :height="65" title="Checkbox Group" >
-
-``` html
-<div>
-  <p>selected colors: {{selected.join(', ')}}</p>
-  <div>
-    <checkbox id="red" value="red" model:group="selected" />
-    <label target="red">red</label>
-    <checkbox id="blue" value="blue" model:group="selected" />
-    <label target="blue">blue</label>
-    <checkbox id="yellow" value="yellow" model:group="selected" />
-    <label target="yellow">yellow</label>
-  </div>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    selected: ['yellow']
-  }
-}
-```
-
-``` css
-label {
-  margin-right: 0.5rem;
-}
-```
-
-</glyphix>
-
-This can be achieved by using `model:group` or `::group` to two-way bind the `group` property to a reactive array (`selected` in the example):
-- After a user interacts with a checkbox in the group, the value of the reactive array is updated;
-- Changes to the elements of the reactive array are reflected in the appearance of the `checkbox`.
-
-As shown in the example above: in the initial state, the selection status of the grouped checkboxes is determined by the value of the `group` property. Specifically, for a checkbox like:
-``` html
-<checkbox value="red" model:group="selected" />
-```
-Since the `value` property specifies `"red"`, when the value of the reactive property `selected` contains `"red"` (such as `["red"]`), the checkbox will be checked. Clicking this checkbox again causes it to become unchecked, and the `"red"` element is removed from the `selected` array.
-
-::: tip
-If you do not want to group checkboxes, you can use the [`checked`](#checked) property to operate them individually. However, do not use `checked` and `group` at the same time, as Glyphix does not account for this scenario.
-:::
-
-### `indeterminate` <decl type="boolean" get set />
-
-The `indeterminate` property indicates that the checkbox is in an **indeterminate** state. When this property is `true`, the checkbox displays a horizontal line resembling a minus sign in the middle to indicate that its state is uncertain.
-
-The indeterminate state can be used when an item has multiple sub-items: if all sub-items are selected, the parent is also selected; if all are unselected, the parent is also unselected. If some sub-items are selected, the parent will be in an indeterminate state.
-
-The following example demonstrates this usage. It shows a list for crafting an enchantment table; when you select some of the recipes, the "Enchantment table" checkbox enters a partially selected state. As you can see, this example allows you to use the parent checkbox to select or deselect all sub-items.
-
-<glyphix id="checkbox-indeterminate" :height="140" title="Tri-state Checkbox" >
-
-``` html
-<div>
-  <div>
-    <!--
-      When selected.length == 3, entirety is checked, otherwise:
-      - If selected.length == 0, it is unchecked;
-      - Otherwise, it means some recipes are selected, so it is in the indeterminate state. 
-      -->
-    <checkbox id="entirety"
-              :indeterminate="selected.length && selected.length < 3"
-              :checked="selected.length == 3"
-              on:checked="selectEntirety" />
-    <label target="entirety">
-      &nbsp;Enchantment table:
-    </label>
-  </div>
-  <div class="group">
-    <div for="x in parts">
-      •
-      <checkbox :id="x" :value="x" model:group="selected" />
-      <label :target="x">&nbsp;{{x}}</label>
-    </div>
-  </div>
-</div>
-```
-
-``` js
-export default {
-  data: {
-    selected: ['Diamonds'],
-  },
-  parts: ['Book', 'Diamonds', 'Obsidian'],
-  // Called when clicking the entirety checkbox to set the selection state of all recipes
-  selectEntirety(status) {
-    // Use [...this.parts] to copy the list to avoid mutating it in place
-    this.selected = status ? [...this.parts] : []
-  },
-}
-```
-
-``` css
-.group {
-  margin-left: 0.4rem;
-}
-```
-
-</glyphix>
-
-::: tip
-When the `checked` property is set (note: not cleared), the `indeterminate` property is automatically cleared. Even if the checkbox has both properties, it will be displayed in the checked state rather than the indeterminate state.
-:::
-
-### CSS Behavior
-
-By default, a checkbox is an inline element. Its display size is determined by the `font-size` CSS property, and it aligns with the text baseline. Please do not manually specify properties like `width` and `height`, as this may cause layout distortion.
-
-============================================================
-FILE_PATH: src/transl/EN/components/label.md
-
-# label
-
-The `label` component is used to display text or tag information, and is an inline element by default. `label` can be used in conjunction with the following form components to display tag information:
-- [input](input)
-- [radio](radio)
-- [switch](switch)
-- [checkbox](checkbox)
-
-When a `label` is associated with a supported form component, clicking the `label` component will also trigger a value update for the form component.
-
-## Properties
-
-### `text` <decl type="string" set get />
-
-The text content of the label, supporting either attribute syntax or text child element syntax:
-``` html
-<label text="label text"></label>
-<label>label text</label>
-```
-
-### `target` <decl type="string" set get />
-
-The ID of the target component. For example:
-```html
-<radio id="red" /><label target="red">red</label>
-```
-Clicking the `label` component in the example will also trigger an update for the `radio` component with the ID `red`, but clicking the `label` component will not trigger touch events such as `click` on the target component.
-
-Due to performance considerations, only target components that are siblings of the `label` component (i.e., sharing the same parent component) are supported.
-
-::: warning
-Changing the target component dynamically is currently not supported.
-:::
-
-============================================================
-FILE_PATH: src/transl/EN/components/stack.md
-
-# stack
-
-`stack` is a stacking layout component. In a stacking layout, each child component has the same size and position as the `stack` component, and they are stacked on top of each other in the order they are defined. The following example shows two text elements overlapping inside a `stack` component.
-
-<glyphix id="components-stack-layout" height="100" width="200" title="Stacking Layout">
-
-``` html
-<stack>
-  <p class="text1">Text 1</p>
-  <p class="text2">Text 2</p>
-</stack>
-```
-
-``` css
-* {
-  text-align: center;
-}
-
-.text1 {
-  font-size: 64px;
-  color: #fff;
-}
-
-.text2 {
-  font-size: 48px;
-  color: #f008;
-}
-
-stack {
-  background-color: gray;
-}
-```
-
-</glyphix>
-
-::: tip
-The `stack` component always uses the stacking layout strategy and cannot be changed to other layouts (such as flex layout or flow layout) via CSS properties like `display`.
-:::
-
-## Layout Behavior
-
-The `stack` component has a fixed stacking layout strategy. Its size is determined by the following constraints:
-1. The size of the `stack` is first specified by sizing CSS properties such as [`width`](../framework/generic/styles.md#width) or [`height`](../framework/generic/styles.md#width);
-2. The layout of the parent element may directly determine the layout of the `stack`, such as properties like `align-items: stretch` or `flex: 1` in a flex layout;
-3. Otherwise, the size of the `stack` component is determined by the maximum width and maximum height of its child elements.
-
-Once the size of the `stack` is determined, all of its child elements will have the same outer bounding box dimensions (i.e., the size of the child element including `border` and `margin`). This can sometimes be confusing; for example, if you use a `stack` to set an image as a background, an oversized element on top might prevent the image from filling the entire space.
-
-============================================================
 FILE_PATH: src/transl/EN/components/README.md
 
 # Native Components
-
-============================================================
-FILE_PATH: src/transl/EN/components/progress.md
-
-# progress
-
-The `progress` component is used to display a progress bar and is a block-level element by default.
-
-## Attributes
-
-### `max` <decl type="number" set />
-
-The maximum progress value. The [`value`](#value) attribute will not exceed it.
-
-### `min` <decl type="number" set />
-
-The minimum progress value. The [`value`](#value) attribute will not be less than it.
-
-### `value` <decl type="number" set get listen />
-
-Sets the progress value. The display proportion of the progress depends on the ratio of the `value` attribute within the range from `min` to `max`, and the display proportion is limited between $0\% \sim 100\%$. The `value` is an integer; if a floating-point value is set, only the integer part will be truncated.
-
-### `vertical` <decl type="boolean" set />
-
-If the value of the `vertical` attribute is `true`, the `progress` component will be displayed vertically, otherwise horizontally. The default value is `false`. 
-
-## CSS Specification
-
-Developers can customize the appearance of the `progress` component using CSS.
-
-### Dimension Calculation
-
-By default, the width and height of `progress` are the same as the font size of the element, which is set by the [`font-size`](/framework/generic/styles.md#font-size) attribute (or inherited). The dimensions of `progress` can be customized via the [`width`](/framework/generic/styles.md#width) and [`height`](/framework/generic/styles.md#height) attributes.
-
-### CSS Properties
-
-The following CSS properties may be very useful:
-- [`background-color`](/framework/generic/styles.md#background-color) can control the background color of `progress`;
-- [`color`](/framework/generic/styles.md#color) can control the progress bar color of `progress`;
-- [`border-radius`](/framework/generic/styles.md#border-radius) can set `progress` to have rounded borders, for example, `50%` will produce semi-circular borders;
-
-Other CSS properties may also be useful, such as using the [`border`](/framework/generic/styles.md#border) property to set border styles.
-
-### CSS Pseudo-elements
-
-#### `value`
-
-This pseudo-element can be used to style the progress bar part of `progress` separately from the background part. For example, you can set the border-radius of the scrollbar background and the progress bar part separately to achieve an effect where the outer border has rounded caps while the progress bar has straight caps.
-
-``` css
-progress {
-  border-radius: 50%; /* Scrollbar background border-radius */
-}
-
-progress::value {
-  border-radius: 0; /* Progress bar has no border-radius */
-}
-```
-
-### CSS Example
-
-The following example demonstrates some ways to customize the appearance of the progress bar using CSS.
-
-<glyphix id="components-progress-styles" height="140" width="480" title="Progress Bar Style">
-
-``` html
-<div>
-  <!-- Default style -->
-  <progress :value="40" />
-  <!-- Flat-head progress bar style -->
-  <progress class="flat" :value="50" />
-  <progress class="more-style" :value="60" />
-</div>
-```
-
-``` css
-div > * {
-  margin: 8px;
-}
-
-.flat::value {
-  /* Set the border-radius of the value pseudo-element to 0 to achieve a flat-head effect on the progress bar */
-  border-radius: 0;
-}
-
-.more-style {
-  /* Custom border-radius */
-  border-radius: 30%;
-  /* Progress bar background color */
-  background-color: #b3c5d7;
-  /* Progress bar foreground color */
-  color: #b5179e;
-  /* padding can adjust the margin of the progress bar foreground */
-  padding: 6px;
-  height: 1.25rem;
-}
-```
-
-</glyphix>
-
-============================================================
-FILE_PATH: src/transl/EN/components/text.md
-
-# text
-
-The text component, the `text` component and the [`p` component](p) are identical except for their component names.
-
-============================================================
-FILE_PATH: src/transl/EN/components/scroll-bar.md
-
-# scroll-bar
-
-Scroll bar component. This component displays a scroll bar when there is a large amount of scrollable content, allowing users to control content scrolling through the scroll bar.
-
-## Attributes
-
-### `value` <decl type="number" set get listen />
-
-The current value of the scroll bar, which is a value between `min` and `max`. The default value is $0$.
-
-### `min` <decl type="number" set />
-
-The minimum value of the scroll bar, which should not be greater than `max`. The default value is $0$.
-
-### `max` <decl type="number" set />
-
-The maximum value of the scroll bar, which should not be less than `min`. The default value is $100$.
-
-### `pagestep` <decl type="number" set />
-
-The scroll step size of the scroll bar, which is the distance scrolled per step. The default value is $10$.
 
 ============================================================
 FILE_PATH: src/transl/EN/components/scroll.md
@@ -4287,4 +4030,261 @@ Produces the following effect, where the padding area does not clip the content 
 </div>
 
 HTML `div` does not have a behavior that directly corresponds to `scroll` when `overflow: clip` is set.
+
+============================================================
+FILE_PATH: src/transl/EN/components/barcode.md
+
+# barcode
+
+The `barcode` component is used to display [Code 128](https://en.wikipedia.org/wiki/Code_128) barcodes. The `barcode` component can display any ASCII string, making it suitable for showing product barcodes, payment codes, and other information.
+
+In flow layouts, the `barcode` component defaults to a block-level element (`block`) and will occupy a single line by itself.
+
+## Attributes
+
+### `value` <decl type="string" get set />
+
+Sets the content to be displayed by the barcode. Supports any ASCII string.
+
+## CSS Notes
+
+To make the barcode easily scannable, the CSS properties of the `barcode` component should be set correctly. These include:
+- `color`: The color of the barcode bars, generally set to black (`black` or `#000`);
+- `background-color`: The background color of the barcode should typically be white (`white` or `#fff`);
+- `padding` / `margin`: Sufficient inner and outer margins help prevent the barcode from blending with other elements, increasing the scanning recognition rate;
+- `width` / `height`: The dimensions of the barcode must be large enough to be easily captured by a camera.
+
+By default, each bar of the barcode component occupies a width of $2\rm px$ and a height of $32\rm px$. This may be too small on small-screen devices such as smartwatches. Developers are advised to manually set the `width` / `height` properties of the barcode component as needed and test them on actual devices.
+
+The following example demonstrates how to use the barcode component. Note that various margins are set for the `barcode` component in the CSS to ensure there is enough spacing between the barcode and other UI elements to avoid scanning interference.
+
+<glyphix id="barcode-1" :height="150" :width="350">
+
+``` html
+<div>
+  <barcode :value="text"/>
+  <p>{{ text }}</p>
+</div>
+```
+
+``` js
+export default {
+  data: {
+    text: '9787111407010'
+  }
+}
+```
+
+``` css
+div {
+  background-color: black;
+  padding: 8px;
+}
+
+barcode {
+  margin: 8px;
+  padding: 8px;
+  color: black; /* Set the barcode foreground color to black */
+  background-color: white; /* Set the barcode background color to white */
+  border-radius: 16px;
+  height: 80px;
+}
+
+p {
+  color: white;
+  font-size: 0.75rem;
+  text-align: center;
+}
+```
+
+</glyphix>
+
+::: tip
+You should always explicitly set **high-contrast** colors for the barcode component's bar color (`color`) and background (`background-color`) styles to prevent reduced scannability caused by deviations in the device's default style themes or inherited style properties.
+
+At the same time, please set a sufficiently large padding (`padding`) to ensure easy scanning and recognition.
+:::
+
+============================================================
+FILE_PATH: src/transl/EN/components/canvas.md
+
+# canvas
+
+The canvas component allows drawing graphics and more on the `canvas` using scripts in JavaScript.
+
+### `context`
+
+**Value Type**: Context content obtained from the canvas API
+
+**Operation**: Set
+
+Sets the context for drawing graphics on the canvas.
+
+============================================================
+FILE_PATH: src/transl/EN/components/radio.md
+
+# radio
+
+Radio buttons are inline elements by default, commonly used in a **radio group**, which contains a set of radio buttons describing a series of related options. Only one radio button in the group can be selected at a time. Radio buttons are usually presented as small circles that are filled and highlighted when selected.
+
+<glyphix id="radio-1" :height="65" title="Radio Button">
+
+``` html
+<div>
+  <p>picked color: {{color}}</p>
+  <div>
+    <radio id="red" value="red" model:group="color" />
+    <label target="red">red</label>
+    <radio id="blue" value="blue" model:group="color" />
+    <label target="blue">blue</label>
+    <radio id="yellow" value="yellow" model:group="color" />
+    <label target="yellow">yellow</label>
+  </div>
+</div>
+```
+
+``` js
+export default {
+  data: {
+    color: 'blue'
+  }
+}
+```
+
+``` css
+label {
+  margin-right: 0.5rem;
+}
+```
+
+</glyphix>
+
+::: tip
+Radio buttons are somewhat similar to [`checkbox`](checkbox.md), but a `radio` only allows selecting a single value from a group, whereas a `checkbox` allows selecting multiple values.
+:::
+
+## Attributes
+
+### `checked` <decl type="boolean" get set listen />
+
+This attribute indicates whether the radio button is checked. Setting the `checked` attribute toggles the selection state of the radio button: when the value is `true`, it is displayed as checked.
+
+When the user clicks the radio button and causes its selection state to change, the `checked` event is triggered.
+
+::: tip
+Manipulating the `checked` attribute is not the recommended way to use `radio`; please use the [radio group](#group) method instead.
+:::
+
+### `value` <decl type="any" get set />
+
+A JavaScript value that identifies the value of the radio button, typically a string or a number. This value is not displayed, but it can be used within a [radio group](#group).
+
+### `group` <decl type="any" get set listen />
+
+If there are multiple related `radio` components, you can combine the `group` and `value` attributes. Radio buttons in the same group are mutually exclusive: the value of the reactive property bound to `group` equals the `value` attribute of the currently selected radio button. For example:
+``` html
+<radio value="red" model:group="color" />
+<radio value="blue" model:group="color" />
+<radio value="yellow" model:group="color" />
+```
+Here, `color` is a reactive property. When the second radio button is selected, the value of `color` is `"blue"`. If the `value` of all radio buttons does not match `color`, no radio button will be selected. For example:
+``` html
+<p on:click="color = null">reset select</p>
+```
+This will clear the selection state:
+
+<glyphix id="radio-reset" :height="65" title="Clear Selection State">
+
+``` html
+<div>
+  <p on:click="color = null">picked color: {{color}} (click to reset)</p>
+  <div>
+    <radio id="red" value="red" model:group="color" />
+    <label target="red">red</label>
+    <radio id="blue" value="blue" model:group="color" />
+    <label target="blue">blue</label>
+    <radio id="yellow" value="yellow" model:group="color" />
+    <label target="yellow">yellow</label>
+  </div>
+</div>
+```
+
+``` js
+export default {
+  data: {
+    color: 'blue'
+  }
+}
+```
+
+``` css
+label {
+  margin-right: 0.5rem;
+}
+```
+
+</glyphix>
+
+### CSS Behavior
+
+Radio buttons are inline elements by default. Their display size is determined by the `font-size` CSS property, and they align with the text baseline. Please do not manually specify properties like `width` and `height`, as this may cause layout distortion.
+
+============================================================
+FILE_PATH: src/transl/EN/components/span.md
+
+# span
+
+`span` is also a text component. Unlike the [`p` component](p), the `span` component is an inline element by default and can span across multiple lines, similar to the [`label`](label) and [`a`](a) components. Text spanning across lines means the element can be laid out across multiple lines instead of occupying an entire "box".
+
+The `span` component can be used to implement [rich text typography](/framework/render/rich-text.md#富文本显示).
+
+<glyphix id="span" :height="36">
+
+``` html
+<div>
+  Hello Glyphix, this is <span style="color: #f0f">span</span> label!
+</div>
+```
+
+</glyphix>
+
+============================================================
+FILE_PATH: src/transl/EN/components/div.md
+
+# div
+
+`div` is the most basic container component. `div` supports child components and layout, but does not support scrolling (content exceeding the boundaries will be clipped directly). If you want the content to be scrollable, please use the [scroll](scroll) component.
+
+## Notes
+
+### Text Display
+
+The `div` component cannot be used to display text directly; instead, text components like `p` must be used. For example:
+
+```html
+<!-- Incorrect usage, text will not be displayed -->
+<div>text content.</div>
+<!-- Correct usage -->
+<p>text content.</p>
+```
+
+However, if the `div` contains multiple child elements, text can be included as its child element:
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+<Glyphix id="components-div-text-element" height="48" width="360" inline >
+
+```html
+<div>
+  first element,
+  <span style="color: #f0f">second element.</span>
+</div>
+```
+
+</Glyphix>
 
