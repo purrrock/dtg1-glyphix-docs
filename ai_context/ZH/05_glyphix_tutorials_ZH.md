@@ -2,317 +2,71 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
-FILE_PATH: src/original_docs/tutorials/quick-orientation.md
+FILE_PATH: src/original_docs/tutorials/README.md
 
 ---
-title: 开发速览：从 Web 到 Glyphix
-icon: compass
+title: Glyphix 应用开发教程
+index: false
+icon: routes
+category:
+  - Guide
 ---
 
-# 开发速览：从 Web 到 Glyphix
+## 什么是 Glyphix
 
-本文档专为熟悉 Web 前端（特别是 Vue.js）的开发者设计。我们将跳过基础语法教学，直接切入 Glyphix 框架的核心机制，帮助你快速建立正确的心智模型。
+Glyphix 是一种面向 MCU（微控制器）设备的高效、轻量级应用开发框架。它为开发者提供类似于 Web 生态的声明式 UI 开发范式：通过 HTML 模板、CSS 和 JavaScript 的方式，开发者可以轻松构建页面和组件，并将应用发布到各种智能设备（如智能手表）上。  
 
-## 核心概念与运行环境
+更多的信息请参考[框架](/framework/README.md)章节。
 
-Glyphix 是一个运行在 MCU（微控制器）设备上的应用框架。虽然它使用 HTML/CSS/JS 进行开发，但它**不是**一个浏览器。本框架用于开发完整应用，而不是可刷新的页面，每个应用运行在独立的沙箱容器中。
+### 类 Web 框架
 
-你需要理解以下几个核心差异：
-- **无 DOM**：底层由 C++ 原生引擎直接渲染，不存在 DOM 树。
-- **无 Web API**：不支持 `window`、`document`、`localStorage` 等浏览器 API。系统能力（网络、存储、传感器）通过 `@system.*` 模块提供。
-- **JS 引擎**：使用轻量级 JS 引擎（支持 ES6 标准），但内存极其受限。
-
-### 资源限制
-
-资源限制是与 Web 开发最大的不同点。MCU 设备的 RAM 通常仅有几 MB。这意味着不要使用网络请求加载超大 JSON 数据，或者直接 [`fetch`](../api/system-fetch.md) 一张图片。请牢记以下几点：
-- 可以使用 [`@system.request`](../api/system-request.md) 模块将资源下载为文件，`fetch` 则会将响应加载到内存中。
-- 图片资源通常存放在应用包内，尺寸尽可能与屏幕分辨率匹配。
-- **后台冻结**：应用进入后台（`onHide`）后，通常会在几十秒内被系统挂起或销毁。请注意保存状态。
-
-### 设备形态
-
-Glyphix 应用通常运行在智能手表等小屏设备上。手表的屏幕尺寸通常为 1.5 到 2 英寸左右，典型分辨率为 466×466 像素，但存在圆形、矩形屏幕。低端设备的像素密度可能更低，但尺寸基本相似。这类设备常用触摸屏进行交互，可能支持物理按键或者旋钮，系统透明地处理了大部分交互细节。
-
-通常使用模拟器进行开发和调试，因为真机部署和调试流程还比较碎片化，耗时较长。
-
-### 典型项目结构
-
-这是我们推荐的项目文件结构，这也是快应用标准的结构：
-```bash
-src/
-├─ manifest.json  # 应用清单：配置权限、注册页面路由
-├─ app.js         # 应用入口：全局生命周期 (onCreate, onDestroy)
-├─ pages/         # 页面目录
-│  └─ Main/
-│     └─ index.ux # 页面组件
-└─ assets/        # 公共资源
-  └─ icon.png
-```
-你可以根据需要引入 [Node.js](nodejs.md) 工具链来管理依赖。也可以按照需要调整目录结构，但 [`src/manifest.json`](/framework/application/manifest.md) 和 `src/app.js` 必须固定在此位置。
-
-## UI 开发
-
-Glyphix 采用 [`.ux`](../framework/component/README.md) 单文件组件（类似 Vue SFC），风格接近 Vue Options API，但也有显著差异。
-
-### Flexbox 布局优先
-
-Web 默认是流式布局（Flow Layout），而 Glyphix 的页面默认为堆叠布局：如果你在页面中放两个 `div`，它们会**重叠**在一起，而不是上下排列。这是因为本框架支持在 `<template>` 中使用多个根节点，例如：
-```html
-<template>
-  <image class="background" src="/assets/bg.png" />
-  <div class="content"> ... </div>
-</template>
-```
-默认的堆叠布局对于这种场景通常非常合适。
-
-尽管 `div` 等容器默认使用流式布局，但推荐使用 Flexbox 来进行布局控制。绝大多数容器都应该显式声明 `display: flex`，再结合 `flex-direction` 控制子元素排列方式。
-
-考虑到设备屏幕尺寸差异较大，请特别注意长度单位的使用：
-- 在较小的尺寸中使用 `px` 单位，它是逻辑像素，会根据屏幕密度自动缩放。
-- 字体应总是使用 `rem` 单位，它由设备厂商定义基准，更符合系统 UX 规范的一致性要求。
-- 可以使用百分比（`%`）单位来实现响应式布局，但是目前限制和缺陷较多，请注意调试。
-
-由于屏幕太小，你可能特别需要 [`scroll`](../components/scroll.md) 组件来实现滚动区域。和 Web 不同，`div` 容器本身不支持滚动，也无法使用 `overflow` 属性来控制。
-
-### 模板语法差异
-
-虽然长得像 Vue 模板，但请注意以下区别：
-- 指令无 `v-` 前缀：如 `<div if="show">` 或 `<div for="item in items">`
-- 事件绑定用 `on`、`@` 均可，如：`<p on:click="handler">`
-- 必须使用 `<p>` 等文本组件：`<text>Hello</text>` 可以正常显示，但是 `<div>Hello</div>` 不会渲染任何内容。
-- 支持用 `model:prop="state"` 或 `::prop="state"` [双向绑定](../framework/commands/model.md)任意组件属性，只要有和属性同名的事件触发即可。
-
-### 样式限制
-
-CSS 支持是子集：
-- 支持类 (`.class`)、ID (`#id`)、标签 (`div`) 和后代 (`.a .b`)。**不支持** `~`、`+`、`>` 等复杂关系选择器。
-- **效果限制**：不支持渐变、阴影等效果。暂不支持 `transition` 动画。
-- **性能限制**：避免使用 `transform` 来移动或对齐元素。`object-fit` 默认为 `none` 并推荐保持默认。
-- 目前不支持动态 `class` 绑定，也不支持 CSS 变量。
-
-## 组件与逻辑
-
-### 脚本模型
-
-组件脚本非常接近 Vue Options API，以下示范指出了主要差异：
-```js
-export default {
-  // 数据模型 (Data)，不需要声明属性，data 属性自动导出为属性
-  data: {
-    count: 0, // 修改 this.count 会自动触发视图更新
-  },
-  timer: null, // 非响应式字段直接定义在组件实例上，也可以不声明
-  // 生命周期
-  onInit() {}, // 数据已初始化，可发起网络请求
-  onReady() {}, // 界面已渲染完成
-  onDestroy() {}, // 务必在此清理定时器、订阅事件
-
-  // 方法 (Methods)，直接定义在组件对象中
-  handleTap() {
-    this.count++
-    // 触发自定义事件给父组件
-    this.$emit('change', { value: this.count })
-  }
-}
-```
-其中 `data` 对象中的字段为响应式属性，它目前只支持 JSON 兼容的类型（不支持 `Date`、`Map`、`Set` 等）。如果不需要响应式更新，推荐将字段定义在组件实例（`this`）上。
+与传统的 MCU 固件开发不同，Glyphix 更接近于基于 Web 技术栈的框架。应用开发者需要熟悉 JavaScript、CSS 和基本的 HTML 知识。你无需掌握完整的 Web 开发技术栈，如浏览器 DOM、标准 HTML 标签，以及复杂的构建工具链等。但若熟悉 [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)) 等 Web UI 框架，将会很容易上手 Glyphix。
 
 ::: tip
-不要使用 `methods` 对象包裹方法，直接定义在组件对象中即可。也不需要使用 `props` 定义属性，`data` 对象中的字段会自动导出为属性。
-
-也不能用 `document.getElementById` 等 DOM API 查找元素。可以使用 [`this.$element()`](../framework/component/component-apis.md#element) 方法获取指定 ID 的元素实例。
+需要的说明是，Glyphix 并非“低代码”平台。在开发过程中，依然会遇到逻辑抽象、界面组织、用户体验和性能权衡等挑战。因此，掌握扎实的 JavaScript 基础与良好的前端思维方式，将有助于你充分发挥 Glyphix 的潜力。
 :::
 
-### 页面与路由
+### 声明式 UI 框架
 
-Glyphix 应用由多个页面组成，页面间通过路由导航。所有页面均需在 `manifest.json` 中的 [`router.pages`](../framework/application/manifest.md#pages) 字段中静态注册。页面组件与普通组件类似，但支持 `onShow` 和 `onHide` 生命周期钩子。
+传统的界面开发通常是命令式的：需要逐步调用函数来创建控件、更新状态、刷新界面。这种方式很灵活，但业务和界面逻辑高度耦合，随着应用规模扩大，代码会迅速变得复杂而难以维护。MVC、MVVM 等模式的提出，正是为了解决这种复杂性。  
 
-使用 `system.router` 系统模块进行跳转：
-```js
-import router from '@system.router'
+Glyphix 则采用声明式 UI 的范式。开发者只需描述“界面应该是什么样子”，框架会根据数据和状态的变化自动完成渲染和更新。这种方式大幅降低了界面逻辑与状态管理的复杂度，也让开发者可以将主要精力放在功能与交互设计，而非维护 UI 的层次结构和刷新流程。
 
-// 跳转并传递参数
-router.push({ uri: 'pages/Detail', params: { id: 123 } })
-```
-::: tip
-不要使用其他的路由库，也不要假装在开发单页面应用（SPA）。否则将无法利用转场动效、页面栈管理等现有功能。
-:::
+### 应用容器
 
-### TypeScript 支持
+Glyphix 不只是一个 UI 框架，它还提供了应用的生命周期管理、权限隔离和系统 API 等功能。应用运行在一个独立的容器中，彼此隔离，确保系统的稳定性和安全性。
 
-如果使用 Node.js 脚手架创建项目，使用 npm、pnpm 等安装 `glyphix` 和 `typescript` 等依赖后，可以在项目中使用 TypeScript 进行开发。
+请阅读[快速开始](getting-started.md)教程，即刻上手 Glyphix 应用开发。
 
-对于 `.ux` 单文件组件，可以在 `<script>` 标签上添加 `lang="ts"` 属性启用 TypeScript 支持。例如：
-```html
-<script lang="ts">
-import { defineComponent } from 'glyphix'
+## 其他问题
 
-export default defineComponent({
-  data() {
-    count: 0: number
-  },
-  increment() { this.count++ },
-})
-</script>
-```
+### 需要熟悉 MCU 和嵌入式开发吗？
 
-## 系统能力集成
+应用开发者通常不需要理解 MCU 和嵌入式开发的具体知识。但应当对设备的资源限制有一些了解。例如 MCU 的内存容量通常只有几 MB，而且运行 JavaScript 代码的内存也有限制。这意味着可能会出现无法从网络上请求非常大的 JSON 数据，或者无法将整张图片编码为 Base64 并通过 GET 请求获取。
 
-不要尝试使用浏览器 API，请使用 Glyphix [标准库](../api/README.md)。
+这些与 Web 开发完全不同的限制确实是因为 MCU 设备的资源有限导致的，但这也不是典型的 MCU 知识体系所包含的。
 
-### 常用模块速查
+直观来说，最好通过在设备上运行应用来确认应用的体验是否足够好。你可以在开发的不同阶段多次使用真机运行以确保体验。
 
-| 功能 | Glyphix 模块 | 说明 |
-| :--- | :--- | :--- |
-| **网络** | [`@system.fetch`](../api/system-fetch.md) | 必须处理异步回调或 Promise |
-| **弹窗** | [`@system.prompt`](../api/system-prompt.md) | 提供 Toast 和 Dialog |
-| **存储** | [`@system.storage`](../api/system-storage.md) | 同步本地存储，直接读写对象而非字符串 |
-| **路由** | [`@system.router`](../api/system-router.md) | 管理页面栈 |
-| **日志** | `console.log` | 输出到调试终端，和浏览器一样 |
+### 应用开发要使用 C/C++ 吗？
 
-### 异步编程模式
+Glyphix 应用开发完全使用 HTML、CSS 和 JavaScript，因此不需要使用 C/C++ 语言。
 
-系统 API 通常支持异步回调和 Promise 两种风格。推荐使用 `async/await` 以保持代码整洁。
+### 嵌入式开发者要怎样上手 Glyphix 应用开发？
 
-```js
-import fetch from '@system.fetch'
-import prompt from '@system.prompt'
+嵌入式开发者可以本教程[快速开始](getting-started.md)，逐步理解 Glyphix 的核心概念。该框架采用类似 Vue Options API 的组件化和数据绑定机制，这对于习惯 [LVGL](https://lvgl.io/) 、Qt widgets 等命令式 GUI 的读者来说会有些不同，但 Glyphix 的声明式设计也能带来更直观的界面控制体验。
 
-export default {
-  onReady() { this.loadData() },
-  async loadData() {
-    try {
-      const response = await fetch.fetch({
-        url: 'https://api.example.com/data',
-        method: 'GET', // 默认为 GET
-        responseType: 'json', // 这样不需要 JSON.parse 手动解析
-      })
+开发者并不需要完全掌握 HTML、CSS 和 JavaScript，不过熟悉 JavaScript 的基本语法（如变量、条件判断、函数调用等）会有助于理解 Glyphix 的渲染逻辑和事件处理。您可以通过教程和文档中的示例代码和实际操作来熟悉这些内容，加速上手开发流程。
 
-      if (response.data.code === 200)
-        this.data = response.data.data
-    } catch (err) {
-      prompt.showToast({ message: 'Network Error' })
-    }
-  }
-}
-```
+### 要关注应用的性能优化吗？
 
-## 构建和运行
+我们的框架已经针对嵌入式系统的资源限制进行了深入优化，能够很好地适应多种硬件环境。多数应用能在默认设置下获得足够流畅、稳定的运行表现，因此通常不需要花费额外时间在性能优化上。
 
-使用 [`gx emu`](../tutorials/glyphix.js/README.md) 命令启动模拟器，或使用 `gx build` 构建应用包。如果使用了 Node.js 脚手架，也可以直接使用 `gx` 命令。
+如果将来有需要深入了解特定优化方案，我们会提供专门的性能优化文档，帮助开发者进一步提升应用的运行效率。
 
-请参考[快速开始](getting-started.md)教程了解详细步骤。 
+### Glyphix 环境和浏览器有区别吗？
 
-## 综合示例
-
-以下是一个完整的组件示例，展示了布局、数据绑定、事件处理和系统 API 的综合使用。你可以直接在浏览器中查看此示例，点击 `>` 按钮来查看完整代码。
-
-<glyphix id="quick-orientation-example" title="计数器组件示例" height="240">
-
-```html
-<!-- 根容器推荐使用 Flex 布局，加载中不允许操作 -->
-<div class="container" :disabled="loading">
-  <text class="title">Hello, {{ name }}</text>
-
-  <div class="card">
-    <text class="count">{{ count }}</text>
-    <text class="btn" value="+1" on:click="increment">Add</text>
-  </div>
-</div>
-
-<!-- 利用页面的堆叠布局来叠加加载状态提示 -->
-<text if="loading" class="loading">Loading...</text>
-```
-
-```css
-.container {
-  /* 页面组件不需要设置宽高，它们总是铺满 */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  /* 注意一般不设置页面背景，这只是演示 */
-  background-color: #f5f5f5;
-  border-radius: 16px;
-  padding: 10%; /* 百分比边距 */
-}
-
-.title {
-  font-size: 1.25rem; /* 字体使用 rem 单位 */
-  color: #333333;
-  align-self: center;
-}
-
-.card {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 16px;
-}
-
-.count {
-  font-size: 1.5rem;
-  color: #007aff;
-  min-width: 80px;
-}
-
-.btn {
-  width: 120px;
-  background-color: #007aff;
-  color: #ffffff;
-  border-radius: 50%; /* 圆形按钮 */
-  text-align: center;
-}
-
-.loading {
-  color: #3d3d3d;
-  font-size: 0.8rem;
-  text-align: center;
-}
-
-/* disabled 状态的淡化样式 */
-*:disabled {
-  opacity: 0.5;
-}
-```
-
-```js
-import prompt from '@system.prompt'
-
-export default {
-  // 组件数据
-  data: {
-    name: 'Glyphix',
-    count: 0,
-    loading: false
-  },
-  // 生命周期：组件初始化完成
-  onInit() {
-    console.log('Component initialized')
-    this.simulateFetch()
-  },
-  // 方法定义
-  increment() {
-    this.count++
-    if (this.count % 5 === 0) {
-      prompt.showToast({
-        message: `Count reached ${this.count}!`
-      })
-    }
-  },
-  async simulateFetch() {
-    this.loading = true
-    // 模拟异步操作，这会产生加载状态
-    setTimeout(() => {
-      this.loading = false
-      this.name = 'Developer'
-    }, 1000)
-  }
-}
-```
-
-</glyphix>
+是的，Glyphix 环境与浏览器有明显区别。Glyphix 并没有浏览器中的 DOM 结构，也不提供 `window`、`document` 等对象。相反，它直接且唯一地提供了一套声明式的接口，开发者可以通过这些接口进行组件开发和界面交互。这种设计简化了开发流程，更适合嵌入式环境。
 
 
 ============================================================
@@ -797,6 +551,320 @@ export default {
 
 
 ============================================================
+FILE_PATH: src/original_docs/tutorials/quick-orientation.md
+
+---
+title: 开发速览：从 Web 到 Glyphix
+icon: compass
+---
+
+# 开发速览：从 Web 到 Glyphix
+
+本文档专为熟悉 Web 前端（特别是 Vue.js）的开发者设计。我们将跳过基础语法教学，直接切入 Glyphix 框架的核心机制，帮助你快速建立正确的心智模型。
+
+## 核心概念与运行环境
+
+Glyphix 是一个运行在 MCU（微控制器）设备上的应用框架。虽然它使用 HTML/CSS/JS 进行开发，但它**不是**一个浏览器。本框架用于开发完整应用，而不是可刷新的页面，每个应用运行在独立的沙箱容器中。
+
+你需要理解以下几个核心差异：
+- **无 DOM**：底层由 C++ 原生引擎直接渲染，不存在 DOM 树。
+- **无 Web API**：不支持 `window`、`document`、`localStorage` 等浏览器 API。系统能力（网络、存储、传感器）通过 `@system.*` 模块提供。
+- **JS 引擎**：使用轻量级 JS 引擎（支持 ES6 标准），但内存极其受限。
+
+### 资源限制
+
+资源限制是与 Web 开发最大的不同点。MCU 设备的 RAM 通常仅有几 MB。这意味着不要使用网络请求加载超大 JSON 数据，或者直接 [`fetch`](../api/system-fetch.md) 一张图片。请牢记以下几点：
+- 可以使用 [`@system.request`](../api/system-request.md) 模块将资源下载为文件，`fetch` 则会将响应加载到内存中。
+- 图片资源通常存放在应用包内，尺寸尽可能与屏幕分辨率匹配。
+- **后台冻结**：应用进入后台（`onHide`）后，通常会在几十秒内被系统挂起或销毁。请注意保存状态。
+
+### 设备形态
+
+Glyphix 应用通常运行在智能手表等小屏设备上。手表的屏幕尺寸通常为 1.5 到 2 英寸左右，典型分辨率为 466×466 像素，但存在圆形、矩形屏幕。低端设备的像素密度可能更低，但尺寸基本相似。这类设备常用触摸屏进行交互，可能支持物理按键或者旋钮，系统透明地处理了大部分交互细节。
+
+通常使用模拟器进行开发和调试，因为真机部署和调试流程还比较碎片化，耗时较长。
+
+### 典型项目结构
+
+这是我们推荐的项目文件结构，这也是快应用标准的结构：
+```bash
+src/
+├─ manifest.json  # 应用清单：配置权限、注册页面路由
+├─ app.js         # 应用入口：全局生命周期 (onCreate, onDestroy)
+├─ pages/         # 页面目录
+│  └─ Main/
+│     └─ index.ux # 页面组件
+└─ assets/        # 公共资源
+  └─ icon.png
+```
+你可以根据需要引入 [Node.js](nodejs.md) 工具链来管理依赖。也可以按照需要调整目录结构，但 [`src/manifest.json`](/framework/application/manifest.md) 和 `src/app.js` 必须固定在此位置。
+
+## UI 开发
+
+Glyphix 采用 [`.ux`](../framework/component/README.md) 单文件组件（类似 Vue SFC），风格接近 Vue Options API，但也有显著差异。
+
+### Flexbox 布局优先
+
+Web 默认是流式布局（Flow Layout），而 Glyphix 的页面默认为堆叠布局：如果你在页面中放两个 `div`，它们会**重叠**在一起，而不是上下排列。这是因为本框架支持在 `<template>` 中使用多个根节点，例如：
+```html
+<template>
+  <image class="background" src="/assets/bg.png" />
+  <div class="content"> ... </div>
+</template>
+```
+默认的堆叠布局对于这种场景通常非常合适。
+
+尽管 `div` 等容器默认使用流式布局，但推荐使用 Flexbox 来进行布局控制。绝大多数容器都应该显式声明 `display: flex`，再结合 `flex-direction` 控制子元素排列方式。
+
+考虑到设备屏幕尺寸差异较大，请特别注意长度单位的使用：
+- 在较小的尺寸中使用 `px` 单位，它是逻辑像素，会根据屏幕密度自动缩放。
+- 字体应总是使用 `rem` 单位，它由设备厂商定义基准，更符合系统 UX 规范的一致性要求。
+- 可以使用百分比（`%`）单位来实现响应式布局，但是目前限制和缺陷较多，请注意调试。
+
+由于屏幕太小，你可能特别需要 [`scroll`](../components/scroll.md) 组件来实现滚动区域。和 Web 不同，`div` 容器本身不支持滚动，也无法使用 `overflow` 属性来控制。
+
+### 模板语法差异
+
+虽然长得像 Vue 模板，但请注意以下区别：
+- 指令无 `v-` 前缀：如 `<div if="show">` 或 `<div for="item in items">`
+- 事件绑定用 `on`、`@` 均可，如：`<p on:click="handler">`
+- 必须使用 `<p>` 等文本组件：`<text>Hello</text>` 可以正常显示，但是 `<div>Hello</div>` 不会渲染任何内容。
+- 支持用 `model:prop="state"` 或 `::prop="state"` [双向绑定](../framework/commands/model.md)任意组件属性，只要有和属性同名的事件触发即可。
+
+### 样式限制
+
+CSS 支持是子集：
+- 支持类 (`.class`)、ID (`#id`)、标签 (`div`) 和后代 (`.a .b`)。**不支持** `~`、`+`、`>` 等复杂关系选择器。
+- **效果限制**：不支持渐变、阴影等效果。暂不支持 `transition` 动画。
+- **性能限制**：避免使用 `transform` 来移动或对齐元素。`object-fit` 默认为 `none` 并推荐保持默认。
+- 目前不支持动态 `class` 绑定，也不支持 CSS 变量。
+
+## 组件与逻辑
+
+### 脚本模型
+
+组件脚本非常接近 Vue Options API，以下示范指出了主要差异：
+```js
+export default {
+  // 数据模型 (Data)，不需要声明属性，data 属性自动导出为属性
+  data: {
+    count: 0, // 修改 this.count 会自动触发视图更新
+  },
+  timer: null, // 非响应式字段直接定义在组件实例上，也可以不声明
+  // 生命周期
+  onInit() {}, // 数据已初始化，可发起网络请求
+  onReady() {}, // 界面已渲染完成
+  onDestroy() {}, // 务必在此清理定时器、订阅事件
+
+  // 方法 (Methods)，直接定义在组件对象中
+  handleTap() {
+    this.count++
+    // 触发自定义事件给父组件
+    this.$emit('change', { value: this.count })
+  }
+}
+```
+其中 `data` 对象中的字段为响应式属性，它目前只支持 JSON 兼容的类型（不支持 `Date`、`Map`、`Set` 等）。如果不需要响应式更新，推荐将字段定义在组件实例（`this`）上。
+
+::: tip
+不要使用 `methods` 对象包裹方法，直接定义在组件对象中即可。也不需要使用 `props` 定义属性，`data` 对象中的字段会自动导出为属性。
+
+也不能用 `document.getElementById` 等 DOM API 查找元素。可以使用 [`this.$element()`](../framework/component/component-apis.md#element) 方法获取指定 ID 的元素实例。
+:::
+
+### 页面与路由
+
+Glyphix 应用由多个页面组成，页面间通过路由导航。所有页面均需在 `manifest.json` 中的 [`router.pages`](../framework/application/manifest.md#pages) 字段中静态注册。页面组件与普通组件类似，但支持 `onShow` 和 `onHide` 生命周期钩子。
+
+使用 `system.router` 系统模块进行跳转：
+```js
+import router from '@system.router'
+
+// 跳转并传递参数
+router.push({ uri: 'pages/Detail', params: { id: 123 } })
+```
+::: tip
+不要使用其他的路由库，也不要假装在开发单页面应用（SPA）。否则将无法利用转场动效、页面栈管理等现有功能。
+:::
+
+### TypeScript 支持
+
+如果使用 Node.js 脚手架创建项目，使用 npm、pnpm 等安装 `glyphix` 和 `typescript` 等依赖后，可以在项目中使用 TypeScript 进行开发。
+
+对于 `.ux` 单文件组件，可以在 `<script>` 标签上添加 `lang="ts"` 属性启用 TypeScript 支持。例如：
+```html
+<script lang="ts">
+import { defineComponent } from 'glyphix'
+
+export default defineComponent({
+  data() {
+    count: 0: number
+  },
+  increment() { this.count++ },
+})
+</script>
+```
+
+## 系统能力集成
+
+不要尝试使用浏览器 API，请使用 Glyphix [标准库](../api/README.md)。
+
+### 常用模块速查
+
+| 功能 | Glyphix 模块 | 说明 |
+| :--- | :--- | :--- |
+| **网络** | [`@system.fetch`](../api/system-fetch.md) | 必须处理异步回调或 Promise |
+| **弹窗** | [`@system.prompt`](../api/system-prompt.md) | 提供 Toast 和 Dialog |
+| **存储** | [`@system.storage`](../api/system-storage.md) | 同步本地存储，直接读写对象而非字符串 |
+| **路由** | [`@system.router`](../api/system-router.md) | 管理页面栈 |
+| **日志** | `console.log` | 输出到调试终端，和浏览器一样 |
+
+### 异步编程模式
+
+系统 API 通常支持异步回调和 Promise 两种风格。推荐使用 `async/await` 以保持代码整洁。
+
+```js
+import fetch from '@system.fetch'
+import prompt from '@system.prompt'
+
+export default {
+  onReady() { this.loadData() },
+  async loadData() {
+    try {
+      const response = await fetch.fetch({
+        url: 'https://api.example.com/data',
+        method: 'GET', // 默认为 GET
+        responseType: 'json', // 这样不需要 JSON.parse 手动解析
+      })
+
+      if (response.data.code === 200)
+        this.data = response.data.data
+    } catch (err) {
+      prompt.showToast({ message: 'Network Error' })
+    }
+  }
+}
+```
+
+## 构建和运行
+
+使用 [`gx emu`](../tutorials/glyphix.js/README.md) 命令启动模拟器，或使用 `gx build` 构建应用包。如果使用了 Node.js 脚手架，也可以直接使用 `gx` 命令。
+
+请参考[快速开始](getting-started.md)教程了解详细步骤。 
+
+## 综合示例
+
+以下是一个完整的组件示例，展示了布局、数据绑定、事件处理和系统 API 的综合使用。你可以直接在浏览器中查看此示例，点击 `>` 按钮来查看完整代码。
+
+<glyphix id="quick-orientation-example" title="计数器组件示例" height="240">
+
+```html
+<!-- 根容器推荐使用 Flex 布局，加载中不允许操作 -->
+<div class="container" :disabled="loading">
+  <text class="title">Hello, {{ name }}</text>
+
+  <div class="card">
+    <text class="count">{{ count }}</text>
+    <text class="btn" value="+1" on:click="increment">Add</text>
+  </div>
+</div>
+
+<!-- 利用页面的堆叠布局来叠加加载状态提示 -->
+<text if="loading" class="loading">Loading...</text>
+```
+
+```css
+.container {
+  /* 页面组件不需要设置宽高，它们总是铺满 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  /* 注意一般不设置页面背景，这只是演示 */
+  background-color: #f5f5f5;
+  border-radius: 16px;
+  padding: 10%; /* 百分比边距 */
+}
+
+.title {
+  font-size: 1.25rem; /* 字体使用 rem 单位 */
+  color: #333333;
+  align-self: center;
+}
+
+.card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 16px;
+}
+
+.count {
+  font-size: 1.5rem;
+  color: #007aff;
+  min-width: 80px;
+}
+
+.btn {
+  width: 120px;
+  background-color: #007aff;
+  color: #ffffff;
+  border-radius: 50%; /* 圆形按钮 */
+  text-align: center;
+}
+
+.loading {
+  color: #3d3d3d;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* disabled 状态的淡化样式 */
+*:disabled {
+  opacity: 0.5;
+}
+```
+
+```js
+import prompt from '@system.prompt'
+
+export default {
+  // 组件数据
+  data: {
+    name: 'Glyphix',
+    count: 0,
+    loading: false
+  },
+  // 生命周期：组件初始化完成
+  onInit() {
+    console.log('Component initialized')
+    this.simulateFetch()
+  },
+  // 方法定义
+  increment() {
+    this.count++
+    if (this.count % 5 === 0) {
+      prompt.showToast({
+        message: `Count reached ${this.count}!`
+      })
+    }
+  },
+  async simulateFetch() {
+    this.loading = true
+    // 模拟异步操作，这会产生加载状态
+    setTimeout(() => {
+      this.loading = false
+      this.name = 'Developer'
+    }, 1000)
+  }
+}
+```
+
+</glyphix>
+
+
+============================================================
 FILE_PATH: src/original_docs/tutorials/qa.md
 
 ---
@@ -828,127 +896,6 @@ error: Lisp Error: thread killed
 gx emu -l en-US # 使用美式英语
 ```
 你也可以在模拟器运行时用 inspector 调试工具动态更改语言。
-
-
-============================================================
-FILE_PATH: src/original_docs/tutorials/name-spec.md
-
----
-icon: code-tags-check
----
-# 组件命名规范
-
-本文档介绍组件框架的强制命名规范以及建议的命名风格。其中强制命名规范强制性的要求，如果不遵守可能导致效果不符合预期。而使用推荐的命名规范则可以保证最大的兼容性。
-
-## 模板命名规范
-
-模板中的标签名称必须是短横线式（kebab-case）或者帕斯卡式（PascalCase）命名：
-``` html
-<Button></Button>
-<button></button>
-<scroll-area></scroll-area>
-<ScrollArea></ScrollArea>
-```
-
-属性名称必须是短横线式或者驼峰式（camelCase）命名法：
-``` html
-<component prop-name="expr"></component>
-<component propName="expr"></component>
-```
-
-推荐统一使用符合 Web 规范的短横线命名法。
-
-## JavaScript 代码命名规范
-
-
-JavaScript 代码中的组件名必须是帕斯卡命名，而模板中则使用对应的短横线命名。
-
-JavaScript 代码中的组件属性名称必须是驼峰式命名：
-``` js
-export default {
-  data: {
-    propName: 0 // 在模板中的属性名是 prop-name
-  }
-}
-```
-这些属性名在模板代码中会自动转换成成对应的短横线命名。
-
-## 文件名命名规范
-
-UX 文件必须使用和组件相同的名字，也就是帕斯卡命名。在 `<import>` 标签中，`src` 属性（attribute）必须是区分大小写的文件 URL，而 `name` 属性则使用帕斯卡命名或者短横线命名：
-``` html
-<import src="path/to/UxFile" name="UxFile"/>
-<import src="path/to/UxFile" name="ux-file"/>
-```
-实际上 `name` 属性的命名要求和模板中的标签名称是一致的。
-
-
-============================================================
-FILE_PATH: src/original_docs/tutorials/README.md
-
----
-title: Glyphix 应用开发教程
-index: false
-icon: routes
-category:
-  - Guide
----
-
-## 什么是 Glyphix
-
-Glyphix 是一种面向 MCU（微控制器）设备的高效、轻量级应用开发框架。它为开发者提供类似于 Web 生态的声明式 UI 开发范式：通过 HTML 模板、CSS 和 JavaScript 的方式，开发者可以轻松构建页面和组件，并将应用发布到各种智能设备（如智能手表）上。  
-
-更多的信息请参考[框架](/framework/README.md)章节。
-
-### 类 Web 框架
-
-与传统的 MCU 固件开发不同，Glyphix 更接近于基于 Web 技术栈的框架。应用开发者需要熟悉 JavaScript、CSS 和基本的 HTML 知识。你无需掌握完整的 Web 开发技术栈，如浏览器 DOM、标准 HTML 标签，以及复杂的构建工具链等。但若熟悉 [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)) 等 Web UI 框架，将会很容易上手 Glyphix。
-
-::: tip
-需要的说明是，Glyphix 并非“低代码”平台。在开发过程中，依然会遇到逻辑抽象、界面组织、用户体验和性能权衡等挑战。因此，掌握扎实的 JavaScript 基础与良好的前端思维方式，将有助于你充分发挥 Glyphix 的潜力。
-:::
-
-### 声明式 UI 框架
-
-传统的界面开发通常是命令式的：需要逐步调用函数来创建控件、更新状态、刷新界面。这种方式很灵活，但业务和界面逻辑高度耦合，随着应用规模扩大，代码会迅速变得复杂而难以维护。MVC、MVVM 等模式的提出，正是为了解决这种复杂性。  
-
-Glyphix 则采用声明式 UI 的范式。开发者只需描述“界面应该是什么样子”，框架会根据数据和状态的变化自动完成渲染和更新。这种方式大幅降低了界面逻辑与状态管理的复杂度，也让开发者可以将主要精力放在功能与交互设计，而非维护 UI 的层次结构和刷新流程。
-
-### 应用容器
-
-Glyphix 不只是一个 UI 框架，它还提供了应用的生命周期管理、权限隔离和系统 API 等功能。应用运行在一个独立的容器中，彼此隔离，确保系统的稳定性和安全性。
-
-请阅读[快速开始](getting-started.md)教程，即刻上手 Glyphix 应用开发。
-
-## 其他问题
-
-### 需要熟悉 MCU 和嵌入式开发吗？
-
-应用开发者通常不需要理解 MCU 和嵌入式开发的具体知识。但应当对设备的资源限制有一些了解。例如 MCU 的内存容量通常只有几 MB，而且运行 JavaScript 代码的内存也有限制。这意味着可能会出现无法从网络上请求非常大的 JSON 数据，或者无法将整张图片编码为 Base64 并通过 GET 请求获取。
-
-这些与 Web 开发完全不同的限制确实是因为 MCU 设备的资源有限导致的，但这也不是典型的 MCU 知识体系所包含的。
-
-直观来说，最好通过在设备上运行应用来确认应用的体验是否足够好。你可以在开发的不同阶段多次使用真机运行以确保体验。
-
-### 应用开发要使用 C/C++ 吗？
-
-Glyphix 应用开发完全使用 HTML、CSS 和 JavaScript，因此不需要使用 C/C++ 语言。
-
-### 嵌入式开发者要怎样上手 Glyphix 应用开发？
-
-嵌入式开发者可以本教程[快速开始](getting-started.md)，逐步理解 Glyphix 的核心概念。该框架采用类似 Vue Options API 的组件化和数据绑定机制，这对于习惯 [LVGL](https://lvgl.io/) 、Qt widgets 等命令式 GUI 的读者来说会有些不同，但 Glyphix 的声明式设计也能带来更直观的界面控制体验。
-
-开发者并不需要完全掌握 HTML、CSS 和 JavaScript，不过熟悉 JavaScript 的基本语法（如变量、条件判断、函数调用等）会有助于理解 Glyphix 的渲染逻辑和事件处理。您可以通过教程和文档中的示例代码和实际操作来熟悉这些内容，加速上手开发流程。
-
-### 要关注应用的性能优化吗？
-
-我们的框架已经针对嵌入式系统的资源限制进行了深入优化，能够很好地适应多种硬件环境。多数应用能在默认设置下获得足够流畅、稳定的运行表现，因此通常不需要花费额外时间在性能优化上。
-
-如果将来有需要深入了解特定优化方案，我们会提供专门的性能优化文档，帮助开发者进一步提升应用的运行效率。
-
-### Glyphix 环境和浏览器有区别吗？
-
-是的，Glyphix 环境与浏览器有明显区别。Glyphix 并没有浏览器中的 DOM 结构，也不提供 `window`、`document` 等对象。相反，它直接且唯一地提供了一套声明式的接口，开发者可以通过这些接口进行组件开发和界面交互。这种设计简化了开发流程，更适合嵌入式环境。
 
 
 ============================================================
@@ -1110,345 +1057,56 @@ export default defineComponent({
 
 
 ============================================================
-FILE_PATH: src/original_docs/tutorials/glyphix.js/emulator.md
+FILE_PATH: src/original_docs/tutorials/name-spec.md
 
 ---
-icon: watch-import-variant
+icon: code-tags-check
 ---
-# 模拟器和调试
+# 组件命名规范
 
-要运行模拟器，你需要在命令行中切换到项目的根目录，然后运行 `gx emu` 子命令来启动模拟器。Glyphix 模拟器拥有和真实设备运行时高度一致的环境，因此可以利用模拟器开发和调试大部分界面和功能，而不需要频繁地将应用安装到真实设备上。
+本文档介绍组件框架的强制命名规范以及建议的命名风格。其中强制命名规范强制性的要求，如果不遵守可能导致效果不符合预期。而使用推荐的命名规范则可以保证最大的兼容性。
 
-::: tip
-由于当前 [`glyphix`](https://www.npmjs.com/package/glyphix) npm 包的限制，请务必配置 [`glyphix.config.js`](/tutorials/nodejs.md#glyphix-config-js-配置)，否则在执行 `gx emu` 时无法看到错误信息的源代码行号。
-:::
+## 模板命名规范
 
-
-## `gx emu` 子命令
-
-使用上次的构建目标设备配置来运行模拟器。该命令需要在 Glyphix 项目的根目录中执行。它会自动构建项目并创建模拟器所需的资源文件，因此无需先执行 `gx build`。
-
-#### 命令选项
-
-- `-d --device=NAME`：指定模拟的设备名称，默认为 `default`（分辨率为 $410 \times 502\rm px$）。
-- `-e --emulator-exe=CMD`：指定模拟器的可执行文件，默认为 `glyphix-emu`。通常不需要修改。
-- `-l --language=NAME`：指定模拟器的语言环境，默认为 `zh-CN`（简体中文）。通过 `gx list language` 命令可以查看支持的语言列表。
-- `--target=URI`：设置模拟器启动时的包名或者 deeplink，例如 `app://com.example.app/SomePage?query=value` 或者 `com.example.app`。
-- `-i --inspector`：在运行模拟器时启用检查器，检查器是一个 Web 页面，可以在浏览器中调试模拟器中的界面元素。
-- `-m --mobile-network`：（尚未实现）仅在模拟器中启用手机 SDK 的网络代理，而不直接访问网络。
-- `-w --watch`：运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并刷新模拟器界面。
-- `-r --real-scale`：使用真实尺寸显示模拟器窗口，而不是按设备分辨率缩放显示。此选项建议在 HiDPI 屏幕上使用。
-- `-t --top`：保持模拟器窗口置顶。
-- `-p --profiling`：启用性能分析模式。由于模拟器和设备性能差异较大，该选项通常不是很有用。
-
-## 启动模式
-
-默认情况下，`gx emu` 会按照上次构建时使用的设备配置来启动模拟器。还可以通过命令选项来调整模拟器的启动行为。
-
-### 指定设备型号
-
-使用 `-d` 或 `--device` 选项可以指定希望模拟的设备型号，例如：
-```bash
-gx emu -d generic-watch-466x466
-```
-将会为 `generic-watch-466x466` 这款设备启动模拟器。可以使用 `gx list device` 命令查看已安装的设备列表。
-
-如果不指定该选项，则会使用上次指定过的设备。第一次或 `gx clean` 之后启动模拟器时会使用 `default` 设备。
-
-### Deeplink 启动
-
-默认情况下，模拟器会启动当前项目的应用，或是启动一个应用菜单界面。但在调试 [`onRoute()`](/framework/component/life-cycle.md#onroute) 生命周期函数时，可能希望通过 deeplink 启动应用，以确保 `onRoute()` 接收到特定参数。可以使用 `--target` 选项来指定 deeplink，例如：
-```bash
-gx emu --target app://com.example.app/SomePage?query=value
-```
-这会启动包名为 `com.example.app` 的应用，而 Deeplink URI 的 path（含根目录 `/`，即 `/SomePage`）和 query 字段会被传递给该应用的 `onRoute()` 函数。
-
-### 模拟设备尺寸
-
-默认情况下，模拟器会使用设备的实际像素分辨率，这会导致电脑上的显示尺寸大于设备的实际屏幕尺寸，并使开发者难以确认 UI 元素（包括设计稿）在设备上的具有较佳尺寸。`-r` 或 `--real-scale` 选项可以按真实设备尺寸来模拟：
-```bash
-gx emu -r
-```
-使用此选项时，您不需要将应用安装到设备上即可确认 UI 的实际尺寸。但考虑到大部分手表的 DPI 超过 300，1080p 显示器在使用 real-scale 模式时会导致界面过于模糊，建议在 HiDPI 显示器（如 4K 显示器，或者 macOS 上的 Retina 屏幕）上使用此选项。
-
-::: tip
-使用 real-scale 模式时，您应该通过 `--device` 选项来指定希望模拟的目标设备。值得注意的是：由于 DPI 不同，两款相同的分辨率设备可能有不同的屏幕尺寸，因此 real-scale 模式的显示尺寸也会不同。
-:::
-
-### 自动刷新
-
-`-w` 或 `--watch` 选项可以在运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并重启应用。通常建议配合 `--top` 选项使用，例如：
-```bash
-gx emu -wt
-```
-这样可以保持模拟器窗口置顶，并且在修改源文件后自动重启应用。这对于开发调试非常有用：直接从代码编辑器切换到模拟器，不需要手动重启模拟器，也不需要频繁切换窗口。
-
-::: tip
-目前不支持热更新页面，而是在修改源文件后重启整个应用。如果想要更快的调试速度，可以将 [`manifest.router.entry`](/framework/application/manifest.md#entry) 调整为正在开发的页面，这样每次重启应用时都会直接进入该页面。
-:::
-
-## 连接手机
-
-可以通过 [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android 手机应用连接模拟器，以便于调试真实设备和手机互联相关的功能。
-
-### 准备工作
-
-你需要在手机上安装 Glyphix Debug 应用，并确保手机和电脑处于同一局域网内，例如连接到同一个 Wi-Fi。启动模拟器并打开打开 Glyphix Debug 应用后，点击“Socket 连接”按钮，应用会显示一个连接界面，你可以选择搜索到的模拟器 IP 地址，或手动输入电脑 IP 和模拟器端口进行连接。
-
-模拟器默认监听 7768 网络端口，如果该端口被占用（通常是启动了多个模拟器），则自动选择下一个可用端口，并在启动时打印实际使用的端口号。例如：
-```bash
-$ gx emu
-[simulator.socket] MAS TCP server bind port 7768 successful 
+模板中的标签名称必须是短横线式（kebab-case）或者帕斯卡式（PascalCase）命名：
+``` html
+<Button></Button>
+<button></button>
+<scroll-area></scroll-area>
+<ScrollArea></ScrollArea>
 ```
 
-::: tip
-一旦模拟器端口被占用并选择了非 7768 端口号，Glyphix Debug 应用将无法自动搜索到该模拟器，必须手动输入正确的 IP 地址和端口号进行连接。
-:::
-
-强烈建议模拟器开启下一节的手机网络代理模式，以免同时使用电脑网络和手机网络。否则可能会干扰 [`@system.interconnect`](/api/system-interconnect.md) 之类依赖手机互联 API 的正常工作。
-
-### 手机网络代理
-
-使用 `-m` 或者 `--mobile-network` 选项可以只启用手机 SDK 的网络代理功能，这类似于真实设备的网络环境。使用此选项时，模拟器不会自动启动目标应用，而是显示一个应用列表界面。
-
-在手动启动应用之前，应通过 Glyphix Debug 手机应用通过“Socket 网络”连接模拟器，然后再点击目标应用。否则应用将无法访问网络。
-
-::: tip
-在使用 `-m` 手机网络代理时，可以通过杀死手机调试应用、重新连接模拟器等方式来模拟网络中断的情况。否则模拟器会自动切换到电脑网络。
-:::
-
-### 常见连接问题
-
-如果无法通过 Glyphix Debug 应用连接模拟器，请检查电脑和手机是否连接到同一个局域网，且模拟器程序和端口未被防火墙规则屏蔽。如果你连接到了公共网络，那么和可能因为防火墙或者网络隔离而无法连接。
-
-如果你使用了 VPN 或者代理软件，请确保局域网内的流量不被代理，否则也会无法连接。
-
-## 其他操作
-
-### 清除应用数据
-
-你可以使用 [`gx clean`](README.md#gx-clean) 清除模拟器运行时的应用数据，之后再启动模拟器时将从首次安装的状态开始运行。
-
-### 组合命令选项
-
-你可以将多个选项组合在一起使用，例如：
-```bash
-gx emu -rwt -d default-watch-466x466
-```
-等效于分开使用
-```bash
-gx emu -r -w -t -d devault-watch-466x466
-gx emu --real-scale --watch --top --device default-watch-466x466
-```
-建议按 [`gx completion`](#gx-completion) 中介绍的方法安装自动补全脚本，以便在终端中选择设备名称和命令选项。
-
-
-============================================================
-FILE_PATH: src/original_docs/tutorials/glyphix.js/image-forge.md
-
----
-icon: image-filter
----
-# 图片管理
-
-glyphix.js 打包工具会管理项目中所有的 PNG 图片资源（ `src` 目录）。相关模块主要提供以下功能：
-- 支持图片资源的配置文件，并提供相关配置界面
-- 打包时将图片转换为为设备优化的尺寸和格式
-
-应用开发者只需要按自己的需要配置图片资源的打包参数，而设备供应商需要为设备定义具体的图片转换策略。
-
-## 应用开发配置
-
-在应用开发中需要配置图片打包参数才可以正确生成资源包
-在应用开发中配置 `config/image-rules.json` 以及 `src/menifest.json` 的 `config.designWidth` 等属性均会影响图片资源的打包行为。`config/image-rules.json` 一般用来配置质量和性能参数，而 `menifest.json` 中的字段影响图片的全局缩放比例（用于适配不同分辨率的设备）。
-
-::: tip
-`config/image-rules.json` 可以使用 `gx config` 命令或其他方式配置，但不建议直接用文本编辑器编辑。
-:::
-
-如果使用 `gx config` 命令，开发者将主要会关注两个参数：transparent 和 quality。
-
-### Transparent 参数
-
-Transparent 表示图片是否包含透明像素，如果为配置为否（`false`）并且资源图片是包含透明像素的，那么生成时会将这些像素转换为不透明（通常是叠加到一个黑色背景上）。因此需要将必要的图片标记为保留透明像素，否则会显示不正确的覆盖效果。由于某些平台上不透明图片的性能更好，且不透明图片的数据量更少，transparent 选项默认关闭。
-
-### Quality 参数
-
-Quality 参数代表打包后图片的品质，是一个 $[0, 100]$ 范围的整数。不过通常只使用 3 个大致的品质级别：
-- High：100，表示最高品质
-- Middle：50，中等品质，默认值
-- Low：0，低品质
-
-转换图片资源时会根据品质参数进行优化。通常而言，中等品质是在目标平台上平衡了显示效果、绘制/加载性能以及内存资源占用等因素后的转换策略，因此推荐使用。使用高品质可能有更好的质量，但可能产生性能下降。低品质可用于可以损失质量以提升性能的图片（例如如照片）。具体的目标平台也可能忽略 quality 参数而使用统一策略。
-
-## 设备和平台适配
-
-假设设备和平台开发商已经针对具体目标平台实现了优化的图片资源格式并支持多种品质和像素格式，为了在 glyphix.js 中可以生成这些图片格式需要做以下工作：
-- 实现**单张图片**转换所需的命令行工具
-  - 必须提供从 PNG 图片转换为自定义格式的命令行接口，支持输出到指定路径（包括覆盖原文件）
-  - 最好提供从自定义格式转换为 PNG 图片的的命令行接口，支持输出到指定路径（包括覆盖原文件），缺失此功能将无法实现 PC 断预览
-- 编写设备描述文件和图片转换脚本
-
-### 图片转换脚本
-
-图片转换脚本是一个 scheme 文件，需要转换图片时 glyphix.js 会调用此脚本，后者可以根据这些变量确定如何转换图片：
-- `env.image-path`：待转换图片的绝对路径，转换后的图片覆盖写入到此路径
-- `env.transparent`：此图片的透明参数
-- `env.quailty`：此图片的品质参数
-- `env.target`：转换目标模式，见后文描述
-- `env.verbose`：是否开启 verbose 模式，如果是则可以输出详细的日志，否则不应输出日志
-- `env.script-dir`：当前脚本文件所在的绝对路径，如果转换所需的命令是相对于此脚本文件而不在 `PATH` 环境变量中，可以利用此参数进行拼接
-
-`env.target` 表示图片转换的**目标模式**，它的值决定具体应用何种转换方式：
-- `"device"`：执行针对目标设备的完整转换流程，例如将不透明图片的透明通道移除，然后将其按照品质参数转换为 PGF 格式（Glyphix 图片格式）
-- `"emulator"`：执行针对模拟器的转换流程，由于模拟器并不支持特定硬件的纹理格式（例如 ETC2 等），为了保证图片在模拟器中正常显示，可以只移除不透明图片的透明通道而不进一步转换为目标设备格式（或者转换为软件支持的 PGF 格式）
-- `"preprocess"`：只执行预处理步骤，也就是移除不透明图片的透明通道，并且要将结果输出为 PNG 格式
-- `"preview"`：生成预览的 PNG 图片，首先要按照 `"device"` 目标的转换流程将图片转换为自定义目标格式，然后将输出图片转回 PNG 供预览使用
-
-::: tip
-如果图片转换的命令行工具不支持将自定义格式转换为 PNG，那么不要实现 `"preprocess"` 和 `"preview"` 目标模式。
-:::
-
-### image-forge 命令行工具
-
-image-forge 是 Glyphix 提供的 PGF 图片格式命令行工具，具有以下功能：
-- 支持 PNG 图片转换为 PGF 格式，以及将 PGF 转换为 PNG 图片
-- 支持常见的 ARGB 和 PAL 像素格式，且区分 premultiplied alpha 模式
-- 支持将透明的 ARGB 图片混合到指定的纯色背景上使之转换为不透明图片（不是直接丢弃 alpha 通道）
-- 支持行按像素或字节对齐
-- 支持 LZ4 压缩，并可以设置最小压缩阈值（低于阈值的图片数据不会压缩）
-
-对于使用其他自定义图片格式的平台，也可以利用 image-forge 来移除透明通道。
-
-## 图片转换脚本示例
-
-以下示例演示如何利用 image-forge 等命令将 PNG 转换为 PGF 图片，并且优先使用查色表（PAL）格式。
-
-首先定义不透明和透明情况下的目标格式：
-``` scheme
-; 定义不透明颜色的像素格式规则
-(define (opaque-formats q)
-  (cond ((<= q 50) "pal-rgb")
-        (else "rgb24")))
-
-; 定义透明颜色的像素格式规则
-(define (transparent-formats q)
-  (cond ((<= q 50) "pal-argb-premul")
-        (else "argb32-premul")))
-
-; 计算透明和品质参数作用下的目标像素格式
-(define pixel-format
-  ((if env.transparent
-      transparent-formats opaque-formats)
-    env.quailty))
-
-; 图片是否转换为查色表格式
-(define palette (<= env.quailty 50))
+属性名称必须是短横线式或者驼峰式（camelCase）命名法：
+``` html
+<component prop-name="expr"></component>
+<component propName="expr"></component>
 ```
 
-以上代码会在品质小于等于 50 时使用查色表格式，并且会根据是否透明使用 `pal-rgb` 或 `pal-argb`。质量高于 50 时使用 RGB 或 ARGB 8bit 位采样的像素格式。最终，`pixel-format` 变量即实际使用的像素格式名称，`palette` 表示是否使用查色表格式。
+推荐统一使用符合 Web 规范的短横线命名法。
 
-接下来定义各种情况下需要使用的命令：
+## JavaScript 代码命名规范
 
-``` scheme
-; 是否添加 --verbose 命令行参数
-(define if-verbose (if env.verbose "--verbose " ""))
 
-; 调用 pngquant 命令将图片颜色缩减至 256 色以内，系统中需要安装 pngquant
-(define color-reduction
-  (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
+JavaScript 代码中的组件名必须是帕斯卡命名，而模板中则使用对应的短横线命名。
 
-; 转换图片为 PGF 格式
-(define convert (string-append "image-forge "
-  "--format=" pixel-format " " ; 指定输出像素格式
-  "--compress --min-compress-ratio=5 " ; 压缩图像数据减小文件尺寸，最小压缩比为 5
-  "--align=16 --pixel-align " ; 图片按 16 像素对齐
-  if-verbose
-  env.image-path))
-
-; 移除图片 Alpha 通道并添加背景
-(define remove-alpha (string-append "image-forge --bypass "
-  ; 在 bes2500ibp 手表上，非透明图片可以移除 alpha 通道并用黑色背景混合，这种操作可以提高 PAL 颜色缩减后的图像质量
-  (if env.transparent "" "--background black ")
-  if-verbose
-  env.image-path))
-
-; 将 PGF 图像转回 PNG 的命令
-(define decode
-  (string-append "image-forge --decode " if-verbose env.image-path))
+JavaScript 代码中的组件属性名称必须是驼峰式命名：
+``` js
+export default {
+  data: {
+    propName: 0 // 在模板中的属性名是 prop-name
+  }
+}
 ```
+这些属性名在模板代码中会自动转换成成对应的短横线命名。
 
-以下代码中，`execute-try` 在命令非 0 退出后调用指定的 `f` 函数，`execute` 函数在命令非 0 退出后打印错误日志并异常退出脚本。`run-convert` 函数执行完整的目标设备图像转换流程（调用 `remove-alpha` 和 `convert` 的命令）。
+## 文件名命名规范
 
-``` scheme
-; 执行一个命令并在 verbose 模式中打印命令内容，如果命令以非 0 异常退出则调用函数 f
-(define (execute-try cmd f)
-  (begin
-    (if env.verbose ; 如果为 verbose 模式则打印命令内容
-      (display (string-append "Run command: " cmd "\n")))
-    (let ((r (system (string-append env.script-dir "/bin/" cmd))))
-      (if (= r 0) 0 (f r)))
-  ))
-
-; 执行一个命令，并会在 verbose 模式打印命令内容，如果命令异常退出则退出程序
-(define (execute cmd)
-  (execute-try cmd (lambda (x)
-    (begin ; 失败时打印错误码并异常退出
-      (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
-      (exit-fail)
-  ))))
-
-; 转换图像
-(define (run-convert)
-  (begin
-    (execute remove-alpha) ; 先移除透明通道
-    (if palette (execute color-reduction)) ; 如果是查色表格式则缩减图片的像素数量
-    (execute convert) ; 执行图片转换命令
-  ))
+UX 文件必须使用和组件相同的名字，也就是帕斯卡命名。在 `<import>` 标签中，`src` 属性（attribute）必须是区分大小写的文件 URL，而 `name` 属性则使用帕斯卡命名或者短横线命名：
+``` html
+<import src="path/to/UxFile" name="UxFile"/>
+<import src="path/to/UxFile" name="ux-file"/>
 ```
-
-`targets` 宏定义所有目标模式的处理方法，例如 `"device"` 模式将调用 `run-convert` 函数等。
-
-``` scheme
-; 定义目标对应的转换策略
-(targets env.target
-  ; 设备模式：最终用于目标设备的图片转换流程
-  ("device" (run-convert))
-  ; 模拟器模式：仅移除非透明图片的 alpha 通道，不转换格式
-  ("emulator" (execute remove-alpha))
-  ; 预处理模式：移除非透明图片的 alpha通道并添加背景
-  ("preprocess" (execute remove-alpha))
-  ; 预览模式：生成和实际设备显示效果一致的 PNG 预览图片
-  ("preview" (begin
-    (run-convert) ; 先把图片转换为 PGF 格式
-    (execute decode))) ; 再把图片转回 PNG
-  )
-```
-
-### 使用图片转换脚本
-
-要使用图片转换脚本，需要在设备型号描述文件中增加一个字段：
-
-``` yaml
-description: default watch
-
-screen:
-  width: 454 # pixels
-  height: 454 # pixels
-  dpi: 326 # pixels per inch
-
-#...
-image-build: image-convert-pal.scm # 图片转换脚本相对于本 Yaml 文件的路径
-```
-
-### 更复杂的策略
-
-由于图片转换脚本是完整的编程语言而不是 Yaml、JSON 等配置语言，我们可以实现更复杂的自定义转换策略而不会受限于框架提供的功能。以上面的查色表格式转换为例：PAL 格式在颜色丰富的图片上效果不好，此时可以将图片转换为在这类场景中表现更好的格式。具体的思路为：
-1. `pngquant` 命令支持在转换 PAL 格式后质量低于指定值的情况下异常退出，因此按照此目的配置命令参数
-2. 在 `run-convert` 函数由 `execute` 执行的 `color-reduction` 的操作改为由 `execute-try` 执行，并在后者的异常处理函数中使用替代格式的转换操作
-3. `preview` 等目标的处理方式类似，但要注意，在将输出格式转换为 PNG 的时候，也需要识别命令异常退出并改由后续的命令继续尝试
-
-总而言之类似于 shell 脚本的思路，利用命令的异常退出码来控制流程。
+实际上 `name` 属性的命名要求和模板中的标签名称是一致的。
 
 
 ============================================================
@@ -1838,6 +1496,214 @@ emulator: glyphix-emu
 
 
 ============================================================
+FILE_PATH: src/original_docs/tutorials/glyphix.js/image-forge.md
+
+---
+icon: image-filter
+---
+# 图片管理
+
+glyphix.js 打包工具会管理项目中所有的 PNG 图片资源（ `src` 目录）。相关模块主要提供以下功能：
+- 支持图片资源的配置文件，并提供相关配置界面
+- 打包时将图片转换为为设备优化的尺寸和格式
+
+应用开发者只需要按自己的需要配置图片资源的打包参数，而设备供应商需要为设备定义具体的图片转换策略。
+
+## 应用开发配置
+
+在应用开发中需要配置图片打包参数才可以正确生成资源包
+在应用开发中配置 `config/image-rules.json` 以及 `src/menifest.json` 的 `config.designWidth` 等属性均会影响图片资源的打包行为。`config/image-rules.json` 一般用来配置质量和性能参数，而 `menifest.json` 中的字段影响图片的全局缩放比例（用于适配不同分辨率的设备）。
+
+::: tip
+`config/image-rules.json` 可以使用 `gx config` 命令或其他方式配置，但不建议直接用文本编辑器编辑。
+:::
+
+如果使用 `gx config` 命令，开发者将主要会关注两个参数：transparent 和 quality。
+
+### Transparent 参数
+
+Transparent 表示图片是否包含透明像素，如果为配置为否（`false`）并且资源图片是包含透明像素的，那么生成时会将这些像素转换为不透明（通常是叠加到一个黑色背景上）。因此需要将必要的图片标记为保留透明像素，否则会显示不正确的覆盖效果。由于某些平台上不透明图片的性能更好，且不透明图片的数据量更少，transparent 选项默认关闭。
+
+### Quality 参数
+
+Quality 参数代表打包后图片的品质，是一个 $[0, 100]$ 范围的整数。不过通常只使用 3 个大致的品质级别：
+- High：100，表示最高品质
+- Middle：50，中等品质，默认值
+- Low：0，低品质
+
+转换图片资源时会根据品质参数进行优化。通常而言，中等品质是在目标平台上平衡了显示效果、绘制/加载性能以及内存资源占用等因素后的转换策略，因此推荐使用。使用高品质可能有更好的质量，但可能产生性能下降。低品质可用于可以损失质量以提升性能的图片（例如如照片）。具体的目标平台也可能忽略 quality 参数而使用统一策略。
+
+## 设备和平台适配
+
+假设设备和平台开发商已经针对具体目标平台实现了优化的图片资源格式并支持多种品质和像素格式，为了在 glyphix.js 中可以生成这些图片格式需要做以下工作：
+- 实现**单张图片**转换所需的命令行工具
+  - 必须提供从 PNG 图片转换为自定义格式的命令行接口，支持输出到指定路径（包括覆盖原文件）
+  - 最好提供从自定义格式转换为 PNG 图片的的命令行接口，支持输出到指定路径（包括覆盖原文件），缺失此功能将无法实现 PC 断预览
+- 编写设备描述文件和图片转换脚本
+
+### 图片转换脚本
+
+图片转换脚本是一个 scheme 文件，需要转换图片时 glyphix.js 会调用此脚本，后者可以根据这些变量确定如何转换图片：
+- `env.image-path`：待转换图片的绝对路径，转换后的图片覆盖写入到此路径
+- `env.transparent`：此图片的透明参数
+- `env.quailty`：此图片的品质参数
+- `env.target`：转换目标模式，见后文描述
+- `env.verbose`：是否开启 verbose 模式，如果是则可以输出详细的日志，否则不应输出日志
+- `env.script-dir`：当前脚本文件所在的绝对路径，如果转换所需的命令是相对于此脚本文件而不在 `PATH` 环境变量中，可以利用此参数进行拼接
+
+`env.target` 表示图片转换的**目标模式**，它的值决定具体应用何种转换方式：
+- `"device"`：执行针对目标设备的完整转换流程，例如将不透明图片的透明通道移除，然后将其按照品质参数转换为 PGF 格式（Glyphix 图片格式）
+- `"emulator"`：执行针对模拟器的转换流程，由于模拟器并不支持特定硬件的纹理格式（例如 ETC2 等），为了保证图片在模拟器中正常显示，可以只移除不透明图片的透明通道而不进一步转换为目标设备格式（或者转换为软件支持的 PGF 格式）
+- `"preprocess"`：只执行预处理步骤，也就是移除不透明图片的透明通道，并且要将结果输出为 PNG 格式
+- `"preview"`：生成预览的 PNG 图片，首先要按照 `"device"` 目标的转换流程将图片转换为自定义目标格式，然后将输出图片转回 PNG 供预览使用
+
+::: tip
+如果图片转换的命令行工具不支持将自定义格式转换为 PNG，那么不要实现 `"preprocess"` 和 `"preview"` 目标模式。
+:::
+
+### image-forge 命令行工具
+
+image-forge 是 Glyphix 提供的 PGF 图片格式命令行工具，具有以下功能：
+- 支持 PNG 图片转换为 PGF 格式，以及将 PGF 转换为 PNG 图片
+- 支持常见的 ARGB 和 PAL 像素格式，且区分 premultiplied alpha 模式
+- 支持将透明的 ARGB 图片混合到指定的纯色背景上使之转换为不透明图片（不是直接丢弃 alpha 通道）
+- 支持行按像素或字节对齐
+- 支持 LZ4 压缩，并可以设置最小压缩阈值（低于阈值的图片数据不会压缩）
+
+对于使用其他自定义图片格式的平台，也可以利用 image-forge 来移除透明通道。
+
+## 图片转换脚本示例
+
+以下示例演示如何利用 image-forge 等命令将 PNG 转换为 PGF 图片，并且优先使用查色表（PAL）格式。
+
+首先定义不透明和透明情况下的目标格式：
+``` scheme
+; 定义不透明颜色的像素格式规则
+(define (opaque-formats q)
+  (cond ((<= q 50) "pal-rgb")
+        (else "rgb24")))
+
+; 定义透明颜色的像素格式规则
+(define (transparent-formats q)
+  (cond ((<= q 50) "pal-argb-premul")
+        (else "argb32-premul")))
+
+; 计算透明和品质参数作用下的目标像素格式
+(define pixel-format
+  ((if env.transparent
+      transparent-formats opaque-formats)
+    env.quailty))
+
+; 图片是否转换为查色表格式
+(define palette (<= env.quailty 50))
+```
+
+以上代码会在品质小于等于 50 时使用查色表格式，并且会根据是否透明使用 `pal-rgb` 或 `pal-argb`。质量高于 50 时使用 RGB 或 ARGB 8bit 位采样的像素格式。最终，`pixel-format` 变量即实际使用的像素格式名称，`palette` 表示是否使用查色表格式。
+
+接下来定义各种情况下需要使用的命令：
+
+``` scheme
+; 是否添加 --verbose 命令行参数
+(define if-verbose (if env.verbose "--verbose " ""))
+
+; 调用 pngquant 命令将图片颜色缩减至 256 色以内，系统中需要安装 pngquant
+(define color-reduction
+  (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
+
+; 转换图片为 PGF 格式
+(define convert (string-append "image-forge "
+  "--format=" pixel-format " " ; 指定输出像素格式
+  "--compress --min-compress-ratio=5 " ; 压缩图像数据减小文件尺寸，最小压缩比为 5
+  "--align=16 --pixel-align " ; 图片按 16 像素对齐
+  if-verbose
+  env.image-path))
+
+; 移除图片 Alpha 通道并添加背景
+(define remove-alpha (string-append "image-forge --bypass "
+  ; 在 bes2500ibp 手表上，非透明图片可以移除 alpha 通道并用黑色背景混合，这种操作可以提高 PAL 颜色缩减后的图像质量
+  (if env.transparent "" "--background black ")
+  if-verbose
+  env.image-path))
+
+; 将 PGF 图像转回 PNG 的命令
+(define decode
+  (string-append "image-forge --decode " if-verbose env.image-path))
+```
+
+以下代码中，`execute-try` 在命令非 0 退出后调用指定的 `f` 函数，`execute` 函数在命令非 0 退出后打印错误日志并异常退出脚本。`run-convert` 函数执行完整的目标设备图像转换流程（调用 `remove-alpha` 和 `convert` 的命令）。
+
+``` scheme
+; 执行一个命令并在 verbose 模式中打印命令内容，如果命令以非 0 异常退出则调用函数 f
+(define (execute-try cmd f)
+  (begin
+    (if env.verbose ; 如果为 verbose 模式则打印命令内容
+      (display (string-append "Run command: " cmd "\n")))
+    (let ((r (system (string-append env.script-dir "/bin/" cmd))))
+      (if (= r 0) 0 (f r)))
+  ))
+
+; 执行一个命令，并会在 verbose 模式打印命令内容，如果命令异常退出则退出程序
+(define (execute cmd)
+  (execute-try cmd (lambda (x)
+    (begin ; 失败时打印错误码并异常退出
+      (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
+      (exit-fail)
+  ))))
+
+; 转换图像
+(define (run-convert)
+  (begin
+    (execute remove-alpha) ; 先移除透明通道
+    (if palette (execute color-reduction)) ; 如果是查色表格式则缩减图片的像素数量
+    (execute convert) ; 执行图片转换命令
+  ))
+```
+
+`targets` 宏定义所有目标模式的处理方法，例如 `"device"` 模式将调用 `run-convert` 函数等。
+
+``` scheme
+; 定义目标对应的转换策略
+(targets env.target
+  ; 设备模式：最终用于目标设备的图片转换流程
+  ("device" (run-convert))
+  ; 模拟器模式：仅移除非透明图片的 alpha 通道，不转换格式
+  ("emulator" (execute remove-alpha))
+  ; 预处理模式：移除非透明图片的 alpha通道并添加背景
+  ("preprocess" (execute remove-alpha))
+  ; 预览模式：生成和实际设备显示效果一致的 PNG 预览图片
+  ("preview" (begin
+    (run-convert) ; 先把图片转换为 PGF 格式
+    (execute decode))) ; 再把图片转回 PNG
+  )
+```
+
+### 使用图片转换脚本
+
+要使用图片转换脚本，需要在设备型号描述文件中增加一个字段：
+
+``` yaml
+description: default watch
+
+screen:
+  width: 454 # pixels
+  height: 454 # pixels
+  dpi: 326 # pixels per inch
+
+#...
+image-build: image-convert-pal.scm # 图片转换脚本相对于本 Yaml 文件的路径
+```
+
+### 更复杂的策略
+
+由于图片转换脚本是完整的编程语言而不是 Yaml、JSON 等配置语言，我们可以实现更复杂的自定义转换策略而不会受限于框架提供的功能。以上面的查色表格式转换为例：PAL 格式在颜色丰富的图片上效果不好，此时可以将图片转换为在这类场景中表现更好的格式。具体的思路为：
+1. `pngquant` 命令支持在转换 PAL 格式后质量低于指定值的情况下异常退出，因此按照此目的配置命令参数
+2. 在 `run-convert` 函数由 `execute` 执行的 `color-reduction` 的操作改为由 `execute-try` 执行，并在后者的异常处理函数中使用替代格式的转换操作
+3. `preview` 等目标的处理方式类似，但要注意，在将输出格式转换为 PNG 的时候，也需要识别命令异常退出并改由后续的命令继续尝试
+
+总而言之类似于 shell 脚本的思路，利用命令的异常退出码来控制流程。
+
+
+============================================================
 FILE_PATH: src/original_docs/tutorials/glyphix.js/cli.md
 
 ---
@@ -1849,152 +1715,145 @@ icon: console-line
 
 
 ============================================================
-FILE_PATH: src/original_docs/cookbook/blur-overlay.md
+FILE_PATH: src/original_docs/tutorials/glyphix.js/emulator.md
 
-# 模糊覆盖菜单
+---
+icon: watch-import-variant
+---
+# 模拟器和调试
 
-## 效果展示
-
-本教程展示将背景模糊之后展示遮盖层菜单的开发技巧。下面的示例展示了这种交互效果（点击右下角的 “...” 按钮会显示遮挡界面）。
-
-<glyphix id="cookbook-blur-overlay" width="410" height="502" title="模糊覆盖层" inline>
-
-</glyphix>
-
-本教程的主要目的是展示如何用 Glyphix 实现带有模糊的界面。
-
-## 实现方法
-
-### 文字阴影
-
-示例中的文字 “Hokkaido sika deer” 阴影可以通过叠加一层模糊文本来实现：
-``` html
-<stack class="wallpaper-title">
-  <p class="shadow">Hokkaido sika deer</p>
-  <p>Hokkaido sika deer</p>
-</stack>
-```
-将两段相同的文本放置在一个 [`stack`](/components/stack.md) 组件内，并将底层文本作为阴影。这是通过底层文本的 `shadow` CSS 类实现的：
-``` css
-.shadow {
-  color: #0008;
-  /* 为背景文本添加模糊，以呈现阴影效果 */
-  filter: blur(8px);
-  /* 必须使用 transparent 标记元素是透明的 */
-  transparent: true;
-}
-```
-将背景文本的颜色设置为半透明的灰色，并通过模糊过滤器（[`filter: blur(8px)`](/framework/generic/styles.md#filter)）属性将 `<p>` 文本组件作为阴影。请注意前景的文字颜色不应该透明，否则可能和 `.shadow` 层叠加。
-
-### 自定义字体
-
-文本 “Hokkaido sika deer” 通过自定义字体来呈现，在 Glyphix 中可以使用和 Web 一样的方法来引入自定义字体：
-``` css
-@font-face {
-  font-family: 'Playwrite Australia SA';
-  src: url('/assets/PlaywriteAUSA-Regular.ttf');
-}
-
-.wallpaper-title {
-  font-family: 'Playwrite Australia SA', 'sans-serif';
-  color: #ffffff;
-  margin-top: 25%;
-}
-```
-如你所见，可以在 CSS 通过 [`@font-face`](/framework/generic/styles.md#font-face-规则) 块来声明一个字体，并在元素的 [`font-family`](/framework/generic/styles.md#font-family) 属性中引用。
-
-### 背景层模糊
-
-由于目前通过 [`router` API](/api/system-router.md) 弹出的页面不支持半透明背景，因此不能使用页面来实现弹出菜单。但可以使用这种技巧来模拟弹出的“页面”：
-``` html
-<stack class="window" :disabled="popups">
-  <image class="wallpaper" src="/assets/images/sika-deer.jpg" />
-  ...
-</stack>
-<div class="overlay" if="popups">
-  ...
-</div>
-```
-你需要在页面中添加两层元素（本例中是 `stack.window` 和 `div.overlay`）,并通过一个条件（如 `popups`）来控制。具体来说：
-- `popups` 控制底层元素的 `disabled` 属性，因此当 `popups` 为真时，底层元素不会响应手势等输入；
-- `popups` 同时还控制顶层元素的渲染，当它为真时顶层元素会显示出来。
-
-在遮挡层弹出时，[`disabled`](/framework/generic/properties.md#disabled) 属性还提供了模糊底层元素的机会：
-``` css
-.window:disabled {
-  filter: blur(40px);
-}
-```
-当元素被设置了 `disabled` 属时，底层元素的 `:disabled` 伪元素也会激活，因此上面 CSS 的模糊效果会起作用。
+要运行模拟器，你需要在命令行中切换到项目的根目录，然后运行 `gx emu` 子命令来启动模拟器。Glyphix 模拟器拥有和真实设备运行时高度一致的环境，因此可以利用模拟器开发和调试大部分界面和功能，而不需要频繁地将应用安装到真实设备上。
 
 ::: tip
-由于 Glyphix 不支持浏览器的 [`backrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) 属性，所以不能直接通过 `div.overlay` 的 CSS 规则来实现背景模糊，而是要用本示例的技巧。
+由于当前 [`glyphix`](https://www.npmjs.com/package/glyphix) npm 包的限制，请务必配置 [`glyphix.config.js`](/tutorials/nodejs.md#glyphix-config-js-配置)，否则在执行 `gx emu` 时无法看到错误信息的源代码行号。
 :::
 
-## 性能风险
 
-由于模糊效果是计算密集的，开发者需要特别注意它的性能负担。我们建议仅在静态界面中使用模糊效果，最好还要为需要模糊的元素添加 [`quiescent`](/framework/generic/properties.md#quiescent) 属性。
+## `gx emu` 子命令
 
-如果可能的话，应该在物理设备上测试带有模糊的界面是否满足性能预期。
+使用上次的构建目标设备配置来运行模拟器。该命令需要在 Glyphix 项目的根目录中执行。它会自动构建项目并创建模拟器所需的资源文件，因此无需先执行 `gx build`。
+
+#### 命令选项
+
+- `-d --device=NAME`：指定模拟的设备名称，默认为 `default`（分辨率为 $410 \times 502\rm px$）。
+- `-e --emulator-exe=CMD`：指定模拟器的可执行文件，默认为 `glyphix-emu`。通常不需要修改。
+- `-l --language=NAME`：指定模拟器的语言环境，默认为 `zh-CN`（简体中文）。通过 `gx list language` 命令可以查看支持的语言列表。
+- `--target=URI`：设置模拟器启动时的包名或者 deeplink，例如 `app://com.example.app/SomePage?query=value` 或者 `com.example.app`。
+- `-i --inspector`：在运行模拟器时启用检查器，检查器是一个 Web 页面，可以在浏览器中调试模拟器中的界面元素。
+- `-m --mobile-network`：（尚未实现）仅在模拟器中启用手机 SDK 的网络代理，而不直接访问网络。
+- `-w --watch`：运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并刷新模拟器界面。
+- `-r --real-scale`：使用真实尺寸显示模拟器窗口，而不是按设备分辨率缩放显示。此选项建议在 HiDPI 屏幕上使用。
+- `-t --top`：保持模拟器窗口置顶。
+- `-p --profiling`：启用性能分析模式。由于模拟器和设备性能差异较大，该选项通常不是很有用。
+
+## 启动模式
+
+默认情况下，`gx emu` 会按照上次构建时使用的设备配置来启动模拟器。还可以通过命令选项来调整模拟器的启动行为。
+
+### 指定设备型号
+
+使用 `-d` 或 `--device` 选项可以指定希望模拟的设备型号，例如：
+```bash
+gx emu -d generic-watch-466x466
+```
+将会为 `generic-watch-466x466` 这款设备启动模拟器。可以使用 `gx list device` 命令查看已安装的设备列表。
+
+如果不指定该选项，则会使用上次指定过的设备。第一次或 `gx clean` 之后启动模拟器时会使用 `default` 设备。
+
+### Deeplink 启动
+
+默认情况下，模拟器会启动当前项目的应用，或是启动一个应用菜单界面。但在调试 [`onRoute()`](/framework/component/life-cycle.md#onroute) 生命周期函数时，可能希望通过 deeplink 启动应用，以确保 `onRoute()` 接收到特定参数。可以使用 `--target` 选项来指定 deeplink，例如：
+```bash
+gx emu --target app://com.example.app/SomePage?query=value
+```
+这会启动包名为 `com.example.app` 的应用，而 Deeplink URI 的 path（含根目录 `/`，即 `/SomePage`）和 query 字段会被传递给该应用的 `onRoute()` 函数。
+
+### 模拟设备尺寸
+
+默认情况下，模拟器会使用设备的实际像素分辨率，这会导致电脑上的显示尺寸大于设备的实际屏幕尺寸，并使开发者难以确认 UI 元素（包括设计稿）在设备上的具有较佳尺寸。`-r` 或 `--real-scale` 选项可以按真实设备尺寸来模拟：
+```bash
+gx emu -r
+```
+使用此选项时，您不需要将应用安装到设备上即可确认 UI 的实际尺寸。但考虑到大部分手表的 DPI 超过 300，1080p 显示器在使用 real-scale 模式时会导致界面过于模糊，建议在 HiDPI 显示器（如 4K 显示器，或者 macOS 上的 Retina 屏幕）上使用此选项。
+
+::: tip
+使用 real-scale 模式时，您应该通过 `--device` 选项来指定希望模拟的目标设备。值得注意的是：由于 DPI 不同，两款相同的分辨率设备可能有不同的屏幕尺寸，因此 real-scale 模式的显示尺寸也会不同。
+:::
+
+### 自动刷新
+
+`-w` 或 `--watch` 选项可以在运行模拟器时监听项目目录，当源文件发生变动时自动重新构建并重启应用。通常建议配合 `--top` 选项使用，例如：
+```bash
+gx emu -wt
+```
+这样可以保持模拟器窗口置顶，并且在修改源文件后自动重启应用。这对于开发调试非常有用：直接从代码编辑器切换到模拟器，不需要手动重启模拟器，也不需要频繁切换窗口。
+
+::: tip
+目前不支持热更新页面，而是在修改源文件后重启整个应用。如果想要更快的调试速度，可以将 [`manifest.router.entry`](/framework/application/manifest.md#entry) 调整为正在开发的页面，这样每次重启应用时都会直接进入该页面。
+:::
+
+## 连接手机
+
+可以通过 [Glyphix Debug](https://www.pgyer.com/KLeBQFv6) Android 手机应用连接模拟器，以便于调试真实设备和手机互联相关的功能。
+
+### 准备工作
+
+你需要在手机上安装 Glyphix Debug 应用，并确保手机和电脑处于同一局域网内，例如连接到同一个 Wi-Fi。启动模拟器并打开打开 Glyphix Debug 应用后，点击“Socket 连接”按钮，应用会显示一个连接界面，你可以选择搜索到的模拟器 IP 地址，或手动输入电脑 IP 和模拟器端口进行连接。
+
+模拟器默认监听 7768 网络端口，如果该端口被占用（通常是启动了多个模拟器），则自动选择下一个可用端口，并在启动时打印实际使用的端口号。例如：
+```bash
+$ gx emu
+[simulator.socket] MAS TCP server bind port 7768 successful 
+```
+
+::: tip
+一旦模拟器端口被占用并选择了非 7768 端口号，Glyphix Debug 应用将无法自动搜索到该模拟器，必须手动输入正确的 IP 地址和端口号进行连接。
+:::
+
+强烈建议模拟器开启下一节的手机网络代理模式，以免同时使用电脑网络和手机网络。否则可能会干扰 [`@system.interconnect`](/api/system-interconnect.md) 之类依赖手机互联 API 的正常工作。
+
+### 手机网络代理
+
+使用 `-m` 或者 `--mobile-network` 选项可以只启用手机 SDK 的网络代理功能，这类似于真实设备的网络环境。使用此选项时，模拟器不会自动启动目标应用，而是显示一个应用列表界面。
+
+在手动启动应用之前，应通过 Glyphix Debug 手机应用通过“Socket 网络”连接模拟器，然后再点击目标应用。否则应用将无法访问网络。
+
+::: tip
+在使用 `-m` 手机网络代理时，可以通过杀死手机调试应用、重新连接模拟器等方式来模拟网络中断的情况。否则模拟器会自动切换到电脑网络。
+:::
+
+### 常见连接问题
+
+如果无法通过 Glyphix Debug 应用连接模拟器，请检查电脑和手机是否连接到同一个局域网，且模拟器程序和端口未被防火墙规则屏蔽。如果你连接到了公共网络，那么和可能因为防火墙或者网络隔离而无法连接。
+
+如果你使用了 VPN 或者代理软件，请确保局域网内的流量不被代理，否则也会无法连接。
+
+## 其他操作
+
+### 清除应用数据
+
+你可以使用 [`gx clean`](README.md#gx-clean) 清除模拟器运行时的应用数据，之后再启动模拟器时将从首次安装的状态开始运行。
+
+### 组合命令选项
+
+你可以将多个选项组合在一起使用，例如：
+```bash
+gx emu -rwt -d default-watch-466x466
+```
+等效于分开使用
+```bash
+gx emu -r -w -t -d devault-watch-466x466
+gx emu --real-scale --watch --top --device default-watch-466x466
+```
+建议按 [`gx completion`](#gx-completion) 中介绍的方法安装自动补全脚本，以便在终端中选择设备名称和命令选项。
 
 
 ============================================================
-FILE_PATH: src/original_docs/cookbook/swiper-indicator.md
+FILE_PATH: src/original_docs/cookbook/README.md
 
-# Swiper 页面指示器
+# 实用指南
 
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
 
-``` html
-<stack>
-  <swiper ::index="index">
-    <p for="i in panels">Panel {{i + 1}}</p>
-  </swiper>
-  <div class="indicator">
-    <image for="x in indicator" :src="x" />
-  </div>
-</stack>
-```
-
-``` js
-export default {
-  data: {
-    panels: 5,
-    index: 2
-  },
-  computed: {
-    indicator() {
-      let result = []
-      for (let i = 0; i < this.panels; i++) {
-        let suffix = i == this.index ? '1' : '0'
-        result.push(`/assets/images/ind-${suffix}.png`)
-      }
-      return result
-    }
-  }
-}
-```
-
-``` css
-swiper > p {
-  background-color: #888;
-  margin: 32px;
-  border-radius: 32px;
-  text-align: center;
-}
-
-.indicator {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.indicator > * {
-  margin: 0 4px 56px 4px;
-}
-```
-
-</Glyphix>
 
 
 ============================================================
@@ -2283,6 +2142,170 @@ async::Result<int> BatteryGetLevel::resolve() const;
 
 
 ============================================================
+FILE_PATH: src/original_docs/cookbook/swiper-indicator.md
+
+# Swiper 页面指示器
+
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper 指示器">
+
+``` html
+<stack>
+  <swiper ::index="index">
+    <p for="i in panels">Panel {{i + 1}}</p>
+  </swiper>
+  <div class="indicator">
+    <image for="x in indicator" :src="x" />
+  </div>
+</stack>
+```
+
+``` js
+export default {
+  data: {
+    panels: 5,
+    index: 2
+  },
+  computed: {
+    indicator() {
+      let result = []
+      for (let i = 0; i < this.panels; i++) {
+        let suffix = i == this.index ? '1' : '0'
+        result.push(`/assets/images/ind-${suffix}.png`)
+      }
+      return result
+    }
+  }
+}
+```
+
+``` css
+swiper > p {
+  background-color: #888;
+  margin: 32px;
+  border-radius: 32px;
+  text-align: center;
+}
+
+.indicator {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.indicator > * {
+  margin: 0 4px 56px 4px;
+}
+```
+
+</Glyphix>
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/blur-overlay.md
+
+# 模糊覆盖菜单
+
+## 效果展示
+
+本教程展示将背景模糊之后展示遮盖层菜单的开发技巧。下面的示例展示了这种交互效果（点击右下角的 “...” 按钮会显示遮挡界面）。
+
+<glyphix id="cookbook-blur-overlay" width="410" height="502" title="模糊覆盖层" inline>
+
+</glyphix>
+
+本教程的主要目的是展示如何用 Glyphix 实现带有模糊的界面。
+
+## 实现方法
+
+### 文字阴影
+
+示例中的文字 “Hokkaido sika deer” 阴影可以通过叠加一层模糊文本来实现：
+``` html
+<stack class="wallpaper-title">
+  <p class="shadow">Hokkaido sika deer</p>
+  <p>Hokkaido sika deer</p>
+</stack>
+```
+将两段相同的文本放置在一个 [`stack`](/components/stack.md) 组件内，并将底层文本作为阴影。这是通过底层文本的 `shadow` CSS 类实现的：
+``` css
+.shadow {
+  color: #0008;
+  /* 为背景文本添加模糊，以呈现阴影效果 */
+  filter: blur(8px);
+  /* 必须使用 transparent 标记元素是透明的 */
+  transparent: true;
+}
+```
+将背景文本的颜色设置为半透明的灰色，并通过模糊过滤器（[`filter: blur(8px)`](/framework/generic/styles.md#filter)）属性将 `<p>` 文本组件作为阴影。请注意前景的文字颜色不应该透明，否则可能和 `.shadow` 层叠加。
+
+### 自定义字体
+
+文本 “Hokkaido sika deer” 通过自定义字体来呈现，在 Glyphix 中可以使用和 Web 一样的方法来引入自定义字体：
+``` css
+@font-face {
+  font-family: 'Playwrite Australia SA';
+  src: url('/assets/PlaywriteAUSA-Regular.ttf');
+}
+
+.wallpaper-title {
+  font-family: 'Playwrite Australia SA', 'sans-serif';
+  color: #ffffff;
+  margin-top: 25%;
+}
+```
+如你所见，可以在 CSS 通过 [`@font-face`](/framework/generic/styles.md#font-face-规则) 块来声明一个字体，并在元素的 [`font-family`](/framework/generic/styles.md#font-family) 属性中引用。
+
+### 背景层模糊
+
+由于目前通过 [`router` API](/api/system-router.md) 弹出的页面不支持半透明背景，因此不能使用页面来实现弹出菜单。但可以使用这种技巧来模拟弹出的“页面”：
+``` html
+<stack class="window" :disabled="popups">
+  <image class="wallpaper" src="/assets/images/sika-deer.jpg" />
+  ...
+</stack>
+<div class="overlay" if="popups">
+  ...
+</div>
+```
+你需要在页面中添加两层元素（本例中是 `stack.window` 和 `div.overlay`）,并通过一个条件（如 `popups`）来控制。具体来说：
+- `popups` 控制底层元素的 `disabled` 属性，因此当 `popups` 为真时，底层元素不会响应手势等输入；
+- `popups` 同时还控制顶层元素的渲染，当它为真时顶层元素会显示出来。
+
+在遮挡层弹出时，[`disabled`](/framework/generic/properties.md#disabled) 属性还提供了模糊底层元素的机会：
+``` css
+.window:disabled {
+  filter: blur(40px);
+}
+```
+当元素被设置了 `disabled` 属时，底层元素的 `:disabled` 伪元素也会激活，因此上面 CSS 的模糊效果会起作用。
+
+::: tip
+由于 Glyphix 不支持浏览器的 [`backrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) 属性，所以不能直接通过 `div.overlay` 的 CSS 规则来实现背景模糊，而是要用本示例的技巧。
+:::
+
+## 性能风险
+
+由于模糊效果是计算密集的，开发者需要特别注意它的性能负担。我们建议仅在静态界面中使用模糊效果，最好还要为需要模糊的元素添加 [`quiescent`](/framework/generic/properties.md#quiescent) 属性。
+
+如果可能的话，应该在物理设备上测试带有模糊的界面是否满足性能预期。
+
+
+============================================================
+FILE_PATH: src/original_docs/cookbook/game-2048.md
+
+# 2048 游戏
+
+## 效果展示
+
+提示：在“2048 游戏”中使用鼠标上下左右快速滑动来操作。
+
+<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
+
+</glyphix>
+
+
+
+============================================================
 FILE_PATH: src/original_docs/cookbook/layout-tricks.md
 
 # 布局技巧
@@ -2404,28 +2427,5 @@ vscode 可以在项目的 `.vscode/settings.json` 中通过 `clangd.arguments` �
   ]
 }
 ```
-
-
-============================================================
-FILE_PATH: src/original_docs/cookbook/game-2048.md
-
-# 2048 游戏
-
-## 效果展示
-
-提示：在“2048 游戏”中使用鼠标上下左右快速滑动来操作。
-
-<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
-
-</glyphix>
-
-
-
-============================================================
-FILE_PATH: src/original_docs/cookbook/README.md
-
-# 实用指南
-
-
 
 
