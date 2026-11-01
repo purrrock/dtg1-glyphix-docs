@@ -2,6 +2,705 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
+FILE_PATH: src/transl/EN/cxxdev/widget-slider-demo.md
+
+# Practical Guide to Custom Widgets
+
+`slider-demo` is a complete example included with the Glyphix SDK, demonstrating how to implement a **custom control**—`WaveSlider`—from scratch in C++. This control adds a wave-fill effect and a click-ripple motion effect on top of the standard `Slider`. The example also covers `StyleEngine` customization and building UI interfaces directly in C++.
+
+Using this example as a guideline, and combining it with the core concepts from the [Widget Development Guide](./widget.md), this article demonstrates the complete steps required to customize a new Widget.
+
+## Example Structure
+
+The file structure of the example is as follows:
+
+```
+app/slider-demo/
+├── CMakeLists.txt
+├── main.cpp           # Application entry point, building the UI directly in C++
+├── styleengine.h/.cpp # Custom StyleEngine implementation
+└── waveslider.h/.cpp  # WaveSlider control implementation
+```
+
+You can directly compile and run the `slider-demo` target to see the effect without needing a frontend project.
+
+### Build Instructions
+
+After [setting up the SDK](sdk-setup.md#preparation), use the following commands to build and run the example:
+
+```bash
+mkdir build && cd build
+cmake .. && cmake --build . -j
+bin/slider-demo
+```
+
+::: important Host System
+You must build and run this example on a Linux system that supports a desktop environment.
+:::
+
+## Building the UI Directly in C++
+
+In `main.cpp`, the application's UI is entirely constructed using C++ code within the constructor, styled similarly to Qt Widgets or LVGL: child controls are created via `new` and passed a pointer to their parent control, without declarative templates.
+
+```cpp
+int main() {
+    Application app(new BSPPlatform(500, 500));
+    app.setFont(Font(GX_EXAMPLE_ASSETS "/roboto.ttf", 32));
+    app.setStyleEngine(new MyStyleEngine);
+
+    Window window;
+    window.setFlowLayout(true);
+
+    MyWidget widget(&window);
+    StyleModifier(&widget)->setSize(
+      Length::fromPercent(100), Length::fromPercent(100));
+    StyleModifier(&widget)->setMargin(Margin(10));
+    return app.exec();
+}
+```
+
+`Application` receives a platform backend object (`BSPPlatform`) and a resolution. `Window` is the root control. When `setFlowLayout(true)` is enabled, its child controls automatically arrange themselves according to a flow layout.
+
+`setStyleEngine` mounts a custom style engine. This is optional (the default style is used otherwise). You only need to provide your own implementation when you need to customize the appearance of controls (such as modifying the `Switch` as shown below).
+
+### The `MyWidget` Class
+
+`MyWidget` inherits from `ScrollArea`, creating and adding child controls in its constructor:
+
+```cpp
+class MyWidget : public ScrollArea {
+public:
+    explicit MyWidget(Widget *parent = nullptr) : ScrollArea(parent) {
+        addItem(&m_switch);
+        addItem(&m_label);
+        addItem(&m_slider);
+        // ...
+    }
+    // ...
+private:
+    Label  m_label;
+    Switch m_switch;
+    Slider m_slider;
+};
+```
+
+Child controls are declared as member variables and initialized automatically upon construction (the parent-child relationship is established in `addItem`). The lifecycle of these member variables is managed by `MyWidget`, requiring no manual `delete`.
+
+`ScrollArea` provides out-of-the-box scrolling, inertia, and bounce-back capabilities, allowing `MyWidget` to operate without writing any custom scrolling logic.
+
+::: tip Role of `addItem()`
+In general, you can attach child controls directly to a parent control using `setParent()`. However, `ScrollArea` internally contains a dedicated content container (`contentWidget()`). Regular elements cannot be added directly to a `ScrollArea`; instead, they must be added to the content container via `addItem()`.
+
+For simple containers, `setParent()` and `addItem()` have the same effect. But for special containers like `ScrollArea`, you **must** use `addItem()` to add elements.
+:::
+
+### Signal Connections
+
+States are synchronized between controls using signal connections:
+
+```cpp
+m_slider.changed.connect(this, &MyWidget::onSlider);
+m_switch.checked.connect(this, &MyWidget::onSwitch);
+
+// Bidirectionally synchronize the values of two Sliders
+waveSlider->changed.connect<AbstractSlider>(&m_slider, &Slider::setValue);
+m_slider.changed.connect<AbstractSlider>(waveSlider, &WaveSlider::setValue);
+
+// Toggle the wave mode of WaveSlider using the switch
+m_switch.checked.connect(waveSlider, &WaveSlider::setWaveMode);
+```
+
+::: tip Signal Usage
+The syntax for signal connection is `signal.connect(receiver, &Type::method)`. When the signatures of `Slider::setValue` and `WaveSlider::setValue` do not match exactly, you can declare a common base class (`AbstractSlider`) via template parameters to resolve ambiguity.
+
+If you are unsure of the actual type to which a slot function belongs, you can check it using IDE hints. For example, when inspecting `Slider::setValue`, the IDE typically suggests:
+```cpp
+public method
+void setValue(int value) in class AbstractSlider 
+```
+This indicates that `setValue` is actually declared in `AbstractSlider`. Therefore, you must specify `AbstractSlider` during connection to resolve ambiguity:
+```cpp
+m_slider.changed.connect<AbstractSlider>(waveSlider, &WaveSlider::setValue);
+```
+:::
+
+### Styling with StyleModifier
+
+`StyleModifier` is a tool for programmatically setting control styles in C++, functionally equivalent to configuring style properties in a template:
+
+```cpp
+StyleModifier m(waveSlider);
+m->setSize(120, 300);
+m->setMargin(Style::Margin{Length::fromAuto(), 20});
+m->setColor(Color{"#35a7ff"});
+```
+
+`setColor` sets the foreground color for the `WaveSlider`, which is read in `paintEvent` and used to render the progress fill color.
+
+## Customizing StyleEngine
+
+The built-in [`Switch`](/components/switch.md) is a fully functional toggle control, but its default appearance resembles [Fluent 2](https://fluent2.microsoft.design/components/web/react/core/switch/usage), which might not suit the visual style of a specific device or brand.
+
+`StyleEngine` is the mechanism designed to solve this. Device manufacturers can implement their own `StyleEngine` to customize the appearance of all built-in controls while retaining their interaction logic, without modifying framework code.
+
+A customized `Switch` is not just a change in theme color; rather, the entire set of switch animations (thumb translation, color transition, press scaling) is achieved through **programmatic interpolation** rather than pre-recorded frame sequences. This means:
+
+- Animations are completely smooth, with frame rates matching the rendering system;
+- Colors and sizes can be overridden by application developers through style properties, as `StyleEngine` provides overridable default values;
+- No need to prepare different image assets for various resolutions.
+
+### Responsibilities of `StyleEngine`
+
+`StyleEngine` is the core of the Glyphix styling system, responsible for three tasks:
+
+1. **Providing a palette**: Global color variables, similar to CSS custom properties, which can be read by all built-in and custom controls.
+2. **Painting control appearance**: The visual effects of built-in framework controls (such as `Switch`, `Slider`) are entirely delegated to `StyleEngine::paint()`, which developers can override in derived classes to achieve completely different appearances.
+3. **Recommending sizes (size hint)**: The recommended size of a control under different style states, used as a reference for the layout system.
+
+### Defining MyStyleEngine
+
+Inherit from `StyleEngine` and override `sizeHint()` and `paint()`:
+
+```cpp
+class MyStyleEngine : public StyleEngine {
+public:
+    MyStyleEngine();
+    Size sizeHint(StyleOption::Type type, const Widget *widget) const override;
+    void paint(Painter &painter, Widget *widget, StyleOption &option) override;
+};
+```
+
+Set the palette in the constructor:
+
+```cpp
+MyStyleEngine::MyStyleEngine() {
+    setPalette(SwitchDark,  Color(0xff565656));
+    setPalette(SwitchLight, Color(0xff2f5cff));
+    setPalette(SwitchThumb, Color(0xffffffff));
+}
+```
+
+`SwitchDark`, `SwitchLight`, and `SwitchThumb` are predefined semantic color keys in the `StyleEngine` enum. Different theme engines can assign different colors to them, and controls always read them by key name rather than hardcoding color values.
+
+### Overriding `sizeHint()`
+
+`sizeHint()` informs the framework of the **recommended size** of built-in controls under a given style state. Taking `Switch` as an example, its width and height should be proportional to the font pixel size:
+
+```cpp
+Size MyStyleEngine::sizeHint(StyleOption::Type type, const Widget *widget) const {
+    // The size ratio of the customized Switch can differ from the built-in strategy
+    if (type == StyleOption::OptionSwitch) {
+        float f = widget->font().pixelSize();
+        int d = int(round(f));
+        return {int(round(f * SwitchAspectRatio)), d};
+    }
+    return StyleEngine::sizeHint(type, widget); // Fall back to base class for other types
+}
+```
+
+Be sure to call `StyleEngine::sizeHint(type, widget)` at the end of the function to fall back to the default implementation, otherwise controls of other types will receive zero dimensions.
+
+### Overriding `paint()`
+
+`paint()` dispatches to the corresponding rendering logic based on the `option()` type of `StyleOption`, falling back unhandled types similarly:
+
+```cpp
+void MyStyleEngine::paint(Painter &painter, Widget *widget, StyleOption &option) {
+    switch (option.option()) {
+    case StyleOption::OptionSwitch:
+        drawSwitch(this, painter, widget, static_cast<StyleOptionSwitch &>(option));
+        break;
+    default:
+        StyleEngine::paint(painter, widget, option);
+    }
+}
+```
+
+`StyleOptionSwitch` is a derived class of `StyleOption`, adding state fields specific to the Switch. It carries two key animation progress values:
+
+- `option.transition`: Switch toggle transition progress, `0.0` for closed state, `1.0` for open state, and intermediate values indicating the animation is in progress.
+- `option.scale`: Scaling factor when pressed, used to render press feedback effects.
+
+Using these two values, smooth state transitions can be achieved within `drawSwitch`:
+
+```cpp
+// Interpolate between open and closed colors
+color = color.blend(checked.background().color(), option.transition);
+
+// The position of the thumb indicator moves with the transition progress
+float pos = option.transition * (box.width() - size - len);
+```
+
+`StyleEngine` drives the animation, and developers only need to interpolate based on progress values within `paint()` to obtain complete transition effects.
+
+::: tip Customizing Only Specific Controls
+The default `StyleEngine` implements the rendering logic for all built-in controls, some of which are quite complex. If you are only dissatisfied with the appearance of certain controls, you should override the rendering logic for those specific controls in your derived class, letting other controls fall back directly to the base class implementation.
+
+You should prioritize satisfying custom color requirements via the palette, and only override `paint()` when completely different visual effects are needed.
+:::
+
+### Drawing Rounded Capsule Shapes with VectorPath
+
+The background and thumb of the default `Switch` are both rounded capsule shapes. The example uses `VectorPath` combined with two arcs to draw this, which is a more flexible approach than `drawRoundedRect`, suitable for scenarios requiring independent control over the radiuses of both ends:
+
+```cpp
+static void indicatorBar(Painter &p, const RectF &rect) {
+    float radius = rect.height() * 0.5f;
+    float x1 = rect.left() + radius;
+    float x2 = rect.right() - radius;
+    float y = rect.top() + radius;
+    VectorPath path;
+    path.arcTo(PointF(x1, y), radius, radius, 90, 270);   // Left semicircle
+    path.arcTo(PointF(x2, y), radius, radius, -90, 90);   // Right semicircle
+    p.fillPath(path);
+}
+```
+
+The two arcs connect end-to-end, and `arcTo` automatically connects lines within the path without requiring an extra `lineTo`.
+
+## WaveSlider: Complete Practice for Custom Controls
+
+`WaveSlider` is the core of this example, demonstrating the complete development workflow for a custom control. Similar to the `StyleEngine` customization above, the design goal of `WaveSlider` is to **overlay** new visual effects without disrupting existing capabilities:
+
+- **Wave fill** mode: The progress area is filled with dynamic waves instead of a regular rectangular progress bar;
+- **Click ripple** effect: Generates a diffusing oscillation when pressed, temporarily enhancing and then recovering the waves;
+- **`waveMode` property**: Allows switching between wave mode and regular mode at runtime, supporting application-layer binding and property animations;
+- **Full fallback compatibility**: When wave mode is disabled, `WaveSlider` directly calls `Slider::paintEvent()` to fall back to the default appearance, reusing all parent capabilities such as dragging, `value`, and `changed`, with zero code changes required on the application side.
+
+### Class Definition and Inheritance
+
+`WaveSlider` inherits from `Slider` (rather than directly from `Widget`), allowing it to reuse `Slider`'s existing gesture-dragging logic, properties like `value`/`minimum`/`maximum`, and the `changed` signal:
+
+```cpp
+// waveslider.h
+#include "gx_slider.h"
+#include "gx_valueanimation.h"
+
+class WaveSlider : public Slider {
+    GX_OBJECT
+public:
+    explicit WaveSlider(Widget *parent = nullptr);
+    ~WaveSlider() override = default;
+
+    GX_NODISCARD bool isWaveMode() const { return m_waveMode; }
+    void setWaveMode(bool enabled);
+    bool event(Event *event) override;
+
+    GX_PROPERTY(bool waveMode, get isWaveMode, set setWaveMode)
+    // ...
+};
+```
+
+`GX_OBJECT` must be placed at the very beginning of the class definition; it triggers the meta-object compiler to generate metadata for this class. `GX_PROPERTY` exposes `waveMode` to the property system, making it bindable by the application layer (e.g., `<wave-slider :wave-mode="enabled"/>`) and drivable by property animations.
+
+### Member Variables
+
+The runtime state of the control is stored in member variables:
+
+```cpp
+private:
+    bool  m_waveMode = false;       // Whether currently in wave mode
+    float m_rippleProgress = 1.0f;  // Ripple progress [0, 1], initially 1 (inactive)
+    float m_waveOffset = 0.0f;      // Waveform phase offset [0, 1], driven by animation
+    ValueAnimation<float> m_animation;        // Wave loop animation
+    ValueAnimation<float> m_rippleAnimation;  // Ripple animation
+    friend struct EventTraits<WaveSlider>;    // Allow event dispatching to access protected methods
+```
+
+`ValueAnimation<float>` is used directly as a member variable (rather than a pointer), with its lifecycle managed by `WaveSlider`, requiring no manual `delete`.
+
+### Constructor: Initializing Animations
+
+The constructor configures two animations and sets the orientation:
+
+```cpp
+WaveSlider::WaveSlider(Widget *parent) : Slider(parent) {
+    // Wave animation: infinite loop, one full cycle per second
+    m_animation.setRepeat(AbstractAnimation::Infinity);
+    m_animation.setValueLimits(0.f, 1.f);
+    m_animation.setDuration(1000);
+    m_animation.value.connect(this, &WaveSlider::onWaveAnimation);
+    m_animation.start();
+
+    // Ripple animation: plays once when pressed, duration 800ms
+    m_rippleAnimation.setValueLimits(0.f, 1.f);
+    m_rippleAnimation.setDuration(800);
+    m_rippleAnimation.value.connect(this, &WaveSlider::onRippleAnimation);
+
+    setVertical(true);  // Vertical slider
+}
+```
+
+`m_animation` runs continuously after starting, advancing `m_waveOffset` from $0$ to $1$ every frame before looping back to $0$. This value is eventually converted into the phase offset of the waveform, causing the waves to flow continuously.
+
+`m_rippleAnimation` is triggered only upon being pressed, playing once and then stopping without setting `Infinity`. The callbacks for both animations do only one thing: update state variables and call `update()` to request a redraw.
+
+```cpp
+void WaveSlider::onWaveAnimation(float value) {
+    m_waveOffset = value;
+    update();
+}
+void WaveSlider::onRippleAnimation(float value) {
+    m_rippleProgress = value;
+    update();
+}
+```
+
+### Event Handling
+
+#### Configuring EventDispatch
+
+`event()` uses [`EventDispatch`](widget.md#handling-events) to route events, with template parameters listing the event types actually handled by the current control, providing compile-time checking:
+
+```cpp
+bool WaveSlider::event(Event *event) {
+    return EventDispatch<Widget,
+        GestureEvent, PaintEvent>{}(this, event);
+}
+```
+
+#### Handling Gestures: Triggering Ripples
+
+`gestureEvent()` intercepts the start of the `Press` gesture to trigger a ripple, delegating all other cases to `Slider`'s gesture handling (implementing drag-to-adjust-value):
+
+```cpp
+bool WaveSlider::gestureEvent(GestureEvent *event) {
+    if (!event->isHitTest() && event->gesture()->type() == Gesture::Press) {
+        auto g = static_cast<PressGesture *>(event->gesture());
+        if (g->isStarted())
+            startRipple(g->clientPoint());
+    }
+    return Slider::gestureEvent(event); // Pass the event further to Slider for processing
+}
+
+void WaveSlider::startRipple(const Point &) {
+    m_rippleProgress = 0.f;      // Start from the beginning
+    m_rippleAnimation.start();   // Replay
+}
+```
+
+When `isHitTest()` is `true`, it indicates that this is a hit-test (used by the framework to detect whether an event should fall onto this control), not actual user interaction, and should be skipped.
+
+::: tip Regarding `isHitTest()`
+Hit-testing is a prerequisite step in event dispatching. `gestureEvent()` is also called during the hit-test phase, but no side effects (such as starting animations) should occur at this time. Always check `!event->isHitTest()` before processing interaction logic.
+:::
+
+#### Style Reading Interface
+
+`paintEvent()` reads the style data corresponding to the control. Two relevant interfaces are introduced here:
+
+- `style()` / `style(Styles::Xxx)` returns the `Style` object for a certain style pseudo-class of the current control, from which properties such as color and background can be read;
+- `se->palette(StyleEngine::Xxx)` reads the global palette color from the `StyleEngine`, acting as a default when the control has no custom color set.
+
+The two are used together to implement the logic of "using custom colors when custom configurations exist, otherwise falling back to theme default colors":
+
+```cpp
+auto contentStyle = style(Styles::Content);
+p.setBrush(contentStyle.hasProperty(style::Background)
+               ? contentStyle.background()
+               : se->palette(StyleEngine::ProgressRange));
+```
+
+### Rendering Implementation
+
+`paintEvent()` is the core of WaveSlider. It decides which rendering path to take based on `m_waveMode`:
+
+```cpp
+void WaveSlider::paintEvent(PaintEvent *event) {
+    discard(event);  // PaintEvent itself carries no useful info; explicitly discard to eliminate compiler warnings
+
+    if (!isWaveMode())
+        return Slider::paintEvent(event);  // Normal mode: directly call parent rendering
+
+    auto se = App()->styleEngine();
+    RectF box = rect();
+    float radius = min(box.width(), box.height()) * 0.5f;
+    float progress = sliderRange ? float(value() - minimum()) / float(sliderRange) : 0.f;
+
+    Painter p(this);
+
+    // Draw background (empty track)
+    p.setBrush(/* background color */);
+    p.fillRoundedRect(box, radius);
+
+    // Draw wave fill (progress area)
+    p.setBrush(/* foreground color */);
+    VectorPath path;
+    buildWaveFillPath(path, box, radius, progress, m_waveOffset, m_rippleProgress);
+    if (!path.isEmpty())
+        p.fillPath(path);
+}
+```
+
+The entire rendering is split into two steps: first, draw the complete background rounded rectangle using `fillRoundedRect`, then draw the waveform fill on top using `fillPath`, overlaying the two layers to form a "progress bar with ripples."
+
+#### Waveform Path Generation
+
+`buildWaveFillPath()` is an independent helper function (not inside the class) responsible for constructing the waveform path under given geometric constraints:
+
+```cpp
+static void buildWaveFillPath(VectorPath &path, const RectF &box, float radius,
+                              float progress, float waveOffset, float rippleProgress)
+```
+
+Its core logic is divided into three steps:
+
+1. **Calculate water level and amplitude**: `waterLevel` rises from the bottom according to the `progress` ratio; amplitude depends on the aspect ratio and is constrained within limits far enough from the top and bottom arcs to prevent the waveform from going out of bounds.
+2. **Sample the waveform**: Sample uniformly from left to right, calculating the $y$ value for each $x$ coordinate.
+   The waveform is a superposition of three parts: a regular sine wave (controlled by `m_waveOffset`) + ripple gain (decay oscillation controlled by `m_rippleProgress`) + rounded corner constraints (ensuring the path does not exceed the boundaries of the rounded rectangle).
+3. **Close the path**: Return along the bottom edge from the top of the waveform to the bottom of the rounded rectangle to form a closed polygon for `fillPath` to fill.
+
+The algorithmic details are for educational demonstration purposes; in actual products, they can be replaced with any custom path generation logic according to design requirements.
+
+::: tip Efficiency of Path Drawing
+The number of sample points (`sampleCount`) is proportional to the width of the control (approximately one point every `4px`), and performance overhead is acceptable at typical screen resolutions. If the CPU is weaker, you can reduce the sampling density or switch to cubic Bézier curve approximations.
+:::
+
+### The waveMode Property
+
+The implementation of `setWaveMode()` is simple: update the member value when the state changes and mark for a redraw:
+
+```cpp
+void WaveSlider::setWaveMode(bool enabled) {
+    if (m_waveMode != enabled) {
+        m_waveMode = enabled;
+        update();
+    }
+}
+```
+
+The declaration of the `GX_PROPERTY` macro makes `waveMode` a property visible to the framework:
+
+```cpp
+GX_PROPERTY(bool waveMode, get isWaveMode, set setWaveMode)
+```
+
+No `signal` field is declared here because it is typically driven by the consumer to change values rather than triggered by interaction.
+
+### Production-Grade Optimizations
+
+The implementation of `WaveSlider` is primarily geared towards educational demonstrations and lacks some optimizations, such as:
+- The wave animation plays continuously even when `waveMode` is disabled, calling `update()` repeatedly and triggering unnecessary `paintEvent()` calls;
+- It only supports vertical sliders and is not adapted for horizontal modes (which can be handled according to product requirements);
+- It fixedly draws capsule-shaped tracks, whereas actual products might require rounded rectangles or other shapes.
+
+## Collaboration Between Components
+
+Here is how the components in `slider-demo` collaborate at runtime:
+
+```
+User presses the screen
+    ├─ WaveSlider::gestureEvent() detects Press.isStarted()
+    │       └─ startRipple() resets m_rippleProgress and starts m_rippleAnimation
+    └─ Slider::gestureEvent() continues processing, adjusting value based on touch point
+            └─ changed signal emitted → MyWidget::onSlider() updates Label text
+
+Per-frame rendering loop
+    ├─ m_animation continuously advances m_waveOffset (0→1 loop)
+    │       └─ update() → paintEvent() redraws wave with new offset
+    └─ m_rippleAnimation advances m_rippleProgress (0→1 plays and stops)
+            └─ update() → paintEvent() redraws ripple decay with new rippleProgress
+
+Switch toggle
+    └─ waveSlider->setWaveMode(true/false)
+            └─ update() → paintEvent() switches to normal or wave mode
+```
+
+Signal connections are established once in `MyWidget`'s constructor. Afterward, runtime execution is entirely driven by events and signals, with no direct calls between controls.
+
+## Summary of Key Patterns
+
+Through `slider-demo`, we can summarize typical patterns for implementing custom controls in Glyphix:
+
+| Requirement | Approach |
+|---|---|
+| Inherit an existing control and reuse its interaction logic | Inherit from the corresponding base class (e.g., `Slider`), and control fallback to the base class inside `EventDispatch` |
+| Custom rendering | Implement `paintEvent()`, falling back to `Slider::paintEvent()` when `isWaveMode()` is `false` |
+| Continuous looping animation | `ValueAnimation::setRepeat(Infinity)` |
+| One-shot triggered animation | Save state variables, and call `anim.start()` in `gestureEvent()` to replay |
+| Expose properties to the application layer | `GX_PROPERTY` macro, paired with getters/setters and optional signals |
+| Read user color schemes or theme colors | Check using `style().hasProperty()` and fall back to `se->palette()` |
+| Customize global control appearance | Inherit from `StyleEngine`, overriding `paint()` and `sizeHint()` |
+
+These patterns are elaborated in the [Widget Development Guide](widget.md), and `slider-demo` serves as a comprehensive practical application of them.
+
+## Comparison with Other GUI Frameworks
+
+::: important Positioning of C++ Control Development
+The mainstream development approach in Glyphix is building interfaces via declarative templates using [`.ux Single File Components](../tutorials/quick-orientation.md). C++ control development is used for implementing **low-level control libraries on the device side** (such as the device-manufacturer-customized `WaveSlider`), which are subsequently used by frontend application layers through templates and data bindings. Building complete UIs directly in C++ (like the demonstration in `main.cpp`) is **possible within the framework, but not the recommended workflow**, and related toolchain support (debugging, hot-reloading, layout preview) is less mature compared to the application layer.
+
+Therefore, when evaluating Glyphix's overall development efficiency, the frontend application layer should be used as the benchmark; the C++ control development experience discussed in this section only represents the development scenario for low-level control libraries.
+:::
+
+In terms of mental models, Glyphix's C++ control development is closer to Qt Widgets than to LVGL: the signal mechanism, property macros, inheritance-based extension, and the naming and division of responsibilities for `paintEvent` all largely correspond to Qt Widgets. Developers with a Qt background can quickly build intuition.
+
+LVGL developers will need to transition from a C handle-style paradigm to a C++ OOP paradigm, which represents a slightly larger gap. However, core paradigms such as control tree organization and `update()` redraw triggering are common. This section uses `slider-demo` as a reference to specifically explain the similarities and key differences between frameworks.
+
+### Similarities
+
+Whether Qt Widgets, LVGL, or Glyphix, they share a set of proven UI framework core paradigms:
+
+- **Control Tree**: UIs are organized in a parent-child tree structure, where child control coordinates are relative to their parent. `MyWidget(&window)` corresponds semantically to Qt's `new QWidget(&parent)` and LVGL's `lv_obj_create(parent)`.
+- **Custom Rendering**: Control appearance is achieved by "overriding" rendering methods. Qt overrides `paintEvent(QPaintEvent *)`, LVGL registers the `LV_EVENT_DRAW_MAIN` callback, and Glyphix implements `paintEvent(PaintEvent *)`. The design philosophy across all three is consistent.
+- **Signal/Slot Mechanism**: State changes are communicated between controls via signals, with receivers responding using member functions.
+  - Glyphix: `m_slider.changed.connect(this, &MyWidget::onSlider)`;
+  - Qt: `connect(&slider, &QSlider::valueChanged, this, &MyWidget::onSlider)`;
+  - LVGL: Achieves similar functionality via event callback functions.
+- **Inheritance and Reuse**: Extending existing controls is achieved via inheritance. `WaveSlider : public Slider` reuses all dragging and value-fetching logic of the parent class, overriding only the rendering part, which is consistent with the design of most OOP GUI frameworks.
+- **On-Demand Redrawing**: When state changes, `update()` is called to mark dirty areas, and the framework uniformly redraws them in the next frame rather than drawing immediately. Mainstream frameworks all adopt this strategy to avoid redundant drawing within the same frame.
+
+### Differences from Qt Widgets
+
+#### Event Dispatching
+
+Qt dispatches events through virtual function overrides, where each event method is `virtual` and overridden in subclasses using `override`:
+
+```cpp
+// Qt
+class MySlider : public QSlider {
+    void paintEvent(QPaintEvent *event) override { ... }
+    void mousePressEvent(QMouseEvent *event) override { ... }
+};
+```
+
+Event handling functions in Glyphix, such as `paintEvent()` and `gestureEvent()`, are **not virtual functions** and cannot use `override`. Event routing is done at compile-time by `EventDispatch`:
+
+```cpp
+// Glyphix
+bool WaveSlider::event(Event *event) {
+    return EventDispatch<Widget, GestureEvent, PaintEvent>{}(this, event);
+}
+// Both paintEvent and gestureEvent are regular member functions without override
+```
+
+This avoids the indirect jumps of virtual functions, providing performance advantages in high-frequency event handling on embedded devices. At the same time, the template parameter list acts as compile-time documentation and omission checks. If you declare that you handle `PaintEvent` but forget to implement `paintEvent()`, the compiler will throw an error rather than silently falling back to the base class.
+
+#### Object and Property Systems
+
+Qt uses the `Q_PROPERTY` macro along with MOC (Meta-Object Compiler) to generate property metadata; Glyphix uses `GX_PROPERTY` alongside `GX_OBJECT`. The mechanisms are similar, but the generation methods and runtime interfaces differ:
+
+```cpp
+// Qt
+Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+// Glyphix
+GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+```
+
+Both support driving animations via property name strings (`QPropertyAnimation` / `PropertyAnimation`). However, when implementing controls themselves, Glyphix recommends using `ValueAnimation<T>` directly to avoid property name lookup overhead and prevent conflicts with application-layer-driven property animations.
+
+#### Signals and Slots
+
+As described in the [Object System](object-system.html#signal), Glyphix also has a signal mechanism, but it is closer to `boost::signals2` and does not rely on MOC to generate code. This is an intentional design choice because the [build system](sdk-setup.md#other-build-systems) of the Glyphix ecosystem is relatively fragmented, and we assume that downstream users do not use the meta-object compiler at all.
+
+#### Styling and Appearance Customization
+
+Qt provides two paths for customizing control appearance: `QStyle` subclassing (complex) or QSS stylesheets (CSS-like strings parsed at runtime). Glyphix uses `StyleEngine`: manufacturers implement a `StyleEngine` subclass, rendering the appearance of all built-in controls in C++ code within `paint()`, and providing recommended sizes in `sizeHint()`. This approach is suitable for global system-level style customization rather than local style adjustments of individual controls.
+
+For styling individual controls, Glyphix uses the `StyleModifier` helper object for programmatic assignment instead of relying heavily on CSS strings:
+
+```cpp
+StyleModifier m(waveSlider);
+m->setSize(120, 300);
+m->setColor(Color{"#35a7ff"});
+
+// Inline style strings are also supported
+waveSlider->setStyle(Style{"background-color: #35a7ff; color: #cce;"});
+```
+
+Glyphix's style and layout properties are set more through style properties than by directly calling control methods. This is because C++ is primarily positioned for low-level control library development and does not directly target application development.
+
+#### Memory and Lifecycles
+
+Under Qt's parent-child control ownership model, child controls are destroyed by their parent after `new QWidget(parent)`. Glyphix also supports this model (`new WaveSlider` followed by `addItem()`), and additionally recommends declaring child controls as member variables (such as `m_label` and `m_slider` in `MyWidget`), where lifecycles are automatically managed alongside the host object without manual `delete` and without depending on parent-child tree destruction mechanisms.
+
+### Differences from LVGL
+
+#### Programming Model
+
+LVGL is a framework implemented in C, where controls are operated via `lv_obj_t *` handles, and function naming typically follows the `lv_<type>_<operation>()` convention:
+
+```c
+// LVGL
+lv_obj_t *slider = lv_slider_create(parent);
+lv_slider_set_value(slider, 50, LV_ANIM_ON);
+lv_obj_add_event_cb(slider, my_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+```
+
+Glyphix is a native C++ OOP framework where methods are called through objects, and `this` naturally carries context:
+
+```cpp
+// Glyphix
+auto *slider = new Slider(parent);
+slider->setValue(50);
+slider->changed.connect(this, &MyWidget::onSlider);
+```
+
+For LVGL developers, the main change here is not the capabilities themselves, but the expression: previously you called functions outside of object handles, whereas now you organize state, events, and rendering logic inside the control class. The type system also helps you avoid certain handle-type misuses at compile time.
+
+#### Event System
+
+LVGL's event handling typically receives multiple events through a single callback function, branching using `lv_event_get_code()` inside the callback:
+
+```c
+// LVGL
+static void event_cb(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_PRESSED) { ... }
+    else if (code == LV_EVENT_VALUE_CHANGED) { ... }
+}
+```
+
+Glyphix dispatches events to independent handling functions by event type, completely isolating different events, with each carrying type-correct data:
+
+```cpp
+// Glyphix
+bool WaveSlider::gestureEvent(GestureEvent *event) { ... }
+void WaveSlider::paintEvent(PaintEvent *event) { ... }
+```
+
+In addition, Glyphix's `isHitTest()` mechanism does not have an exact equivalent in LVGL. LVGL can handle similar issues via `LV_EVENT_HIT_TEST`, but typically still requires manual branching within the same callback.
+
+::: tip Glyphix's Internal Event Dispatch Mechanism
+`EventDispatch` is also implemented internally via a switch-case dispatch, but we do not recommend developers write manual switch branches. Instead, always use the fixed `EventDispatch<Widget, ...>{}(this, event)` pattern to facilitate code auditing.
+:::
+
+#### Animations
+
+LVGL animations are configured via the `lv_anim_t` structure, with target values passed through function pointers and `void *` user data:
+
+```c
+// LVGL
+lv_anim_t a;
+lv_anim_init(&a);
+lv_anim_set_exec_cb(&a, anim_cb);
+lv_anim_set_var(&a, obj);
+lv_anim_set_values(&a, 0, 100);
+lv_anim_set_time(&a, 800);
+lv_anim_start(&a);
+```
+
+Glyphix's `ValueAnimation<T>` determines the interpolation type at compile time via template parameters, eliminating `void *` casting through signal connections:
+
+```cpp
+// Glyphix
+m_rippleAnimation.setValueLimits(0.f, 1.f);
+m_rippleAnimation.setDuration(800);
+m_rippleAnimation.value.connect(this, &WaveSlider::onRippleAnimation);
+```
+
+`ValueAnimation<T>` has built-in interpolation support for composite types such as `Color`, `Point`, and `Transform`, whereas LVGL natively supports only integer ranges, requiring developers to implement custom interpolation callbacks for composite types.
+
+#### Vector Path Rendering
+
+LVGL's rendering API focuses primarily on basic primitives like rectangles and arcs, and vector path support (`lv_draw_vector`) is a relatively recent addition with a lower-level interface. Glyphix's `VectorPath` is a standard path-building interface, where `moveTo`, `lineTo`, `arcTo`, `conicTo`, and `cubicTo` fully cover common curve types. The waveforms in `WaveSlider` rely entirely on this interface without requiring additional graphics libraries.
+
+#### Memory and Lifecycles
+
+Both support object tree management: child controls are attached under parent controls, and when the parent object is destroyed, child objects are destroyed alongside it.
+
+Glyphix also allows child controls, animations, and runtime states to be written directly as class members, managed automatically via C++ RAII. For example, `m_label` and `m_slider` in `MyWidget`, as well as the two `ValueAnimation<float>` instances in `WaveSlider`, can be constructed and destructed along with the host object, eliminating the need to organize states primarily around handles, `user_data`, and callback contexts like in LVGL.
+
+============================================================
 FILE_PATH: src/transl/EN/cxxdev/cpp-guide.md
 
 # C++ Learning Recommendations
@@ -236,1892 +935,6 @@ If you are ready to continue reading, you can map the important knowledge points
 - [Native Module Development](./native-module.md): Function interfaces, lambdas, object lifecycles, C/C++ interop
 - [Asynchronous Feature Development](./async.md): Templates, threading models, object ownership, callback constraints
 - [Widget Development Guide](./widget.md): Inheritance, member functions, event handling, object trees, and the rendering pipeline
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/widget-export.md
-
-# Widget Registration and Framework Integration
-
-In the [Widget Development Guide](./widget.md), we implemented a C++ widget class. However, at that stage, it is merely an ordinary C++ object, and application developers cannot use it directly in page code. This article explains how to register a widget with the framework so that it becomes a component usable within applications. Many concepts in this document relate to the [Object System](./object-system.md); reading that section first is recommended.
-
-## Runtime Environment
-
-Widget registration relies on a set of **runtime environment objects**. These are mandatory dependencies for the reactive framework to run, must be explicitly created in `main()` or platform startup code, and their lifecycles must cover the entire duration of the application's execution:
-
-```cpp
-Application app(/* platform */);
-JsVM vm;
-Window window;
-AppletKit kit(&window, "pkgs.db");
-```
-
-These objects manage the runtime environment of the entire application:
-- `Application` is the framework application object that manages all low-level services and maintains the event loop. At the end of initialization, call `app.exec()` to enter the event loop;
-- `JsVM` is the embedded JavaScript engine that hosts the reactive framework, and **must** be created before `AppletKit`;
-- `Window` is the top-level window, serving as the rendering output target;
-- `AppletKit` is the applet manager, responsible for application lifecycles and widget registration.
-
-::: warning Do Not Omit These Objects
-`vm`, `window`, `kit`, and others are RAII objects; the framework manages the runtime environment through their constructors and destructors. Even if there are no direct calls to `vm` in the code, its **very presence** is required—destroying it prematurely or failing to create it will cause the framework to malfunction.
-:::
-
-`Window window` can sometimes be replaced with `Widget window`, etc. The difference is that `Window` renders an opaque background by default, whereas `Widget` is transparent by default.
-
-## Registering Widgets
-
-Widget registration is completed via `AppletKit::installWidget<T>()`. This must be called after `AppletKit` is instantiated and **before** `launch()` starts the first application:
-
-```cpp
-// Register a custom widget (before launch)
-kit.installWidget<ProgressRing>(); // No arguments, registered by class name, written as <progress-ring> in templates
-kit.installWidget<MySpecialChart>("SpecialChart"); // Or registered with a custom name (see below)
-
-kit.launch("com.example.app");     // Start the application
-return app.exec();                 // Enter the event loop
-```
-
-::: tip Built-in Widgets Are Registered by Default
-Built-in widgets provided by the framework, such as buttons and labels, are registered by `installBuiltinWidgets()`. As long as the SDK is built with the CMake option `GX_BUILTIN_BINDINGS` enabled (default `ON`), `AppletKit` will **automatically call** it upon construction, requiring no manual handling. You only need to manually call `kit.installBuiltinWidgets()` if you explicitly disable that option.
-:::
-
-Upon registration, the framework automatically exports its properties, events, methods, as well as the enum and struct types they use, based on the widget class's `GX_OBJECT` metadata, making them available at the application layer.
-
-### Using Widgets in Application Pages
-
-Once successfully registered, application developers can use the widget in page templates just like built-in widgets:
-
-```xml
-<!-- Taking the progress-ring component as an example -->
-<progress-ring
-  class="ring"
-  :value="progress"
-  @completed="onDone">
-</progress-ring>
-```
-
-Here, `:value="progress"` binds the widget's `value` property to the application data `progress`; `@completed` listens to the `completed` event exposed by the widget. The framework automatically handles the bidirectional conversion between JavaScript values and C++ properties, eliminating the need for developers to write any "bridge code."
-
-### Custom Component Names
-
-By default, widgets are registered by their **class name**. If the class name is not suitable to be used directly as a component name, a custom name can be specified during registration:
-
-```cpp
-// Register VendorWaveformGraph as WaveformGraph, written as <waveform-graph> in templates
-kit.installWidget<VendorWaveformGraph>("WaveformGraph");
-```
-
-Custom names should use **PascalCase**, matching the style of C++ class names.
-
-### C++ ↔ UX Naming Conversion
-
-Component tag names correspond to the registration name (by default, the **class name** declared by `GX_OBJECT`, or the custom name specified during registration). It is customary to use kebab-case in templates, **and the ux packaging tool is responsible for name conversion at compile time**:
-
-- Tag names: kebab-case in templates ↔ PascalCase registration names. For example, `<progress-ring>` corresponds to the `ProgressRing` class. The same applies to custom registration names.
-- Property names: kebab-case in templates ↔ camelCase in C++. For example, `ring-color` corresponds to the `ringColor` property.
-
-In other words, the runtime framework performs exact matching using the original names declared in C++ (camelCase / PascalCase), while the kebab-case syntax is merely a convention on the template side, which is converted by the ux tool to interface correctly.
-
-UX components can also use the same PascalCase for tags and camelCase for properties as C++, as detailed in the [Component Naming Specification](/tutorials/name-spec.md).
-
-## Property and Event Exporting
-
-Properties declared with `GX_PROPERTY` are automatically exported according to the following rules:
-
-- The property name is directly identical to the property name in the framework component
-- Properties with a declared setter (`set xxx`) can be assigned values by the application
-- Properties with a declared getter (`get xxx`) can be read by the application
-- When a signal is declared (`signal xxxChanged`), signals indicating property changes are forwarded to bindings
-
-For example, consider the following complete property declaration:
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-    GX_PROPERTY(Color ringColor, get ringColor, set setRingColor)
-    GX_PROPERTY(bool showLabel, get showLabel, set setShowLabel)
-    // ...
-};
-```
-
-Corresponding usage at the application layer:
-
-```xml
-<progress-ring
-  :value="jobProgress"
-  ring-color="#409EFF"
-  :show-label="true">
-</progress-ring>
-```
-
-Properties in templates are written in kebab-case, corresponding to camelCase property names in C++: `ring-color` → `ringColor`, `show-label` → `showLabel` (conversion is handled by the ux packaging tool, see above). `:value` and `:show-label` are dynamic bindings (values are expressions), whereas literals like `ring-color="#409EFF"` are static assignments.
-
-### Event Exporting
-
-Component events are exported through **properties with change signals**, rather than exporting `Signal<>` members directly. Exporting an event takes two steps:
-
-1. Declare a `Signal<...>` member (used internally by C++);
-2. Reference it in the `signal` field of a `GX_PROPERTY`.
-
-The key rule is: the event name listened to on the application side is the **property name**, **not** the name of the signal member.
-
-### Value-Bearing Property Change Events
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    int value() const;
-    void setValue(int v);
-
-    Signal<int> valueChanged;   // Internal signal, this name is invisible to the application
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-};
-```
-
-The application side listens to changes using `@property-name`, so write `@value` (the property name) here, **not** `@value-changed`: even though the signal member is called `valueChanged`, the event name seen by the application is always the property name `value`.
-
-```xml
-<progress-ring :value="progress" @value="onProgressChanged"></progress-ring>
-```
-
-This behavior is completely consistent with framework built-in widgets. For example, the `Slider` value change signal member is called `changed`, but the application side still listens to the property name `value` (`@value` or two-way binding `::value`).
-
-### Value-less Pure Events
-
-For events that carry no value and simply indicate "something happened" (such as "completed"), use `invalid_t` as the property type to declare a property that has only a signal and no read/write value:
-
-```cpp
-Signal<>  completed;   // Emitted when progress completes
-GX_PROPERTY(invalid_t completed, signal completed)
-```
-
-The application side can listen to it like this (without an event value):
-
-```xml
-<progress-ring @completed="onDone"></progress-ring>
-```
-
-You cannot declare a `GX_PROPERTY` with a `void` type, even if it has no `get`/`set` at all; therefore, `invalid_t` must be used as a placeholder type. If you want an event to carry a value, it must be declared as a specific type and provide a `get` method—the parameter type of `Signal<T>` does not automatically become the event value, which always originates from the property's getter.
-
-::: warning `Signal<>` Does Not Automatically Become an Event
-Declaring a `Signal<>` member without referencing it via the `signal` field in any `GX_PROPERTY` means this signal **cannot** be listened to on the application side using `@some-event`. The framework only exposes "property change signals"—that is, the `signal` field—as events, and the event name always derives from the property name.
-:::
-
-## Method Exporting
-
-Member functions declared with `GX_METHOD` are exported as component methods for applications to call in JavaScript:
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    GX_METHOD void reset();               // Method without parameters
-    GX_METHOD void animateTo(int target); // Method with parameters
-};
-```
-
-Unlike properties and events, methods are not used via template tags. Instead, you first obtain the native component object using [`$element()`](../framework/component/component-apis.md#element), and then call methods on it. This requires setting an `id` for the component in the template:
-
-```xml
-<progress-ring id="ring" :value="progress"/>
-```
-
-```js
-onReady() {
-  const ring = this.$element('ring'); // 'ring' is the component id in the template
-  ring.reset();
-  ring.animateTo(80);
-}
-```
-
-Method arguments and return values are automatically marshaled by the framework via `Variant`, requiring no manual conversion code (for details on type bridging, see [Object System · Runtime Type System](./object-system.md#运行时类型系统)). Note that `$element()` must be called during or after the [`onReady()`](../framework/component/life-cycle.md#onready) lifecycle, as detailed in [Native Components](../framework/component/native-component.md).
-
-## Enum and Struct Types
-
-When the type of a property or method parameter is a custom C++ enum or struct, annotate it with `GX_ENUM` or `GX_STRUCT` to export it together. When [registering the widget](#注册控件), the framework automatically installs the corresponding type conversions without requiring manual binding code. Enums appear as string constants on the JavaScript side, and structs appear as object literals:
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    // Note: define aliases for values, otherwise JavaScript side will use
-    // 'Solid' / 'Dashed' names instead of the expected 'solid' / 'dashed'
-    enum GX_ENUM LineStyle {
-        Solid GX_ALIAS("solid") = 0,
-        Dashed GX_ALIAS("dashed"),
-    };
-    // Structs should have default values to avoid undefined fields when created on the JavaScript side
-    struct GX_STRUCT Range { int min = 0; int max = 100; };
-
-    GX_METHOD void setRange(const Range &range);
-
-    GX_PROPERTY(LineStyle lineStyle, get lineStyle, set setLineStyle)
-};
-```
-
-```xml
-<progress-ring line-style="dashed"/>
-```
-
-```js
-this.$element('ring').setRange({ min: 0, max: 100 });
-```
-
-For complete semantics such as enum aliases, struct field mapping, and nested types, refer to [Object System · Complex Type Reflection](./object-system.md#复杂类型反射), which will not be elaborated further here.
-
-::: warning Do Not Forget Annotations
-When custom enums/structs are used in properties or methods, be sure to annotate them with `GX_ENUM` / `GX_STRUCT`; otherwise, they will be unusable on the JavaScript side without any compilation error prompts.
-:::
-
-## Accommodating Sub-widgets (Container Widgets)
-
-If a widget needs to contain sub-content declared by the application, simply implement it as a **container widget**: layout of sub-widgets is handled on the C++ side, and the framework automatically creates sub-components nested within the template declarations as sub-widgets and mounts them under it. Glyphix does not have HTML-like named slots; nested tags in templates directly become sub-widgets of that widget.
-
-Container layout can be implemented in two ways (detailed in the "Layout and Sizing" section of the [Widget Development Guide](./widget.md)):
-
-- Use existing framework layout classes, such as `setLayout(new FlexLayout())` in the constructor;
-- Or override `layoutEvent()`, iterating through `children()` inside it to manually set the geometry of each sub-widget.
-
-At the application layer, use it just like nesting child tags (here, `card-panel` is a container widget implemented and registered by the developer, and `text` is a built-in widget):
-
-```xml
-<card-panel>
-  <text>Title</text>
-  <progress-ring :value="progress"/>
-</card-panel>
-```
-
-## A Complete Example
-
-Below is the definition of a simple number display widget, registered as a framework component:
-
-```cpp
-// number_display.h
-#pragma once
-#include "gx_widget.h"
-#include "gx_color.h"
-
-class NumberDisplay : public Widget {
-    GX_OBJECT
-public:
-    explicit NumberDisplay(Widget *parent = nullptr);
-
-    int value() const { return m_value; }
-    Color textColor() const { return m_color; }
-
-    void setValue(int v);
-    void setTextColor(const Color &c);
-
-    bool event(Event *event) override;   // The only virtual function that needs to be overridden
-
-    Signal<int> valueChanged;            // Internal signal; application side listens via property name value
-
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-    GX_PROPERTY(Color textColor, get textColor, set setTextColor)
-
-protected:
-    // Neither paintEvent nor sizeHint are virtual functions, do not add override
-    void paintEvent(PaintEvent *event);
-    Size sizeHint() const;
-
-    // EventDispatch needs access to protected handler functions
-    friend struct EventTraits<NumberDisplay>;
-
-private:
-    int m_value = 0;
-    Color m_color{0, 0, 0};
-};
-```
-
-```cpp
-// number_display.cpp
-#include "number_display.h"
-#include "gx_format.h"
-#include "gx_painter.h"
-#include "gx_widgetevent.h"   // EventDispatch
-
-NumberDisplay::NumberDisplay(Widget *parent)
-    : Widget(parent) {}
-
-bool NumberDisplay::event(Event *event) {
-    // Dispatch events to paintEvent; declaring PaintEvent allows compile-time checking for omissions
-    return EventDispatch<Widget, PaintEvent>{}(this, event);
-}
-
-void NumberDisplay::setValue(int v) {
-    if (m_value == v) return;
-    m_value = v;
-    update();
-    valueChanged(v);
-}
-
-void NumberDisplay::setTextColor(const Color &c) {
-    if (m_color == c) return;
-    m_color = c;
-    update();
-}
-
-Size NumberDisplay::sizeHint() const {
-    return Size(60, 30);
-}
-
-void NumberDisplay::paintEvent(PaintEvent *) {
-    Painter p(this);
-    p.setBrush(m_color);   // Text color is determined by the Brush, not the Pen
-    p.setFont(Font(20));
-    p.drawText(rect(), format("{}", m_value), AlignCenter);
-}
-```
-
-Registration:
-
-```cpp
-kit.installWidget<NumberDisplay>();
-```
-
-Application-layer usage:
-
-```xml
-<number-display
-  :value="count"
-  text-color="#333333"
-  @value="onCountChanged">
-</number-display>
-```
-
-With this, the entire workflow from C++ implementation to application usage is complete: the `<number-display>` tag is converted to the registration name `NumberDisplay` by the ux tool and recognized.
-
-Whenever the application data `count` changes, the `:value` binding calls `NumberDisplay::setValue()`; when the widget internally emits the `valueChanged` signal, the framework triggers an event named `value` (taking the event name from the property name), thereby invoking the application's `onCountChanged`. If you want bidirectional synchronization between `count` and the widget, you can use `::value="count"` instead.
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/README.md
-
-# Native C++ Development
-
-Glyphix is an application framework designed for embedded devices, providing a JavaScript-centric application development experience with a Vue Options API-like style. However, the core runtime of the framework is implemented in C++, allowing hardware vendors to extend and customize framework features using C++ — and this is where "Native C++ Development" comes into play.
-
-This documentation is intended for C++ developers with embedded development experience. It aims to help you understand Glyphix's C++ extension mechanism and enable you to implement the following two types of features:
-
-- **Native Module**: Encapsulates C++ functionalities into JavaScript-callable APIs, such as file access, hardware sensor reading, Bluetooth communication, and other system capabilities.
-- **Native Widget**: Implements custom UI widgets using C++ and registers them as framework [components](/framework/component/native-component.md) for applications to use directly in their user interfaces, just like the built-in `div`, `image`, and `button` components.
-
-::: tip
-In application development, we use "component" to refer to UI elements, while at the C++ layer, we use "widget" to refer to UI elements. This documentation distinguishes between these two terms: **widgets** are concepts at the C++ layer, and **components** are concepts within the reactive framework.
-:::
-
-## Framework Runtime Model
-
-The Glyphix runtime consists of multiple layers. The diagram below illustrates the complete layered architecture:
-
-<ArchDiagram max-width="560px">
-  <div>
-    Application Sandbox (Applet × N)
-    <div class="remark">Independent JavaScript Realm · Lifecycle Isolation</div>
-  </div>
-  <div>
-    Reactive Framework (C++)
-    <div class="group row">
-      <div>AppletKit<div class="remark">App Routing · Background Management</div></div>
-      <div>Component System<div class="remark">Template · Reactive Render</div></div>
-      <div>JsVM Bridge Layer<div class="remark">JerryScript / QuickJS</div></div>
-    </div>
-    <div class="group row">
-      <div>Applet<div class="remark">C++ ↔ JavaScript Sandbox</div></div>
-      <div>Asynchronous Session<div class="remark">ResultSession · Signals</div></div>
-      <div>Native Module<div class="remark">System API Extension</div></div>
-    </div>
-  </div>
-  <div>
-    C++ Core Framework
-    <div class="group row">
-      <div>Widget System<div class="remark">Object · Widget</div></div>
-      <div>Layout Engine<div class="remark">Flex · Flow · Stack</div></div>
-      <div>Style Engine<div class="remark">CSS · Transition</div></div>
-    </div>
-    <div class="group row">
-      <div>Event System<div class="remark">Touch · Key · Wheel</div></div>
-      <div>Painter<div class="remark">2D Drawing</div></div>
-      <div>Animation Engine<div class="remark">Property · Ease</div></div>
-      <div>Signal / Slot</div>
-    </div>
-  </div>
-  <div>
-    Platform Abstraction Layer
-    <div class="group row">
-      <div>Graphics Backend<div class="remark">Framebuffer · GPU</div></div>
-      <div>Input Driver<div class="remark">Touch · Key · Wheel</div></div>
-      <div>File System<span class="remark">File · Dir</span></div>
-      <div>IO/Time<span class="remark">Logger · Time</span></div>
-    </div>
-  </div>
-  <div>
-    Hardware / OS
-    <div class="remark">RTOS · Linux · WASM</div>
-  </div>
-</ArchDiagram>
-
-The bottom layer is the **Platform Abstraction Layer**, which is responsible for platform-dependent abstractions such as graphics rendering, input events, and the file system. This layer is typically implemented by device vendors or provided as a reference implementation for the corresponding platform by Glyphix.
-
-Above it is the **C++ Core Framework**, containing the complete widget system (`Widget`), event dispatching, animation engine, layout system, and style engine. All UI elements are ultimately organized and rendered in the form of a C++ widget tree.
-
-The next layer up is the **Reactive Framework**, which is responsible for bridging C++ core capabilities to JavaScript applications. It embeds a JavaScript engine (JerryScript or QuickJS) and implements bidirectional interaction between C++ and JavaScript via the `JsVM` and `JsValue` classes. AppletKit manages the complete lifecycle of applications (Applets), the component system implements reactive data binding and template rendering, and the asynchronous session framework maps C++ asynchronous operations to JavaScript Promises. The reactive framework itself is also implemented in C++.
-
-The top layer is the **Application Sandbox**. Each running application (Applet) has an independent JavaScript execution environment (Realm) that is completely isolated from others. When an application exits, all resources within its sandbox are automatically reclaimed.
-
-### System Collaboration Principles
-
-The architectural diagram illustrates module partitioning but intentionally conceals the collaboration and coupling relationships between modules. In reality, the entire framework operates through a set of shared underlying mechanisms. Understanding these mechanisms helps you know "what you are doing and why you are doing it" in practice.
-
-The entire framework is underpinned by a **Object System** that endows classes with runtime perception capabilities, including C++ class property reflection and event notification capabilities, as well as necessary lifecycle safety. Widgets, Native Modules, application frameworks, and asynchronous sessions all rely on this same foundation. For details, see the [Object System](./object-system.md).
-
-**Widgets** form the UI skeleton through an object tree combined with drawing and event dispatching; the JavaScript application layer uses a **componentized** declarative programming model, and the two are naturally connected via object reflection capabilities such properties. Complex features like **Asynchronous Sessions** also rely on the object system's lifecycle model to ensure correctness.
-
-Through the **Meta-Object Compiler** and other abstraction mechanisms, Glyphix does not require developers to handwrite binding code to expose C++-developed widget classes for JavaScript usage. At the same time, functional completeness is retained on the C++ side; theoretically speaking, you can develop a complete application directly in C++ (although it is not recommended).
-
-### Programming Model
-
-The Glyphix project does not restrict specific programming paradigms. For example, the object system is a classic object-oriented model, while the reactive framework provides application developers with a declarative, component-based development experience.
-
-We do not encourage developers to practice "everything is an object," deliberately force design patterns, or pursue unnecessary abstractions. Our design principles lean more toward **pragmatism**, prioritizing the **resource constraints** and development efficiency of embedded systems.
-
-## Documentation Conventions
-
-### What is this document?
-
-This is a guide for Glyphix Native C++ Development, **not** an API reference document. It introduces the framework's design philosophy, core mechanisms, and development workflow to help you understand how to extend framework capabilities, demonstrating specific implementation details through sample code.
-
-During actual development, please be sure to refer to the API documentation distributed alongside the SDK; please contact your vendor for access.
-
-### Sample Code Notes
-
-All C++ code within the Glyphix framework resides under the `gx` namespace. The documentation assumes `using namespace gx;` by default, so class and function names do not carry the `gx::` prefix. For example:
-
-```cpp
-#include "gx_widget.h"
-
-using namespace gx; // Assumed to be imported by default in documentation
-
-class MyWidget : public Widget {
-    // ...
-};
-```
-
-Here, `Widget` is actually `gx::Widget`, but for brevity, we omit the namespace prefix.
-
-::: tip C++ Learning Resources
-If you primarily use C, are familiar with MCUs, RTOS, drivers, or LVGL, but have not systematically studied C++, we recommend reading the [C++ Learning Guide](./cpp-guide.md) first. It covers only the subset of C++ truly needed to enter Glyphix native development and organizes external resources suitable for embedded developers.
-:::
-
-## Development Path
-
-Regardless of your goal, it is recommended to first thoroughly read the basic usage of `GX_OBJECT`, `GX_PROPERTY`, and `Signal` in the [Object System](./object-system) — they are used across all development scenarios.
-
-Choose the appropriate documentation to continue reading based on your goals:
-
-- [SDK Project Configuration](./sdk-setup): How to configure the build environment for an SDK project, including `glyphix_add_meta_objects()` registration, host building, and cross-compilation.
-- [Native Module Development](./native-module): How to provide new system APIs for applications, such as fetching sensor data or calling underlying SDK functions.
-- [Asynchronous Feature Development](./async): How to extend asynchronous features for applications, such as network requests, file IO, and time-consuming computations.
-- [Widget Development Guide](./widget.md): How to implement new UI widgets (such as custom charts, special animation lists, etc.).
-- [Widget Registration and Export](./widget-export.md): Registering custom widgets as framework components for direct application usage.
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/async.md
-
-# Asynchronous Feature Development
-
-In embedded systems, many operations are time-consuming—such as reading flash memory, accessing the network, or waiting for hardware responses. If these operations are executed on the UI thread (which is also the rendering thread), it will freeze the UI and cause the application to become unresponsive.
-
-Glyphix solves this problem by seamlessly integrating asynchronous operations with JavaScript's `Promise` mechanism. The C++ side handles the actual asynchronous logic (typically on another thread or via event-driven mechanisms), the JavaScript side waits for the result using `async/await` or `.then()`, and the UI remains smooth during the wait.
-
-## Core Mechanism
-
-The core of the asynchronous functionality is the "Session" model. When a JavaScript asynchronous call is initiated, the C++ side creates a **session object** (`AsyncSession`) and immediately returns a `Promise` to JavaScript. When the operation completes, the session drives the resolution (resolve or reject) of the `Promise`, and the `then/catch` or `await` on the JavaScript side is executed accordingly.
-
-The session object is bound to the `Applet` that initiated the call. When the application exits, the session is automatically cleaned up, so developers do not need to manage memory manually.
-
-The following diagram illustrates the position of the asynchronous session within the framework and its core components:
-
-<ArchDiagram max-width="520px">
-  <div>
-    JavaScript Application Layer
-    <div class="group row">
-      <div>async/await<div class="remark">Call module functions</div></div>
-      <div>Promise<div class="remark">Wait for async results</div></div>
-    </div>
-  </div>
-  <div class="subject">
-    Async Session (C++)
-    <div class="group row">
-      <div>ResultSession<div class="remark">Single query · Promise bridging</div></div>
-      <div>Signal&lt;T&gt;<div class="remark">Global event broadcasting</div></div>
-    </div>
-    <div class="group row">
-      <div>Client Class<div class="remark">Pure C++ · No JS dependency</div></div>
-      <div>SingleTimer<div class="remark">Timeout control</div></div>
-    </div>
-  </div>
-  <div>
-    Async Executor
-    <div class="group row">
-      <div>ThreadPool<div class="remark">Background execution by default</div></div>
-      <div>Custom Context<div class="remark">Hardware driver · Event loop</div></div>
-    </div>
-  </div>
-</ArchDiagram>
-
-The asynchronous framework implementation is located in `gx_async.h` and encapsulated within the `gx::async` namespace. The framework provides several useful facilities:
-- **`async::ResultSession`**: Used for single asynchronous queries, suitable for scenarios such as reading files and initiating network requests.
-- **`async::make_timeout()`**: Used to create a one-shot timer to attach timeout functionality to a single session.
-- **`async::Signal<T>`**: Used for global event broadcasting, suitable for scenarios such as device state changes and external event notifications.
-
-## Single-Query ResultSession
-
-`async::ResultSession<T>` is suitable for scenarios where you "initiate a query and wait for a single result," such as reading a file or making a network request. It is the most commonly used asynchronous pattern and works similarly to an asynchronous function call.
-
-### Working Model
-
-The complete lifecycle of a `ResultSession` is as follows:
-
-1. **Creation**: The module function creates a session via `async::make<ResultSession<T>>(applet)`, and the session is automatically bound to the current `Applet`.
-2. **Configuration**: Access the client object via `session->client()` to set the pure C++ parameters required for the task.
-3. **Submission**: Call `session->request(resolver)` to submit the task, which immediately returns a `Promise` to JavaScript.
-4. **Execution**: The framework forwards the client's `resolve()` method to the **asynchronous executor** (defaults to a background thread pool) for execution.
-5. **Reporting**: After `resolve()` returns, the result is **automatically scheduled back to the UI thread** to drive the resolution or rejection of the `Promise`.
-6. **Cleanup**: The session object is automatically destroyed after reporting is complete, or automatically cleaned up when the `Applet` exits.
-
-::: important Client Class Isolation Requirements
-The client class (i.e., the template parameter `T`) runs in the asynchronous context and **must not hold or access any objects that interact with JavaScript**, including `JsValue`, `Applet *`, or any other UI-thread-exclusive objects.
-
-The client class should be a **pure C++ data processing unit**, holding only value-type data required to execute the task (such as `String`, `int`, or custom structures), and completing all work within the `resolve()` method. All interactions between the UI thread and the asynchronous thread are handled automatically by the framework.
-:::
-
-### Basic Usage
-
-First, define a client class and implement the `resolve()` method. This method is called in the asynchronous context and returns a result wrapped in `async::Result<T>`:
-
-```cpp
-#include "gx_async.h"
-#include "gx_file.h"
-
-using namespace gx;
-
-// Client class: Pure C++ data processing, holding no JS objects
-class ReadTextClient {
-public:
-    void setPath(const String &path) { m_path = path; }
-
-    // Called in the asynchronous context, returns the operation result
-    async::Result<String> resolve() {
-        File file(m_path);
-        if (!file.open(File::ReadOnly | File::Text))
-            return async::Status(300);  // IO error
-        int size = int(file.size());
-        String text(size);
-        text.resize(file.read(text.data(), size));
-        return text;  // Success: return file content
-    }
-
-    // Optional: Custom error message (used when the Promise is rejected)
-    static const char *errorMessage(async::Status status) {
-        switch (status.value()) {
-        case 300: return "io error";
-        default:  return "unknown error";
-        }
-    }
-
-private:
-    String m_path;  // Absolute path that has already passed security validation
-};
-```
-
-Next, create a session in the module function and return a `Promise`. Note: You **must** use `Applet::resolveUri()` to perform security validation on the path passed from JavaScript, rather than blindly trusting the string provided by the application:
-
-```cpp
-static JsValue readText(JsCtx ctx) {
-    Applet *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
-        return {};
-
-    // ✅ Secure: Validate and convert the path via resolveUri
-    auto uri = applet->resolveUri(ctx.arg(0)["uri"].toString());
-    if (uri.empty())
-        return {};  // URI validation failed, access denied
-
-    using Session = async::ResultSession<ReadTextClient>;
-    auto *session = async::make<Session>(applet);
-    session->client().setPath(uri);  // Pass the validated secure path
-
-    // Submit the async task, passing the complete options object for quick-app callback compatibility
-    session->request(ctx.arg(0));
-    return session->promise();
-}
-```
-
-::: tip Why pass `ctx.arg(0)`?
-`request()` receives the entire `options` object passed from the JavaScript side (i.e., `ctx.arg(0)`), which is used to automatically adapt to both [calling styles](/api/README.md#快应用异步接口) of quick-app asynchronous interfaces:
-
-- If `options` contains any of the `success`, `fail`, or `complete` properties, it is determined to be **callback style**, and the corresponding function is called directly. `request()` does not return a meaningful value;
-- Otherwise, it is determined to be **Promise style**, creating a new `Promise`, and `session->promise()` returns this object for the caller to `await`.
-
-This allows the exact same C++ implementation to simultaneously support both standard quick-app callback interfaces and modern Promise/async-await interfaces without any extra code. If you are certain that only the Promise style is supported, you can also pass an empty value `{}`.
-:::
-
-::: danger Do not skip URI validation
-Directly using strings passed from JavaScript as file paths is a severe security vulnerability:
-
-```cpp
-// ❌ Dangerous! Bypasses sandbox path security checks
-session->client().setPath(ctx.arg(0)["uri"].toString());
-```
-
-Malicious applications can access the file system outside the sandbox via path traversal (e.g., `../../etc/passwd`). All paths originating from JavaScript **must** be sanitized via `Applet::resolveUri()`, which detects path traversal attacks, cross-application unauthorized access, and illegal URI formats, returning an empty string when validation fails.
-:::
-
-Usage on the JavaScript side:
-
-```javascript
-import file from '@system.file'
-
-async function loadConfig() {
-    try {
-        const text = await file.readText({
-          uri: 'internal://files/config.json'
-        })
-        console.log('config:', text)
-    } catch (err) {
-        console.error('read failed:', err.message)
-    }
-}
-```
-
-### Errors and Status Codes
-
-`async::Status` encapsulates an integer status code. `0` (i.e., `async::OK`) indicates success, and other values represent custom business error codes:
-
-```cpp
-// Success: Return value directly, status code is automatically OK
-return async::Result<String>{std::move(content)};
-// Failure: Return status code only, value part is ignored
-return async::Status(404);
-// Carry both partial results and a non-OK status (e.g., HTTP 206 Partial Content)
-return async::Result<ByteArray>{
-  std::move(partialData),
-  async::Status(206)
-};
-```
-
-When `resolve()` returns an error status, the `Promise` is rejected, and the JavaScript `catch` block receives an error object containing `message` and `code` fields. The `message` comes from the client class's `errorMessage()` static method.
-
-`errorMessage()` supports multiple signatures, which the framework will automatically recognize:
-
-```cpp
-// Form 1: Accepts Status (recommended, concise)
-static const char *errorMessage(async::Status status);
-
-// Form 2: Accepts the complete Result, allowing message generation based on both value and status
-static String errorMessage(const async::Result<MyType> &result);
-```
-
-If the client class does not define `errorMessage()`, the framework will use the default `"unknown async error"`.
-
-### Value Types and JavaScript Conversion
-
-The value returned by `resolve()` is not passed to JavaScript as-is. The framework uses the `js_cast()` function to automatically convert C++ types to `JsValue`, which then drives the resolution of the `Promise`. This process happens internally within the framework and appears "transparent," but it actually relies on a set of **implicit conventions**: only types that implement `js_cast()` specializations can be correctly converted. For custom enums, structs, and other types, conversion relationships must be explicitly established, otherwise compilation will fail.
-
-#### Built-in Supported Types
-
-The following types can be used directly as type parameters for `Result<T>` without extra work:
-
-| C++ Type | Corresponding JavaScript Type | Remarks |
-| --- | --- | --- |
-| `int`, `double`, `float` | `number` | Direct numeric mapping |
-| `bool` | `boolean` | Direct boolean mapping |
-| `String`, `StringView`, `const char *` | `string` | Direct string mapping |
-| `ByteArray` | `ArrayBuffer` | Binary data |
-| `JsonValue` | `object` / `array` | JSON object or array |
-| [`std::vector<T>`](https://en.cppreference.com/w/cpp/container/vector) | `Array` | Array, elements are recursively converted (`T` itself must also be convertible) |
-| `JsValue` | Any | Passed directly without conversion |
-| `void` (i.e., `Result<void>`) | `undefined` | No return value |
-
-These types all have built-in `js_cast<T>()` specializations within the JsVM framework. Some of them are types that `JsValue` can construct directly, while others implement conversion logic via specializations.
-
-#### Adding Conversion Support for Custom Types
-
-If the type you are using is not in the above list, the compiler will throw an error indicating that `JsValue` cannot be constructed. There are two ways to resolve this:
-
-**Approach 1: Define an `operator JsValue()` member function**
-
-This is suitable for custom structs whose definitions you can modify. The advantage is that the conversion logic is built directly into the type definition, maintaining tight coupling:
-
-```cpp
-struct DeviceInfo {
-    String model;
-    int version;
-
-    // Convert the struct into a JavaScript object
-    // Note: Conversion executes on the UI thread, where a valid JsVM context is present
-    operator JsValue() const {
-        JsVM &vm = JsVM::current();
-        JsValue obj = vm.newObject();
-        obj["model"] = JsValue(model);
-        obj["version"] = JsValue(version);
-        return obj;
-    }
-};
-```
-
-Once defined, `Result<DeviceInfo>` can be used directly:
-
-```cpp
-async::Result<DeviceInfo> resolve() {
-    return DeviceInfo{"ModelX", 3};  // Framework automatically calls operator JsValue()
-}
-```
-
-APIs such as `JsVM::current()` and `vm.newObject()` used inside `operator JsValue()` belong to the JsVM bridging layer. See [Native Module Development Documentation](./native-module.md#创建与返回对象) for details.
-
-**Approach 2: [Specialize](https://en.cppreference.com/w/cpp/language/template_specialization) `js_cast<T>` in the `gx` namespace**
-
-This is suitable for cases where you cannot modify the original type definition (such as types or enums defined externally):
-
-```cpp
-// Declare the specialization beforehand if necessary
-template<>
-JsValue gx::js_cast<ConnectionState>(const ConnectionState &x);
-
-// Specialize within the gx namespace
-template<>
-JsValue gx::js_cast<ConnectionState>(const ConnectionState &x) {
-    switch (x) {
-    case ConnectionState::Connected:    return "connected";
-    case ConnectionState::Connecting:   return "connecting";
-    case ConnectionState::Disconnected: return "disconnected";
-    default:                            return "unknown";
-    }
-}
-```
-
-Once specialized, both `Result<ConnectionState>` and `Signal<ConnectionState>` will work normally.
-
-::: tip Easy approach for integer enums
-If enum values directly correspond to integers, manually converting them to `int` inside `resolve()` is the easiest way without needing any specialization:
-
-```cpp
-async::Result<int> resolve() {
-    return async::Result<int>{int(myEnum)};
-}
-```
-:::
-
-#### Runtime Conversion Overhead
-
-`js_cast()` is executed **after** the asynchronous result is delivered back to the UI thread, not in the asynchronous thread. The time overhead of conversion occurs entirely on the UI thread. For complex structures, you must ensure it is fast enough to avoid dropped frames. The actual costs for various types are as follows:
-
-- **Zero-overhead types**: `int`, `double`, `bool`, `String`, and `const char *` are mapped directly via `JsValue` constructors with no extra copying or heap allocation. The `operator JsValue()` approach and `js_cast<T>` specializations are also inlined at compile time, with no virtual calls or layers of indirection.
-- **Linear-overhead types**: `std::vector<T>` requires calling `setIndex()` element by element, with overhead proportional to the number of elements. If the returned structure is an object with fixed fields, prefer manually constructing a JS object using `operator JsValue()`, which is more efficient and readable than an array.
-- **Tree-traversal types**: `JsonValue` recursively traverses the entire tree during conversion to construct JavaScript nodes one by one, representing the highest overhead among built-in types. If the data structure is known at compile time, `operator JsValue()` to construct the object directly is usually faster and avoids the construction cost of `JsonValue` itself.
-- **Custom structs**: If you use `operator JsValue()` or `js_cast()` specializations, conversion performance depends on the conversion overhead of each member type, i.e., the complexity of constructing the object.
-
-::: tip Simple heuristic rule
-If your asynchronous data structure is simple (numeric values, simple struct objects, or small `JsonValues`), the conversion overhead typically will not affect UI smoothness.
-:::
-
-#### No Intermediate Serialization Layer
-
-Some asynchronous frameworks require data passed between the worker thread and the UI thread to first be serialized into JSON or another self-describing format, and then deserialized on the UI thread. This is done to achieve thread-safe "type-erased" transmission, but at the cost of incurring string (or binary data stream) concatenation, transmission, and parsing overhead on every call. Worse still, it may construct multiple data copies (intermediate serialized data and raw data, etc.).
-
-The async framework **does not rely on an intermediate serialization layer.** Results are moved across threads as native C++ values via `async::Result<T>`, completely bypassing the serialization process:
-
-```
-worker thread                  UI thread
-resolve(Result<MyType>{...}) → js_cast(result.value()) → JsValue (JavaScript)
-                  ↑
-             Direct memory movement, no JSON strings
-```
-
-`js_cast()` is only executed after the result has safely returned to the UI thread. Its responsibility is to map C++ values to the JavaScript engine's internal representation, rather than acting as a communication protocol between threads.
-
-If you proactively choose to use `JsonValue` as the type parameter for `Result<T>` (to mitigate template code bloat), you are introducing the overhead of `JsonValue`'s **construction and tree traversal**, not string serialization. `JsonValue` itself is also an in-memory tree structure, not a text format.
-
-#### Template Code Size
-
-`ResultSession<T>` is a template class, and the compiler generates a separate copy of code for each distinct client class type `T`. However, the framework extracts the vast majority of logic unrelated to `T` (such as `Promise` management, event delivery, and `Applet` lifecycle binding) into the non-template base class `detail::ResultSession`. Therefore, the actual extra code added per `T` is primarily concentrated in the thin `Resolver` adapter layer.
-
-However, if there are **a large number of fine-grained client types used only once** in a project, the cumulative number of instantiations can still lead to significant code size growth.
-
-A common mitigation technique is to use `JsonValue` as a type-erasure medium, combining multiple scattered small functions into a single client class:
-
-```cpp
-// Before combination: Each operation is an independent client class + independent template instantiation
-struct GetVersionClient { ... };   // ResultSession<GetVersionClient>
-struct GetModelClient   { ... };   // ResultSession<GetModelClient>
-struct GetSerialClient  { ... };   // ResultSession<GetSerialClient>
-
-// After combination: Share the same template instantiation, distinguishing operations at runtime
-struct DeviceQueryClient {
-    enum Kind { Version, Model, Serial } kind;
-
-    // A switch dispatch is shown here for demonstration; function pointers can also be used.
-    // However, do not use BaseClient combined with derived classes overriding resolve() 
-    // for polymorphism, as it introduces more vtable bloat than the function pointer approach.
-    async::Result<JsonValue> resolve() {
-        switch (kind) {
-        case Kind::Version: return JsonValue{getVersion()};
-        case Kind::Model:   return JsonValue{getModel()};
-        case Kind::Serial:  return JsonValue{getSerial()};
-        }
-    }
-};
-
-// Three module functions share the single ResultSession<DeviceQueryClient> instantiation
-static JsValue getVersion(JsCtx ctx) {
-    using Session = async::ResultSession<DeviceQueryClient>;
-    auto *session = async::make<Session>(applet);
-    session->client().kind = DeviceQueryClient::Version;
-    return session->request(ctx.arg(0));
-}
-```
-
-The tradeoff of this approach is that the return type degenerates to `JsonValue`, incurring additional runtime conversion overhead (see above). Therefore, it is suitable for scenarios with **small data volumes and many functions**, trading a small amount of runtime overhead for meaningful code size gains. For data-intensive or performance-sensitive operations, independent strongly-typed client classes should still be retained.
-
-### Custom Asynchronous Contexts
-
-By default, `session->request()` submits `resolve()` to the framework's **asynchronous executor**—typically a background thread pool. However, some scenarios require using a different asynchronous context, such as a custom event loop or AIO multiplexing mechanism, which do not want to consume extra thread resources.
-
-In this case, you can bypass `request()` and manually control the asynchronous execution flow directly. The client class also does not need to implement the `resolve()` execution function. The key is: **after completing work in the asynchronous context, call `session->resolve()` to deliver the result back to the UI thread**.
-
-```cpp
-// Client class: No need to implement resolve(), as the default thread pool is not used
-struct FirmwareCheckClient {
-    // Only define errorMessage() for error description
-    static const char *errorMessage(async::Status status) {
-        switch (status.value()) {
-        case 1: return "firmware not found";
-        case 2: return "check failed";
-        default: return "unknown error";
-        }
-    }
-};
-
-static JsValue checkFirmwareUpdate(JsCtx ctx) {
-    Applet *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1) return {};
-
-    using Session = async::ResultSession<FirmwareCheckClient>;
-    auto *session = async::make<Session>(applet);
-    auto version = ctx.arg(0).asString();
-
-    // Manually set resolver (do not call request, do not use default thread pool)
-    session->setResolver(ctx.arg(0));
-    JsValue promise = session->promise();
-
-    // Submit to a custom hardware driver thread
-    HardwareDriver::checkUpdate(
-        version,
-        // The callback may run on any thread—the framework automatically schedules it back to the UI thread
-        [session](bool available) {
-            session->resolve<bool>(available);
-        },
-        [session](int errorCode) {
-            session->resolve<bool>(async::Status(errorCode));
-        }
-    );
-
-    return promise;
-}
-```
-
-The core differences here:
-- `request()` performs both "setting the resolver" and "submitting to the async executor" in one go;
-- In manual mode, you need to call `setResolver()` yourself to set the response target, and then push the result or error status via `session->resolve()` at any arbitrary time.
-
-`resolve()` is thread-safe; it packages the result as an event, delivers it back to the UI thread, and then completes the resolution of the `Promise`.
-
-::: tip When to use custom contexts
-- The underlying driver already provides a callback interface, and you do not want to create extra threads: `resolve` directly inside the driver callback.
-- You need to integrate with an existing AIO/epoll event loop: `resolve` inside the event completion callback.
-- You need sequential execution (e.g., operations must be ordered): dispatch via your own task queue and `resolve` upon completion.
-
-As long as you ensure `session->resolve()` is eventually called once, the framework does not care which thread the result is delivered from.
-:::
-
-### Value Type Semantics
-
-Since the `async::Result<T>` value returned by `resolve()` (or actively posted by a custom async context) is posted to the UI thread and then converted to `JsValue`, the data type `T` must be movable. Built-in supported types all meet this requirement. For custom types:
-- If it is a struct containing only members of built-in supported types, the C++ standard guarantees it is movable.
-- If raw pointers are used and you manage their ownership yourself, you need to correctly implement the [move constructor](https://en.cppreference.com/w/cpp/language/move_constructor).
-- [Trivial types](https://en.cppreference.com/w/cpp/named_req/TrivialType) (such as pure C structs, enums, etc.) satisfy value type semantics by default.
-
-Note that non-trivial types typically contain resources on the heap, and the following pattern may face peak memory issues:
-
-```cpp
-auto *session = getFetchLargeDataSession();
-std::vector<uint32_t> data = fetchDataFromNetwork(url);
-session->resolve<decltype(data)>(data);  // Results in a full copy of data
-```
-This is because the parameter of `session->resolve()` is passed by value, and passing `data` invokes the [copy constructor](https://en.cppreference.com/w/cpp/language/copy_constructor), resulting in a full copy. If `data` is large, this will double memory usage. In such cases, you will encounter compilation warnings like this:
-```
-'...' is deprecated:
-avoid use copy semantics of Result<T> if T is not trivially copyable
-```
-The correct approach is to explicitly enable move semantics using [`std::move()`](https://en.cppreference.com/w/cpp/utility/move):
-
-```cpp
-auto *session = getFetchLargeDataSession();
-std::vector<uint32_t> data = fetchDataFromNetwork(url);
-session->resolve<decltype(data)>(std::move(data));  // Use move semantics
-```
-
-### Timeout Control
-
-For asynchronous operations that may remain unresponsive for a long time, use `async::make_timeout()` to add timeout protection to the session. Upon timeout, the `Promise` is automatically rejected, preventing the JavaScript side from hanging indefinitely.
-
-The following code snippet shows a basic example demonstrating how to use timeout control in a network request:
-
-```cpp
-static JsValue fetchData(JsCtx ctx) {
-    Applet *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1) return {};
-
-    String url = ctx.arg(0)["url"].asString();
-    int timeoutMs = ctx.arg(0)["timeout"].asInt(5000);
-
-    using Session = async::ResultSession<HttpClient>;
-    auto *session = async::make<Session>(applet);
-    session->client().setUrl(url);
-    session->setResolver(ctx.arg(0));
-    JsValue promise = session->promise();
-
-    // Create timeout protection: automatically reject Promise upon timeout
-    auto handle = async::make_timeout(session, timeoutMs,
-        [](Session *s) {
-            // Timeout handling: ongoing async operations should be cancelled here
-            s->fulfill(async::Status(408));  // 408 Request Timeout
-            
-        });
-
-    // Move handle into the asynchronous execution context
-    NetworkDriver::fetch(url,
-        [handle = std::move(handle)](auto &response) {
-            // If timed out, resolve will be safely ignored
-            handle->resolve<String>(std::move(response.body));
-        });
-
-    return promise;
-}
-```
-
-#### Working Principle
-
-The key workflow of `make_timeout()`:
-
-1. **Moves** the client data of `session` into an internal class; `session->client()` must not be accessed after this.
-2. Starts a one-shot timer, returning a `SharedRef<SingleTimer>` handle.
-3. **Normal Path**: Call `handle->resolve()` before the timeout. This atomically takes ownership of the session and posts the result event. When the timer subsequently triggers, it sees the session is already empty and takes no action.
-4. **Timeout Path**: The timer triggers and executes the callback **on the UI thread**. The developer calls `session->fulfill()` in the callback to post the error status. After the callback returns, the timer is responsible for `delete session`.
-5. **App Exit**: When the `Applet` is destroyed, the timer is automatically unbound, the session is deleted, and the callback is not triggered.
-
-This mechanism is particularly useful for scenarios where asynchronous operations lack built-in timeout mechanisms, such as certain network request implementations. As is well known, correctly implementing timeout protection can be tricky, as you must correctly handle race conditions and lifecycle safety issues across all execution paths.
-
-`make_timeout()` relies on these prerequisites to guarantee safety:
-- The client type (i.e., `T` in `ResultSession<T>`) must be **movable**, which is somewhat of a legacy restriction.
-- Asynchronous operations must support safe cancellation on the UI thread, which means removing task listeners and releasing references to `handle`.
-
-#### Callback Thread and `fulfill()`
-
-The timeout callback (the third parameter of `make_timeout()`) **always executes on the UI thread** because it is triggered by a timer (`Timer`), and timer events are dispatched by the main event loop.
-
-This dictates that you **must only** use `session->fulfill()` rather than `session->resolve()` within the callback:
-
-| Method | Callable Thread | Impact on Session |
-| --- | --- | --- |
-| `resolve(result)` | Any thread | Posts a Consume event; session is **deleted** after being processed on the UI thread |
-| `fulfill(result)` | **UI Thread Only** | Dispatches the result directly **without deleting** the session |
-
-The timeout path of `make_timeout()` is handled by the timer itself, which executes `delete session` after the callback finishes. If you call `session->resolve()` inside the callback, it will also post an event to delete the session, creating a **double free** conflict with the timer's `delete`, leading to undefined behavior. `fulfill()` only posts the result without touching the session lifecycle, making it the only safe choice inside the callback.
-
-`fulfill()` accepts an `async::Result<R>` or directly accepts an `async::Status` (shorthand when there is no result value):
-
-```cpp
-auto handle = async::make_timeout(session, 5000, [](Session *s) {
-    s->fulfill(async::Status(408)); // Populate error status only
-    // Or carry both value and status:
-    s->fulfill(async::Result<String>{"partial", async::Status(206)});
-    // ❌ Do not call s->resolve(), as it will form a double free with the timer's delete session
-});
-```
-
-::: tip
-The decision rule is simple: Where does the session ownership lie, and who is responsible for deletion?
-- **Normal Path**: `handle->resolve()` atomically takes ownership of the session internally, and the session is deleted after the Consume event is processed.
-- **Timeout Callback**: The timer takes ownership of the session and deletes it after the callback finishes. Therefore, you can only use `fulfill()` to post results inside the callback.
-:::
-
-#### Accessing Client Data
-
-If the timeout callback needs to read client data to determine the error strategy, use the extended callback signature `(Session *, const T &)`. **Do not** call `session->client()` inside the callback—the client has already been moved into the timer:
-
-```cpp
-auto handle = async::make_timeout(session, 3000,
-    [](Session *s, const HttpClient &client) { // auto &client can also be used
-        // ✅ Access client data via the second parameter
-        LogWarn() << "request timeout: " << client.url();
-        s->fulfill(async::Status(408));
-    }
-);
-```
-
-#### Resource Lifecycle Management
-
-When a timeout occurs, you need to cancel ongoing asynchronous tasks within the callback to release references to `handle`. `SingleTimer` manages its lifecycle using reference counting—if an asynchronous operation holds a reference to `handle` but never completes, a memory leak will occur:
-
-```cpp
-auto task = AioTask::create();
-auto handle = async::make_timeout(session, 5000,
-    [task](auto *s) {
-        task->cancel();     // Cancel task, releasing reference to handle
-        s->fulfill(async::Status(408)); // reject Promise
-    });
-
-// Task completion callback holds a reference to handle
-task->start([handle = std::move(handle)](auto &result) {
-    handle->resolve(result);
-});
-```
-
-::: important
-The `handle` returned by `make_timeout()` **must** also be referenced by the asynchronous task (captured by the lambda in the example above) to ensure the timer is not destroyed before the task completes. Otherwise, it will immediately trigger the timeout callback and `Promise` rejection, preventing the task from completing normally.
-:::
-
-Such memory leaks are caused by two reasons:
-1. **Async framework leak**: The `handle` reference is forgotten, causing the related session object to remain unreleased.
-2. **Underlying task leak**: The asynchronous task itself blocks in an uncompleted state, leaving related resources uncleaned.
-
-### Automatic Cleanup on Application Exit
-
-When an `Applet` is destroyed (e.g., the user closes the app, or the system reclaims resources), all asynchronous sessions bound to that `Applet` are automatically cleaned up:
-
-- The session's `unbind()` method is called, which closes the session and releases the `Promise` reference.
-- If `make_timeout` is being used, the timer is similarly unbound, and the internally held session is deleted.
-- The `Promise` on the JavaScript side will never be resolved or rejected—but since the JavaScript environment itself is being destroyed at this point, this is safe.
-
-This means you **do not** need to manually track and cancel asynchronous tasks—the framework guarantees that the following will not happen:
-- Delivering results to a destroyed `Applet`, causing access to dangling pointers.
-- Executing callbacks in a released JavaScript environment.
-- Asynchronous sessions leaking after application exit.
-
-Specifically, when a background thread calls `resolve()` to post a result to the UI thread, the handling function checks whether `applet()` is still valid. If the `Applet` has already been destroyed, causing `applet()` to return `nullptr`, the framework safely discards the result without executing any JavaScript operations.
-
-::: tip Safe Return in Asynchronous Contexts
-Since `resolve()` is pure data posting (via the event queue), calling `resolve()` in a background thread will not crash even if the `Applet` has already been destroyed. The background thread does not need to care about the survival state of the `Applet`; that is the framework's responsibility.
-:::
-
-The only thing to note is that if you derive from `ResultSession` and introduce other `JsValue` member variables, you need to clean up these members in `unbind()` to avoid memory leaks:
-
-```cpp
-class MySession : public async::ResultSession<MyClient> {
-public:
-    void unbind() override {
-        m_callbacks = {}; // Clean up any held JsValues to avoid leaks
-        async::ResultSession::unbind(); // Call base class cleanup
-    }
-
-private:
-    JsValue m_callbacks; // Members that need manual cleanup
-};
-```
-
-::: important `ResultSession` Lifecycle Extension
-If there are still incomplete asynchronous sessions when the application exits, the framework only cleans up application-related resources (such as `Promise` references, binding relationships, etc.), but **does not destroy the session object itself**. This manifests as the lifetime of the `ResultSession` being extended until the asynchronous operation completes.
-
-While this is meant to guarantee memory safety, it causes some resources to be released less promptly. Therefore, asynchronous tasks must ensure they complete within a finite time and cannot hang indefinitely.
-:::
-
-## Multi-Query ListenSession
-
-This category of APIs is still unstable and is not yet open for use.
-
-## Global Event Broadcasting async::Signal
-
-If a C++ event needs to be broadcast to **multiple applications** (rather than targeting a specific caller), use `async::Signal<T>`. It "multicasts" underlying hardware or system events to all JavaScript listeners subscribed to it.
-
-`async::Signal<T>` and `ResultSession` have different positioning:
-
-| Feature | ResultSession | Signal |
-| --- | :---: | :---: |
-| Communication Direction | One-to-one (Caller → Result) | One-to-many (Event Source → All Subscribers) |
-| Trigger Count | Single | Multiple |
-| Bound Object | Single Applet | Cross-Applet |
-| Applicable Scenarios | Asynchronous queries, requests | System events, state changes |
-
-### Basic Usage
-
-Suppose there is a battery level change event that needs to be notified to all subscribers:
-
-```cpp
-// Define a global signal, typically a member variable of the corresponding service
-async::Signal<int> batteryChanged;
-
-// Trigger the signal when a hardware event occurs (can be called on any thread)
-void onBatteryLevelChanged(int newLevel) {
-    batteryChanged(newLevel);  // Notify all subscribers
-}
-```
-
-#### Binding & Unbinding
-
-This module function allows the JavaScript side to subscribe to the signal, and it returns a binding ID for the JavaScript side to unsubscribe:
-
-```cpp
-static JsValue subscribeBatteryChange(JsCtx ctx) {
-    if (ctx.argc() < 1 || !ctx.arg(0).isFunction())
-        return {};
-    // Must be in a valid applet environment to subscribe
-    auto *applet = Applet::current(ctx.vm());
-    if (applet == nullptr) return {};
-
-    // Bind slot to the applet, automatically unsubscribing when the app exits
-    auto *slot = batteryChanged.connect(ctx.arg(0));
-    return applet->bindObject(slot); // Return slot ID for JavaScript to cancel
-}
-```
-
-You also need to implement a module function for unbinding. Regardless of the `async::Signal` type, the implementation of the unbind function is very fixed:
-
-```cpp
-static JsValue unsubscribeBatteryChange(JsCtx ctx) {
-    auto *applet = Applet::current(ctx.vm());
-    if (applet && ctx.argc()) {
-        // slotId defaults to 0, which can be safely ignored without performing any operation
-        auto slotId = ctx.arg(0).toInt();
-        // After unbinding the slot from the applet, the slot object must also be deleted
-        delete applet->unbindObject<async::Slot>(slotId);
-    }
-    return {};
-}
-```
-
-#### JavaScript Export
-
-You simply need to define a [Native Module](./native-module.md) to export these functions:
-
-```cpp
-static JsModule *createBatteryModule(JsVM &vm) {
-    auto mod = vm.newObject();
-    // The battery module typically has functions like getLevel(), omitted here
-    mod["subscribe"] = subscribeBatteryChange;
-    mod["unsubscribe"] = unsubscribeBatteryChange;
-    return mod;
-}
-// Don't forget to import the module using GX_JSVM_MODULE_IMPORT
-GX_JSVM_MODULE(vendor_battery, "vendor.battery", createBatteryModule)
-```
-
-::: tip Reusing the `unsubscribe` function
-Since the implementation of the unbinding function is very generic, you can define a general `unsubscribe` function and import it into multiple modules for use.
-:::
-
-On the JavaScript side:
-
-```js
-import battery from '@vendor.battery'
-
-const sid = battery.subscribe((level) => {
-  console.log('battery level:', level)
-})
-
-// Call when unsubscribing is needed
-battery.unsubscribe(sid)
-```
-
-### Signal Delivery Modes
-
-`Signal` supports two delivery modes, controlled by the second parameter:
-
-```cpp
-// Normal mode (default): Notify all subscribers
-batteryChanged(newLevel, async::NormalSignal);
-
-// Skip invisible apps: Only notify foreground visible apps, reducing unnecessary consumption
-batteryChanged(newLevel, async::SkipInvisible);
-```
-
-The `SkipInvisible` mode is suitable for events that only make sense when the UI is visible (such as interface refresh notifications). For events that require background awareness (such as low battery warnings), the default `NormalSignal` should be used.
-
-### Signal Value Types
-
-The type parameter `T` of `Signal<T>` follows the exact same conversion rules as `ResultSession`: when a signal is triggered, the framework converts C++ values to JavaScript callback parameters via the same `js_cast()` mechanism. Built-in types such as `int`, `bool`, `String`, and `JsonValue` can be used directly; if you need to pass custom structs or enums, refer to the methods in the [Value Types and JavaScript Conversion](#value-types-and-javascript-conversion) section.
-
-## Thread Safety Notes
-
-The thread safety model of the asynchronous framework follows these rules:
-
-- **`resolve()` is thread-safe**: `ResultSession::resolve()` and `SingleTimer::resolve()` can be called on any thread. They post results to the UI thread via the event system and do not directly manipulate JavaScript objects.
-- **`JsValue` is not thread-safe**: `JsValue` manages its lifecycle using reference counting, and its reference counting operations are non-atomic. You must not create, copy, destroy, or access `JsValue` in an asynchronous thread. This is precisely why client classes must not hold `JsValue`.
-- **`Promise` resolution executes on the UI thread**: Regardless of which thread `resolve()` is called from, the final JavaScript `Promise` callback always executes on the UI thread, ensuring UI operation safety.
-- **`async::Signal` notifications are dispatched on the UI thread**: Although `async::Signal::operator()` can be called across threads, JavaScript callbacks always execute on the UI thread.
-
-If the client class needs to share state with the UI thread (such as providing a cancellation flag), use atomic operations like [`std::atomic`](https://en.cppreference.com/w/cpp/atomic/atomic) or mutexes to protect shared data:
-
-```cpp
-class CancellableClient {
-public:
-    void cancel() { m_cancelled.store(true); }
-
-    async::Result<String> resolve() {
-        for (int i = 0; i < 100 && !m_cancelled.load(); ++i) {
-            // Execute step-by-step task, periodically checking the cancellation flag
-            processChunk(i);
-        }
-        if (m_cancelled.load())
-            return async::Status(499);  // Client cancelled
-        return std::move(m_result);
-    }
-
-private:
-    std::atomic_bool m_cancelled{false};
-    String m_result;
-};
-```
-
-Notably, many value types in the Glyphix framework **are** safe to pass across threads **within this asynchronous framework**, such as:
-- `String`: Can be assigned and accessed directly across multiple threads without extra synchronization mechanisms.
-- `JsonValue`: This class is also a value type and possesses the same thread-safety characteristics as `String`.
-- `ByteArray`: Similar to `String`, supports cross-thread usage.
-- `SharedRef<T>`: The reference-counted smart pointer itself can be passed across threads, but the thread safety of the managed object `T` depends on its definition.
-- Non-owning types such as `String::View` **cannot** be used across threads.
-
-This is why in all the preceding examples we always directly capture and pass types like `String` across asynchronous contexts without special handling, and without needing to use synchronization mechanisms like mutexes.
-
-::: important
-The thread safety of the aforementioned types actually relies on the specific asynchronous framework memory model, meaning they are **not automatically thread-safe** in all scenarios. The asynchronous framework in this document guarantees this, but it cannot be generalized to any situation.
-:::
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/async-examples.md
-
-# Asynchronous Development Examples
-
-If you feel that the chapter on [Asynchronous Feature Development](async.md) is too lengthy and not intuitive enough, this document provides some typical and simpler examples to help you handle common asynchronous development scenarios.
-
-These scenarios are not extremely complex, but they focus on:
-- A typical asynchronous call pattern, with an emphasis on cross-thread and cross-language calling relationships;
-- Scenarios that may be more trivial, involving a large batch of system APIs that need to be integrated, making them sensitive to code bloat;
-- Typical C API interaction requirements rather than standard C++ interfaces.
-
-You can find complete implementations of these scenarios in the SDK samples and simulate running them directly on your PC.
-
-## Scenario: Interfacing with a C Alarm Interface
-
-A common asynchronous pattern in embedded systems is the "C callback": the caller submits a task, passes a function pointer as a completion notification, and the worker thread calls the callback once the operation is complete.
-
-::: important async only supports the thread model
-The asynchronous features of the Glyphix framework only support normal thread contexts and cannot be used in interrupts. If your asynchronous context is an interrupt service routine, you should provide a thread to act as a bridge.
-:::
-
-Here, we take an alarm service as an example. Its provided C asynchronous interface looks like this:
-
-```c
-// Taking alarm_async_create as an example; other operations have similar forms
-void alarm_async_create(AlarmService *svc, uint32_t interval_ms, ...,
-                        alarm_create_cb_t done_cb, void *done_ctx);
-
-// Function pointer type for the completion callback, called on the worker thread
-typedef void (*alarm_create_cb_t)(alarm_err_t err, alarm_id_t id, void *ctx);
-```
-
-Next, we will explain how to bridge such typical C callback interfaces to JavaScript Promises.
-
-### Multiple Operations Sharing a Session Type
-
-The alarm service has a batch of operations such as `create`, `cancel`, `setEnabled`, `update`, `snooze`, `getInfo`, `list`, and `count`. Defining a separate client class for each operation would generate a large number of template instantiations.
-
-For such scenarios where "the actual logic is completed in the C layer, and the C++ side only handles parameter passing," you can define a lightweight client containing only error code mapping, allowing all operations to share a single `ResultSession` instantiation:
-
-```cpp
-struct AlarmClient {
-    // Converts the C layer's alarm_err_t to a readable error string
-    // to be passed to the JavaScript side's catch when the Promise is rejected.
-    static const char *errorMessage(async::Status status) {
-        switch (status.value()) {
-        case ALARM_OK:              return "ok";
-        case ALARM_ERR_NOT_FOUND:   return "not_found";
-        case ALARM_ERR_TABLE_FULL:  return "table_full";
-        case ALARM_ERR_INVALID_ARG: return "invalid_arg";
-        default:                    return "unknown_error";
-        }
-    }
-};
-
-// All alarm operations share this single Session type
-using AlarmSession = async::ResultSession<AlarmClient>;
-```
-
-`AlarmClient` does not need to implement the `resolve()` method because the default thread pool executor is not used here; the actual asynchronous operations are completed by the alarm service's worker thread, and the C++ side is only responsible for posting the results back to the UI thread.
-
-### Basic Binding Pattern
-
-Taking `alarm.create()` as an example, this demonstrates the complete binding process:
-
-```cpp
-static JsValue jsAlarmCreate(JsCtx ctx) {
-    auto *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
-        return JsValue{};
-
-    // Read parameters from the options object passed from JavaScript
-    const JsValue &opts = ctx.arg(0);
-    uint32_t intervalMs = static_cast<uint32_t>(opts["interval"].toInt());
-    String label        = opts["label"].toString();
-    alarm_repeat_t mask = parseRepeatMask(opts["repeat"]);
-
-    // Create a session and extract resolve/reject callbacks from the options object (supporting both async styles)
-    auto *session = async::make<AlarmSession>(applet);
-    session->setResolver(opts);
-
-    // C callback: called in the worker thread, notifying JavaScript across threads via resolve()
-    auto done = +[](alarm_err_t err, alarm_id_t id, void *data) {
-        auto *s = static_cast<AlarmSession *>(data);
-        s->resolve(err == ALARM_OK
-            ? async::Result<int>(id) // Success: resolve the newly created alarm ID
-            : async::Status(err));   // Failure: reject, with the error message coming from errorMessage()
-    };
-
-    // Call the C service's asynchronous alarm creation interface, passing the callback and session pointer
-    alarm_async_create(AppletAlarmService::instance(),
-                       intervalMs, mask, label.c_str(), /*...*/,
-                       onAlarmFired, nullptr, done, session);
-    // Return the Promise object to JavaScript; the framework will automatically settle it when resolve() is called
-    return session->promise();
-}
-```
-
-There are a few fixed patterns here that you can copy and use directly:
-
-- `async::make<AlarmSession>(applet)` creates a session and binds it to the current Applet to meet lifecycle requirements.
-- `session->setResolver(opts)` enables the same codebase to support both [callback style and Promise style](/api/README.md#快应用异步接口) asynchronous calls.
-- `+[](... void *data)` converts the lambda into a normal function pointer via the unary `+` operator, satisfying the type requirements of C callbacks.
-- Pass `session` as `void *` transparently to the C API, cast it back in the callback, and then call `resolve()`.
-- `resolve()` is thread-safe; it encapsulates the result as an event and posts it back to the UI thread to drive the resolution of the Promise.
-
-::: tip Writing callbacks using lambda expressions
-In C, callback functions are typically static functions. You can use C++ lambda expressions to define callback functions locally and nested nearby, for example:
-```cpp
-auto done = +[](alarm_err_t err, alarm_id_t id, ...) { ... }
-alarm_async_create(..., done, session);
-```
-This avoids defining a large batch of separate static functions, making the code more compact and clear.
-:::
-
-The structure of the remaining operations (`cancel`, `setEnabled`, `snooze`, etc.) is completely identical, differing only in parameter reading and C API calls:
-
-```cpp
-static JsValue jsAlarmCancel(JsCtx ctx) {
-    auto *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1)
-        return JsValue{};
-
-    alarm_id_t id = ctx.arg(0).toInt();
-
-    auto *session = async::make<AlarmSession>(applet);
-    session->setResolver(ctx.arg(0));
-
-    auto done = +[](alarm_err_t err, void *data) {
-        // When there is no return value, resolve<void> can be used
-        static_cast<AlarmSession *>(data)->resolve<void>(async::Status(err));
-    };
-    alarm_async_cancel(AppletAlarmService::instance(), id, done, session);
-
-    return session->promise();
-}
-```
-
-::: important Do not omit parameter checks
-`session->setResolver(ctx.arg(0))` relies on checking `ctx.argc()`. If the function does not check the parameter count at the beginning, you must check it when calling `setResolver()`:
-```cpp
-session->setResolver(ctx.argc() ? ctx.arg(0) : JsValue{});
-```
-:::
-
-### Registering Type Conversions for Custom C Structs
-
-`alarm.getInfo()` returns an `alarm_info_t` struct, which needs to be converted into a JavaScript object. To achieve this, first specialize `js_cast<T>` within the `gx` namespace:
-
-```cpp
-template<> JsValue gx::js_cast<alarm_info_t>(const alarm_info_t &info) {
-    JsValue obj = JsVM::current().newObject();
-    obj["id"]          = info.id;
-    obj["label"]       = info.label;
-    obj["interval"]    = double(info.interval_ms);
-    obj["repeatMask"]  = info.repeat_mask;
-    obj["enabled"]     = bool(info.enabled);
-    obj["remaining"]   = double(info.remaining_ms);
-    obj["fireCount"]   = int(info.fire_count);
-    obj["snooze"]      = int(info.snooze_ms);
-    obj["snoozed"]     = bool(info.snoozed);
-    return obj;
-}
-```
-
-Once specialization is complete, you can directly pass the struct instance to `resolve()` within the binding function:
-
-```cpp
-auto done = +[](alarm_err_t err, const alarm_info_t *info, void *data) {
-    auto *s = static_cast<AlarmSession *>(data);
-    if (err != ALARM_OK || !info) {
-        // Exception path, return error status to trigger reject; error message comes from errorMessage()
-        s->resolve<alarm_info_t>(async::Status(err));
-        return;
-    }
-    s->resolve<alarm_info_t>(*info);  // The framework automatically calls js_cast on the UI thread
-};
-alarm_async_get_info(AppletAlarmService::instance(), id, done, session);
-```
-
-::: tip
-`js_cast()` is called by the framework only after the result returns to the UI thread, not executed in the worker thread. This means you can safely use UI-thread-exclusive APIs such as `JsVM::current()` inside `js_cast()`.
-:::
-
-For cases like `alarm.list()` which return an array, you can directly construct a `std::vector<int>` and resolve it without defining additional type conversions:
-
-```cpp
-auto done = +[](alarm_err_t /*err*/, const alarm_id_t *ids, int count, void *data) {
-    auto *s = static_cast<AlarmSession *>(data);
-    s->resolve<std::vector<int>>(std::vector<int>{ids, ids + count});
-};
-alarm_async_list(AppletAlarmService::instance(), done, session);
-```
-
-### Alarm Trigger Callback: Sending Events Back to JavaScript
-
-When an alarm triggers, the C layer calls the `alarm_fire_cb_t` callback from the worker thread. This scenario differs somewhat from the previous "query results" pattern and requires a specially designed event notification mechanism.
-
-#### Why Not Use JavaScript Callback Functions
-
-Intuitively, it might seem reasonable to let the application pass a callback function when registering an alarm:
-
-```javascript
-// ❌ This does not work for the alarm scenario
-alarm.create({ interval: 60000, onFired: (event) => { /* ... */ } })
-```
-
-The problem is that alarms span the application's lifecycle: after an alarm is created, the application may be killed at any time before the alarm fires; many devices also support triggering alarms after a reboot.
-
-A JavaScript callback function (`JsValue`) is only valid within the JavaScript runtime of the current application instance. Once the application is closed, this runtime along with all `JsValue`s will be destroyed. At that point, the C++ side has no way to retain this JavaScript callback, let alone call it when the alarm fires.
-
-This is not just a problem for alarms; **any event that may trigger across application lifecycles cannot be solved via JavaScript callbacks**, such as scheduled tasks, offline message push, background download completion notifications, etc.
-
-#### Using Convention Method Names Instead of Callback References
-
-The simplest solution is: instead of the application "registering a callback," the system actively **launches** the application when an event occurs and calls a processing method on the application object using a pre-arranged method name.
-
-This aligns with the approach of application lifecycle functions (`onCreate`, `onShow`, etc.)—the system starts the application on demand and calls a known entry method rather than holding onto a pre-registered callback. The application side implements the corresponding method by convention:
-
-```javascript
-// app.js — Processing method exported by the application model object (implemented by convention)
-export default {
-  onAlarmFired(event) {
-    // event: { id, label, interval, ... }
-    console.log('alarm fired:', event)
-  }
-}
-```
-
-C++ side implementation: first read the snapshot on the worker thread, then switch back to the main thread to start the application and call the method:
-
-```cpp
-static void onAlarmFired(alarm_id_t id, void * /*user_data*/) {
-    // Read the snapshot on the worker thread to avoid cross-thread access to the alarm table
-    alarm_info_t info{};
-    alarm_get_info(id, &info);
-
-    // Switch back to the main thread before operating on JavaScript
-    App()->postTask([info] {
-        auto *svc = AppletAlarmService::instance();
-        // Use launch() to start (or wake up) the target app, even if it is not currently running
-        auto *applet = AppletKit::instance()->launch(svc->alarmAppletName);
-        if (!applet) return;
-
-        auto &vm = JsVM::current();
-        // Call the convention method on the exported object of app.js, with the event parameter being the JS object of the alarm info
-        JsValue event = js_cast(info);
-        applet->modelObject().callMethod("onAlarmFired", {event}).reportError();
-    });
-}
-```
-
-Key points:
-
-- **Do not** directly operate on `JsValue` or call any JavaScript APIs in the worker thread; they can only be used on the UI thread.
-- Use `App()->postTask()` to post closures to the main event loop for execution. This is the simplest way to switch back to the UI thread.
-- Use `AppletKit::launch()` instead of searching for an existing instance; `launch()` restarts the application if it does not exist, and returns the existing instance if it is already running.
-- `.reportError()` on the return value of `callMethod()` prints potential JavaScript exceptions to the log rather than silently ignoring them.
-
-::: tip Convention method names are the simplest event handling method
-You can think of this pattern as: the exported object of app.js is simply the "set of entry points" exposed by the application to the system. The system calls methods within it when needed, just like calling `onCreate` or `onShow`.
-
-This method is not universally applicable, but it is basically sufficient for controlled system applications, and it is simple to implement without requiring complex persistence and callback management mechanisms.
-:::
-
-### Registering the Library Loader
-
-Once all binding functions are written, they need to be "assembled" into a [library object](native-module.md#library-loader) that JavaScript can import, and registered into the framework.
-
-A library loader is a C++ function triggered when an application calls `app.loadLibrary('vendor.alarm')`. It is responsible for creating and returning a JavaScript object containing all exported methods:
-
-```cpp
-static JsValue libAlarmLoader(Applet *applet) {
-    // You can check the application's package name here to reject unauthorized apps, or check fields.
-    if (!applet || applet->objectName() != "com.vendor.alarm")
-        return JsValue{};
-
-    JsValue lib = JsVM::current().newObject();
-
-    // Mount binding functions onto the library object; property names are the method names called on the JavaScript side
-    lib["create"]     = jsAlarmCreate;
-    lib["cancel"]     = jsAlarmCancel;
-    lib["list"]       = jsAlarmList;
-    lib["count"]      = jsAlarmCount;
-    // ...
-    return lib;
-}
-```
-
-Then register the loader into `AppletKit` during the initialization stage:
-
-```cpp
-AppletKit kit{&window};
-kit.setLibraryLoader("vendor.alarm", libAlarmLoader);
-```
-
-Import it on the JavaScript side via `app.loadLibrary()`, and the return value will be the library object returned by the loader:
-
-```javascript
-const alarm = app.loadLibrary('vendor.alarm')
-
-const id = await alarm.create({ interval: 60000, label: 'Get up' })
-```
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/sdk-setup.md
-
-# SDK Project Configuration
-
-Glyphix is distributed to device manufacturers in the form of pre-compiled libraries. This article introduces how to configure the build environment in the SDK project in order to develop Native Modules, Native Widgets, or platform adaptation code based on it.
-
-### Prerequisites
-
-Before you begin, make sure you have installed:
-- CMake 3.14 or higher
-- A C++ compiler supporting C++14 (GCC, Clang, or MSVC)
-- The Glyphix meta-object compiler `meta` (matches the SDK; see below for how to obtain it)
-- A cross-compilation toolchain (if building for embedded targets)
-
-::: tip System Requirements
-- The MSVC toolchain requires Visual Studio 2022 or later.
-- For Linux, a distribution with a desktop environment, such as Ubuntu 22.04 or later, is recommended.
-- Ubuntu 20.04 is not recommended because its package versions are usually too old, often requiring manual installation of newer software.
-- Environments without graphical interfaces like WSL or Docker will not be able to run the simulator and GUI examples.
-- Currently, the host environment only provides Linux pre-compiled libraries; pre-compiled libraries for Windows and macOS are not yet available.
-:::
-
-## SDK Package Structure
-
-The extracted SDK contains the following directories:
-
-```
-glyphix-sdk/
-├── libs/
-│   └── <target-triple>/       # Pre-compiled libraries categorized by target triple
-│       ├── include/           # Glyphix header files (gx_*.h)
-│       └── lib/               # Static libraries (libglyphix-core.a, etc.)
-├── cmake/
-│   ├── GlyphixSDK.cmake       # Main SDK configuration script
-│   ├── meta.cmake             # Meta-object compiler integration (glyphix_add_meta_objects)
-│   ├── cross-compile.cmake    # Cross-compilation toolchain loading
-│   ├── arch/                  # Compilation parameters for each architecture (mips-linux-gnu, cortex-m33, etc.)
-│   └── toolchain/             # CMake toolchain files for each toolchain
-├── wrapper/                   # Platform adaptation layer (host implementations for network, file system, etc.)
-├── app/                       # Sample application entry points (emulator, async, etc.)
-└── vendor/                    # Third-party dependency libraries
-```
-
-### `libs/<target-triple>/`
-
-The pre-compiled libraries of the SDK are categorized by platform using **target triples**, for example:
-
-- `x86_64-linux-gnu/`: 64-bit Linux host development/simulation
-- `mips-linux-gnu/`: MIPS Linux embedded target
-- `cortex_m55-none-gnu/`: Cortex-M55 bare-metal target
-
-The `include/` directory contains all Glyphix public header files, all prefixed with `gx_`. The `lib/` directory contains static libraries. The core libraries include:
-
-| Library File | Description |
-|:---|:---|
-| `libglyphix-core.a` | Core framework (object system, widget tree, events, etc.) |
-| `libglyphix-widgets.a` | Built-in widget library |
-| `libglyphix-reactive.a` | Reactive framework (JavaScript bridge layer) |
-| `libglyphix-platform.a` | Platform abstraction layer interface |
-| `libglyphix-service.a` | System service layer |
-
-::: tip Pre-compiled Vendor Libraries
-The SDK distribution package also includes some pre-compiled third-party libraries, such as `libfreetype.a`. For convenience, we do not directly distribute the source code of these libraries, but you can choose to build using the source code directly instead of using the pre-compiled libraries.
-:::
-
-## Preparation
-
-### Configuring the Meta-Object Compiler
-
-The `meta` meta-object compiler is distributed separately from the SDK as an independent archive. Extracting it yields two directories: `bin/` and `lib/`. **Both must be kept in the same directory**; the `meta` executable depends on the runtime libraries in `lib/`.
-
-On Linux and macOS, it is recommended to extract it to `/usr/local` so that `meta` is automatically in your `PATH`:
-
-::: code-tabs#bash
-
-@tab Linux
-
-```bash
-sudo tar -xJf glyphix-meta-vX.X-linux-x86_64.tar.xz -C /usr/local
-```
-
-@tab macOS
-
-```bash
-sudo tar -xJf glyphix-meta-vX.X-darwin-arm64.tar.xz -C /usr/local
-```
-
-:::
-
-Alternatively, you can extract it to any directory and add its `bin/` directory to your `PATH`. Once done, verify that it is available with the following command:
-
-```bash
-meta --version
-```
-
-If you do not wish to modify your `PATH`, you can explicitly specify the full path to the executable during CMake configuration using `-DGX_META=/path/to/bin/meta`.
-
-## Configuring CMakeLists.txt
-
-### Minimal Configuration
-
-::: tip
-The CMake configuration introduced in this section resembles the standard sample template of the Glyphix SDK project, and you can refer directly to the SDK's source files.
-:::
-
-Below is a minimally runnable `CMakeLists.txt` illustrating the standard configuration skeleton of a project:
-
-```cmake
-cmake_minimum_required(VERSION 3.14)
-
-# Must be loaded before project() so the toolchain is in place when project() probes compilers
-include(cmake/cross-compile.cmake)
-
-project(my_glyphix_app)
-set(CMAKE_CXX_STANDARD 14)
-
-# Load the Glyphix SDK (sets up include paths, link directories, and the glyphix::sdk target)
-include(cmake/GlyphixSDK.cmake)
-
-add_subdirectory(vendor)  # Third-party dependencies (if any)
-add_subdirectory(src)     # Your source code
-```
-
-Create a target in `src/CMakeLists.txt` and link the SDK:
-
-```cmake
-add_executable(my_app
-  main.cpp
-  my_module.cpp
-  my_widget.cpp
-)
-
-# Link the Glyphix SDK
-target_link_libraries(my_app PRIVATE glyphix::sdk)
-
-# Generate metadata for header files containing GX_OBJECT
-glyphix_add_meta_objects(my_app
-  my_module.h
-  my_widget.h
-)
-```
-
-### Registering Meta Objects (`glyphix_add_meta_objects`)
-
-As mentioned in the [Object System](./object-system) documentation, any class declaring `GX_OBJECT` must be registered with the build system so the meta-object compiler can generate the `*_meta.cpp` files for it. `glyphix_add_meta_objects()` is the CMake function that accomplishes this:
-
-```cmake
-glyphix_add_meta_objects(<target> [header1.h header2.h ...])
-```
-
-It takes the target name and a set of **header file** paths as arguments. For each header file, the `meta` tool generates a corresponding `*_meta.cpp` in the `meta/` subdirectory within the build directory, and automatically adds it to the target's source file list for compilation.
-
-**Example:** Suppose your project has the following structure:
-
-```
-src/
-├── CMakeLists.txt
-├── main.cpp
-├── sensors/
-│   ├── step_counter.h       # Contains GX_OBJECT
-│   └── step_counter.cpp
-└── widgets/
-    ├── activity_ring.h      # Contains GX_OBJECT
-    └── activity_ring.cpp
-```
-
-The corresponding `CMakeLists.txt`:
-
-```cmake
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/meta.cmake)
-
-add_executable(my_app
-  main.cpp
-  sensors/step_counter.cpp
-  widgets/activity_ring.cpp
-)
-target_link_libraries(my_app PRIVATE glyphix::sdk)
-
-glyphix_add_meta_objects(my_app
-  sensors/step_counter.h
-  widgets/activity_ring.h
-)
-```
-
-::: tip Pass Header Files Only, Not .cpp Files
-`glyphix_add_meta_objects()` only requires **header files** (`.h`) containing `GX_OBJECT` declarations. The meta-object compiler reads the macro declarations in the header files to generate code and does not need to parse implementation files. Conversely, `.cpp` files must not define classes containing `GX_OBJECT`.
-:::
-
-::: warning Do Not Omit Registration
-If a class declares `GX_OBJECT` but is not registered via `glyphix_add_meta_objects()`, it will result in a **link error** (symbols like `staticMetaObject` cannot be found). Remember to update `CMakeLists.txt` whenever you add a new header file containing `GX_OBJECT`.
-:::
-
-### The `glyphix::sdk` Interface Target
-
-`GlyphixSDK.cmake` defines the `glyphix::sdk` CMake interface library target, which encapsulates all link dependencies of the SDK. You only need to link this single target in your `CMakeLists.txt`:
-
-```cmake
-target_link_libraries(my_target PRIVATE glyphix::sdk)
-```
-
-Internally, this is equivalent to:
-
-```cmake
-# Pseudocode — actually managed automatically by GlyphixSDK.cmake
-target_include_directories(... ${GLYPHIX_INCLUDE_DIRS} wrapper/include)
-target_link_libraries(... -Wl,--start-group ${glyphix-*.a} glyphix-wrapper -Wl,--end-group)
-target_link_libraries(... m pthread dl)  # UNIX system libraries
-```
-
-Wrapping static libraries with `-Wl,--start-group ... -Wl,--end-group` is done to resolve circular dependency linking issues among static libraries on embedded platforms.
-
-::: tip Link Order Issue
-If your project has its own static libraries (such as `add_library(my_module STATIC ...)`), they should be linked **inside** `glyphix::sdk`, otherwise the scope of `--start-group` will not cover them, which may trigger link errors. The approach is to append your static library path after the `GLYPHIX_LIBS` variable in `GlyphixSDK.cmake` is defined and before the `glyphix-sdk` target is created, or directly have the final executable link both `my_module` and `glyphix::sdk` and manually specify `--start-group`.
-:::
-
-## Host Build
-
-Host builds are used to run Glyphix sample programs on your development machine, allowing you to quickly verify widget and module logic without connecting hardware.
-
-```bash
-mkdir build && cd build
-cmake -G Ninja ..
-cmake --build .
-```
-
-The `app/` directory of the SDK contains multiple examples, with each subdirectory corresponding to an independent executable target. For example:
-
-| Subdirectory | Build Output | Description |
-|:---|:---|:---|
-| `app/emulator/` | `demo` | Simulator with GUI, depends on the MiniFB window backend |
-| `app/async/` | `async-demo` | Headless asynchronous service example, demonstrating Native Modules and asynchronous callbacks |
-
-`GlyphixSDK.cmake` automatically detects the compiler target triple of the host (via `gcc -dumpmachine` or `clang -dumpmachine`), and uses it as a key to look up the corresponding pre-compiled libraries in the `libs/` directory. For example, on an x86_64 Linux development machine, it will automatically resolve to `libs/x86_64-linux-gnu/`.
-
-If the automatically detected target triple does not match the actual library directory, you can specify it manually:
-
-```bash
-cmake -G Ninja -DTARGET_TRIPLE=x86_64-linux-gnu ..
-```
-
-If you only need to build a specific example, you can specify the target name:
-
-```bash
-cmake --build . --target demo
-cmake --build . --target async-demo
-```
-
-## CMake Cross-Compilation
-
-For embedded targets, you need to specify the target architecture using the `-DARCH` parameter. The SDK presets the following architecture configurations:
-
-| `-DARCH` Value | Target Platform | Toolchain Prefix |
-|:---:|:---:|:---:|
-| `mips-linux-gnu` | MIPS Linux | `mips-linux-gnu-` |
-| `cortex_m33-gnu` | ARM Cortex-M33 (GNU) | `arm-none-eabi-` |
-| `cortex_m7-gnu` | ARM Cortex-M7 (GNU) | `arm-none-eabi-` |
-
-### MIPS Linux Example
-
-```bash
-export MIPS_TOOLCHAIN_DIR="/opt/mips-gcc720-glibc229"
-
-mkdir build-mips && cd build-mips
-cmake -G Ninja .. \
-  -DARCH=mips-linux-gnu \
-  -DMIPS_TOOLCHAIN_DIR="$MIPS_TOOLCHAIN_DIR" \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-```
-
-If the toolchain is already in your `PATH` (meaning `mips-linux-gnu-gcc` can be called directly), you can omit `-DMIPS_TOOLCHAIN_DIR`, and CMake will locate it automatically.
-
-### ARM Cortex-M Example
-
-```bash
-mkdir build-cm33 && cd build-cm33
-cmake -G Ninja .. \
-  -DARCH=cortex_m33-gnu \
-  -DARM_TOOLCHAIN_DIR="/opt/arm-none-eabi-gcc" \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-```
-
-During cross-compilation, `GlyphixSDK.cmake` does not attempt to automatically detect the target triple—architecture files (such as `cmake/arch/cortex_m33-gnu.cmake`) directly set `TARGET_TRIPLE`, pointing to the correct library directory.
-
-### Supported Target Architectures
-
-The SDK only provides pre-compiled libraries for the architectures listed in the table above. If your target platform is not among them, you need to contact Glyphix to obtain an SDK package for the corresponding architecture; you cannot add support yourself on top of the existing SDK.
-
-## Other Build Systems
-
-While the SDK uses CMake as its primary build system, Glyphix also provides support for other build systems to partner manufacturers. This typically just involves importing the pre-built SDK libraries and header files, and adding the porting layer source files.
-
-### Project Limitations
-
-This approach is suitable for projects that only require standard SDK features. Once custom widgets, Native Modules, or other capabilities are needed, you must introduce the `meta` meta-object compiler to generate the necessary binding code. Currently, CMake is the only supported build system.
-
-There are several available alternatives:
-1. Build custom code using the SDK CMake project, and then link the generated libraries into your main project.
-2. Build custom code using the SDK CMake project, and then include the generated source files (`*_meta.cpp`) into your main project.
-3. Directly invoke the `meta` tool in your build system to generate binding code.
-
-Among these, the Glyphix SDK itself is built using Method 1. However, this is not suitable for downstream manufacturers' internal development workflows because it requires maintaining a separate project outside of the main firmware project and linking the generated binary libraries back to the main project, which introduces severe version management issues.
-
-Method 3 is also usually undesirable because manufacturers generally do not want to introduce an external tool into their main project's build system.
-
-### Recommended Approach
-
-Therefore, Method 2 is recommended. This approach copies the source code; although it requires manual operation, it is easy to audit and integrate into existing build pipelines. You can build custom code in the SDK's CMake project to generate the `*_meta.cpp` files, then copy these files into your main project and compile them within your main project's build system.
-
-Another limitation of this method is that the custom source files must successfully build within the SDK project environment. Specifically, this requires them to be buildable independently of the main project, which includes:
-- Include paths and preprocessor definitions must be set correctly, and the header files of custom components must not include header files specific to the main project.
-- It is best if the `.cpp` files of custom components can also compile successfully; although this does not affect the generation of `*_meta.cpp` files, it facilitates rapid iteration and debugging in the host environment.
-
-::: tip
-For most [custom widgets](widget.md), this is not an issue. It can be slightly more cumbersome for [Native Modules](native-module.md), and you should note: header files declaring `GX_OBJECT` should not include header files specific to the main project.
-:::
 
 ============================================================
 FILE_PATH: src/transl/EN/cxxdev/global-assets-migrate.md
@@ -2402,361 +1215,6 @@ map.readJSON("/fonts/", R"({
 ```
 
 The first parameter is `baseUri`, used to resolve relative paths in `urls`.
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/platform-font-fallback.md
-
-# Platform Font Fallback
-
-The Glyphix framework has a built-in font loading and fallback mechanism based on `font-face` / `font-family`. However, target platforms usually come with comprehensive font pipelines (such as Windows DirectWrite or macOS CoreText) that already implement system font fallback and related optimizations.
-
-To make full use of the platform font pipeline, Glyphix allows you to take over font fallback: when a font within the framework cannot cover a certain character, the task is handed over to the platform to find and render the appropriate system font. This article is intended for Glyphix system developers and guides you step-by-step through the integration process.
-
-Public header files involved:
-- `gx_unite.h`: Contains the UniTE public interface and the engine installation function `installEngine()`;
-- `gx_shapingadapter.h`: This is the primary interface;
-- `gx_fontdriver.h`: Provides the `FontDriver` encapsulation mechanism;
-- `gx_fontloader.h`: Provides the font loader interface.
-
-## Overall Architecture
-
-For a piece of text to be displayed on the screen, it goes through the following pipeline: application text is handed over to the **paragraph layout engine** for line breaking and positioning; text segments with the same script and direction are **shaped** into glyphs; missing characters are filled in by **font fallback**; glyphs are then handed over to the **font driver** to be rendered into bitmaps; and all fonts come from the registration, loading, and reuse of the **font management** layer.
-
-<ArchDiagram max-width="560px">
-  <div>Application Text<div class="remark">Paragraph · String · Style</div></div>
-  <div>
-    Paragraph Layout Engine
-    <div class="group row">
-      <div>Lightweight Engine LiTE<div class="remark">Simple typesetting (Default engine)</div></div>
-      <div>UniTE Engine<div class="remark">BiDi · Shape · Complex scripts</div></div>
-    </div>
-  </div>
-  <div>
-    Shaping · Font Fallback
-    <div class="group row">
-      <div>HarfBuzz<div class="remark">GSUB / GPOS</div></div>
-      <div>Simple Shape<div class="remark">Character → Glyph</div></div>
-      <div class="subject">FontFallbackShaper<div class="remark">Family fallback · Platform system fonts</div></div>
-    </div>
-  </div>
-  <div>
-    Font Rendering
-    <div class="group row">
-      <div>FontDriver<div class="remark">TTF / FreeType</div></div>
-      <div>FontDriverFamily<div class="remark">Multi-face cascading</div></div>
-      <div class="subject">PlatformFont Wrapper<div class="remark">Render platform fallback glyphs</div></div>
-    </div>
-    <div>GlyphCache - Glyph bitmap cache</div>
-  </div>
-  <div>
-    Font Management (FontManager)
-    <div class="group row">
-      <div>Registration / Lookup<div class="remark">Face · Family · Attributes</div></div>
-      <div class="subject">FontLoader<div class="remark">Load face, inject wrapper</div></div>
-    </div>
-  </div>
-</ArchDiagram>
-
-The three highlighted parts in the diagram are covered in this article:
-1. The fallback strategy `FontFallbackShaper`, used to identify missing characters and perform fallback shaping;
-2. The `PlatformFont` wrapper responsible for rendering platform fallback fonts, used in tandem with `FontFallbackShaper`;
-3. The `FontLoader` used to load the platform fallback font wrapper, which will be registered into `FontManager`.
-
-The rest of the framework layers are already implemented. Text shaping (`ShapingAdapter`) usually does not need to be implemented from scratch; you can directly reuse the reference implementation.
-
-### Prerequisites
-
-Before implementing the platform font fallback feature according to this document, you need:
-
-- Enable the UniTE text engine (compared to the default lightweight engine, it supports complex script shaping and multi-level fallback).
-- The target platform must support a complete font pipeline capable of advanced features such as system font shaping and script mapping. This is usually a complex subsystem that most MCU RTOS platforms lack.
-
-::: important
-Compared to the default LiTE engine, enabling UniTE and the complete font pipeline requires more memory and firmware space. Moreover, the performance of this engine is lower than the lightweight LiTE, so you need to evaluate whether it is necessary to enable it for complete Unicode support and internationalization requirements.
-:::
-
-## Reusing the Shaping Backend
-
-`ShapingAdapter` is responsible for shaping characters into glyphs. The built-in `HarfBuzzShaper` (`gx_harfbuzz_shaper.cpp`) already implements complete OpenType shaping. It calls HarfBuzz for shaping, and then writes glyph indices, advances, and offsets into the output based on the target pixel size.
-
-`HarfBuzzShaper` relies on FreeType to read font files, so both HarfBuzz and FreeType libraries must be included simultaneously. If these libraries already exist on the target platform, make sure their versions match, otherwise link or runtime errors may occur.
-
-::: tip
-Similar to HarfBuzz's [responsibility](https://harfbuzz.github.io/what-harfbuzz-doesnt-do.html), `ShapingAdapter` does not handle text runs containing different fonts, which includes the "font fallback" mechanism described below. Therefore, as long as the font used in shaping is missing a character, the `ShapingAdapter` implementation will return the `.notdef` glyph (index `0`), leaving it to the fallback strategy to handle.
-:::
-
-## Implementing the Fallback Strategy
-
-`FontFallbackShaper` is the core of the fallback mechanism. The engine calls it every time it shapes a section of text, requiring a glyph sequence **free of missing characters** to be returned as the shaping result. Unlike `ShapingAdapter`, it is not just shaping for a single font-face, but is designed for a two-tier fallback.
-
-### Two-Tier Fallback Cascade
-
-`FontFallbackShaper::shape()` performs fallback in two tiers from nearest to farthest:
-
-- **First tier**: Use other fonts within the current family to complement each other. This is already implemented by the framework; you only need to call `builtinShape()`.
-- **Second tier**: Missing characters that cannot be resolved by the first tier are handed over to the platform system fonts. This tier is implemented by you.
-
-Missing characters are represented in the data by a glyph index of `0`, i.e., `.notdef`. The return value `FallbackResult` of `shape()` uses bit flags to express the result: `result & NotNeeded` being true indicates that there are no more missing characters and can end directly; otherwise, common returns are `FullyResolved` (all processed) or `PartiallyResolved` (some `.notdef` still remain).
-
-### `shape()` Function Skeleton
-
-First call the first tier; return if there are no missing characters, otherwise proceed to the second-tier platform font fallback. `m_shaper` is the `ShapingAdapter` held by this fallback processor (usually `HarfBuzzShaper`).
-
-```cpp
-FallbackResult shape(GlyphRunBundle &storage,
-                     TextSpan text,
-                     FontDriver *font) override {
-    // First tier: Use builtin API to handle fallback within the family
-    auto r = builtinShape(storage, text, font, &m_shaper);
-    if (r & NotNeeded)
-        return r;                                  // No missing characters, finish
-    return resolveByPlatform(storage, text, font); // Second tier, see below
-}
-```
-
-`builtinShape()` is the only place that depends on `ShapingAdapter`. In this case, you typically need to implement `PlatformFallbackShaper` as follows:
-```cpp
-class PlatformFallbackShaper : public FontFallbackShaper {
-    HarfBuzzShaper m_shaper; // Directly define as a member variable, no pointer reference needed
-
-public:
-    PlatformFallbackShaper() = default;
-    FallbackResult shape(GlyphRunBundle &storage,
-                         TextSpan text, FontDriver *font) override;
-};
-```
-Please note that `m_shaper` is merely a private member variable of your platform fallback strategy and does not need to be exposed externally at all. When calling `builtinShape()` inside `shape()`, simply pass `&m_shaper`.
-
-::: tip
-In extreme cases (such as the initial adaptation phase), you can ignore the fallback within the family and directly skip `builtinShape()`, only handling the second-tier platform fallback. In this case, the `m_shaper` member variable can be omitted.
-
-Regardless, specific `ShaperAdapter` classes generally cannot be defined as local variables because they may hold HarfBuzz cache states, and recreating them on every shaping operation would cause severe performance degradation.
-:::
-
-### Obtaining Platform Fonts
-
-The second tier hands over missing characters to the platform and ultimately lets the wrapper render them. `fallbackFont(font)` returns the wrapper registered at the end of the family (see below). Its static type is `FontDriver *`, and you need to cast it back to your own wrapper type in order to call your custom registration and query interfaces.
-
-```cpp
-// Casting can also use dyn_cast, but if there is only one wrapper type, static_cast is also safe
-auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
-if (wrapper == nullptr)
-    return PartiallyResolved; // No wrapper at the end of the family, cannot continue
-```
-
-::: warning Must Be Implemented in Pairs
-The fallback strategy and the wrapper are a matched pair: the `static_cast` above requires that `fallbackFont()` returns precisely your own wrapper type. Make sure that the installed fallback processor matches the registered wrapper.
-:::
-
-### Simple Fallback Shaping
-
-The most common and starter-friendly scenario is: the entire run can be shaped using a single platform font (i.e., a certain system font file completely covers the script). In this case, select the platform font according to `storage.run().spec.script`, re-shape the entire run, write the entire section into the same `faceId`, **directly overwriting the first-tier result**, without needing to merge with already resolved glyphs.
-
-UniTE splits runs by script, and Latin and CJK within the same text segment are inherently different runs. When the main font focuses on Latin and encounters scripts such as CJK, Arabic, or Devanagari, the entire run after `builtinShape()` is often `.notdef`, and re-shaping and overwriting the entire run will not lose any resolved glyphs. Therefore, multilingual typesetting almost entirely follows this path and is not a degenerated special case.
-
-```cpp
-// Select platform font based on script (platform font handle, not FontDriver), register to get faceId
-auto sysFont = platformFontForScript(storage.run().spec.script);
-uint32_t faceId = wrapper->registerFont(sysFont);
-// Your shaping step produces glyphCount glyphs (demonstrated here with HarfBuzz output)
-auto &run = storage.resize(glyphCount);
-for (int i = 0; i < glyphCount; ++i) {
-    run.data.glyphIds[i]   = GlyphIds::encodeFallback(gid[i], faceId);
-    run.data.xAdvances[i]  = uint16_t(scale(pos[i].x_advance));
-    run.data.xOffsets[i]   = int16_t(scale(pos[i].x_offset));
-    run.data.yOffsets[i]   = int16_t(scale(pos[i].y_offset));
-    run.data.clusterMap[i] = static_cast<int>(info[i].cluster);
-}
-```
-
-The fields `pos`, `info`, `gid`, and `scale` come from your shaping steps, demonstrated above using HarfBuzz output.
-
-::: tip Platform Shaping Capabilities
-Platforms usually come with their own shaping capabilities (such as DirectWrite, CoreText). Whether to reuse HarfBuzz depends on the specific platform; the HarfBuzz output in the demonstration can be replaced with the platform's shaping output. For RTL runs (`spec.bidiLevel & 1`), the direction must be passed to the shaper.
-:::
-
-The premise of this method is that the entire run maps to a single platform font. It **does not apply to Common scripts** (Emojis, symbols, etc.): different characters within the same run may belong to multiple platform fonts, requiring the complex fallback described below.
-
-### Complex Fallback Shaping
-
-When multiple platform fonts are needed within a run, or only some clusters need fallback, the simple solution no longer applies. Considering that specific fallback and merging algorithms depend on platform APIs, this document only constrains the semantics that the merged `GlyphRun` must satisfy, and the implementation must handle it accordingly:
-
-- Glyphs already resolved in the first tier are **retained as is**, and the second tier only replaces clusters that are still `.notdef`.
-- Fill every glyph slot with `glyphIds`, `xAdvances`, `xOffsets`, `yOffsets`, and `clusterMap`; fallback glyphs are marked using `encodeFallback(gid, faceId)`.
-- `clusterMap[i]` is the offset of the source code point corresponding to this glyph relative to **this run** (consistent with `spec.text`, range `[0, text.length())`), used for drawing mapping and per-line clipping.
-- Glyph count is variable: use `storage.resize()/reset()` to adjust storage, then write slot by slot. `GlyphRunBundle` will automatically update `run().glyphCount`.
-- When a single source cluster maps to multiple glyphs, the order and sum of advances must be correct; code points swallowed by GSUB cluster merging should produce zero-advance glyphs to avoid gaps or misalignments.
-- `faceId` must be a stable ID registered in the wrapper and valid throughout its lifecycle; the glyph order and shaping direction of RTL runs must be consistent.
-- Return value: return `FullyResolved` if all are filled, or `PartiallyResolved` if residuals remain.
-
-As long as the output satisfies the above constraints, the framework can render correctly. Whether to query platform APIs segment by segment or reuse HarfBuzz to shape font by font can be chosen according to the platform.
-
-### Line Height and Caching
-
-Line height depends on **which font actually draws each glyph**. `builtinLineMetrics()` is responsible for parts of the glyphs within the family; glyphs with fallback marks (`isFallback()`) query the wrapper for their system font's ascender and descender and incorporate them. Fallback glyphs are encoded in `GlyphIds` by `encodeFallback`, and their `fontIndex()` is the written `faceId`, based on which the corresponding platform font is retrieved from the wrapper.
-
-```cpp
-VerticalMetrics resolveLineMetrics(const GlyphIds *gids, int count,
-                                   FontDriver *font) const override {
-    // Handle glyphs within the family
-    VerticalMetrics m = builtinLineMetrics(gids, count, font);
-    // Handle platform fallback glyphs
-    auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
-    if (wrapper == nullptr)
-        return m;
-    // For glyphs where gids[i].isFallback(), query asc/descent from wrapper and incorporate into m
-    for (auto gid : utils::span<const GlyphIds>(gids, count)) {
-        if (!gid.isFallback())
-            continue; // Process fallback glyphs only
-        uint32_t faceId = gid.fontIndex(); // The fontIndex() of a fallback glyph is its faceId
-        auto face = wrapper->fontForFaceId(faceId); // Platform font handle (not FontDriver)
-        if (face == nullptr)
-            continue;
-        m.ascent = max(face->ascender(), m.ascent);
-        m.descent = min(face->descender(), m.descent);
-    }
-    return m;
-}
-```
-
-You can also aggregate the fallback fonts of the entire line and query their asc/descent all at once to avoid per-glyph queries in a loop.
-
-`flush()` is used to release system fonts cached by the wrapper:
-
-```cpp
-void flush(FontDriver *font) override {
-    if (auto *w = static_cast<PlatformFont *>(fallbackFont(font)))
-        w->releaseFonts();
-}
-```
-
-::: tip
-`flush()` is called by the framework when a paragraph is destroyed or memory is tight. Please clean up platform resources held by the wrapper inside it.
-:::
-
-## Fallback Font `FontDriver` Wrapper
-
-The wrapper is responsible for rendering the glyphs shaped in the previous step into bitmaps. It inherits from `FontDriver` and carries the `PlatformFallback` flag upon construction, letting the framework know it is a fallback font.
-
-```cpp
-class PlatformFont : public FontDriver {
-public:
-    PlatformFont(const String &family, const FontAttribute &attr)
-        : FontDriver(family, attr, Vector | PlatformFallback) {}
-    // ... bitmapOf / metricsOf ...
-protected:
-    void requestHandler(int) override {}
-};
-```
-
-This font wrapper is not used to load some font file (like `FontDriverTTF` does). Its role is to hand over fallback glyphs to the platform font pipeline for processing, while the internal implementation is opaque to Glyphix.
-
-### Dual-Mode Query
-
-The `code` received by the wrapper has two meanings, distinguished by the `CodeAsGlyphId` bit:
-
-- **Tagged**: Query by glyph index, with the high bits carrying `faceId` and the low bits being the glyph index. After decoding, it is routed to the corresponding platform font, and then queried for the corresponding `GlyphBitmap` using `glyphId`.
-- **Untagged**: Unicode character query, fallback lookup among registered platform fonts by code point, which internally converts to a glyph index before querying.
-
-A typical `bitmapOf()` implementation is as follows:
-
-```cpp
-bool bitmapOf(uint32_t code, GlyphBitmap *bitmap) override {
-    if (code & CodeAsGlyphId) { // By glyph index
-        uint32_t faceId  = (code >> 16) & 0x3ff;
-        uint32_t glyphId =  code & 0xffff;
-        auto face = fontForFaceId(faceId); // Platform font handle (not FontDriver)
-        return face && face->bitmapOf(glyphId, bitmap);
-    }
-    // Unicode character lookup; iterate registered fonts here, or use a more efficient mapping table
-    for (auto *face : registeredFonts()) {
-        uint32_t glyphId = face->glyphIndexOf(code);
-        if (face->bitmapOf(glyphId, bitmap))
-            return true;
-    }
-    return false;
-}
-```
-
-::: tip
-`fontForFaceId()` returns a platform font handle, **not a `FontDriver`**; `face->bitmapOf(...)` and `face->glyphIndexOf(...)` above are pseudo-code operating on that handle, representing "getting `GlyphBitmap` by `glyphId`" and "getting `glyphId` by code point" respectively.
-:::
-
-`metricsOf()` uses the same dual-mode logic; `advancesOf()`, `baseline()`, etc., are also calculated from platform fonts. `duplicate()` only needs to copy a mapping table.
-
-### `faceId` Mapping
-
-The wrapper maintains a mapping of `faceId` → platform font for the fallback strategy to register and look up during rendering.
-
-`faceId` is a $10$-bit integer ($[0, 1023]$), and its meaning is entirely defined by the implementation, with the only requirement being **stability throughout its lifecycle**. There are two common approaches:
-
-- **Fixed by script**: Directly use the `Script` enum value as `faceId`. The wrapper holds the corresponding platform font by script, and registers it by script upon creation without runtime allocation.
-- **Allocated on demand**: Allocate the next index whenever a new platform font is encountered, maintaining a growing table.
-
-Example of fixing by script (`faceId` is the script value):
-```cpp
-PlatformFontHandle fontForScript(Script script) {
-    switch (script) {
-    case Script::Han:    return sysHanFont;
-    case Script::Arabic: return sysArabicFont;
-    case Script::Latin:  return sysLatinFont;
-    // ...
-    }
-    return sysDefaultFont;
-}
-```
-You need to handle script-to-font mapping, `faceId` allocation, and platform font object caching yourself.
-
-::: tip
-`faceId` is the contract between the fallback strategy and the wrapper: `PlatformFallbackShaper` uses it to encode glyphs, and `PlatformFont` uses it to decode back to system fonts. Both ends must interpret `faceId` consistently, and it must be representable by a $10\text{-bit}$ integer.
-:::
-
-## Registering the Wrapper
-
-Finally, let the framework incorporate the wrapper into family loading. Implement `FontLoader::load()`, return the wrapper for a certain generic family name, and then install it into `FontManager`:
-
-```cpp
-struct PlatformFontLoader : public FontLoader {
-    FontDriver *load(const String &face, const FontAttribute &attr) override {
-        if (face == "sans-serif")
-            return new PlatformFont(face, attr);
-        return nullptr;
-    }
-};
-
-CoreApp()->fontManager()->install(new PlatformFontLoader);
-```
-
-When an application requests a font in the form of `"<primary-face>,sans-serif"`, the framework merges each part into the same family in comma-separated order, with the wrapper acting as the last item to become the fallback face, allowing `fallbackFont()` to retrieve it.
-
-`PlatformFont` and `PlatformFontLoader` are usually only registered as fonts for generic family names like `sans-serif`, rather than any specific system font name. This allows applications to use the same family name across different platforms without knowing the platform's specific fonts.
-
-::: warning Functional Limitation
-The wrapper must always be placed as the last item in the family, and applications must write family names in the order described above. The mechanism to automatically guarantee this order is still under development.
-:::
-
-## Installation and Assembly
-
-`installEngine()` in `gx_unite.h` plugs your fallback strategy into the engine:
-
-```cpp
-unite::installEngine(*CoreApp()->typesetCore(),
-                     std::make_unique<PlatformFallbackShaper>());
-```
-
-Complete assembly sequence:
-
-1. `fontManager()->install(new PlatformFontLoader)`: Register the wrapper loader.
-2. `installEngine(...)`: Install the fallback strategy holding the shaping backend.
-3. Request fonts in the form of `"<primary-face>,sans-serif"`, and lay out and render as usual.
-
-## Notes
-
-- Advances / offsets are uniformly Q26.6 fixed-point (value = pixels × 64).
-- Unresolved `.notdef` (glyph index $0$) are skipped during rendering, displaying blank spaces or tofu blocks at their corresponding positions.
-- `faceId` is only $10$ bits, meaning the upper limit of simultaneously active system fonts in a single family is $1024$.
-- The fallback strategy and the wrapper must be implemented in pairs and maintain type consistency (relying on `static_cast`).
-- Be sure to release the platform font caches held by the wrapper inside `flush()`.
 
 ============================================================
 FILE_PATH: src/transl/EN/cxxdev/native-module.md
@@ -3616,703 +2074,777 @@ This strategy effectively blocks unauthorized access at the entry point. Even if
 Library Loader entry permission checks have already been introduced in related documentation.
 
 ============================================================
-FILE_PATH: src/transl/EN/cxxdev/widget-slider-demo.md
+FILE_PATH: src/transl/EN/cxxdev/async.md
 
-# Practical Guide to Custom Widgets
+# Asynchronous Feature Development
 
-`slider-demo` is a complete example included with the Glyphix SDK, demonstrating how to implement a **custom control**—`WaveSlider`—from scratch in C++. This control adds a wave-fill effect and a click-ripple motion effect on top of the standard `Slider`. The example also covers `StyleEngine` customization and building UI interfaces directly in C++.
+In embedded systems, many operations are time-consuming—such as reading flash memory, accessing the network, or waiting for hardware responses. If these operations are executed on the UI thread (which is also the rendering thread), it will freeze the UI and cause the application to become unresponsive.
 
-Using this example as a guideline, and combining it with the core concepts from the [Widget Development Guide](./widget.md), this article demonstrates the complete steps required to customize a new Widget.
+Glyphix solves this problem by seamlessly integrating asynchronous operations with JavaScript's `Promise` mechanism. The C++ side handles the actual asynchronous logic (typically on another thread or via event-driven mechanisms), the JavaScript side waits for the result using `async/await` or `.then()`, and the UI remains smooth during the wait.
 
-## Example Structure
+## Core Mechanism
 
-The file structure of the example is as follows:
+The core of the asynchronous functionality is the "Session" model. When a JavaScript asynchronous call is initiated, the C++ side creates a **session object** (`AsyncSession`) and immediately returns a `Promise` to JavaScript. When the operation completes, the session drives the resolution (resolve or reject) of the `Promise`, and the `then/catch` or `await` on the JavaScript side is executed accordingly.
 
-```
-app/slider-demo/
-├── CMakeLists.txt
-├── main.cpp           # Application entry point, building the UI directly in C++
-├── styleengine.h/.cpp # Custom StyleEngine implementation
-└── waveslider.h/.cpp  # WaveSlider control implementation
-```
+The session object is bound to the `Applet` that initiated the call. When the application exits, the session is automatically cleaned up, so developers do not need to manage memory manually.
 
-You can directly compile and run the `slider-demo` target to see the effect without needing a frontend project.
+The following diagram illustrates the position of the asynchronous session within the framework and its core components:
 
-### Build Instructions
+<ArchDiagram max-width="520px">
+  <div>
+    JavaScript Application Layer
+    <div class="group row">
+      <div>async/await<div class="remark">Call module functions</div></div>
+      <div>Promise<div class="remark">Wait for async results</div></div>
+    </div>
+  </div>
+  <div class="subject">
+    Async Session (C++)
+    <div class="group row">
+      <div>ResultSession<div class="remark">Single query · Promise bridging</div></div>
+      <div>Signal&lt;T&gt;<div class="remark">Global event broadcasting</div></div>
+    </div>
+    <div class="group row">
+      <div>Client Class<div class="remark">Pure C++ · No JS dependency</div></div>
+      <div>SingleTimer<div class="remark">Timeout control</div></div>
+    </div>
+  </div>
+  <div>
+    Async Executor
+    <div class="group row">
+      <div>ThreadPool<div class="remark">Background execution by default</div></div>
+      <div>Custom Context<div class="remark">Hardware driver · Event loop</div></div>
+    </div>
+  </div>
+</ArchDiagram>
 
-After [setting up the SDK](sdk-setup.md#preparation), use the following commands to build and run the example:
+The asynchronous framework implementation is located in `gx_async.h` and encapsulated within the `gx::async` namespace. The framework provides several useful facilities:
+- **`async::ResultSession`**: Used for single asynchronous queries, suitable for scenarios such as reading files and initiating network requests.
+- **`async::make_timeout()`**: Used to create a one-shot timer to attach timeout functionality to a single session.
+- **`async::Signal<T>`**: Used for global event broadcasting, suitable for scenarios such as device state changes and external event notifications.
 
-```bash
-mkdir build && cd build
-cmake .. && cmake --build . -j
-bin/slider-demo
-```
+## Single-Query ResultSession
 
-::: important Host System
-You must build and run this example on a Linux system that supports a desktop environment.
+`async::ResultSession<T>` is suitable for scenarios where you "initiate a query and wait for a single result," such as reading a file or making a network request. It is the most commonly used asynchronous pattern and works similarly to an asynchronous function call.
+
+### Working Model
+
+The complete lifecycle of a `ResultSession` is as follows:
+
+1. **Creation**: The module function creates a session via `async::make<ResultSession<T>>(applet)`, and the session is automatically bound to the current `Applet`.
+2. **Configuration**: Access the client object via `session->client()` to set the pure C++ parameters required for the task.
+3. **Submission**: Call `session->request(resolver)` to submit the task, which immediately returns a `Promise` to JavaScript.
+4. **Execution**: The framework forwards the client's `resolve()` method to the **asynchronous executor** (defaults to a background thread pool) for execution.
+5. **Reporting**: After `resolve()` returns, the result is **automatically scheduled back to the UI thread** to drive the resolution or rejection of the `Promise`.
+6. **Cleanup**: The session object is automatically destroyed after reporting is complete, or automatically cleaned up when the `Applet` exits.
+
+::: important Client Class Isolation Requirements
+The client class (i.e., the template parameter `T`) runs in the asynchronous context and **must not hold or access any objects that interact with JavaScript**, including `JsValue`, `Applet *`, or any other UI-thread-exclusive objects.
+
+The client class should be a **pure C++ data processing unit**, holding only value-type data required to execute the task (such as `String`, `int`, or custom structures), and completing all work within the `resolve()` method. All interactions between the UI thread and the asynchronous thread are handled automatically by the framework.
 :::
 
-## Building the UI Directly in C++
+### Basic Usage
 
-In `main.cpp`, the application's UI is entirely constructed using C++ code within the constructor, styled similarly to Qt Widgets or LVGL: child controls are created via `new` and passed a pointer to their parent control, without declarative templates.
-
-```cpp
-int main() {
-    Application app(new BSPPlatform(500, 500));
-    app.setFont(Font(GX_EXAMPLE_ASSETS "/roboto.ttf", 32));
-    app.setStyleEngine(new MyStyleEngine);
-
-    Window window;
-    window.setFlowLayout(true);
-
-    MyWidget widget(&window);
-    StyleModifier(&widget)->setSize(
-      Length::fromPercent(100), Length::fromPercent(100));
-    StyleModifier(&widget)->setMargin(Margin(10));
-    return app.exec();
-}
-```
-
-`Application` receives a platform backend object (`BSPPlatform`) and a resolution. `Window` is the root control. When `setFlowLayout(true)` is enabled, its child controls automatically arrange themselves according to a flow layout.
-
-`setStyleEngine` mounts a custom style engine. This is optional (the default style is used otherwise). You only need to provide your own implementation when you need to customize the appearance of controls (such as modifying the `Switch` as shown below).
-
-### The `MyWidget` Class
-
-`MyWidget` inherits from `ScrollArea`, creating and adding child controls in its constructor:
+First, define a client class and implement the `resolve()` method. This method is called in the asynchronous context and returns a result wrapped in `async::Result<T>`:
 
 ```cpp
-class MyWidget : public ScrollArea {
+#include "gx_async.h"
+#include "gx_file.h"
+
+using namespace gx;
+
+// Client class: Pure C++ data processing, holding no JS objects
+class ReadTextClient {
 public:
-    explicit MyWidget(Widget *parent = nullptr) : ScrollArea(parent) {
-        addItem(&m_switch);
-        addItem(&m_label);
-        addItem(&m_slider);
-        // ...
+    void setPath(const String &path) { m_path = path; }
+
+    // Called in the asynchronous context, returns the operation result
+    async::Result<String> resolve() {
+        File file(m_path);
+        if (!file.open(File::ReadOnly | File::Text))
+            return async::Status(300);  // IO error
+        int size = int(file.size());
+        String text(size);
+        text.resize(file.read(text.data(), size));
+        return text;  // Success: return file content
     }
-    // ...
+
+    // Optional: Custom error message (used when the Promise is rejected)
+    static const char *errorMessage(async::Status status) {
+        switch (status.value()) {
+        case 300: return "io error";
+        default:  return "unknown error";
+        }
+    }
+
 private:
-    Label  m_label;
-    Switch m_switch;
-    Slider m_slider;
+    String m_path;  // Absolute path that has already passed security validation
 };
 ```
 
-Child controls are declared as member variables and initialized automatically upon construction (the parent-child relationship is established in `addItem`). The lifecycle of these member variables is managed by `MyWidget`, requiring no manual `delete`.
-
-`ScrollArea` provides out-of-the-box scrolling, inertia, and bounce-back capabilities, allowing `MyWidget` to operate without writing any custom scrolling logic.
-
-::: tip Role of `addItem()`
-In general, you can attach child controls directly to a parent control using `setParent()`. However, `ScrollArea` internally contains a dedicated content container (`contentWidget()`). Regular elements cannot be added directly to a `ScrollArea`; instead, they must be added to the content container via `addItem()`.
-
-For simple containers, `setParent()` and `addItem()` have the same effect. But for special containers like `ScrollArea`, you **must** use `addItem()` to add elements.
-:::
-
-### Signal Connections
-
-States are synchronized between controls using signal connections:
+Next, create a session in the module function and return a `Promise`. Note: You **must** use `Applet::resolveUri()` to perform security validation on the path passed from JavaScript, rather than blindly trusting the string provided by the application:
 
 ```cpp
-m_slider.changed.connect(this, &MyWidget::onSlider);
-m_switch.checked.connect(this, &MyWidget::onSwitch);
+static JsValue readText(JsCtx ctx) {
+    Applet *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
+        return {};
 
-// Bidirectionally synchronize the values of two Sliders
-waveSlider->changed.connect<AbstractSlider>(&m_slider, &Slider::setValue);
-m_slider.changed.connect<AbstractSlider>(waveSlider, &WaveSlider::setValue);
+    // ✅ Secure: Validate and convert the path via resolveUri
+    auto uri = applet->resolveUri(ctx.arg(0)["uri"].toString());
+    if (uri.empty())
+        return {};  // URI validation failed, access denied
 
-// Toggle the wave mode of WaveSlider using the switch
-m_switch.checked.connect(waveSlider, &WaveSlider::setWaveMode);
-```
+    using Session = async::ResultSession<ReadTextClient>;
+    auto *session = async::make<Session>(applet);
+    session->client().setPath(uri);  // Pass the validated secure path
 
-::: tip Signal Usage
-The syntax for signal connection is `signal.connect(receiver, &Type::method)`. When the signatures of `Slider::setValue` and `WaveSlider::setValue` do not match exactly, you can declare a common base class (`AbstractSlider`) via template parameters to resolve ambiguity.
-
-If you are unsure of the actual type to which a slot function belongs, you can check it using IDE hints. For example, when inspecting `Slider::setValue`, the IDE typically suggests:
-```cpp
-public method
-void setValue(int value) in class AbstractSlider 
-```
-This indicates that `setValue` is actually declared in `AbstractSlider`. Therefore, you must specify `AbstractSlider` during connection to resolve ambiguity:
-```cpp
-m_slider.changed.connect<AbstractSlider>(waveSlider, &WaveSlider::setValue);
-```
-:::
-
-### Styling with StyleModifier
-
-`StyleModifier` is a tool for programmatically setting control styles in C++, functionally equivalent to configuring style properties in a template:
-
-```cpp
-StyleModifier m(waveSlider);
-m->setSize(120, 300);
-m->setMargin(Style::Margin{Length::fromAuto(), 20});
-m->setColor(Color{"#35a7ff"});
-```
-
-`setColor` sets the foreground color for the `WaveSlider`, which is read in `paintEvent` and used to render the progress fill color.
-
-## Customizing StyleEngine
-
-The built-in [`Switch`](/components/switch.md) is a fully functional toggle control, but its default appearance resembles [Fluent 2](https://fluent2.microsoft.design/components/web/react/core/switch/usage), which might not suit the visual style of a specific device or brand.
-
-`StyleEngine` is the mechanism designed to solve this. Device manufacturers can implement their own `StyleEngine` to customize the appearance of all built-in controls while retaining their interaction logic, without modifying framework code.
-
-A customized `Switch` is not just a change in theme color; rather, the entire set of switch animations (thumb translation, color transition, press scaling) is achieved through **programmatic interpolation** rather than pre-recorded frame sequences. This means:
-
-- Animations are completely smooth, with frame rates matching the rendering system;
-- Colors and sizes can be overridden by application developers through style properties, as `StyleEngine` provides overridable default values;
-- No need to prepare different image assets for various resolutions.
-
-### Responsibilities of `StyleEngine`
-
-`StyleEngine` is the core of the Glyphix styling system, responsible for three tasks:
-
-1. **Providing a palette**: Global color variables, similar to CSS custom properties, which can be read by all built-in and custom controls.
-2. **Painting control appearance**: The visual effects of built-in framework controls (such as `Switch`, `Slider`) are entirely delegated to `StyleEngine::paint()`, which developers can override in derived classes to achieve completely different appearances.
-3. **Recommending sizes (size hint)**: The recommended size of a control under different style states, used as a reference for the layout system.
-
-### Defining MyStyleEngine
-
-Inherit from `StyleEngine` and override `sizeHint()` and `paint()`:
-
-```cpp
-class MyStyleEngine : public StyleEngine {
-public:
-    MyStyleEngine();
-    Size sizeHint(StyleOption::Type type, const Widget *widget) const override;
-    void paint(Painter &painter, Widget *widget, StyleOption &option) override;
-};
-```
-
-Set the palette in the constructor:
-
-```cpp
-MyStyleEngine::MyStyleEngine() {
-    setPalette(SwitchDark,  Color(0xff565656));
-    setPalette(SwitchLight, Color(0xff2f5cff));
-    setPalette(SwitchThumb, Color(0xffffffff));
+    // Submit the async task, passing the complete options object for quick-app callback compatibility
+    session->request(ctx.arg(0));
+    return session->promise();
 }
 ```
 
-`SwitchDark`, `SwitchLight`, and `SwitchThumb` are predefined semantic color keys in the `StyleEngine` enum. Different theme engines can assign different colors to them, and controls always read them by key name rather than hardcoding color values.
+::: tip Why pass `ctx.arg(0)`?
+`request()` receives the entire `options` object passed from the JavaScript side (i.e., `ctx.arg(0)`), which is used to automatically adapt to both [calling styles](/api/README.md#快应用异步接口) of quick-app asynchronous interfaces:
 
-### Overriding `sizeHint()`
+- If `options` contains any of the `success`, `fail`, or `complete` properties, it is determined to be **callback style**, and the corresponding function is called directly. `request()` does not return a meaningful value;
+- Otherwise, it is determined to be **Promise style**, creating a new `Promise`, and `session->promise()` returns this object for the caller to `await`.
 
-`sizeHint()` informs the framework of the **recommended size** of built-in controls under a given style state. Taking `Switch` as an example, its width and height should be proportional to the font pixel size:
+This allows the exact same C++ implementation to simultaneously support both standard quick-app callback interfaces and modern Promise/async-await interfaces without any extra code. If you are certain that only the Promise style is supported, you can also pass an empty value `{}`.
+:::
+
+::: danger Do not skip URI validation
+Directly using strings passed from JavaScript as file paths is a severe security vulnerability:
 
 ```cpp
-Size MyStyleEngine::sizeHint(StyleOption::Type type, const Widget *widget) const {
-    // The size ratio of the customized Switch can differ from the built-in strategy
-    if (type == StyleOption::OptionSwitch) {
-        float f = widget->font().pixelSize();
-        int d = int(round(f));
-        return {int(round(f * SwitchAspectRatio)), d};
-    }
-    return StyleEngine::sizeHint(type, widget); // Fall back to base class for other types
-}
+// ❌ Dangerous! Bypasses sandbox path security checks
+session->client().setPath(ctx.arg(0)["uri"].toString());
 ```
 
-Be sure to call `StyleEngine::sizeHint(type, widget)` at the end of the function to fall back to the default implementation, otherwise controls of other types will receive zero dimensions.
+Malicious applications can access the file system outside the sandbox via path traversal (e.g., `../../etc/passwd`). All paths originating from JavaScript **must** be sanitized via `Applet::resolveUri()`, which detects path traversal attacks, cross-application unauthorized access, and illegal URI formats, returning an empty string when validation fails.
+:::
 
-### Overriding `paint()`
+Usage on the JavaScript side:
 
-`paint()` dispatches to the corresponding rendering logic based on the `option()` type of `StyleOption`, falling back unhandled types similarly:
+```javascript
+import file from '@system.file'
 
-```cpp
-void MyStyleEngine::paint(Painter &painter, Widget *widget, StyleOption &option) {
-    switch (option.option()) {
-    case StyleOption::OptionSwitch:
-        drawSwitch(this, painter, widget, static_cast<StyleOptionSwitch &>(option));
-        break;
-    default:
-        StyleEngine::paint(painter, widget, option);
+async function loadConfig() {
+    try {
+        const text = await file.readText({
+          uri: 'internal://files/config.json'
+        })
+        console.log('config:', text)
+    } catch (err) {
+        console.error('read failed:', err.message)
     }
 }
 ```
 
-`StyleOptionSwitch` is a derived class of `StyleOption`, adding state fields specific to the Switch. It carries two key animation progress values:
+### Errors and Status Codes
 
-- `option.transition`: Switch toggle transition progress, `0.0` for closed state, `1.0` for open state, and intermediate values indicating the animation is in progress.
-- `option.scale`: Scaling factor when pressed, used to render press feedback effects.
-
-Using these two values, smooth state transitions can be achieved within `drawSwitch`:
+`async::Status` encapsulates an integer status code. `0` (i.e., `async::OK`) indicates success, and other values represent custom business error codes:
 
 ```cpp
-// Interpolate between open and closed colors
-color = color.blend(checked.background().color(), option.transition);
-
-// The position of the thumb indicator moves with the transition progress
-float pos = option.transition * (box.width() - size - len);
-```
-
-`StyleEngine` drives the animation, and developers only need to interpolate based on progress values within `paint()` to obtain complete transition effects.
-
-::: tip Customizing Only Specific Controls
-The default `StyleEngine` implements the rendering logic for all built-in controls, some of which are quite complex. If you are only dissatisfied with the appearance of certain controls, you should override the rendering logic for those specific controls in your derived class, letting other controls fall back directly to the base class implementation.
-
-You should prioritize satisfying custom color requirements via the palette, and only override `paint()` when completely different visual effects are needed.
-:::
-
-### Drawing Rounded Capsule Shapes with VectorPath
-
-The background and thumb of the default `Switch` are both rounded capsule shapes. The example uses `VectorPath` combined with two arcs to draw this, which is a more flexible approach than `drawRoundedRect`, suitable for scenarios requiring independent control over the radiuses of both ends:
-
-```cpp
-static void indicatorBar(Painter &p, const RectF &rect) {
-    float radius = rect.height() * 0.5f;
-    float x1 = rect.left() + radius;
-    float x2 = rect.right() - radius;
-    float y = rect.top() + radius;
-    VectorPath path;
-    path.arcTo(PointF(x1, y), radius, radius, 90, 270);   // Left semicircle
-    path.arcTo(PointF(x2, y), radius, radius, -90, 90);   // Right semicircle
-    p.fillPath(path);
-}
-```
-
-The two arcs connect end-to-end, and `arcTo` automatically connects lines within the path without requiring an extra `lineTo`.
-
-## WaveSlider: Complete Practice for Custom Controls
-
-`WaveSlider` is the core of this example, demonstrating the complete development workflow for a custom control. Similar to the `StyleEngine` customization above, the design goal of `WaveSlider` is to **overlay** new visual effects without disrupting existing capabilities:
-
-- **Wave fill** mode: The progress area is filled with dynamic waves instead of a regular rectangular progress bar;
-- **Click ripple** effect: Generates a diffusing oscillation when pressed, temporarily enhancing and then recovering the waves;
-- **`waveMode` property**: Allows switching between wave mode and regular mode at runtime, supporting application-layer binding and property animations;
-- **Full fallback compatibility**: When wave mode is disabled, `WaveSlider` directly calls `Slider::paintEvent()` to fall back to the default appearance, reusing all parent capabilities such as dragging, `value`, and `changed`, with zero code changes required on the application side.
-
-### Class Definition and Inheritance
-
-`WaveSlider` inherits from `Slider` (rather than directly from `Widget`), allowing it to reuse `Slider`'s existing gesture-dragging logic, properties like `value`/`minimum`/`maximum`, and the `changed` signal:
-
-```cpp
-// waveslider.h
-#include "gx_slider.h"
-#include "gx_valueanimation.h"
-
-class WaveSlider : public Slider {
-    GX_OBJECT
-public:
-    explicit WaveSlider(Widget *parent = nullptr);
-    ~WaveSlider() override = default;
-
-    GX_NODISCARD bool isWaveMode() const { return m_waveMode; }
-    void setWaveMode(bool enabled);
-    bool event(Event *event) override;
-
-    GX_PROPERTY(bool waveMode, get isWaveMode, set setWaveMode)
-    // ...
+// Success: Return value directly, status code is automatically OK
+return async::Result<String>{std::move(content)};
+// Failure: Return status code only, value part is ignored
+return async::Status(404);
+// Carry both partial results and a non-OK status (e.g., HTTP 206 Partial Content)
+return async::Result<ByteArray>{
+  std::move(partialData),
+  async::Status(206)
 };
 ```
 
-`GX_OBJECT` must be placed at the very beginning of the class definition; it triggers the meta-object compiler to generate metadata for this class. `GX_PROPERTY` exposes `waveMode` to the property system, making it bindable by the application layer (e.g., `<wave-slider :wave-mode="enabled"/>`) and drivable by property animations.
+When `resolve()` returns an error status, the `Promise` is rejected, and the JavaScript `catch` block receives an error object containing `message` and `code` fields. The `message` comes from the client class's `errorMessage()` static method.
 
-### Member Variables
-
-The runtime state of the control is stored in member variables:
+`errorMessage()` supports multiple signatures, which the framework will automatically recognize:
 
 ```cpp
+// Form 1: Accepts Status (recommended, concise)
+static const char *errorMessage(async::Status status);
+
+// Form 2: Accepts the complete Result, allowing message generation based on both value and status
+static String errorMessage(const async::Result<MyType> &result);
+```
+
+If the client class does not define `errorMessage()`, the framework will use the default `"unknown async error"`.
+
+### Value Types and JavaScript Conversion
+
+The value returned by `resolve()` is not passed to JavaScript as-is. The framework uses the `js_cast()` function to automatically convert C++ types to `JsValue`, which then drives the resolution of the `Promise`. This process happens internally within the framework and appears "transparent," but it actually relies on a set of **implicit conventions**: only types that implement `js_cast()` specializations can be correctly converted. For custom enums, structs, and other types, conversion relationships must be explicitly established, otherwise compilation will fail.
+
+#### Built-in Supported Types
+
+The following types can be used directly as type parameters for `Result<T>` without extra work:
+
+| C++ Type | Corresponding JavaScript Type | Remarks |
+| --- | --- | --- |
+| `int`, `double`, `float` | `number` | Direct numeric mapping |
+| `bool` | `boolean` | Direct boolean mapping |
+| `String`, `StringView`, `const char *` | `string` | Direct string mapping |
+| `ByteArray` | `ArrayBuffer` | Binary data |
+| `JsonValue` | `object` / `array` | JSON object or array |
+| [`std::vector<T>`](https://en.cppreference.com/w/cpp/container/vector) | `Array` | Array, elements are recursively converted (`T` itself must also be convertible) |
+| `JsValue` | Any | Passed directly without conversion |
+| `void` (i.e., `Result<void>`) | `undefined` | No return value |
+
+These types all have built-in `js_cast<T>()` specializations within the JsVM framework. Some of them are types that `JsValue` can construct directly, while others implement conversion logic via specializations.
+
+#### Adding Conversion Support for Custom Types
+
+If the type you are using is not in the above list, the compiler will throw an error indicating that `JsValue` cannot be constructed. There are two ways to resolve this:
+
+**Approach 1: Define an `operator JsValue()` member function**
+
+This is suitable for custom structs whose definitions you can modify. The advantage is that the conversion logic is built directly into the type definition, maintaining tight coupling:
+
+```cpp
+struct DeviceInfo {
+    String model;
+    int version;
+
+    // Convert the struct into a JavaScript object
+    // Note: Conversion executes on the UI thread, where a valid JsVM context is present
+    operator JsValue() const {
+        JsVM &vm = JsVM::current();
+        JsValue obj = vm.newObject();
+        obj["model"] = JsValue(model);
+        obj["version"] = JsValue(version);
+        return obj;
+    }
+};
+```
+
+Once defined, `Result<DeviceInfo>` can be used directly:
+
+```cpp
+async::Result<DeviceInfo> resolve() {
+    return DeviceInfo{"ModelX", 3};  // Framework automatically calls operator JsValue()
+}
+```
+
+APIs such as `JsVM::current()` and `vm.newObject()` used inside `operator JsValue()` belong to the JsVM bridging layer. See [Native Module Development Documentation](./native-module.md#创建与返回对象) for details.
+
+**Approach 2: [Specialize](https://en.cppreference.com/w/cpp/language/template_specialization) `js_cast<T>` in the `gx` namespace**
+
+This is suitable for cases where you cannot modify the original type definition (such as types or enums defined externally):
+
+```cpp
+// Declare the specialization beforehand if necessary
+template<>
+JsValue gx::js_cast<ConnectionState>(const ConnectionState &x);
+
+// Specialize within the gx namespace
+template<>
+JsValue gx::js_cast<ConnectionState>(const ConnectionState &x) {
+    switch (x) {
+    case ConnectionState::Connected:    return "connected";
+    case ConnectionState::Connecting:   return "connecting";
+    case ConnectionState::Disconnected: return "disconnected";
+    default:                            return "unknown";
+    }
+}
+```
+
+Once specialized, both `Result<ConnectionState>` and `Signal<ConnectionState>` will work normally.
+
+::: tip Easy approach for integer enums
+If enum values directly correspond to integers, manually converting them to `int` inside `resolve()` is the easiest way without needing any specialization:
+
+```cpp
+async::Result<int> resolve() {
+    return async::Result<int>{int(myEnum)};
+}
+```
+:::
+
+#### Runtime Conversion Overhead
+
+`js_cast()` is executed **after** the asynchronous result is delivered back to the UI thread, not in the asynchronous thread. The time overhead of conversion occurs entirely on the UI thread. For complex structures, you must ensure it is fast enough to avoid dropped frames. The actual costs for various types are as follows:
+
+- **Zero-overhead types**: `int`, `double`, `bool`, `String`, and `const char *` are mapped directly via `JsValue` constructors with no extra copying or heap allocation. The `operator JsValue()` approach and `js_cast<T>` specializations are also inlined at compile time, with no virtual calls or layers of indirection.
+- **Linear-overhead types**: `std::vector<T>` requires calling `setIndex()` element by element, with overhead proportional to the number of elements. If the returned structure is an object with fixed fields, prefer manually constructing a JS object using `operator JsValue()`, which is more efficient and readable than an array.
+- **Tree-traversal types**: `JsonValue` recursively traverses the entire tree during conversion to construct JavaScript nodes one by one, representing the highest overhead among built-in types. If the data structure is known at compile time, `operator JsValue()` to construct the object directly is usually faster and avoids the construction cost of `JsonValue` itself.
+- **Custom structs**: If you use `operator JsValue()` or `js_cast()` specializations, conversion performance depends on the conversion overhead of each member type, i.e., the complexity of constructing the object.
+
+::: tip Simple heuristic rule
+If your asynchronous data structure is simple (numeric values, simple struct objects, or small `JsonValues`), the conversion overhead typically will not affect UI smoothness.
+:::
+
+#### No Intermediate Serialization Layer
+
+Some asynchronous frameworks require data passed between the worker thread and the UI thread to first be serialized into JSON or another self-describing format, and then deserialized on the UI thread. This is done to achieve thread-safe "type-erased" transmission, but at the cost of incurring string (or binary data stream) concatenation, transmission, and parsing overhead on every call. Worse still, it may construct multiple data copies (intermediate serialized data and raw data, etc.).
+
+The async framework **does not rely on an intermediate serialization layer.** Results are moved across threads as native C++ values via `async::Result<T>`, completely bypassing the serialization process:
+
+```
+worker thread                  UI thread
+resolve(Result<MyType>{...}) → js_cast(result.value()) → JsValue (JavaScript)
+                  ↑
+             Direct memory movement, no JSON strings
+```
+
+`js_cast()` is only executed after the result has safely returned to the UI thread. Its responsibility is to map C++ values to the JavaScript engine's internal representation, rather than acting as a communication protocol between threads.
+
+If you proactively choose to use `JsonValue` as the type parameter for `Result<T>` (to mitigate template code bloat), you are introducing the overhead of `JsonValue`'s **construction and tree traversal**, not string serialization. `JsonValue` itself is also an in-memory tree structure, not a text format.
+
+#### Template Code Size
+
+`ResultSession<T>` is a template class, and the compiler generates a separate copy of code for each distinct client class type `T`. However, the framework extracts the vast majority of logic unrelated to `T` (such as `Promise` management, event delivery, and `Applet` lifecycle binding) into the non-template base class `detail::ResultSession`. Therefore, the actual extra code added per `T` is primarily concentrated in the thin `Resolver` adapter layer.
+
+However, if there are **a large number of fine-grained client types used only once** in a project, the cumulative number of instantiations can still lead to significant code size growth.
+
+A common mitigation technique is to use `JsonValue` as a type-erasure medium, combining multiple scattered small functions into a single client class:
+
+```cpp
+// Before combination: Each operation is an independent client class + independent template instantiation
+struct GetVersionClient { ... };   // ResultSession<GetVersionClient>
+struct GetModelClient   { ... };   // ResultSession<GetModelClient>
+struct GetSerialClient  { ... };   // ResultSession<GetSerialClient>
+
+// After combination: Share the same template instantiation, distinguishing operations at runtime
+struct DeviceQueryClient {
+    enum Kind { Version, Model, Serial } kind;
+
+    // A switch dispatch is shown here for demonstration; function pointers can also be used.
+    // However, do not use BaseClient combined with derived classes overriding resolve() 
+    // for polymorphism, as it introduces more vtable bloat than the function pointer approach.
+    async::Result<JsonValue> resolve() {
+        switch (kind) {
+        case Kind::Version: return JsonValue{getVersion()};
+        case Kind::Model:   return JsonValue{getModel()};
+        case Kind::Serial:  return JsonValue{getSerial()};
+        }
+    }
+};
+
+// Three module functions share the single ResultSession<DeviceQueryClient> instantiation
+static JsValue getVersion(JsCtx ctx) {
+    using Session = async::ResultSession<DeviceQueryClient>;
+    auto *session = async::make<Session>(applet);
+    session->client().kind = DeviceQueryClient::Version;
+    return session->request(ctx.arg(0));
+}
+```
+
+The tradeoff of this approach is that the return type degenerates to `JsonValue`, incurring additional runtime conversion overhead (see above). Therefore, it is suitable for scenarios with **small data volumes and many functions**, trading a small amount of runtime overhead for meaningful code size gains. For data-intensive or performance-sensitive operations, independent strongly-typed client classes should still be retained.
+
+### Custom Asynchronous Contexts
+
+By default, `session->request()` submits `resolve()` to the framework's **asynchronous executor**—typically a background thread pool. However, some scenarios require using a different asynchronous context, such as a custom event loop or AIO multiplexing mechanism, which do not want to consume extra thread resources.
+
+In this case, you can bypass `request()` and manually control the asynchronous execution flow directly. The client class also does not need to implement the `resolve()` execution function. The key is: **after completing work in the asynchronous context, call `session->resolve()` to deliver the result back to the UI thread**.
+
+```cpp
+// Client class: No need to implement resolve(), as the default thread pool is not used
+struct FirmwareCheckClient {
+    // Only define errorMessage() for error description
+    static const char *errorMessage(async::Status status) {
+        switch (status.value()) {
+        case 1: return "firmware not found";
+        case 2: return "check failed";
+        default: return "unknown error";
+        }
+    }
+};
+
+static JsValue checkFirmwareUpdate(JsCtx ctx) {
+    Applet *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1) return {};
+
+    using Session = async::ResultSession<FirmwareCheckClient>;
+    auto *session = async::make<Session>(applet);
+    auto version = ctx.arg(0).asString();
+
+    // Manually set resolver (do not call request, do not use default thread pool)
+    session->setResolver(ctx.arg(0));
+    JsValue promise = session->promise();
+
+    // Submit to a custom hardware driver thread
+    HardwareDriver::checkUpdate(
+        version,
+        // The callback may run on any thread—the framework automatically schedules it back to the UI thread
+        [session](bool available) {
+            session->resolve<bool>(available);
+        },
+        [session](int errorCode) {
+            session->resolve<bool>(async::Status(errorCode));
+        }
+    );
+
+    return promise;
+}
+```
+
+The core differences here:
+- `request()` performs both "setting the resolver" and "submitting to the async executor" in one go;
+- In manual mode, you need to call `setResolver()` yourself to set the response target, and then push the result or error status via `session->resolve()` at any arbitrary time.
+
+`resolve()` is thread-safe; it packages the result as an event, delivers it back to the UI thread, and then completes the resolution of the `Promise`.
+
+::: tip When to use custom contexts
+- The underlying driver already provides a callback interface, and you do not want to create extra threads: `resolve` directly inside the driver callback.
+- You need to integrate with an existing AIO/epoll event loop: `resolve` inside the event completion callback.
+- You need sequential execution (e.g., operations must be ordered): dispatch via your own task queue and `resolve` upon completion.
+
+As long as you ensure `session->resolve()` is eventually called once, the framework does not care which thread the result is delivered from.
+:::
+
+### Value Type Semantics
+
+Since the `async::Result<T>` value returned by `resolve()` (or actively posted by a custom async context) is posted to the UI thread and then converted to `JsValue`, the data type `T` must be movable. Built-in supported types all meet this requirement. For custom types:
+- If it is a struct containing only members of built-in supported types, the C++ standard guarantees it is movable.
+- If raw pointers are used and you manage their ownership yourself, you need to correctly implement the [move constructor](https://en.cppreference.com/w/cpp/language/move_constructor).
+- [Trivial types](https://en.cppreference.com/w/cpp/named_req/TrivialType) (such as pure C structs, enums, etc.) satisfy value type semantics by default.
+
+Note that non-trivial types typically contain resources on the heap, and the following pattern may face peak memory issues:
+
+```cpp
+auto *session = getFetchLargeDataSession();
+std::vector<uint32_t> data = fetchDataFromNetwork(url);
+session->resolve<decltype(data)>(data);  // Results in a full copy of data
+```
+This is because the parameter of `session->resolve()` is passed by value, and passing `data` invokes the [copy constructor](https://en.cppreference.com/w/cpp/language/copy_constructor), resulting in a full copy. If `data` is large, this will double memory usage. In such cases, you will encounter compilation warnings like this:
+```
+'...' is deprecated:
+avoid use copy semantics of Result<T> if T is not trivially copyable
+```
+The correct approach is to explicitly enable move semantics using [`std::move()`](https://en.cppreference.com/w/cpp/utility/move):
+
+```cpp
+auto *session = getFetchLargeDataSession();
+std::vector<uint32_t> data = fetchDataFromNetwork(url);
+session->resolve<decltype(data)>(std::move(data));  // Use move semantics
+```
+
+### Timeout Control
+
+For asynchronous operations that may remain unresponsive for a long time, use `async::make_timeout()` to add timeout protection to the session. Upon timeout, the `Promise` is automatically rejected, preventing the JavaScript side from hanging indefinitely.
+
+The following code snippet shows a basic example demonstrating how to use timeout control in a network request:
+
+```cpp
+static JsValue fetchData(JsCtx ctx) {
+    Applet *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1) return {};
+
+    String url = ctx.arg(0)["url"].asString();
+    int timeoutMs = ctx.arg(0)["timeout"].asInt(5000);
+
+    using Session = async::ResultSession<HttpClient>;
+    auto *session = async::make<Session>(applet);
+    session->client().setUrl(url);
+    session->setResolver(ctx.arg(0));
+    JsValue promise = session->promise();
+
+    // Create timeout protection: automatically reject Promise upon timeout
+    auto handle = async::make_timeout(session, timeoutMs,
+        [](Session *s) {
+            // Timeout handling: ongoing async operations should be cancelled here
+            s->fulfill(async::Status(408));  // 408 Request Timeout
+            
+        });
+
+    // Move handle into the asynchronous execution context
+    NetworkDriver::fetch(url,
+        [handle = std::move(handle)](auto &response) {
+            // If timed out, resolve will be safely ignored
+            handle->resolve<String>(std::move(response.body));
+        });
+
+    return promise;
+}
+```
+
+#### Working Principle
+
+The key workflow of `make_timeout()`:
+
+1. **Moves** the client data of `session` into an internal class; `session->client()` must not be accessed after this.
+2. Starts a one-shot timer, returning a `SharedRef<SingleTimer>` handle.
+3. **Normal Path**: Call `handle->resolve()` before the timeout. This atomically takes ownership of the session and posts the result event. When the timer subsequently triggers, it sees the session is already empty and takes no action.
+4. **Timeout Path**: The timer triggers and executes the callback **on the UI thread**. The developer calls `session->fulfill()` in the callback to post the error status. After the callback returns, the timer is responsible for `delete session`.
+5. **App Exit**: When the `Applet` is destroyed, the timer is automatically unbound, the session is deleted, and the callback is not triggered.
+
+This mechanism is particularly useful for scenarios where asynchronous operations lack built-in timeout mechanisms, such as certain network request implementations. As is well known, correctly implementing timeout protection can be tricky, as you must correctly handle race conditions and lifecycle safety issues across all execution paths.
+
+`make_timeout()` relies on these prerequisites to guarantee safety:
+- The client type (i.e., `T` in `ResultSession<T>`) must be **movable**, which is somewhat of a legacy restriction.
+- Asynchronous operations must support safe cancellation on the UI thread, which means removing task listeners and releasing references to `handle`.
+
+#### Callback Thread and `fulfill()`
+
+The timeout callback (the third parameter of `make_timeout()`) **always executes on the UI thread** because it is triggered by a timer (`Timer`), and timer events are dispatched by the main event loop.
+
+This dictates that you **must only** use `session->fulfill()` rather than `session->resolve()` within the callback:
+
+| Method | Callable Thread | Impact on Session |
+| --- | --- | --- |
+| `resolve(result)` | Any thread | Posts a Consume event; session is **deleted** after being processed on the UI thread |
+| `fulfill(result)` | **UI Thread Only** | Dispatches the result directly **without deleting** the session |
+
+The timeout path of `make_timeout()` is handled by the timer itself, which executes `delete session` after the callback finishes. If you call `session->resolve()` inside the callback, it will also post an event to delete the session, creating a **double free** conflict with the timer's `delete`, leading to undefined behavior. `fulfill()` only posts the result without touching the session lifecycle, making it the only safe choice inside the callback.
+
+`fulfill()` accepts an `async::Result<R>` or directly accepts an `async::Status` (shorthand when there is no result value):
+
+```cpp
+auto handle = async::make_timeout(session, 5000, [](Session *s) {
+    s->fulfill(async::Status(408)); // Populate error status only
+    // Or carry both value and status:
+    s->fulfill(async::Result<String>{"partial", async::Status(206)});
+    // ❌ Do not call s->resolve(), as it will form a double free with the timer's delete session
+});
+```
+
+::: tip
+The decision rule is simple: Where does the session ownership lie, and who is responsible for deletion?
+- **Normal Path**: `handle->resolve()` atomically takes ownership of the session internally, and the session is deleted after the Consume event is processed.
+- **Timeout Callback**: The timer takes ownership of the session and deletes it after the callback finishes. Therefore, you can only use `fulfill()` to post results inside the callback.
+:::
+
+#### Accessing Client Data
+
+If the timeout callback needs to read client data to determine the error strategy, use the extended callback signature `(Session *, const T &)`. **Do not** call `session->client()` inside the callback—the client has already been moved into the timer:
+
+```cpp
+auto handle = async::make_timeout(session, 3000,
+    [](Session *s, const HttpClient &client) { // auto &client can also be used
+        // ✅ Access client data via the second parameter
+        LogWarn() << "request timeout: " << client.url();
+        s->fulfill(async::Status(408));
+    }
+);
+```
+
+#### Resource Lifecycle Management
+
+When a timeout occurs, you need to cancel ongoing asynchronous tasks within the callback to release references to `handle`. `SingleTimer` manages its lifecycle using reference counting—if an asynchronous operation holds a reference to `handle` but never completes, a memory leak will occur:
+
+```cpp
+auto task = AioTask::create();
+auto handle = async::make_timeout(session, 5000,
+    [task](auto *s) {
+        task->cancel();     // Cancel task, releasing reference to handle
+        s->fulfill(async::Status(408)); // reject Promise
+    });
+
+// Task completion callback holds a reference to handle
+task->start([handle = std::move(handle)](auto &result) {
+    handle->resolve(result);
+});
+```
+
+::: important
+The `handle` returned by `make_timeout()` **must** also be referenced by the asynchronous task (captured by the lambda in the example above) to ensure the timer is not destroyed before the task completes. Otherwise, it will immediately trigger the timeout callback and `Promise` rejection, preventing the task from completing normally.
+:::
+
+Such memory leaks are caused by two reasons:
+1. **Async framework leak**: The `handle` reference is forgotten, causing the related session object to remain unreleased.
+2. **Underlying task leak**: The asynchronous task itself blocks in an uncompleted state, leaving related resources uncleaned.
+
+### Automatic Cleanup on Application Exit
+
+When an `Applet` is destroyed (e.g., the user closes the app, or the system reclaims resources), all asynchronous sessions bound to that `Applet` are automatically cleaned up:
+
+- The session's `unbind()` method is called, which closes the session and releases the `Promise` reference.
+- If `make_timeout` is being used, the timer is similarly unbound, and the internally held session is deleted.
+- The `Promise` on the JavaScript side will never be resolved or rejected—but since the JavaScript environment itself is being destroyed at this point, this is safe.
+
+This means you **do not** need to manually track and cancel asynchronous tasks—the framework guarantees that the following will not happen:
+- Delivering results to a destroyed `Applet`, causing access to dangling pointers.
+- Executing callbacks in a released JavaScript environment.
+- Asynchronous sessions leaking after application exit.
+
+Specifically, when a background thread calls `resolve()` to post a result to the UI thread, the handling function checks whether `applet()` is still valid. If the `Applet` has already been destroyed, causing `applet()` to return `nullptr`, the framework safely discards the result without executing any JavaScript operations.
+
+::: tip Safe Return in Asynchronous Contexts
+Since `resolve()` is pure data posting (via the event queue), calling `resolve()` in a background thread will not crash even if the `Applet` has already been destroyed. The background thread does not need to care about the survival state of the `Applet`; that is the framework's responsibility.
+:::
+
+The only thing to note is that if you derive from `ResultSession` and introduce other `JsValue` member variables, you need to clean up these members in `unbind()` to avoid memory leaks:
+
+```cpp
+class MySession : public async::ResultSession<MyClient> {
+public:
+    void unbind() override {
+        m_callbacks = {}; // Clean up any held JsValues to avoid leaks
+        async::ResultSession::unbind(); // Call base class cleanup
+    }
+
 private:
-    bool  m_waveMode = false;       // Whether currently in wave mode
-    float m_rippleProgress = 1.0f;  // Ripple progress [0, 1], initially 1 (inactive)
-    float m_waveOffset = 0.0f;      // Waveform phase offset [0, 1], driven by animation
-    ValueAnimation<float> m_animation;        // Wave loop animation
-    ValueAnimation<float> m_rippleAnimation;  // Ripple animation
-    friend struct EventTraits<WaveSlider>;    // Allow event dispatching to access protected methods
-```
-
-`ValueAnimation<float>` is used directly as a member variable (rather than a pointer), with its lifecycle managed by `WaveSlider`, requiring no manual `delete`.
-
-### Constructor: Initializing Animations
-
-The constructor configures two animations and sets the orientation:
-
-```cpp
-WaveSlider::WaveSlider(Widget *parent) : Slider(parent) {
-    // Wave animation: infinite loop, one full cycle per second
-    m_animation.setRepeat(AbstractAnimation::Infinity);
-    m_animation.setValueLimits(0.f, 1.f);
-    m_animation.setDuration(1000);
-    m_animation.value.connect(this, &WaveSlider::onWaveAnimation);
-    m_animation.start();
-
-    // Ripple animation: plays once when pressed, duration 800ms
-    m_rippleAnimation.setValueLimits(0.f, 1.f);
-    m_rippleAnimation.setDuration(800);
-    m_rippleAnimation.value.connect(this, &WaveSlider::onRippleAnimation);
-
-    setVertical(true);  // Vertical slider
-}
-```
-
-`m_animation` runs continuously after starting, advancing `m_waveOffset` from $0$ to $1$ every frame before looping back to $0$. This value is eventually converted into the phase offset of the waveform, causing the waves to flow continuously.
-
-`m_rippleAnimation` is triggered only upon being pressed, playing once and then stopping without setting `Infinity`. The callbacks for both animations do only one thing: update state variables and call `update()` to request a redraw.
-
-```cpp
-void WaveSlider::onWaveAnimation(float value) {
-    m_waveOffset = value;
-    update();
-}
-void WaveSlider::onRippleAnimation(float value) {
-    m_rippleProgress = value;
-    update();
-}
-```
-
-### Event Handling
-
-#### Configuring EventDispatch
-
-`event()` uses [`EventDispatch`](widget.md#handling-events) to route events, with template parameters listing the event types actually handled by the current control, providing compile-time checking:
-
-```cpp
-bool WaveSlider::event(Event *event) {
-    return EventDispatch<Widget,
-        GestureEvent, PaintEvent>{}(this, event);
-}
-```
-
-#### Handling Gestures: Triggering Ripples
-
-`gestureEvent()` intercepts the start of the `Press` gesture to trigger a ripple, delegating all other cases to `Slider`'s gesture handling (implementing drag-to-adjust-value):
-
-```cpp
-bool WaveSlider::gestureEvent(GestureEvent *event) {
-    if (!event->isHitTest() && event->gesture()->type() == Gesture::Press) {
-        auto g = static_cast<PressGesture *>(event->gesture());
-        if (g->isStarted())
-            startRipple(g->clientPoint());
-    }
-    return Slider::gestureEvent(event); // Pass the event further to Slider for processing
-}
-
-void WaveSlider::startRipple(const Point &) {
-    m_rippleProgress = 0.f;      // Start from the beginning
-    m_rippleAnimation.start();   // Replay
-}
-```
-
-When `isHitTest()` is `true`, it indicates that this is a hit-test (used by the framework to detect whether an event should fall onto this control), not actual user interaction, and should be skipped.
-
-::: tip Regarding `isHitTest()`
-Hit-testing is a prerequisite step in event dispatching. `gestureEvent()` is also called during the hit-test phase, but no side effects (such as starting animations) should occur at this time. Always check `!event->isHitTest()` before processing interaction logic.
-:::
-
-#### Style Reading Interface
-
-`paintEvent()` reads the style data corresponding to the control. Two relevant interfaces are introduced here:
-
-- `style()` / `style(Styles::Xxx)` returns the `Style` object for a certain style pseudo-class of the current control, from which properties such as color and background can be read;
-- `se->palette(StyleEngine::Xxx)` reads the global palette color from the `StyleEngine`, acting as a default when the control has no custom color set.
-
-The two are used together to implement the logic of "using custom colors when custom configurations exist, otherwise falling back to theme default colors":
-
-```cpp
-auto contentStyle = style(Styles::Content);
-p.setBrush(contentStyle.hasProperty(style::Background)
-               ? contentStyle.background()
-               : se->palette(StyleEngine::ProgressRange));
-```
-
-### Rendering Implementation
-
-`paintEvent()` is the core of WaveSlider. It decides which rendering path to take based on `m_waveMode`:
-
-```cpp
-void WaveSlider::paintEvent(PaintEvent *event) {
-    discard(event);  // PaintEvent itself carries no useful info; explicitly discard to eliminate compiler warnings
-
-    if (!isWaveMode())
-        return Slider::paintEvent(event);  // Normal mode: directly call parent rendering
-
-    auto se = App()->styleEngine();
-    RectF box = rect();
-    float radius = min(box.width(), box.height()) * 0.5f;
-    float progress = sliderRange ? float(value() - minimum()) / float(sliderRange) : 0.f;
-
-    Painter p(this);
-
-    // Draw background (empty track)
-    p.setBrush(/* background color */);
-    p.fillRoundedRect(box, radius);
-
-    // Draw wave fill (progress area)
-    p.setBrush(/* foreground color */);
-    VectorPath path;
-    buildWaveFillPath(path, box, radius, progress, m_waveOffset, m_rippleProgress);
-    if (!path.isEmpty())
-        p.fillPath(path);
-}
-```
-
-The entire rendering is split into two steps: first, draw the complete background rounded rectangle using `fillRoundedRect`, then draw the waveform fill on top using `fillPath`, overlaying the two layers to form a "progress bar with ripples."
-
-#### Waveform Path Generation
-
-`buildWaveFillPath()` is an independent helper function (not inside the class) responsible for constructing the waveform path under given geometric constraints:
-
-```cpp
-static void buildWaveFillPath(VectorPath &path, const RectF &box, float radius,
-                              float progress, float waveOffset, float rippleProgress)
-```
-
-Its core logic is divided into three steps:
-
-1. **Calculate water level and amplitude**: `waterLevel` rises from the bottom according to the `progress` ratio; amplitude depends on the aspect ratio and is constrained within limits far enough from the top and bottom arcs to prevent the waveform from going out of bounds.
-2. **Sample the waveform**: Sample uniformly from left to right, calculating the $y$ value for each $x$ coordinate.
-   The waveform is a superposition of three parts: a regular sine wave (controlled by `m_waveOffset`) + ripple gain (decay oscillation controlled by `m_rippleProgress`) + rounded corner constraints (ensuring the path does not exceed the boundaries of the rounded rectangle).
-3. **Close the path**: Return along the bottom edge from the top of the waveform to the bottom of the rounded rectangle to form a closed polygon for `fillPath` to fill.
-
-The algorithmic details are for educational demonstration purposes; in actual products, they can be replaced with any custom path generation logic according to design requirements.
-
-::: tip Efficiency of Path Drawing
-The number of sample points (`sampleCount`) is proportional to the width of the control (approximately one point every `4px`), and performance overhead is acceptable at typical screen resolutions. If the CPU is weaker, you can reduce the sampling density or switch to cubic Bézier curve approximations.
-:::
-
-### The waveMode Property
-
-The implementation of `setWaveMode()` is simple: update the member value when the state changes and mark for a redraw:
-
-```cpp
-void WaveSlider::setWaveMode(bool enabled) {
-    if (m_waveMode != enabled) {
-        m_waveMode = enabled;
-        update();
-    }
-}
-```
-
-The declaration of the `GX_PROPERTY` macro makes `waveMode` a property visible to the framework:
-
-```cpp
-GX_PROPERTY(bool waveMode, get isWaveMode, set setWaveMode)
-```
-
-No `signal` field is declared here because it is typically driven by the consumer to change values rather than triggered by interaction.
-
-### Production-Grade Optimizations
-
-The implementation of `WaveSlider` is primarily geared towards educational demonstrations and lacks some optimizations, such as:
-- The wave animation plays continuously even when `waveMode` is disabled, calling `update()` repeatedly and triggering unnecessary `paintEvent()` calls;
-- It only supports vertical sliders and is not adapted for horizontal modes (which can be handled according to product requirements);
-- It fixedly draws capsule-shaped tracks, whereas actual products might require rounded rectangles or other shapes.
-
-## Collaboration Between Components
-
-Here is how the components in `slider-demo` collaborate at runtime:
-
-```
-User presses the screen
-    ├─ WaveSlider::gestureEvent() detects Press.isStarted()
-    │       └─ startRipple() resets m_rippleProgress and starts m_rippleAnimation
-    └─ Slider::gestureEvent() continues processing, adjusting value based on touch point
-            └─ changed signal emitted → MyWidget::onSlider() updates Label text
-
-Per-frame rendering loop
-    ├─ m_animation continuously advances m_waveOffset (0→1 loop)
-    │       └─ update() → paintEvent() redraws wave with new offset
-    └─ m_rippleAnimation advances m_rippleProgress (0→1 plays and stops)
-            └─ update() → paintEvent() redraws ripple decay with new rippleProgress
-
-Switch toggle
-    └─ waveSlider->setWaveMode(true/false)
-            └─ update() → paintEvent() switches to normal or wave mode
-```
-
-Signal connections are established once in `MyWidget`'s constructor. Afterward, runtime execution is entirely driven by events and signals, with no direct calls between controls.
-
-## Summary of Key Patterns
-
-Through `slider-demo`, we can summarize typical patterns for implementing custom controls in Glyphix:
-
-| Requirement | Approach |
-|---|---|
-| Inherit an existing control and reuse its interaction logic | Inherit from the corresponding base class (e.g., `Slider`), and control fallback to the base class inside `EventDispatch` |
-| Custom rendering | Implement `paintEvent()`, falling back to `Slider::paintEvent()` when `isWaveMode()` is `false` |
-| Continuous looping animation | `ValueAnimation::setRepeat(Infinity)` |
-| One-shot triggered animation | Save state variables, and call `anim.start()` in `gestureEvent()` to replay |
-| Expose properties to the application layer | `GX_PROPERTY` macro, paired with getters/setters and optional signals |
-| Read user color schemes or theme colors | Check using `style().hasProperty()` and fall back to `se->palette()` |
-| Customize global control appearance | Inherit from `StyleEngine`, overriding `paint()` and `sizeHint()` |
-
-These patterns are elaborated in the [Widget Development Guide](widget.md), and `slider-demo` serves as a comprehensive practical application of them.
-
-## Comparison with Other GUI Frameworks
-
-::: important Positioning of C++ Control Development
-The mainstream development approach in Glyphix is building interfaces via declarative templates using [`.ux Single File Components](../tutorials/quick-orientation.md). C++ control development is used for implementing **low-level control libraries on the device side** (such as the device-manufacturer-customized `WaveSlider`), which are subsequently used by frontend application layers through templates and data bindings. Building complete UIs directly in C++ (like the demonstration in `main.cpp`) is **possible within the framework, but not the recommended workflow**, and related toolchain support (debugging, hot-reloading, layout preview) is less mature compared to the application layer.
-
-Therefore, when evaluating Glyphix's overall development efficiency, the frontend application layer should be used as the benchmark; the C++ control development experience discussed in this section only represents the development scenario for low-level control libraries.
-:::
-
-In terms of mental models, Glyphix's C++ control development is closer to Qt Widgets than to LVGL: the signal mechanism, property macros, inheritance-based extension, and the naming and division of responsibilities for `paintEvent` all largely correspond to Qt Widgets. Developers with a Qt background can quickly build intuition.
-
-LVGL developers will need to transition from a C handle-style paradigm to a C++ OOP paradigm, which represents a slightly larger gap. However, core paradigms such as control tree organization and `update()` redraw triggering are common. This section uses `slider-demo` as a reference to specifically explain the similarities and key differences between frameworks.
-
-### Similarities
-
-Whether Qt Widgets, LVGL, or Glyphix, they share a set of proven UI framework core paradigms:
-
-- **Control Tree**: UIs are organized in a parent-child tree structure, where child control coordinates are relative to their parent. `MyWidget(&window)` corresponds semantically to Qt's `new QWidget(&parent)` and LVGL's `lv_obj_create(parent)`.
-- **Custom Rendering**: Control appearance is achieved by "overriding" rendering methods. Qt overrides `paintEvent(QPaintEvent *)`, LVGL registers the `LV_EVENT_DRAW_MAIN` callback, and Glyphix implements `paintEvent(PaintEvent *)`. The design philosophy across all three is consistent.
-- **Signal/Slot Mechanism**: State changes are communicated between controls via signals, with receivers responding using member functions.
-  - Glyphix: `m_slider.changed.connect(this, &MyWidget::onSlider)`;
-  - Qt: `connect(&slider, &QSlider::valueChanged, this, &MyWidget::onSlider)`;
-  - LVGL: Achieves similar functionality via event callback functions.
-- **Inheritance and Reuse**: Extending existing controls is achieved via inheritance. `WaveSlider : public Slider` reuses all dragging and value-fetching logic of the parent class, overriding only the rendering part, which is consistent with the design of most OOP GUI frameworks.
-- **On-Demand Redrawing**: When state changes, `update()` is called to mark dirty areas, and the framework uniformly redraws them in the next frame rather than drawing immediately. Mainstream frameworks all adopt this strategy to avoid redundant drawing within the same frame.
-
-### Differences from Qt Widgets
-
-#### Event Dispatching
-
-Qt dispatches events through virtual function overrides, where each event method is `virtual` and overridden in subclasses using `override`:
-
-```cpp
-// Qt
-class MySlider : public QSlider {
-    void paintEvent(QPaintEvent *event) override { ... }
-    void mousePressEvent(QMouseEvent *event) override { ... }
+    JsValue m_callbacks; // Members that need manual cleanup
 };
 ```
 
-Event handling functions in Glyphix, such as `paintEvent()` and `gestureEvent()`, are **not virtual functions** and cannot use `override`. Event routing is done at compile-time by `EventDispatch`:
+::: important `ResultSession` Lifecycle Extension
+If there are still incomplete asynchronous sessions when the application exits, the framework only cleans up application-related resources (such as `Promise` references, binding relationships, etc.), but **does not destroy the session object itself**. This manifests as the lifetime of the `ResultSession` being extended until the asynchronous operation completes.
 
-```cpp
-// Glyphix
-bool WaveSlider::event(Event *event) {
-    return EventDispatch<Widget, GestureEvent, PaintEvent>{}(this, event);
-}
-// Both paintEvent and gestureEvent are regular member functions without override
-```
-
-This avoids the indirect jumps of virtual functions, providing performance advantages in high-frequency event handling on embedded devices. At the same time, the template parameter list acts as compile-time documentation and omission checks. If you declare that you handle `PaintEvent` but forget to implement `paintEvent()`, the compiler will throw an error rather than silently falling back to the base class.
-
-#### Object and Property Systems
-
-Qt uses the `Q_PROPERTY` macro along with MOC (Meta-Object Compiler) to generate property metadata; Glyphix uses `GX_PROPERTY` alongside `GX_OBJECT`. The mechanisms are similar, but the generation methods and runtime interfaces differ:
-
-```cpp
-// Qt
-Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
-// Glyphix
-GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-```
-
-Both support driving animations via property name strings (`QPropertyAnimation` / `PropertyAnimation`). However, when implementing controls themselves, Glyphix recommends using `ValueAnimation<T>` directly to avoid property name lookup overhead and prevent conflicts with application-layer-driven property animations.
-
-#### Signals and Slots
-
-As described in the [Object System](object-system.html#signal), Glyphix also has a signal mechanism, but it is closer to `boost::signals2` and does not rely on MOC to generate code. This is an intentional design choice because the [build system](sdk-setup.md#other-build-systems) of the Glyphix ecosystem is relatively fragmented, and we assume that downstream users do not use the meta-object compiler at all.
-
-#### Styling and Appearance Customization
-
-Qt provides two paths for customizing control appearance: `QStyle` subclassing (complex) or QSS stylesheets (CSS-like strings parsed at runtime). Glyphix uses `StyleEngine`: manufacturers implement a `StyleEngine` subclass, rendering the appearance of all built-in controls in C++ code within `paint()`, and providing recommended sizes in `sizeHint()`. This approach is suitable for global system-level style customization rather than local style adjustments of individual controls.
-
-For styling individual controls, Glyphix uses the `StyleModifier` helper object for programmatic assignment instead of relying heavily on CSS strings:
-
-```cpp
-StyleModifier m(waveSlider);
-m->setSize(120, 300);
-m->setColor(Color{"#35a7ff"});
-
-// Inline style strings are also supported
-waveSlider->setStyle(Style{"background-color: #35a7ff; color: #cce;"});
-```
-
-Glyphix's style and layout properties are set more through style properties than by directly calling control methods. This is because C++ is primarily positioned for low-level control library development and does not directly target application development.
-
-#### Memory and Lifecycles
-
-Under Qt's parent-child control ownership model, child controls are destroyed by their parent after `new QWidget(parent)`. Glyphix also supports this model (`new WaveSlider` followed by `addItem()`), and additionally recommends declaring child controls as member variables (such as `m_label` and `m_slider` in `MyWidget`), where lifecycles are automatically managed alongside the host object without manual `delete` and without depending on parent-child tree destruction mechanisms.
-
-### Differences from LVGL
-
-#### Programming Model
-
-LVGL is a framework implemented in C, where controls are operated via `lv_obj_t *` handles, and function naming typically follows the `lv_<type>_<operation>()` convention:
-
-```c
-// LVGL
-lv_obj_t *slider = lv_slider_create(parent);
-lv_slider_set_value(slider, 50, LV_ANIM_ON);
-lv_obj_add_event_cb(slider, my_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-```
-
-Glyphix is a native C++ OOP framework where methods are called through objects, and `this` naturally carries context:
-
-```cpp
-// Glyphix
-auto *slider = new Slider(parent);
-slider->setValue(50);
-slider->changed.connect(this, &MyWidget::onSlider);
-```
-
-For LVGL developers, the main change here is not the capabilities themselves, but the expression: previously you called functions outside of object handles, whereas now you organize state, events, and rendering logic inside the control class. The type system also helps you avoid certain handle-type misuses at compile time.
-
-#### Event System
-
-LVGL's event handling typically receives multiple events through a single callback function, branching using `lv_event_get_code()` inside the callback:
-
-```c
-// LVGL
-static void event_cb(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_PRESSED) { ... }
-    else if (code == LV_EVENT_VALUE_CHANGED) { ... }
-}
-```
-
-Glyphix dispatches events to independent handling functions by event type, completely isolating different events, with each carrying type-correct data:
-
-```cpp
-// Glyphix
-bool WaveSlider::gestureEvent(GestureEvent *event) { ... }
-void WaveSlider::paintEvent(PaintEvent *event) { ... }
-```
-
-In addition, Glyphix's `isHitTest()` mechanism does not have an exact equivalent in LVGL. LVGL can handle similar issues via `LV_EVENT_HIT_TEST`, but typically still requires manual branching within the same callback.
-
-::: tip Glyphix's Internal Event Dispatch Mechanism
-`EventDispatch` is also implemented internally via a switch-case dispatch, but we do not recommend developers write manual switch branches. Instead, always use the fixed `EventDispatch<Widget, ...>{}(this, event)` pattern to facilitate code auditing.
+While this is meant to guarantee memory safety, it causes some resources to be released less promptly. Therefore, asynchronous tasks must ensure they complete within a finite time and cannot hang indefinitely.
 :::
 
-#### Animations
+## Multi-Query ListenSession
 
-LVGL animations are configured via the `lv_anim_t` structure, with target values passed through function pointers and `void *` user data:
+This category of APIs is still unstable and is not yet open for use.
 
-```c
-// LVGL
-lv_anim_t a;
-lv_anim_init(&a);
-lv_anim_set_exec_cb(&a, anim_cb);
-lv_anim_set_var(&a, obj);
-lv_anim_set_values(&a, 0, 100);
-lv_anim_set_time(&a, 800);
-lv_anim_start(&a);
-```
+## Global Event Broadcasting async::Signal
 
-Glyphix's `ValueAnimation<T>` determines the interpolation type at compile time via template parameters, eliminating `void *` casting through signal connections:
+If a C++ event needs to be broadcast to **multiple applications** (rather than targeting a specific caller), use `async::Signal<T>`. It "multicasts" underlying hardware or system events to all JavaScript listeners subscribed to it.
+
+`async::Signal<T>` and `ResultSession` have different positioning:
+
+| Feature | ResultSession | Signal |
+| --- | :---: | :---: |
+| Communication Direction | One-to-one (Caller → Result) | One-to-many (Event Source → All Subscribers) |
+| Trigger Count | Single | Multiple |
+| Bound Object | Single Applet | Cross-Applet |
+| Applicable Scenarios | Asynchronous queries, requests | System events, state changes |
+
+### Basic Usage
+
+Suppose there is a battery level change event that needs to be notified to all subscribers:
 
 ```cpp
-// Glyphix
-m_rippleAnimation.setValueLimits(0.f, 1.f);
-m_rippleAnimation.setDuration(800);
-m_rippleAnimation.value.connect(this, &WaveSlider::onRippleAnimation);
+// Define a global signal, typically a member variable of the corresponding service
+async::Signal<int> batteryChanged;
+
+// Trigger the signal when a hardware event occurs (can be called on any thread)
+void onBatteryLevelChanged(int newLevel) {
+    batteryChanged(newLevel);  // Notify all subscribers
+}
 ```
 
-`ValueAnimation<T>` has built-in interpolation support for composite types such as `Color`, `Point`, and `Transform`, whereas LVGL natively supports only integer ranges, requiring developers to implement custom interpolation callbacks for composite types.
+#### Binding & Unbinding
 
-#### Vector Path Rendering
+This module function allows the JavaScript side to subscribe to the signal, and it returns a binding ID for the JavaScript side to unsubscribe:
 
-LVGL's rendering API focuses primarily on basic primitives like rectangles and arcs, and vector path support (`lv_draw_vector`) is a relatively recent addition with a lower-level interface. Glyphix's `VectorPath` is a standard path-building interface, where `moveTo`, `lineTo`, `arcTo`, `conicTo`, and `cubicTo` fully cover common curve types. The waveforms in `WaveSlider` rely entirely on this interface without requiring additional graphics libraries.
+```cpp
+static JsValue subscribeBatteryChange(JsCtx ctx) {
+    if (ctx.argc() < 1 || !ctx.arg(0).isFunction())
+        return {};
+    // Must be in a valid applet environment to subscribe
+    auto *applet = Applet::current(ctx.vm());
+    if (applet == nullptr) return {};
 
-#### Memory and Lifecycles
+    // Bind slot to the applet, automatically unsubscribing when the app exits
+    auto *slot = batteryChanged.connect(ctx.arg(0));
+    return applet->bindObject(slot); // Return slot ID for JavaScript to cancel
+}
+```
 
-Both support object tree management: child controls are attached under parent controls, and when the parent object is destroyed, child objects are destroyed alongside it.
+You also need to implement a module function for unbinding. Regardless of the `async::Signal` type, the implementation of the unbind function is very fixed:
 
-Glyphix also allows child controls, animations, and runtime states to be written directly as class members, managed automatically via C++ RAII. For example, `m_label` and `m_slider` in `MyWidget`, as well as the two `ValueAnimation<float>` instances in `WaveSlider`, can be constructed and destructed along with the host object, eliminating the need to organize states primarily around handles, `user_data`, and callback contexts like in LVGL.
+```cpp
+static JsValue unsubscribeBatteryChange(JsCtx ctx) {
+    auto *applet = Applet::current(ctx.vm());
+    if (applet && ctx.argc()) {
+        // slotId defaults to 0, which can be safely ignored without performing any operation
+        auto slotId = ctx.arg(0).toInt();
+        // After unbinding the slot from the applet, the slot object must also be deleted
+        delete applet->unbindObject<async::Slot>(slotId);
+    }
+    return {};
+}
+```
+
+#### JavaScript Export
+
+You simply need to define a [Native Module](./native-module.md) to export these functions:
+
+```cpp
+static JsModule *createBatteryModule(JsVM &vm) {
+    auto mod = vm.newObject();
+    // The battery module typically has functions like getLevel(), omitted here
+    mod["subscribe"] = subscribeBatteryChange;
+    mod["unsubscribe"] = unsubscribeBatteryChange;
+    return mod;
+}
+// Don't forget to import the module using GX_JSVM_MODULE_IMPORT
+GX_JSVM_MODULE(vendor_battery, "vendor.battery", createBatteryModule)
+```
+
+::: tip Reusing the `unsubscribe` function
+Since the implementation of the unbinding function is very generic, you can define a general `unsubscribe` function and import it into multiple modules for use.
+:::
+
+On the JavaScript side:
+
+```js
+import battery from '@vendor.battery'
+
+const sid = battery.subscribe((level) => {
+  console.log('battery level:', level)
+})
+
+// Call when unsubscribing is needed
+battery.unsubscribe(sid)
+```
+
+### Signal Delivery Modes
+
+`Signal` supports two delivery modes, controlled by the second parameter:
+
+```cpp
+// Normal mode (default): Notify all subscribers
+batteryChanged(newLevel, async::NormalSignal);
+
+// Skip invisible apps: Only notify foreground visible apps, reducing unnecessary consumption
+batteryChanged(newLevel, async::SkipInvisible);
+```
+
+The `SkipInvisible` mode is suitable for events that only make sense when the UI is visible (such as interface refresh notifications). For events that require background awareness (such as low battery warnings), the default `NormalSignal` should be used.
+
+### Signal Value Types
+
+The type parameter `T` of `Signal<T>` follows the exact same conversion rules as `ResultSession`: when a signal is triggered, the framework converts C++ values to JavaScript callback parameters via the same `js_cast()` mechanism. Built-in types such as `int`, `bool`, `String`, and `JsonValue` can be used directly; if you need to pass custom structs or enums, refer to the methods in the [Value Types and JavaScript Conversion](#value-types-and-javascript-conversion) section.
+
+## Thread Safety Notes
+
+The thread safety model of the asynchronous framework follows these rules:
+
+- **`resolve()` is thread-safe**: `ResultSession::resolve()` and `SingleTimer::resolve()` can be called on any thread. They post results to the UI thread via the event system and do not directly manipulate JavaScript objects.
+- **`JsValue` is not thread-safe**: `JsValue` manages its lifecycle using reference counting, and its reference counting operations are non-atomic. You must not create, copy, destroy, or access `JsValue` in an asynchronous thread. This is precisely why client classes must not hold `JsValue`.
+- **`Promise` resolution executes on the UI thread**: Regardless of which thread `resolve()` is called from, the final JavaScript `Promise` callback always executes on the UI thread, ensuring UI operation safety.
+- **`async::Signal` notifications are dispatched on the UI thread**: Although `async::Signal::operator()` can be called across threads, JavaScript callbacks always execute on the UI thread.
+
+If the client class needs to share state with the UI thread (such as providing a cancellation flag), use atomic operations like [`std::atomic`](https://en.cppreference.com/w/cpp/atomic/atomic) or mutexes to protect shared data:
+
+```cpp
+class CancellableClient {
+public:
+    void cancel() { m_cancelled.store(true); }
+
+    async::Result<String> resolve() {
+        for (int i = 0; i < 100 && !m_cancelled.load(); ++i) {
+            // Execute step-by-step task, periodically checking the cancellation flag
+            processChunk(i);
+        }
+        if (m_cancelled.load())
+            return async::Status(499);  // Client cancelled
+        return std::move(m_result);
+    }
+
+private:
+    std::atomic_bool m_cancelled{false};
+    String m_result;
+};
+```
+
+Notably, many value types in the Glyphix framework **are** safe to pass across threads **within this asynchronous framework**, such as:
+- `String`: Can be assigned and accessed directly across multiple threads without extra synchronization mechanisms.
+- `JsonValue`: This class is also a value type and possesses the same thread-safety characteristics as `String`.
+- `ByteArray`: Similar to `String`, supports cross-thread usage.
+- `SharedRef<T>`: The reference-counted smart pointer itself can be passed across threads, but the thread safety of the managed object `T` depends on its definition.
+- Non-owning types such as `String::View` **cannot** be used across threads.
+
+This is why in all the preceding examples we always directly capture and pass types like `String` across asynchronous contexts without special handling, and without needing to use synchronization mechanisms like mutexes.
+
+::: important
+The thread safety of the aforementioned types actually relies on the specific asynchronous framework memory model, meaning they are **not automatically thread-safe** in all scenarios. The asynchronous framework in this document guarantees this, but it cannot be generalized to any situation.
+:::
 
 ============================================================
 FILE_PATH: src/transl/EN/cxxdev/applet-install-flow.md
@@ -4699,445 +3231,6 @@ EnvPath::packages().emplace_back("/data/apps");
 ```
 
 Once configured, you can install and launch applications according to steps two and three. We recommend using `AppletKit::NoVerify` to install a simple sample package during your first successful run, confirming that `.pkg` appears under `/data/apps` and `launch` returns a non-null value, before gradually restoring formal verification policies and pre-installed layouts.
-
-============================================================
-FILE_PATH: src/transl/EN/cxxdev/object-system.md
-
-# Object System
-
-The C++ framework of Glyphix features an object model rooted in `PrimitiveObject`, which forms the foundation for subsequent development.
-
-The object system consists of three complementary parts: the **Object Base Class Hierarchy** defines the common capabilities and lifecycle rules for all managed objects; the **Meta-Object System** uses a compile-time meta-compiler to generate metadata for C++ classes, endowing them with reflection, property binding, and JavaScript export capabilities; and the **Memory Safety Mechanism** solves the ubiquitous dangling pointer problem in GUI frameworks through guarded pointers and reference counting.
-
-<ArchDiagram max-width="540px">
-  <div>
-    JavaScript Script Layer
-    <div class="remark">Property Binding · Method Invocation · Event Response</div>
-  </div>
-  <div>
-    Meta-Object System
-    <div class="group row">
-      <div>GX_OBJECT<div class="remark">Meta-Compiler Registration</div></div>
-      <div>GX_PROPERTY<div class="remark">Property/Method Reflection</div></div>
-      <div>Variant<div class="remark">C++ ↔ JS Type Bridging</div></div>
-      <div>dyn_cast<div class="remark">Safe Downcasting</div></div>
-    </div>
-  </div>
-  <div class="subject">
-    Object Base Class Hierarchy
-    <div class="group row">
-      <div>PrimitiveObject<div class="remark">Reflection Support · Lifecycle Management</div></div>
-      <div>Object<div class="remark">Parent-Child Tree Structure · Cascading Destruction</div></div>
-      <div>Widget<div class="remark">UI Control Base Class</div></div>
-    </div>
-  </div>
-  <div>
-    Memory Safety Mechanism
-    <div class="group row">
-      <div>Signal&lt;&gt;<div class="remark">Event Notification · Auto-Disconnection</div></div>
-      <div>Pointer&lt;T&gt;<div class="remark">Guarded Weak Reference</div></div>
-      <div>SharedRef&lt;T&gt;<div class="remark">Intrusive Shared Reference</div></div>
-    </div>
-  </div>
-</ArchDiagram>
-
-## Reflection and the Meta-Object Compiler
-
-Standard C++ classes are "silent": given an object pointer, you cannot know at runtime what members it has, what they are named, or how to read and write them. This is not an obstacle for static C++ development that does not require scripting.
-
-However, Glyphix works differently. When an application's page template writes `:value="progress"`, the reactive framework needs to find the property corresponding to the control by the string `"value"` at runtime, and automatically refresh when the data changes. This capability of a program to understand its own structure at runtime is called **Reflection**, which standard C++ does not support.
-
-Glyphix's solution is to introduce a **Meta Compiler** into the build pipeline. It scans the source code before standard C++ compilation, generating metadata for classes that need to participate in the object system. Developers simply place the **`GX_OBJECT`** macro at the beginning of a class definition, and the meta compiler processes the class—after which the framework can read and write its properties or call methods by name, and access it from JavaScript.
-
-You don't need to understand the internal workings of the meta-object system just yet. Just remember one rule: any class requiring reflection capabilities must include the `GX_OBJECT` macro in its definition and inherit from `PrimitiveObject` or `Object`.
-
-## `PrimitiveObject` and `Object`
-
-The framework's object system is divided into two tiers:
-
-**`PrimitiveObject`** is the root base class for all **managed objects**. Classes inheriting from it gain framework capabilities such as property reflection, dynamic casting, and safe delayed destruction. However, `PrimitiveObject` itself **does not** have a parent-child tree structure—it is simply a "C++ object perceptible to the framework." Types like `AsyncSession` and `BindableObject` inherit from it because these classes do not need to form trees.
-
-**`Object`** inherits from `PrimitiveObject` and adds a **parent-child tree structure**: a `parent` pointer is passed during construction, and when the parent object is destroyed, all child objects are also recursively destroyed. The Widget Tree is organized through this mechanism.
-
-::: tip Analogy to Other Frameworks
-If you have Qt development experience, you can analogize Glyphix's meta-object system to Qt's MOC system: `GX_OBJECT` corresponds to `Q_OBJECT`. However, there are many differences, such as Glyphix splitting the capabilities of Qt's `QObject` into two layers; `Signal` is also just a regular template class that does not rely on the meta-object compiler.
-
-Other frameworks, such as Unreal Engine's UCLASS, have similar reflection systems.
-:::
-
-Choosing which base class to use depends on whether your class needs to be part of a tree:
-
-```cpp
-// Needs to participate in the object tree → inherit from Object
-class MySensor : public Object {
-    GX_OBJECT
-public:
-    explicit MySensor(Object *parent = nullptr) : Object(parent) {}
-};
-
-// Only needs framework awareness, does not participate in the tree → inherit from PrimitiveObject
-class MyNetworkSession : public PrimitiveObject {
-    GX_OBJECT_KINDS(ExplicitDeleteKind)
-public:
-    MyNetworkSession() = default;
-};
-```
-
-`GX_OBJECT_KINDS(ExplicitDeleteKind)` in the code is an additional declaration. Like the `GX_OBJECT` macro, it declares the meta-object class, but informs the framework that the object's lifecycle is managed by the developer and will not be automatically reclaimed by JavaScript. Lifecycle-sensitive types like `AsyncSession` use this.
-
-## Properties and Signals
-
-The **`GX_PROPERTY`** macro is used to declare a framework-perceptible property, associating it with its getter and setter. Once declared, the property can be driven by the framework's reactive system—UI depending on it automatically refreshes when the value changes, and the animation system can interpolate it:
-
-```cpp
-class MyWidget : public Widget {
-    GX_OBJECT
-public:
-    int value() const { return m_value; }
-    void setValue(int v) { m_value = v; update(); }
-
-    GX_PROPERTY(int value, get value, set setValue)
-
-private:
-    int m_value = 0;
-};
-```
-
-### Signals
-
-**`Signal<>`** is an event notification mechanism, declared directly as a class member. It is "emitted" when an event occurs, and other objects receive notifications by "connecting" to it ([lambda expressions](https://en.cppreference.com/w/cpp/language/lambda) are C++'s anonymous function syntax):
-
-```cpp
-class MyWidget : public Widget {
-    GX_OBJECT
-public:
-    Signal<int> valueChanged;
-
-    void setValue(int v) {
-        m_value = v;
-        valueChanged(v);  // Emit signal
-    }
-private:
-    int m_value = 0;
-};
-
-// Connect to a member function
-myWidget->valueChanged.connect(this, &MyClass::onValueChanged);
-
-// Or connect to a lambda
-auto slot = make_slot([](int v) { /* Handle change */ });
-myWidget->valueChanged.connect(slot);
-```
-
-::: tip Comparison with Qt's Signals and Slots
-Qt's classic signals and slots mechanism requires MOC-generated code support, but `Signal<>` is a pure C++ template class that does not depend on the meta-object compiler. Therefore, you do not necessarily have to use `Signal<...>` objects in specific classes; you can use them anywhere.
-
-Since `Signal` is a class, it consumes memory space (even when unconnected). Therefore, it is recommended to use event type enumerations and single signal member variables to save memory, rather than declaring a `Signal` member for every single event.
-:::
-
-### Complete Form of `GX_PROPERTY`
-
-In addition to `get` / `set`, `GX_PROPERTY` supports declaring an associated change signal (`signal`), which is the standard interface for reactive frameworks to subscribe to property changes:
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    int value() const { return m_value; }
-    void setValue(int v) {
-        if (m_value == v) return;
-        m_value = v;
-        update();
-        valueChanged(v);
-    }
-
-    Signal<int> valueChanged;
-
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-
-private:
-    int m_value = 0;
-};
-```
-
-For properties with a declared `signal`, changes are automatically propagated through the reactive framework to JavaScript expressions bound to that property. This is the basis for two-way synchronization between control properties and application data.
-
-The `signal` field in `GX_PROPERTY` does not depend on the parameter type of `Signal<T>`; the framework only cares whether it exists and when it is emitted. Conversely, the `get` field must be provided in this case to allow the framework to read property values on the JavaScript side.
-
-## Guarded Pointers and Memory Safety
-
-In GUI frameworks, asynchronous scenarios easily lead to dangling pointer crashes. A typical case:
-```cpp
-void onNetworkResponse(const String &data) {
-    // Network request takes 2 seconds to return
-    // But within these 2 seconds, the user may have exited the current page, and the label has been destroyed
-    this->label->setText(data); // Segmentation Fault!
-}
-```
-Timer callbacks, I/O callbacks, and all other asynchronous scenarios face the same risk. In scripted frameworks, such use cases are structurally unavoidable, so a safe lifecycle observation mechanism must be provided.
-
-### `Pointer<T>` Guarded Pointers
-
-Glyphix builds weak reference counting support into all derived classes of `PrimitiveObject`. Use `Pointer<T>` to hold non-owning cross-object references. When the target object is destroyed, `Pointer<T>` is automatically set to null, and you can safely use it by checking before dereferencing:
-
-```cpp
-Pointer<Label> m_label; // Declare as member variable
-
-// ...Assign after construction...
-m_label = label;
-
-// In any asynchronous callback that might cause the label to be destroyed:
-void onNetworkResponse(const String &data) {
-    if (!m_label)
-        return; // Label has been destroyed, safely exit
-    m_label->setText(data); // Access is safe here
-}
-```
-
-::: tip When to Use
-Use `Pointer<T>` instead of raw pointers `T *` to track lifecycles when holding pointers across objects without owning their lifecycles. `Signal`'s `connect` mechanism also relies on guarded pointers—when the receiver (the object containing the slot) is destroyed, the connection is automatically severed, preventing dangling callbacks.
-:::
-
-### Thread Limitations
-Guarded pointers do not support cross-thread access; they are essentially limited to use on the UI thread. Furthermore, they are not zero-cost abstractions, as every construction involves reference counting operations.
-
-### `SharedRef<T>` Intrusive Reference Counting
-
-For ordinary value objects that do not inherit from `PrimitiveObject` (such as custom data structures), the framework provides intrusive shared reference counting. Make the value type inherit from `SharedValue`, and then hold it with `SharedRef<T>` to obtain shared semantics similar to [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr) while avoiding additional control block allocations:
-
-```cpp
-class MyData : public SharedValue {
-public:
-    int x = 0;
-    String name;
-};
-
-auto ref1 = make_shared<MyData>();
-ref1->x = 42;
-
-SharedRef<MyData> ref2 = ref1; // Reference count increases, sharing the same object
-```
-
-`SharedRef` also supports Copy-On-Write (COW) semantics: before modifying a copied version, an independent copy is created to ensure multiple holders do not interfere with each other. This mechanism uses atomic reference counting to achieve thread safety.
-
-## Dynamic Type Casting
-
-Standard C++'s [`dynamic_cast`](https://en.cppreference.com/w/cpp/language/dynamic_cast) relies on RTTI (Run-Time Type Information), whereas embedded environments are typically compiled with `-fno-rtti`. `dyn_cast` leverages the meta-object system to provide equivalent runtime-safe downcasting capabilities.
-
-The target type `T` of `dyn_cast<T *>()` must satisfy two conditions:
-1. Inherit from `PrimitiveObject`
-2. Declare the `GX_OBJECT`/`GX_OBJECT_KINDS` macro
-
-```cpp
-PrimitiveObject *obj = getSomeObject();
-
-// Safe downcasting; returns nullptr if casting fails
-auto *btn = dyn_cast<Button *>(obj);
-if (btn)
-    btn->setText("OK");
-
-// Const versions are also supported
-const auto *constBtn = dyn_cast<const Button *>(obj);
-```
-
-::: warning `GX_OBJECT` is a Prerequisite
-`dyn_cast`'s type checking relies on the target class's static meta-object information (`staticMetaObject`). If the target class does not declare `GX_OBJECT`, it lacks the necessary runtime type information, resulting in a compilation error.
-:::
-
-`dyn_cast` is particularly commonly used in Native Module development: the framework frequently passes objects in as base class pointers (`PrimitiveObject *` or `Object *`), requiring `dyn_cast` to safely restore them to concrete types before operating on them.
-
-Considering that sandbox security policies do not trust objects passed from scripts, we cannot assume that runtime object pointers passed in are of the correct type, and therefore must use `dyn_cast` to verify types and safely access their members.
-
-### Memory Leak Traps
-
-A typical `dyn_cast` usage pattern implies a risk of memory leaks, such as:
-```cpp
-auto *session = dyn_cast<Session *>(takeObjectOwnership());
-if (session) {
-    // Successfully cast, access session members and transfer ownership
-}
-```
-The problem is that if the object returned by `takeObjectOwnership()` is not of type `Session`, `dyn_cast` returns `nullptr`, but ownership of the original object has already been transferred—leading to a memory leak if no other mechanism reclaims the object.
-
-When developing Native Module APIs, you may occasionally encounter this issue, and related frameworks provide better APIs to avoid it. However, developers should be aware of this potential risk and not be misled by the safety of `dyn_cast`.
-
-### Is `GX_OBJECT` Necessary?
-
-Not all classes inheriting from `PrimitiveObject` require `GX_OBJECT`. The purpose of the `GX_OBJECT` macro is to register the class with the meta-object system, enabling capabilities such as reflection, property binding, and `dyn_cast`. If your class:
-
-- Does not need to be exposed to JavaScript
-- Does not require reflection mechanisms like `GX_PROPERTY` or `GX_METHOD`
-- Does not need to be safely cast via `dyn_cast`
-
-Then you can omit `GX_OBJECT`, simply inheriting from the base class and using C++ features normally:
-
-```cpp
-// Internal helper class requiring no meta-object capabilities, omit GX_OBJECT
-class InternalBufferManager : public PrimitiveObject {
-public:
-    explicit InternalBufferManager() = default;
-    void flush();
-private:
-    // ...
-};
-```
-
-Classes omitting `GX_OBJECT` still retain the basic capabilities of `PrimitiveObject`, including `deleteLater()` and guarded pointer support, but lose reflection and dynamic type recognition capabilities.
-
-Another scenario is when your final type requires meta-object capabilities, but certain intermediate base classes do not; in this case, the intermediate base classes can omit `GX_OBJECT`. This loses some runtime type information but reduces code size.
-
-::: tip
-If you are unsure whether you need `GX_OBJECT`, it is generally recommended to conservatively include it.
-:::
-
-One final important difference: once marked with `GX_OBJECT`, the class must be located in a header file (`*.h`) and registered with the build system using the `glyphix_add_meta_objects()` CMake macro. Classes without `GX_OBJECT` have no such requirement and can be defined directly in `.cpp` files.
-
-## Runtime Type System
-
-Throughout all previous discussions of `GX_PROPERTY`, one question remained unanswered:
-
-```cpp
-GX_PROPERTY(int value, get value, set setValue)
-```
-
-How does JavaScript know what an `int` is? When `widget.value = 42` is written on the JavaScript side, `42` is JavaScript's `number` type, whereas `setValue(int v)` accepts a C++ `int`. What happens in between? Conversely, how does the `int` returned by `getValue()` become a `number` in JavaScript?
-
-Without any glue code, the framework obviously needs to do some work behind the scenes to bridge C++ static types and dynamic script types. This is a fairly transparent process, and this section explains what happens in the middle.
-
-### The General-Purpose Type Container `Variant`
-
-The answer lies in `Variant`. It is a type-erased container capable of holding values of arbitrary types, serving as the core bridge connecting C++'s static type system with JavaScript's dynamic types.
-
-Whenever the framework needs to cross this boundary, it goes through `Variant`:
-
-1. **Property Read/Write Intermediate Layer**: When properties declared with `GX_PROPERTY` are read and written via reflection APIs, values are passed via `Variant`. The framework converts JavaScript's `JsValue` into a `Variant`, which is then converted by `Variant` into the actual argument type of the C++ setter; the direction is reversed when reading.
-2. **Method Call Argument Marshaling**: Parameters and return values of `GX_METHOD` are represented via `Variant` before being passed to C++ .
-
-```cpp
-Variant v1;                  // Empty value (null)
-Variant v2{42};              // Stores int
-Variant v3{3.14};            // Stores double
-Variant v4{String("Hello")}; // Stores String
-// Variant must be explicitly constructed, implicit conversion is not supported
-// Variant v5 = 42; // Error, must write Variant v5{42};
-
-// Type checking
-if (v2.is<int>()) { /* ... */ }
-// Checking convertibility is not recommended; instead, directly to<T>() and check if it's an invalid value
-if (v3.convertible<double>()) { /* ... */ }
-
-// Read by reference (fastest, requires exact type match)
-int n = v2.as<int>();
-// Read by reference, returns default value on type mismatch
-double d = v2.as<double>(0.0); // int != double, returns 0.0
-// Read with type conversion (by value)
-int fromDouble = v3.to<int>();   // 3.14 -> 3
-String fromInt = v2.to<String>(); // 42 -> "42"
-```
-
-::: tip
-This is not C++17's [`std::variant`](https://en.cppreference.com/w/cpp/utility/variant), but rather closer to [`std::any`](https://en.cppreference.com/w/cpp/utility/any) with support for runtime type identification and automatic type conversion.
-
-Generally, you do not need to directly manipulate `Variant` in business code; the framework automatically handles all conversions. You will only interact with it directly when implementing low-level framework extensions, writing general utility functions, or needing to manipulate runtime reflection APIs directly.
-:::
-
-### Built-in Type Mappings
-
-The framework has built-in bidirectional mappings to JavaScript for common C++ primitive types:
-
-| C++ Type | JavaScript Type | Remarks |
-|:---:|:---:|:---:|
-| `int`, `float`, `double`, etc. | `number` | Numerical types mapped directly |
-| `bool` | `boolean` | |
-| `String` | `string` | |
-| Subclasses of `PrimitiveObject *` | JavaScript object reference | Object lifecycle managed by framework |
-| Value types like `Color`, `Length` | `string` | Represented via specifically formatted strings |
-
-This is why after writing `GX_PROPERTY(int value, ...)`, the JS side can directly do `widget.value = 42`: `int` is in the built-in mapping table, and the framework knows how to convert the type.
-
-::: note Do Not Use C-Strings
-`Variant` requires the stored type `T` to have ownership, so non-owning types such as C-strings (`const char *`) and string views (`String::View`) cannot be stored in `Variant`. Always use `String` to represent text data, and explicitly convert to `String` before storing in `Variant` when necessary.
-
-Using an unsupported string type will result in a compilation error.
-:::
-
-::: important
-The built-in type mapping table does not register `std::string`-related mappings, so storing `std::string` in `Variant` is also not recommended. Unmapped types can be stored normally, but they will be treated as opaque C++ objects and cannot be used in JavaScript.
-:::
-
-### Complex Type Reflection
-
-For classes declared using `GX_OBJECT`, you can also utilize `GX_ENUM` and `GX_STRUCT` to export enumeration and structure member types, allowing them to be used naturally in JavaScript as well. This type export is automatic and requires no manual writing of additional binding code.
-
-#### Enumeration Reflection `GX_ENUM`
-
-When a property or method parameter type is a C++ enumeration, exposing it to JavaScript directly as an integer is neither intuitive nor error-prone. `GX_ENUM` exports enumerations as string constants, allowing JavaScript to operate using readable strings rather than magic numbers:
-
-```cpp
-class ScrollArea : public Widget {
-    GX_OBJECT
-public:
-    enum GX_ENUM ScrollBarStyle {
-        RemoveScrollBar GX_ALIAS("hidden"),
-        LinearScrollBar GX_ALIAS("line"),
-        DotsScrollBar   GX_ALIAS("dots")
-    };
-
-    GX_PROPERTY(ScrollBarStyle indicator, set setScrollBar)
-};
-```
-
-`GX_ENUM` is placed after the `enum` keyword, telling the meta compiler that this enumeration needs to be exported. `GX_ALIAS("...")` specifies a JavaScript-visible string name for each enumeration member—if omitted, the original name of the C++ member is used by default. Application developers use this in JavaScript as follows:
-
-```js
-scroll.indicator = "hidden"; // Corresponds to RemoveScrollBar
-scroll.indicator = "dots";   // Corresponds to DotsScrollBar
-```
-
-When reading the `indicator` property, the framework converts the string `"dots"` into the `DotsScrollBar` enumeration value before passing it to the setter; when reading, it converts the enumeration value back to a string. The entire process is completely transparent to the C++ side, which always operates on concrete enumeration types.
-
-#### Structure Parameter Reflection `GX_STRUCT`
-
-For method parameters, an operation sometimes requires multiple related configuration options. In such cases, parameters can be encapsulated into structures and exported with `GX_STRUCT`, allowing the JavaScript side to pass an object literal:
-
-```cpp
-class Scroll : public ScrollArea {
-    GX_OBJECT
-public:
-    struct GX_STRUCT ScrollOptions {
-        Length left;
-        Length top;
-        ScrollBehavior behavior;
-    };
-    struct GX_STRUCT IndexOptions {
-        int index;
-        ScrollBehavior behavior;
-    };
-
-    GX_METHOD void scrollTo(const ScrollOptions &options);
-    GX_METHOD void scrollBy(const ScrollOptions &options);
-    GX_METHOD void setIndex(const IndexOptions &options);
-};
-```
-
-`GX_STRUCT` is placed after the `struct` keyword, and each field of the structure is automatically exported according to its type (again via built-in type mappings or nested `GX_ENUM`s). Objects can be passed directly on the JS side:
-
-```js
-scroll.scrollTo({ left: 0, top: 200, behavior: "smooth" });
-scroll.setIndex({ index: 3, behavior: "instant" });
-```
-
-The `scrollTo` method on the C++ side always receives strongly typed `ScrollOptions` objects, requiring no parsing whatsoever on the C++ side.
-
-::: warning Do Not Forget Annotations
-When declaring `GX_PROPERTY` or `GX_METHOD`, if the related type is a custom enumeration or structure, make sure to correctly annotate it with `GX_ENUM` or `GX_STRUCT`. Otherwise, these properties or methods cannot be used on the JavaScript side, and no compilation error prompts will be given.
-:::
-
-### Is There an "Intermediate Representation"?
-
-When using `Variant` to bridge C++ and JavaScript, does the framework convert JavaScript objects into a general intermediate representation, such as some JSON-like serialized structure?
-
-The answer is no. `Variant` directly stores C++ objects (including `JsValue`), which includes all type information and operation semantics of the object. The system correctly performs type conversions and method invocations based on the runtime type tags of the `Variant` value, without requiring a specific intermediate representation or serialization process.
 
 ============================================================
 FILE_PATH: src/transl/EN/cxxdev/widget.md
@@ -6007,4 +4100,1911 @@ Whether you manually `delete` the parent widget or the framework cleans up the w
 If delayed destruction is required (for example, inside an event handling function), you can use `deleteLater()`, which destroys the object after the current event handling completes, avoiding issues like "destroying oneself within a callback".
 
 In the reactive framework, widget trees are maintained by the component framework. Customized development only requires [registering widget classes](./widget-export.md).
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/platform-font-fallback.md
+
+# Platform Font Fallback
+
+The Glyphix framework has a built-in font loading and fallback mechanism based on `font-face` / `font-family`. However, target platforms usually come with comprehensive font pipelines (such as Windows DirectWrite or macOS CoreText) that already implement system font fallback and related optimizations.
+
+To make full use of the platform font pipeline, Glyphix allows you to take over font fallback: when a font within the framework cannot cover a certain character, the task is handed over to the platform to find and render the appropriate system font. This article is intended for Glyphix system developers and guides you step-by-step through the integration process.
+
+Public header files involved:
+- `gx_unite.h`: Contains the UniTE public interface and the engine installation function `installEngine()`;
+- `gx_shapingadapter.h`: This is the primary interface;
+- `gx_fontdriver.h`: Provides the `FontDriver` encapsulation mechanism;
+- `gx_fontloader.h`: Provides the font loader interface.
+
+## Overall Architecture
+
+For a piece of text to be displayed on the screen, it goes through the following pipeline: application text is handed over to the **paragraph layout engine** for line breaking and positioning; text segments with the same script and direction are **shaped** into glyphs; missing characters are filled in by **font fallback**; glyphs are then handed over to the **font driver** to be rendered into bitmaps; and all fonts come from the registration, loading, and reuse of the **font management** layer.
+
+<ArchDiagram max-width="560px">
+  <div>Application Text<div class="remark">Paragraph · String · Style</div></div>
+  <div>
+    Paragraph Layout Engine
+    <div class="group row">
+      <div>Lightweight Engine LiTE<div class="remark">Simple typesetting (Default engine)</div></div>
+      <div>UniTE Engine<div class="remark">BiDi · Shape · Complex scripts</div></div>
+    </div>
+  </div>
+  <div>
+    Shaping · Font Fallback
+    <div class="group row">
+      <div>HarfBuzz<div class="remark">GSUB / GPOS</div></div>
+      <div>Simple Shape<div class="remark">Character → Glyph</div></div>
+      <div class="subject">FontFallbackShaper<div class="remark">Family fallback · Platform system fonts</div></div>
+    </div>
+  </div>
+  <div>
+    Font Rendering
+    <div class="group row">
+      <div>FontDriver<div class="remark">TTF / FreeType</div></div>
+      <div>FontDriverFamily<div class="remark">Multi-face cascading</div></div>
+      <div class="subject">PlatformFont Wrapper<div class="remark">Render platform fallback glyphs</div></div>
+    </div>
+    <div>GlyphCache - Glyph bitmap cache</div>
+  </div>
+  <div>
+    Font Management (FontManager)
+    <div class="group row">
+      <div>Registration / Lookup<div class="remark">Face · Family · Attributes</div></div>
+      <div class="subject">FontLoader<div class="remark">Load face, inject wrapper</div></div>
+    </div>
+  </div>
+</ArchDiagram>
+
+The three highlighted parts in the diagram are covered in this article:
+1. The fallback strategy `FontFallbackShaper`, used to identify missing characters and perform fallback shaping;
+2. The `PlatformFont` wrapper responsible for rendering platform fallback fonts, used in tandem with `FontFallbackShaper`;
+3. The `FontLoader` used to load the platform fallback font wrapper, which will be registered into `FontManager`.
+
+The rest of the framework layers are already implemented. Text shaping (`ShapingAdapter`) usually does not need to be implemented from scratch; you can directly reuse the reference implementation.
+
+### Prerequisites
+
+Before implementing the platform font fallback feature according to this document, you need:
+
+- Enable the UniTE text engine (compared to the default lightweight engine, it supports complex script shaping and multi-level fallback).
+- The target platform must support a complete font pipeline capable of advanced features such as system font shaping and script mapping. This is usually a complex subsystem that most MCU RTOS platforms lack.
+
+::: important
+Compared to the default LiTE engine, enabling UniTE and the complete font pipeline requires more memory and firmware space. Moreover, the performance of this engine is lower than the lightweight LiTE, so you need to evaluate whether it is necessary to enable it for complete Unicode support and internationalization requirements.
+:::
+
+## Reusing the Shaping Backend
+
+`ShapingAdapter` is responsible for shaping characters into glyphs. The built-in `HarfBuzzShaper` (`gx_harfbuzz_shaper.cpp`) already implements complete OpenType shaping. It calls HarfBuzz for shaping, and then writes glyph indices, advances, and offsets into the output based on the target pixel size.
+
+`HarfBuzzShaper` relies on FreeType to read font files, so both HarfBuzz and FreeType libraries must be included simultaneously. If these libraries already exist on the target platform, make sure their versions match, otherwise link or runtime errors may occur.
+
+::: tip
+Similar to HarfBuzz's [responsibility](https://harfbuzz.github.io/what-harfbuzz-doesnt-do.html), `ShapingAdapter` does not handle text runs containing different fonts, which includes the "font fallback" mechanism described below. Therefore, as long as the font used in shaping is missing a character, the `ShapingAdapter` implementation will return the `.notdef` glyph (index `0`), leaving it to the fallback strategy to handle.
+:::
+
+## Implementing the Fallback Strategy
+
+`FontFallbackShaper` is the core of the fallback mechanism. The engine calls it every time it shapes a section of text, requiring a glyph sequence **free of missing characters** to be returned as the shaping result. Unlike `ShapingAdapter`, it is not just shaping for a single font-face, but is designed for a two-tier fallback.
+
+### Two-Tier Fallback Cascade
+
+`FontFallbackShaper::shape()` performs fallback in two tiers from nearest to farthest:
+
+- **First tier**: Use other fonts within the current family to complement each other. This is already implemented by the framework; you only need to call `builtinShape()`.
+- **Second tier**: Missing characters that cannot be resolved by the first tier are handed over to the platform system fonts. This tier is implemented by you.
+
+Missing characters are represented in the data by a glyph index of `0`, i.e., `.notdef`. The return value `FallbackResult` of `shape()` uses bit flags to express the result: `result & NotNeeded` being true indicates that there are no more missing characters and can end directly; otherwise, common returns are `FullyResolved` (all processed) or `PartiallyResolved` (some `.notdef` still remain).
+
+### `shape()` Function Skeleton
+
+First call the first tier; return if there are no missing characters, otherwise proceed to the second-tier platform font fallback. `m_shaper` is the `ShapingAdapter` held by this fallback processor (usually `HarfBuzzShaper`).
+
+```cpp
+FallbackResult shape(GlyphRunBundle &storage,
+                     TextSpan text,
+                     FontDriver *font) override {
+    // First tier: Use builtin API to handle fallback within the family
+    auto r = builtinShape(storage, text, font, &m_shaper);
+    if (r & NotNeeded)
+        return r;                                  // No missing characters, finish
+    return resolveByPlatform(storage, text, font); // Second tier, see below
+}
+```
+
+`builtinShape()` is the only place that depends on `ShapingAdapter`. In this case, you typically need to implement `PlatformFallbackShaper` as follows:
+```cpp
+class PlatformFallbackShaper : public FontFallbackShaper {
+    HarfBuzzShaper m_shaper; // Directly define as a member variable, no pointer reference needed
+
+public:
+    PlatformFallbackShaper() = default;
+    FallbackResult shape(GlyphRunBundle &storage,
+                         TextSpan text, FontDriver *font) override;
+};
+```
+Please note that `m_shaper` is merely a private member variable of your platform fallback strategy and does not need to be exposed externally at all. When calling `builtinShape()` inside `shape()`, simply pass `&m_shaper`.
+
+::: tip
+In extreme cases (such as the initial adaptation phase), you can ignore the fallback within the family and directly skip `builtinShape()`, only handling the second-tier platform fallback. In this case, the `m_shaper` member variable can be omitted.
+
+Regardless, specific `ShaperAdapter` classes generally cannot be defined as local variables because they may hold HarfBuzz cache states, and recreating them on every shaping operation would cause severe performance degradation.
+:::
+
+### Obtaining Platform Fonts
+
+The second tier hands over missing characters to the platform and ultimately lets the wrapper render them. `fallbackFont(font)` returns the wrapper registered at the end of the family (see below). Its static type is `FontDriver *`, and you need to cast it back to your own wrapper type in order to call your custom registration and query interfaces.
+
+```cpp
+// Casting can also use dyn_cast, but if there is only one wrapper type, static_cast is also safe
+auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
+if (wrapper == nullptr)
+    return PartiallyResolved; // No wrapper at the end of the family, cannot continue
+```
+
+::: warning Must Be Implemented in Pairs
+The fallback strategy and the wrapper are a matched pair: the `static_cast` above requires that `fallbackFont()` returns precisely your own wrapper type. Make sure that the installed fallback processor matches the registered wrapper.
+:::
+
+### Simple Fallback Shaping
+
+The most common and starter-friendly scenario is: the entire run can be shaped using a single platform font (i.e., a certain system font file completely covers the script). In this case, select the platform font according to `storage.run().spec.script`, re-shape the entire run, write the entire section into the same `faceId`, **directly overwriting the first-tier result**, without needing to merge with already resolved glyphs.
+
+UniTE splits runs by script, and Latin and CJK within the same text segment are inherently different runs. When the main font focuses on Latin and encounters scripts such as CJK, Arabic, or Devanagari, the entire run after `builtinShape()` is often `.notdef`, and re-shaping and overwriting the entire run will not lose any resolved glyphs. Therefore, multilingual typesetting almost entirely follows this path and is not a degenerated special case.
+
+```cpp
+// Select platform font based on script (platform font handle, not FontDriver), register to get faceId
+auto sysFont = platformFontForScript(storage.run().spec.script);
+uint32_t faceId = wrapper->registerFont(sysFont);
+// Your shaping step produces glyphCount glyphs (demonstrated here with HarfBuzz output)
+auto &run = storage.resize(glyphCount);
+for (int i = 0; i < glyphCount; ++i) {
+    run.data.glyphIds[i]   = GlyphIds::encodeFallback(gid[i], faceId);
+    run.data.xAdvances[i]  = uint16_t(scale(pos[i].x_advance));
+    run.data.xOffsets[i]   = int16_t(scale(pos[i].x_offset));
+    run.data.yOffsets[i]   = int16_t(scale(pos[i].y_offset));
+    run.data.clusterMap[i] = static_cast<int>(info[i].cluster);
+}
+```
+
+The fields `pos`, `info`, `gid`, and `scale` come from your shaping steps, demonstrated above using HarfBuzz output.
+
+::: tip Platform Shaping Capabilities
+Platforms usually come with their own shaping capabilities (such as DirectWrite, CoreText). Whether to reuse HarfBuzz depends on the specific platform; the HarfBuzz output in the demonstration can be replaced with the platform's shaping output. For RTL runs (`spec.bidiLevel & 1`), the direction must be passed to the shaper.
+:::
+
+The premise of this method is that the entire run maps to a single platform font. It **does not apply to Common scripts** (Emojis, symbols, etc.): different characters within the same run may belong to multiple platform fonts, requiring the complex fallback described below.
+
+### Complex Fallback Shaping
+
+When multiple platform fonts are needed within a run, or only some clusters need fallback, the simple solution no longer applies. Considering that specific fallback and merging algorithms depend on platform APIs, this document only constrains the semantics that the merged `GlyphRun` must satisfy, and the implementation must handle it accordingly:
+
+- Glyphs already resolved in the first tier are **retained as is**, and the second tier only replaces clusters that are still `.notdef`.
+- Fill every glyph slot with `glyphIds`, `xAdvances`, `xOffsets`, `yOffsets`, and `clusterMap`; fallback glyphs are marked using `encodeFallback(gid, faceId)`.
+- `clusterMap[i]` is the offset of the source code point corresponding to this glyph relative to **this run** (consistent with `spec.text`, range `[0, text.length())`), used for drawing mapping and per-line clipping.
+- Glyph count is variable: use `storage.resize()/reset()` to adjust storage, then write slot by slot. `GlyphRunBundle` will automatically update `run().glyphCount`.
+- When a single source cluster maps to multiple glyphs, the order and sum of advances must be correct; code points swallowed by GSUB cluster merging should produce zero-advance glyphs to avoid gaps or misalignments.
+- `faceId` must be a stable ID registered in the wrapper and valid throughout its lifecycle; the glyph order and shaping direction of RTL runs must be consistent.
+- Return value: return `FullyResolved` if all are filled, or `PartiallyResolved` if residuals remain.
+
+As long as the output satisfies the above constraints, the framework can render correctly. Whether to query platform APIs segment by segment or reuse HarfBuzz to shape font by font can be chosen according to the platform.
+
+### Line Height and Caching
+
+Line height depends on **which font actually draws each glyph**. `builtinLineMetrics()` is responsible for parts of the glyphs within the family; glyphs with fallback marks (`isFallback()`) query the wrapper for their system font's ascender and descender and incorporate them. Fallback glyphs are encoded in `GlyphIds` by `encodeFallback`, and their `fontIndex()` is the written `faceId`, based on which the corresponding platform font is retrieved from the wrapper.
+
+```cpp
+VerticalMetrics resolveLineMetrics(const GlyphIds *gids, int count,
+                                   FontDriver *font) const override {
+    // Handle glyphs within the family
+    VerticalMetrics m = builtinLineMetrics(gids, count, font);
+    // Handle platform fallback glyphs
+    auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
+    if (wrapper == nullptr)
+        return m;
+    // For glyphs where gids[i].isFallback(), query asc/descent from wrapper and incorporate into m
+    for (auto gid : utils::span<const GlyphIds>(gids, count)) {
+        if (!gid.isFallback())
+            continue; // Process fallback glyphs only
+        uint32_t faceId = gid.fontIndex(); // The fontIndex() of a fallback glyph is its faceId
+        auto face = wrapper->fontForFaceId(faceId); // Platform font handle (not FontDriver)
+        if (face == nullptr)
+            continue;
+        m.ascent = max(face->ascender(), m.ascent);
+        m.descent = min(face->descender(), m.descent);
+    }
+    return m;
+}
+```
+
+You can also aggregate the fallback fonts of the entire line and query their asc/descent all at once to avoid per-glyph queries in a loop.
+
+`flush()` is used to release system fonts cached by the wrapper:
+
+```cpp
+void flush(FontDriver *font) override {
+    if (auto *w = static_cast<PlatformFont *>(fallbackFont(font)))
+        w->releaseFonts();
+}
+```
+
+::: tip
+`flush()` is called by the framework when a paragraph is destroyed or memory is tight. Please clean up platform resources held by the wrapper inside it.
+:::
+
+## Fallback Font `FontDriver` Wrapper
+
+The wrapper is responsible for rendering the glyphs shaped in the previous step into bitmaps. It inherits from `FontDriver` and carries the `PlatformFallback` flag upon construction, letting the framework know it is a fallback font.
+
+```cpp
+class PlatformFont : public FontDriver {
+public:
+    PlatformFont(const String &family, const FontAttribute &attr)
+        : FontDriver(family, attr, Vector | PlatformFallback) {}
+    // ... bitmapOf / metricsOf ...
+protected:
+    void requestHandler(int) override {}
+};
+```
+
+This font wrapper is not used to load some font file (like `FontDriverTTF` does). Its role is to hand over fallback glyphs to the platform font pipeline for processing, while the internal implementation is opaque to Glyphix.
+
+### Dual-Mode Query
+
+The `code` received by the wrapper has two meanings, distinguished by the `CodeAsGlyphId` bit:
+
+- **Tagged**: Query by glyph index, with the high bits carrying `faceId` and the low bits being the glyph index. After decoding, it is routed to the corresponding platform font, and then queried for the corresponding `GlyphBitmap` using `glyphId`.
+- **Untagged**: Unicode character query, fallback lookup among registered platform fonts by code point, which internally converts to a glyph index before querying.
+
+A typical `bitmapOf()` implementation is as follows:
+
+```cpp
+bool bitmapOf(uint32_t code, GlyphBitmap *bitmap) override {
+    if (code & CodeAsGlyphId) { // By glyph index
+        uint32_t faceId  = (code >> 16) & 0x3ff;
+        uint32_t glyphId =  code & 0xffff;
+        auto face = fontForFaceId(faceId); // Platform font handle (not FontDriver)
+        return face && face->bitmapOf(glyphId, bitmap);
+    }
+    // Unicode character lookup; iterate registered fonts here, or use a more efficient mapping table
+    for (auto *face : registeredFonts()) {
+        uint32_t glyphId = face->glyphIndexOf(code);
+        if (face->bitmapOf(glyphId, bitmap))
+            return true;
+    }
+    return false;
+}
+```
+
+::: tip
+`fontForFaceId()` returns a platform font handle, **not a `FontDriver`**; `face->bitmapOf(...)` and `face->glyphIndexOf(...)` above are pseudo-code operating on that handle, representing "getting `GlyphBitmap` by `glyphId`" and "getting `glyphId` by code point" respectively.
+:::
+
+`metricsOf()` uses the same dual-mode logic; `advancesOf()`, `baseline()`, etc., are also calculated from platform fonts. `duplicate()` only needs to copy a mapping table.
+
+### `faceId` Mapping
+
+The wrapper maintains a mapping of `faceId` → platform font for the fallback strategy to register and look up during rendering.
+
+`faceId` is a $10$-bit integer ($[0, 1023]$), and its meaning is entirely defined by the implementation, with the only requirement being **stability throughout its lifecycle**. There are two common approaches:
+
+- **Fixed by script**: Directly use the `Script` enum value as `faceId`. The wrapper holds the corresponding platform font by script, and registers it by script upon creation without runtime allocation.
+- **Allocated on demand**: Allocate the next index whenever a new platform font is encountered, maintaining a growing table.
+
+Example of fixing by script (`faceId` is the script value):
+```cpp
+PlatformFontHandle fontForScript(Script script) {
+    switch (script) {
+    case Script::Han:    return sysHanFont;
+    case Script::Arabic: return sysArabicFont;
+    case Script::Latin:  return sysLatinFont;
+    // ...
+    }
+    return sysDefaultFont;
+}
+```
+You need to handle script-to-font mapping, `faceId` allocation, and platform font object caching yourself.
+
+::: tip
+`faceId` is the contract between the fallback strategy and the wrapper: `PlatformFallbackShaper` uses it to encode glyphs, and `PlatformFont` uses it to decode back to system fonts. Both ends must interpret `faceId` consistently, and it must be representable by a $10\text{-bit}$ integer.
+:::
+
+## Registering the Wrapper
+
+Finally, let the framework incorporate the wrapper into family loading. Implement `FontLoader::load()`, return the wrapper for a certain generic family name, and then install it into `FontManager`:
+
+```cpp
+struct PlatformFontLoader : public FontLoader {
+    FontDriver *load(const String &face, const FontAttribute &attr) override {
+        if (face == "sans-serif")
+            return new PlatformFont(face, attr);
+        return nullptr;
+    }
+};
+
+CoreApp()->fontManager()->install(new PlatformFontLoader);
+```
+
+When an application requests a font in the form of `"<primary-face>,sans-serif"`, the framework merges each part into the same family in comma-separated order, with the wrapper acting as the last item to become the fallback face, allowing `fallbackFont()` to retrieve it.
+
+`PlatformFont` and `PlatformFontLoader` are usually only registered as fonts for generic family names like `sans-serif`, rather than any specific system font name. This allows applications to use the same family name across different platforms without knowing the platform's specific fonts.
+
+::: warning Functional Limitation
+The wrapper must always be placed as the last item in the family, and applications must write family names in the order described above. The mechanism to automatically guarantee this order is still under development.
+:::
+
+## Installation and Assembly
+
+`installEngine()` in `gx_unite.h` plugs your fallback strategy into the engine:
+
+```cpp
+unite::installEngine(*CoreApp()->typesetCore(),
+                     std::make_unique<PlatformFallbackShaper>());
+```
+
+Complete assembly sequence:
+
+1. `fontManager()->install(new PlatformFontLoader)`: Register the wrapper loader.
+2. `installEngine(...)`: Install the fallback strategy holding the shaping backend.
+3. Request fonts in the form of `"<primary-face>,sans-serif"`, and lay out and render as usual.
+
+## Notes
+
+- Advances / offsets are uniformly Q26.6 fixed-point (value = pixels × 64).
+- Unresolved `.notdef` (glyph index $0$) are skipped during rendering, displaying blank spaces or tofu blocks at their corresponding positions.
+- `faceId` is only $10$ bits, meaning the upper limit of simultaneously active system fonts in a single family is $1024$.
+- The fallback strategy and the wrapper must be implemented in pairs and maintain type consistency (relying on `static_cast`).
+- Be sure to release the platform font caches held by the wrapper inside `flush()`.
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/README.md
+
+# Native C++ Development
+
+Glyphix is an application framework designed for embedded devices, providing a JavaScript-centric application development experience with a Vue Options API-like style. However, the core runtime of the framework is implemented in C++, allowing hardware vendors to extend and customize framework features using C++ — and this is where "Native C++ Development" comes into play.
+
+This documentation is intended for C++ developers with embedded development experience. It aims to help you understand Glyphix's C++ extension mechanism and enable you to implement the following two types of features:
+
+- **Native Module**: Encapsulates C++ functionalities into JavaScript-callable APIs, such as file access, hardware sensor reading, Bluetooth communication, and other system capabilities.
+- **Native Widget**: Implements custom UI widgets using C++ and registers them as framework [components](/framework/component/native-component.md) for applications to use directly in their user interfaces, just like the built-in `div`, `image`, and `button` components.
+
+::: tip
+In application development, we use "component" to refer to UI elements, while at the C++ layer, we use "widget" to refer to UI elements. This documentation distinguishes between these two terms: **widgets** are concepts at the C++ layer, and **components** are concepts within the reactive framework.
+:::
+
+## Framework Runtime Model
+
+The Glyphix runtime consists of multiple layers. The diagram below illustrates the complete layered architecture:
+
+<ArchDiagram max-width="560px">
+  <div>
+    Application Sandbox (Applet × N)
+    <div class="remark">Independent JavaScript Realm · Lifecycle Isolation</div>
+  </div>
+  <div>
+    Reactive Framework (C++)
+    <div class="group row">
+      <div>AppletKit<div class="remark">App Routing · Background Management</div></div>
+      <div>Component System<div class="remark">Template · Reactive Render</div></div>
+      <div>JsVM Bridge Layer<div class="remark">JerryScript / QuickJS</div></div>
+    </div>
+    <div class="group row">
+      <div>Applet<div class="remark">C++ ↔ JavaScript Sandbox</div></div>
+      <div>Asynchronous Session<div class="remark">ResultSession · Signals</div></div>
+      <div>Native Module<div class="remark">System API Extension</div></div>
+    </div>
+  </div>
+  <div>
+    C++ Core Framework
+    <div class="group row">
+      <div>Widget System<div class="remark">Object · Widget</div></div>
+      <div>Layout Engine<div class="remark">Flex · Flow · Stack</div></div>
+      <div>Style Engine<div class="remark">CSS · Transition</div></div>
+    </div>
+    <div class="group row">
+      <div>Event System<div class="remark">Touch · Key · Wheel</div></div>
+      <div>Painter<div class="remark">2D Drawing</div></div>
+      <div>Animation Engine<div class="remark">Property · Ease</div></div>
+      <div>Signal / Slot</div>
+    </div>
+  </div>
+  <div>
+    Platform Abstraction Layer
+    <div class="group row">
+      <div>Graphics Backend<div class="remark">Framebuffer · GPU</div></div>
+      <div>Input Driver<div class="remark">Touch · Key · Wheel</div></div>
+      <div>File System<span class="remark">File · Dir</span></div>
+      <div>IO/Time<span class="remark">Logger · Time</span></div>
+    </div>
+  </div>
+  <div>
+    Hardware / OS
+    <div class="remark">RTOS · Linux · WASM</div>
+  </div>
+</ArchDiagram>
+
+The bottom layer is the **Platform Abstraction Layer**, which is responsible for platform-dependent abstractions such as graphics rendering, input events, and the file system. This layer is typically implemented by device vendors or provided as a reference implementation for the corresponding platform by Glyphix.
+
+Above it is the **C++ Core Framework**, containing the complete widget system (`Widget`), event dispatching, animation engine, layout system, and style engine. All UI elements are ultimately organized and rendered in the form of a C++ widget tree.
+
+The next layer up is the **Reactive Framework**, which is responsible for bridging C++ core capabilities to JavaScript applications. It embeds a JavaScript engine (JerryScript or QuickJS) and implements bidirectional interaction between C++ and JavaScript via the `JsVM` and `JsValue` classes. AppletKit manages the complete lifecycle of applications (Applets), the component system implements reactive data binding and template rendering, and the asynchronous session framework maps C++ asynchronous operations to JavaScript Promises. The reactive framework itself is also implemented in C++.
+
+The top layer is the **Application Sandbox**. Each running application (Applet) has an independent JavaScript execution environment (Realm) that is completely isolated from others. When an application exits, all resources within its sandbox are automatically reclaimed.
+
+### System Collaboration Principles
+
+The architectural diagram illustrates module partitioning but intentionally conceals the collaboration and coupling relationships between modules. In reality, the entire framework operates through a set of shared underlying mechanisms. Understanding these mechanisms helps you know "what you are doing and why you are doing it" in practice.
+
+The entire framework is underpinned by a **Object System** that endows classes with runtime perception capabilities, including C++ class property reflection and event notification capabilities, as well as necessary lifecycle safety. Widgets, Native Modules, application frameworks, and asynchronous sessions all rely on this same foundation. For details, see the [Object System](./object-system.md).
+
+**Widgets** form the UI skeleton through an object tree combined with drawing and event dispatching; the JavaScript application layer uses a **componentized** declarative programming model, and the two are naturally connected via object reflection capabilities such properties. Complex features like **Asynchronous Sessions** also rely on the object system's lifecycle model to ensure correctness.
+
+Through the **Meta-Object Compiler** and other abstraction mechanisms, Glyphix does not require developers to handwrite binding code to expose C++-developed widget classes for JavaScript usage. At the same time, functional completeness is retained on the C++ side; theoretically speaking, you can develop a complete application directly in C++ (although it is not recommended).
+
+### Programming Model
+
+The Glyphix project does not restrict specific programming paradigms. For example, the object system is a classic object-oriented model, while the reactive framework provides application developers with a declarative, component-based development experience.
+
+We do not encourage developers to practice "everything is an object," deliberately force design patterns, or pursue unnecessary abstractions. Our design principles lean more toward **pragmatism**, prioritizing the **resource constraints** and development efficiency of embedded systems.
+
+## Documentation Conventions
+
+### What is this document?
+
+This is a guide for Glyphix Native C++ Development, **not** an API reference document. It introduces the framework's design philosophy, core mechanisms, and development workflow to help you understand how to extend framework capabilities, demonstrating specific implementation details through sample code.
+
+During actual development, please be sure to refer to the API documentation distributed alongside the SDK; please contact your vendor for access.
+
+### Sample Code Notes
+
+All C++ code within the Glyphix framework resides under the `gx` namespace. The documentation assumes `using namespace gx;` by default, so class and function names do not carry the `gx::` prefix. For example:
+
+```cpp
+#include "gx_widget.h"
+
+using namespace gx; // Assumed to be imported by default in documentation
+
+class MyWidget : public Widget {
+    // ...
+};
+```
+
+Here, `Widget` is actually `gx::Widget`, but for brevity, we omit the namespace prefix.
+
+::: tip C++ Learning Resources
+If you primarily use C, are familiar with MCUs, RTOS, drivers, or LVGL, but have not systematically studied C++, we recommend reading the [C++ Learning Guide](./cpp-guide.md) first. It covers only the subset of C++ truly needed to enter Glyphix native development and organizes external resources suitable for embedded developers.
+:::
+
+## Development Path
+
+Regardless of your goal, it is recommended to first thoroughly read the basic usage of `GX_OBJECT`, `GX_PROPERTY`, and `Signal` in the [Object System](./object-system) — they are used across all development scenarios.
+
+Choose the appropriate documentation to continue reading based on your goals:
+
+- [SDK Project Configuration](./sdk-setup): How to configure the build environment for an SDK project, including `glyphix_add_meta_objects()` registration, host building, and cross-compilation.
+- [Native Module Development](./native-module): How to provide new system APIs for applications, such as fetching sensor data or calling underlying SDK functions.
+- [Asynchronous Feature Development](./async): How to extend asynchronous features for applications, such as network requests, file IO, and time-consuming computations.
+- [Widget Development Guide](./widget.md): How to implement new UI widgets (such as custom charts, special animation lists, etc.).
+- [Widget Registration and Export](./widget-export.md): Registering custom widgets as framework components for direct application usage.
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/async-examples.md
+
+# Asynchronous Development Examples
+
+If you feel that the chapter on [Asynchronous Feature Development](async.md) is too lengthy and not intuitive enough, this document provides some typical and simpler examples to help you handle common asynchronous development scenarios.
+
+These scenarios are not extremely complex, but they focus on:
+- A typical asynchronous call pattern, with an emphasis on cross-thread and cross-language calling relationships;
+- Scenarios that may be more trivial, involving a large batch of system APIs that need to be integrated, making them sensitive to code bloat;
+- Typical C API interaction requirements rather than standard C++ interfaces.
+
+You can find complete implementations of these scenarios in the SDK samples and simulate running them directly on your PC.
+
+## Scenario: Interfacing with a C Alarm Interface
+
+A common asynchronous pattern in embedded systems is the "C callback": the caller submits a task, passes a function pointer as a completion notification, and the worker thread calls the callback once the operation is complete.
+
+::: important async only supports the thread model
+The asynchronous features of the Glyphix framework only support normal thread contexts and cannot be used in interrupts. If your asynchronous context is an interrupt service routine, you should provide a thread to act as a bridge.
+:::
+
+Here, we take an alarm service as an example. Its provided C asynchronous interface looks like this:
+
+```c
+// Taking alarm_async_create as an example; other operations have similar forms
+void alarm_async_create(AlarmService *svc, uint32_t interval_ms, ...,
+                        alarm_create_cb_t done_cb, void *done_ctx);
+
+// Function pointer type for the completion callback, called on the worker thread
+typedef void (*alarm_create_cb_t)(alarm_err_t err, alarm_id_t id, void *ctx);
+```
+
+Next, we will explain how to bridge such typical C callback interfaces to JavaScript Promises.
+
+### Multiple Operations Sharing a Session Type
+
+The alarm service has a batch of operations such as `create`, `cancel`, `setEnabled`, `update`, `snooze`, `getInfo`, `list`, and `count`. Defining a separate client class for each operation would generate a large number of template instantiations.
+
+For such scenarios where "the actual logic is completed in the C layer, and the C++ side only handles parameter passing," you can define a lightweight client containing only error code mapping, allowing all operations to share a single `ResultSession` instantiation:
+
+```cpp
+struct AlarmClient {
+    // Converts the C layer's alarm_err_t to a readable error string
+    // to be passed to the JavaScript side's catch when the Promise is rejected.
+    static const char *errorMessage(async::Status status) {
+        switch (status.value()) {
+        case ALARM_OK:              return "ok";
+        case ALARM_ERR_NOT_FOUND:   return "not_found";
+        case ALARM_ERR_TABLE_FULL:  return "table_full";
+        case ALARM_ERR_INVALID_ARG: return "invalid_arg";
+        default:                    return "unknown_error";
+        }
+    }
+};
+
+// All alarm operations share this single Session type
+using AlarmSession = async::ResultSession<AlarmClient>;
+```
+
+`AlarmClient` does not need to implement the `resolve()` method because the default thread pool executor is not used here; the actual asynchronous operations are completed by the alarm service's worker thread, and the C++ side is only responsible for posting the results back to the UI thread.
+
+### Basic Binding Pattern
+
+Taking `alarm.create()` as an example, this demonstrates the complete binding process:
+
+```cpp
+static JsValue jsAlarmCreate(JsCtx ctx) {
+    auto *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
+        return JsValue{};
+
+    // Read parameters from the options object passed from JavaScript
+    const JsValue &opts = ctx.arg(0);
+    uint32_t intervalMs = static_cast<uint32_t>(opts["interval"].toInt());
+    String label        = opts["label"].toString();
+    alarm_repeat_t mask = parseRepeatMask(opts["repeat"]);
+
+    // Create a session and extract resolve/reject callbacks from the options object (supporting both async styles)
+    auto *session = async::make<AlarmSession>(applet);
+    session->setResolver(opts);
+
+    // C callback: called in the worker thread, notifying JavaScript across threads via resolve()
+    auto done = +[](alarm_err_t err, alarm_id_t id, void *data) {
+        auto *s = static_cast<AlarmSession *>(data);
+        s->resolve(err == ALARM_OK
+            ? async::Result<int>(id) // Success: resolve the newly created alarm ID
+            : async::Status(err));   // Failure: reject, with the error message coming from errorMessage()
+    };
+
+    // Call the C service's asynchronous alarm creation interface, passing the callback and session pointer
+    alarm_async_create(AppletAlarmService::instance(),
+                       intervalMs, mask, label.c_str(), /*...*/,
+                       onAlarmFired, nullptr, done, session);
+    // Return the Promise object to JavaScript; the framework will automatically settle it when resolve() is called
+    return session->promise();
+}
+```
+
+There are a few fixed patterns here that you can copy and use directly:
+
+- `async::make<AlarmSession>(applet)` creates a session and binds it to the current Applet to meet lifecycle requirements.
+- `session->setResolver(opts)` enables the same codebase to support both [callback style and Promise style](/api/README.md#快应用异步接口) asynchronous calls.
+- `+[](... void *data)` converts the lambda into a normal function pointer via the unary `+` operator, satisfying the type requirements of C callbacks.
+- Pass `session` as `void *` transparently to the C API, cast it back in the callback, and then call `resolve()`.
+- `resolve()` is thread-safe; it encapsulates the result as an event and posts it back to the UI thread to drive the resolution of the Promise.
+
+::: tip Writing callbacks using lambda expressions
+In C, callback functions are typically static functions. You can use C++ lambda expressions to define callback functions locally and nested nearby, for example:
+```cpp
+auto done = +[](alarm_err_t err, alarm_id_t id, ...) { ... }
+alarm_async_create(..., done, session);
+```
+This avoids defining a large batch of separate static functions, making the code more compact and clear.
+:::
+
+The structure of the remaining operations (`cancel`, `setEnabled`, `snooze`, etc.) is completely identical, differing only in parameter reading and C API calls:
+
+```cpp
+static JsValue jsAlarmCancel(JsCtx ctx) {
+    auto *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1)
+        return JsValue{};
+
+    alarm_id_t id = ctx.arg(0).toInt();
+
+    auto *session = async::make<AlarmSession>(applet);
+    session->setResolver(ctx.arg(0));
+
+    auto done = +[](alarm_err_t err, void *data) {
+        // When there is no return value, resolve<void> can be used
+        static_cast<AlarmSession *>(data)->resolve<void>(async::Status(err));
+    };
+    alarm_async_cancel(AppletAlarmService::instance(), id, done, session);
+
+    return session->promise();
+}
+```
+
+::: important Do not omit parameter checks
+`session->setResolver(ctx.arg(0))` relies on checking `ctx.argc()`. If the function does not check the parameter count at the beginning, you must check it when calling `setResolver()`:
+```cpp
+session->setResolver(ctx.argc() ? ctx.arg(0) : JsValue{});
+```
+:::
+
+### Registering Type Conversions for Custom C Structs
+
+`alarm.getInfo()` returns an `alarm_info_t` struct, which needs to be converted into a JavaScript object. To achieve this, first specialize `js_cast<T>` within the `gx` namespace:
+
+```cpp
+template<> JsValue gx::js_cast<alarm_info_t>(const alarm_info_t &info) {
+    JsValue obj = JsVM::current().newObject();
+    obj["id"]          = info.id;
+    obj["label"]       = info.label;
+    obj["interval"]    = double(info.interval_ms);
+    obj["repeatMask"]  = info.repeat_mask;
+    obj["enabled"]     = bool(info.enabled);
+    obj["remaining"]   = double(info.remaining_ms);
+    obj["fireCount"]   = int(info.fire_count);
+    obj["snooze"]      = int(info.snooze_ms);
+    obj["snoozed"]     = bool(info.snoozed);
+    return obj;
+}
+```
+
+Once specialization is complete, you can directly pass the struct instance to `resolve()` within the binding function:
+
+```cpp
+auto done = +[](alarm_err_t err, const alarm_info_t *info, void *data) {
+    auto *s = static_cast<AlarmSession *>(data);
+    if (err != ALARM_OK || !info) {
+        // Exception path, return error status to trigger reject; error message comes from errorMessage()
+        s->resolve<alarm_info_t>(async::Status(err));
+        return;
+    }
+    s->resolve<alarm_info_t>(*info);  // The framework automatically calls js_cast on the UI thread
+};
+alarm_async_get_info(AppletAlarmService::instance(), id, done, session);
+```
+
+::: tip
+`js_cast()` is called by the framework only after the result returns to the UI thread, not executed in the worker thread. This means you can safely use UI-thread-exclusive APIs such as `JsVM::current()` inside `js_cast()`.
+:::
+
+For cases like `alarm.list()` which return an array, you can directly construct a `std::vector<int>` and resolve it without defining additional type conversions:
+
+```cpp
+auto done = +[](alarm_err_t /*err*/, const alarm_id_t *ids, int count, void *data) {
+    auto *s = static_cast<AlarmSession *>(data);
+    s->resolve<std::vector<int>>(std::vector<int>{ids, ids + count});
+};
+alarm_async_list(AppletAlarmService::instance(), done, session);
+```
+
+### Alarm Trigger Callback: Sending Events Back to JavaScript
+
+When an alarm triggers, the C layer calls the `alarm_fire_cb_t` callback from the worker thread. This scenario differs somewhat from the previous "query results" pattern and requires a specially designed event notification mechanism.
+
+#### Why Not Use JavaScript Callback Functions
+
+Intuitively, it might seem reasonable to let the application pass a callback function when registering an alarm:
+
+```javascript
+// ❌ This does not work for the alarm scenario
+alarm.create({ interval: 60000, onFired: (event) => { /* ... */ } })
+```
+
+The problem is that alarms span the application's lifecycle: after an alarm is created, the application may be killed at any time before the alarm fires; many devices also support triggering alarms after a reboot.
+
+A JavaScript callback function (`JsValue`) is only valid within the JavaScript runtime of the current application instance. Once the application is closed, this runtime along with all `JsValue`s will be destroyed. At that point, the C++ side has no way to retain this JavaScript callback, let alone call it when the alarm fires.
+
+This is not just a problem for alarms; **any event that may trigger across application lifecycles cannot be solved via JavaScript callbacks**, such as scheduled tasks, offline message push, background download completion notifications, etc.
+
+#### Using Convention Method Names Instead of Callback References
+
+The simplest solution is: instead of the application "registering a callback," the system actively **launches** the application when an event occurs and calls a processing method on the application object using a pre-arranged method name.
+
+This aligns with the approach of application lifecycle functions (`onCreate`, `onShow`, etc.)—the system starts the application on demand and calls a known entry method rather than holding onto a pre-registered callback. The application side implements the corresponding method by convention:
+
+```javascript
+// app.js — Processing method exported by the application model object (implemented by convention)
+export default {
+  onAlarmFired(event) {
+    // event: { id, label, interval, ... }
+    console.log('alarm fired:', event)
+  }
+}
+```
+
+C++ side implementation: first read the snapshot on the worker thread, then switch back to the main thread to start the application and call the method:
+
+```cpp
+static void onAlarmFired(alarm_id_t id, void * /*user_data*/) {
+    // Read the snapshot on the worker thread to avoid cross-thread access to the alarm table
+    alarm_info_t info{};
+    alarm_get_info(id, &info);
+
+    // Switch back to the main thread before operating on JavaScript
+    App()->postTask([info] {
+        auto *svc = AppletAlarmService::instance();
+        // Use launch() to start (or wake up) the target app, even if it is not currently running
+        auto *applet = AppletKit::instance()->launch(svc->alarmAppletName);
+        if (!applet) return;
+
+        auto &vm = JsVM::current();
+        // Call the convention method on the exported object of app.js, with the event parameter being the JS object of the alarm info
+        JsValue event = js_cast(info);
+        applet->modelObject().callMethod("onAlarmFired", {event}).reportError();
+    });
+}
+```
+
+Key points:
+
+- **Do not** directly operate on `JsValue` or call any JavaScript APIs in the worker thread; they can only be used on the UI thread.
+- Use `App()->postTask()` to post closures to the main event loop for execution. This is the simplest way to switch back to the UI thread.
+- Use `AppletKit::launch()` instead of searching for an existing instance; `launch()` restarts the application if it does not exist, and returns the existing instance if it is already running.
+- `.reportError()` on the return value of `callMethod()` prints potential JavaScript exceptions to the log rather than silently ignoring them.
+
+::: tip Convention method names are the simplest event handling method
+You can think of this pattern as: the exported object of app.js is simply the "set of entry points" exposed by the application to the system. The system calls methods within it when needed, just like calling `onCreate` or `onShow`.
+
+This method is not universally applicable, but it is basically sufficient for controlled system applications, and it is simple to implement without requiring complex persistence and callback management mechanisms.
+:::
+
+### Registering the Library Loader
+
+Once all binding functions are written, they need to be "assembled" into a [library object](native-module.md#library-loader) that JavaScript can import, and registered into the framework.
+
+A library loader is a C++ function triggered when an application calls `app.loadLibrary('vendor.alarm')`. It is responsible for creating and returning a JavaScript object containing all exported methods:
+
+```cpp
+static JsValue libAlarmLoader(Applet *applet) {
+    // You can check the application's package name here to reject unauthorized apps, or check fields.
+    if (!applet || applet->objectName() != "com.vendor.alarm")
+        return JsValue{};
+
+    JsValue lib = JsVM::current().newObject();
+
+    // Mount binding functions onto the library object; property names are the method names called on the JavaScript side
+    lib["create"]     = jsAlarmCreate;
+    lib["cancel"]     = jsAlarmCancel;
+    lib["list"]       = jsAlarmList;
+    lib["count"]      = jsAlarmCount;
+    // ...
+    return lib;
+}
+```
+
+Then register the loader into `AppletKit` during the initialization stage:
+
+```cpp
+AppletKit kit{&window};
+kit.setLibraryLoader("vendor.alarm", libAlarmLoader);
+```
+
+Import it on the JavaScript side via `app.loadLibrary()`, and the return value will be the library object returned by the loader:
+
+```javascript
+const alarm = app.loadLibrary('vendor.alarm')
+
+const id = await alarm.create({ interval: 60000, label: 'Get up' })
+```
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/sdk-setup.md
+
+# SDK Project Configuration
+
+Glyphix is distributed to device manufacturers in the form of pre-compiled libraries. This article introduces how to configure the build environment in the SDK project in order to develop Native Modules, Native Widgets, or platform adaptation code based on it.
+
+### Prerequisites
+
+Before you begin, make sure you have installed:
+- CMake 3.14 or higher
+- A C++ compiler supporting C++14 (GCC, Clang, or MSVC)
+- The Glyphix meta-object compiler `meta` (matches the SDK; see below for how to obtain it)
+- A cross-compilation toolchain (if building for embedded targets)
+
+::: tip System Requirements
+- The MSVC toolchain requires Visual Studio 2022 or later.
+- For Linux, a distribution with a desktop environment, such as Ubuntu 22.04 or later, is recommended.
+- Ubuntu 20.04 is not recommended because its package versions are usually too old, often requiring manual installation of newer software.
+- Environments without graphical interfaces like WSL or Docker will not be able to run the simulator and GUI examples.
+- Currently, the host environment only provides Linux pre-compiled libraries; pre-compiled libraries for Windows and macOS are not yet available.
+:::
+
+## SDK Package Structure
+
+The extracted SDK contains the following directories:
+
+```
+glyphix-sdk/
+├── libs/
+│   └── <target-triple>/       # Pre-compiled libraries categorized by target triple
+│       ├── include/           # Glyphix header files (gx_*.h)
+│       └── lib/               # Static libraries (libglyphix-core.a, etc.)
+├── cmake/
+│   ├── GlyphixSDK.cmake       # Main SDK configuration script
+│   ├── meta.cmake             # Meta-object compiler integration (glyphix_add_meta_objects)
+│   ├── cross-compile.cmake    # Cross-compilation toolchain loading
+│   ├── arch/                  # Compilation parameters for each architecture (mips-linux-gnu, cortex-m33, etc.)
+│   └── toolchain/             # CMake toolchain files for each toolchain
+├── wrapper/                   # Platform adaptation layer (host implementations for network, file system, etc.)
+├── app/                       # Sample application entry points (emulator, async, etc.)
+└── vendor/                    # Third-party dependency libraries
+```
+
+### `libs/<target-triple>/`
+
+The pre-compiled libraries of the SDK are categorized by platform using **target triples**, for example:
+
+- `x86_64-linux-gnu/`: 64-bit Linux host development/simulation
+- `mips-linux-gnu/`: MIPS Linux embedded target
+- `cortex_m55-none-gnu/`: Cortex-M55 bare-metal target
+
+The `include/` directory contains all Glyphix public header files, all prefixed with `gx_`. The `lib/` directory contains static libraries. The core libraries include:
+
+| Library File | Description |
+|:---|:---|
+| `libglyphix-core.a` | Core framework (object system, widget tree, events, etc.) |
+| `libglyphix-widgets.a` | Built-in widget library |
+| `libglyphix-reactive.a` | Reactive framework (JavaScript bridge layer) |
+| `libglyphix-platform.a` | Platform abstraction layer interface |
+| `libglyphix-service.a` | System service layer |
+
+::: tip Pre-compiled Vendor Libraries
+The SDK distribution package also includes some pre-compiled third-party libraries, such as `libfreetype.a`. For convenience, we do not directly distribute the source code of these libraries, but you can choose to build using the source code directly instead of using the pre-compiled libraries.
+:::
+
+## Preparation
+
+### Configuring the Meta-Object Compiler
+
+The `meta` meta-object compiler is distributed separately from the SDK as an independent archive. Extracting it yields two directories: `bin/` and `lib/`. **Both must be kept in the same directory**; the `meta` executable depends on the runtime libraries in `lib/`.
+
+On Linux and macOS, it is recommended to extract it to `/usr/local` so that `meta` is automatically in your `PATH`:
+
+::: code-tabs#bash
+
+@tab Linux
+
+```bash
+sudo tar -xJf glyphix-meta-vX.X-linux-x86_64.tar.xz -C /usr/local
+```
+
+@tab macOS
+
+```bash
+sudo tar -xJf glyphix-meta-vX.X-darwin-arm64.tar.xz -C /usr/local
+```
+
+:::
+
+Alternatively, you can extract it to any directory and add its `bin/` directory to your `PATH`. Once done, verify that it is available with the following command:
+
+```bash
+meta --version
+```
+
+If you do not wish to modify your `PATH`, you can explicitly specify the full path to the executable during CMake configuration using `-DGX_META=/path/to/bin/meta`.
+
+## Configuring CMakeLists.txt
+
+### Minimal Configuration
+
+::: tip
+The CMake configuration introduced in this section resembles the standard sample template of the Glyphix SDK project, and you can refer directly to the SDK's source files.
+:::
+
+Below is a minimally runnable `CMakeLists.txt` illustrating the standard configuration skeleton of a project:
+
+```cmake
+cmake_minimum_required(VERSION 3.14)
+
+# Must be loaded before project() so the toolchain is in place when project() probes compilers
+include(cmake/cross-compile.cmake)
+
+project(my_glyphix_app)
+set(CMAKE_CXX_STANDARD 14)
+
+# Load the Glyphix SDK (sets up include paths, link directories, and the glyphix::sdk target)
+include(cmake/GlyphixSDK.cmake)
+
+add_subdirectory(vendor)  # Third-party dependencies (if any)
+add_subdirectory(src)     # Your source code
+```
+
+Create a target in `src/CMakeLists.txt` and link the SDK:
+
+```cmake
+add_executable(my_app
+  main.cpp
+  my_module.cpp
+  my_widget.cpp
+)
+
+# Link the Glyphix SDK
+target_link_libraries(my_app PRIVATE glyphix::sdk)
+
+# Generate metadata for header files containing GX_OBJECT
+glyphix_add_meta_objects(my_app
+  my_module.h
+  my_widget.h
+)
+```
+
+### Registering Meta Objects (`glyphix_add_meta_objects`)
+
+As mentioned in the [Object System](./object-system) documentation, any class declaring `GX_OBJECT` must be registered with the build system so the meta-object compiler can generate the `*_meta.cpp` files for it. `glyphix_add_meta_objects()` is the CMake function that accomplishes this:
+
+```cmake
+glyphix_add_meta_objects(<target> [header1.h header2.h ...])
+```
+
+It takes the target name and a set of **header file** paths as arguments. For each header file, the `meta` tool generates a corresponding `*_meta.cpp` in the `meta/` subdirectory within the build directory, and automatically adds it to the target's source file list for compilation.
+
+**Example:** Suppose your project has the following structure:
+
+```
+src/
+├── CMakeLists.txt
+├── main.cpp
+├── sensors/
+│   ├── step_counter.h       # Contains GX_OBJECT
+│   └── step_counter.cpp
+└── widgets/
+    ├── activity_ring.h      # Contains GX_OBJECT
+    └── activity_ring.cpp
+```
+
+The corresponding `CMakeLists.txt`:
+
+```cmake
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/meta.cmake)
+
+add_executable(my_app
+  main.cpp
+  sensors/step_counter.cpp
+  widgets/activity_ring.cpp
+)
+target_link_libraries(my_app PRIVATE glyphix::sdk)
+
+glyphix_add_meta_objects(my_app
+  sensors/step_counter.h
+  widgets/activity_ring.h
+)
+```
+
+::: tip Pass Header Files Only, Not .cpp Files
+`glyphix_add_meta_objects()` only requires **header files** (`.h`) containing `GX_OBJECT` declarations. The meta-object compiler reads the macro declarations in the header files to generate code and does not need to parse implementation files. Conversely, `.cpp` files must not define classes containing `GX_OBJECT`.
+:::
+
+::: warning Do Not Omit Registration
+If a class declares `GX_OBJECT` but is not registered via `glyphix_add_meta_objects()`, it will result in a **link error** (symbols like `staticMetaObject` cannot be found). Remember to update `CMakeLists.txt` whenever you add a new header file containing `GX_OBJECT`.
+:::
+
+### The `glyphix::sdk` Interface Target
+
+`GlyphixSDK.cmake` defines the `glyphix::sdk` CMake interface library target, which encapsulates all link dependencies of the SDK. You only need to link this single target in your `CMakeLists.txt`:
+
+```cmake
+target_link_libraries(my_target PRIVATE glyphix::sdk)
+```
+
+Internally, this is equivalent to:
+
+```cmake
+# Pseudocode — actually managed automatically by GlyphixSDK.cmake
+target_include_directories(... ${GLYPHIX_INCLUDE_DIRS} wrapper/include)
+target_link_libraries(... -Wl,--start-group ${glyphix-*.a} glyphix-wrapper -Wl,--end-group)
+target_link_libraries(... m pthread dl)  # UNIX system libraries
+```
+
+Wrapping static libraries with `-Wl,--start-group ... -Wl,--end-group` is done to resolve circular dependency linking issues among static libraries on embedded platforms.
+
+::: tip Link Order Issue
+If your project has its own static libraries (such as `add_library(my_module STATIC ...)`), they should be linked **inside** `glyphix::sdk`, otherwise the scope of `--start-group` will not cover them, which may trigger link errors. The approach is to append your static library path after the `GLYPHIX_LIBS` variable in `GlyphixSDK.cmake` is defined and before the `glyphix-sdk` target is created, or directly have the final executable link both `my_module` and `glyphix::sdk` and manually specify `--start-group`.
+:::
+
+## Host Build
+
+Host builds are used to run Glyphix sample programs on your development machine, allowing you to quickly verify widget and module logic without connecting hardware.
+
+```bash
+mkdir build && cd build
+cmake -G Ninja ..
+cmake --build .
+```
+
+The `app/` directory of the SDK contains multiple examples, with each subdirectory corresponding to an independent executable target. For example:
+
+| Subdirectory | Build Output | Description |
+|:---|:---|:---|
+| `app/emulator/` | `demo` | Simulator with GUI, depends on the MiniFB window backend |
+| `app/async/` | `async-demo` | Headless asynchronous service example, demonstrating Native Modules and asynchronous callbacks |
+
+`GlyphixSDK.cmake` automatically detects the compiler target triple of the host (via `gcc -dumpmachine` or `clang -dumpmachine`), and uses it as a key to look up the corresponding pre-compiled libraries in the `libs/` directory. For example, on an x86_64 Linux development machine, it will automatically resolve to `libs/x86_64-linux-gnu/`.
+
+If the automatically detected target triple does not match the actual library directory, you can specify it manually:
+
+```bash
+cmake -G Ninja -DTARGET_TRIPLE=x86_64-linux-gnu ..
+```
+
+If you only need to build a specific example, you can specify the target name:
+
+```bash
+cmake --build . --target demo
+cmake --build . --target async-demo
+```
+
+## CMake Cross-Compilation
+
+For embedded targets, you need to specify the target architecture using the `-DARCH` parameter. The SDK presets the following architecture configurations:
+
+| `-DARCH` Value | Target Platform | Toolchain Prefix |
+|:---:|:---:|:---:|
+| `mips-linux-gnu` | MIPS Linux | `mips-linux-gnu-` |
+| `cortex_m33-gnu` | ARM Cortex-M33 (GNU) | `arm-none-eabi-` |
+| `cortex_m7-gnu` | ARM Cortex-M7 (GNU) | `arm-none-eabi-` |
+
+### MIPS Linux Example
+
+```bash
+export MIPS_TOOLCHAIN_DIR="/opt/mips-gcc720-glibc229"
+
+mkdir build-mips && cd build-mips
+cmake -G Ninja .. \
+  -DARCH=mips-linux-gnu \
+  -DMIPS_TOOLCHAIN_DIR="$MIPS_TOOLCHAIN_DIR" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+```
+
+If the toolchain is already in your `PATH` (meaning `mips-linux-gnu-gcc` can be called directly), you can omit `-DMIPS_TOOLCHAIN_DIR`, and CMake will locate it automatically.
+
+### ARM Cortex-M Example
+
+```bash
+mkdir build-cm33 && cd build-cm33
+cmake -G Ninja .. \
+  -DARCH=cortex_m33-gnu \
+  -DARM_TOOLCHAIN_DIR="/opt/arm-none-eabi-gcc" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+```
+
+During cross-compilation, `GlyphixSDK.cmake` does not attempt to automatically detect the target triple—architecture files (such as `cmake/arch/cortex_m33-gnu.cmake`) directly set `TARGET_TRIPLE`, pointing to the correct library directory.
+
+### Supported Target Architectures
+
+The SDK only provides pre-compiled libraries for the architectures listed in the table above. If your target platform is not among them, you need to contact Glyphix to obtain an SDK package for the corresponding architecture; you cannot add support yourself on top of the existing SDK.
+
+## Other Build Systems
+
+While the SDK uses CMake as its primary build system, Glyphix also provides support for other build systems to partner manufacturers. This typically just involves importing the pre-built SDK libraries and header files, and adding the porting layer source files.
+
+### Project Limitations
+
+This approach is suitable for projects that only require standard SDK features. Once custom widgets, Native Modules, or other capabilities are needed, you must introduce the `meta` meta-object compiler to generate the necessary binding code. Currently, CMake is the only supported build system.
+
+There are several available alternatives:
+1. Build custom code using the SDK CMake project, and then link the generated libraries into your main project.
+2. Build custom code using the SDK CMake project, and then include the generated source files (`*_meta.cpp`) into your main project.
+3. Directly invoke the `meta` tool in your build system to generate binding code.
+
+Among these, the Glyphix SDK itself is built using Method 1. However, this is not suitable for downstream manufacturers' internal development workflows because it requires maintaining a separate project outside of the main firmware project and linking the generated binary libraries back to the main project, which introduces severe version management issues.
+
+Method 3 is also usually undesirable because manufacturers generally do not want to introduce an external tool into their main project's build system.
+
+### Recommended Approach
+
+Therefore, Method 2 is recommended. This approach copies the source code; although it requires manual operation, it is easy to audit and integrate into existing build pipelines. You can build custom code in the SDK's CMake project to generate the `*_meta.cpp` files, then copy these files into your main project and compile them within your main project's build system.
+
+Another limitation of this method is that the custom source files must successfully build within the SDK project environment. Specifically, this requires them to be buildable independently of the main project, which includes:
+- Include paths and preprocessor definitions must be set correctly, and the header files of custom components must not include header files specific to the main project.
+- It is best if the `.cpp` files of custom components can also compile successfully; although this does not affect the generation of `*_meta.cpp` files, it facilitates rapid iteration and debugging in the host environment.
+
+::: tip
+For most [custom widgets](widget.md), this is not an issue. It can be slightly more cumbersome for [Native Modules](native-module.md), and you should note: header files declaring `GX_OBJECT` should not include header files specific to the main project.
+:::
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/object-system.md
+
+# Object System
+
+The C++ framework of Glyphix features an object model rooted in `PrimitiveObject`, which forms the foundation for subsequent development.
+
+The object system consists of three complementary parts: the **Object Base Class Hierarchy** defines the common capabilities and lifecycle rules for all managed objects; the **Meta-Object System** uses a compile-time meta-compiler to generate metadata for C++ classes, endowing them with reflection, property binding, and JavaScript export capabilities; and the **Memory Safety Mechanism** solves the ubiquitous dangling pointer problem in GUI frameworks through guarded pointers and reference counting.
+
+<ArchDiagram max-width="540px">
+  <div>
+    JavaScript Script Layer
+    <div class="remark">Property Binding · Method Invocation · Event Response</div>
+  </div>
+  <div>
+    Meta-Object System
+    <div class="group row">
+      <div>GX_OBJECT<div class="remark">Meta-Compiler Registration</div></div>
+      <div>GX_PROPERTY<div class="remark">Property/Method Reflection</div></div>
+      <div>Variant<div class="remark">C++ ↔ JS Type Bridging</div></div>
+      <div>dyn_cast<div class="remark">Safe Downcasting</div></div>
+    </div>
+  </div>
+  <div class="subject">
+    Object Base Class Hierarchy
+    <div class="group row">
+      <div>PrimitiveObject<div class="remark">Reflection Support · Lifecycle Management</div></div>
+      <div>Object<div class="remark">Parent-Child Tree Structure · Cascading Destruction</div></div>
+      <div>Widget<div class="remark">UI Control Base Class</div></div>
+    </div>
+  </div>
+  <div>
+    Memory Safety Mechanism
+    <div class="group row">
+      <div>Signal&lt;&gt;<div class="remark">Event Notification · Auto-Disconnection</div></div>
+      <div>Pointer&lt;T&gt;<div class="remark">Guarded Weak Reference</div></div>
+      <div>SharedRef&lt;T&gt;<div class="remark">Intrusive Shared Reference</div></div>
+    </div>
+  </div>
+</ArchDiagram>
+
+## Reflection and the Meta-Object Compiler
+
+Standard C++ classes are "silent": given an object pointer, you cannot know at runtime what members it has, what they are named, or how to read and write them. This is not an obstacle for static C++ development that does not require scripting.
+
+However, Glyphix works differently. When an application's page template writes `:value="progress"`, the reactive framework needs to find the property corresponding to the control by the string `"value"` at runtime, and automatically refresh when the data changes. This capability of a program to understand its own structure at runtime is called **Reflection**, which standard C++ does not support.
+
+Glyphix's solution is to introduce a **Meta Compiler** into the build pipeline. It scans the source code before standard C++ compilation, generating metadata for classes that need to participate in the object system. Developers simply place the **`GX_OBJECT`** macro at the beginning of a class definition, and the meta compiler processes the class—after which the framework can read and write its properties or call methods by name, and access it from JavaScript.
+
+You don't need to understand the internal workings of the meta-object system just yet. Just remember one rule: any class requiring reflection capabilities must include the `GX_OBJECT` macro in its definition and inherit from `PrimitiveObject` or `Object`.
+
+## `PrimitiveObject` and `Object`
+
+The framework's object system is divided into two tiers:
+
+**`PrimitiveObject`** is the root base class for all **managed objects**. Classes inheriting from it gain framework capabilities such as property reflection, dynamic casting, and safe delayed destruction. However, `PrimitiveObject` itself **does not** have a parent-child tree structure—it is simply a "C++ object perceptible to the framework." Types like `AsyncSession` and `BindableObject` inherit from it because these classes do not need to form trees.
+
+**`Object`** inherits from `PrimitiveObject` and adds a **parent-child tree structure**: a `parent` pointer is passed during construction, and when the parent object is destroyed, all child objects are also recursively destroyed. The Widget Tree is organized through this mechanism.
+
+::: tip Analogy to Other Frameworks
+If you have Qt development experience, you can analogize Glyphix's meta-object system to Qt's MOC system: `GX_OBJECT` corresponds to `Q_OBJECT`. However, there are many differences, such as Glyphix splitting the capabilities of Qt's `QObject` into two layers; `Signal` is also just a regular template class that does not rely on the meta-object compiler.
+
+Other frameworks, such as Unreal Engine's UCLASS, have similar reflection systems.
+:::
+
+Choosing which base class to use depends on whether your class needs to be part of a tree:
+
+```cpp
+// Needs to participate in the object tree → inherit from Object
+class MySensor : public Object {
+    GX_OBJECT
+public:
+    explicit MySensor(Object *parent = nullptr) : Object(parent) {}
+};
+
+// Only needs framework awareness, does not participate in the tree → inherit from PrimitiveObject
+class MyNetworkSession : public PrimitiveObject {
+    GX_OBJECT_KINDS(ExplicitDeleteKind)
+public:
+    MyNetworkSession() = default;
+};
+```
+
+`GX_OBJECT_KINDS(ExplicitDeleteKind)` in the code is an additional declaration. Like the `GX_OBJECT` macro, it declares the meta-object class, but informs the framework that the object's lifecycle is managed by the developer and will not be automatically reclaimed by JavaScript. Lifecycle-sensitive types like `AsyncSession` use this.
+
+## Properties and Signals
+
+The **`GX_PROPERTY`** macro is used to declare a framework-perceptible property, associating it with its getter and setter. Once declared, the property can be driven by the framework's reactive system—UI depending on it automatically refreshes when the value changes, and the animation system can interpolate it:
+
+```cpp
+class MyWidget : public Widget {
+    GX_OBJECT
+public:
+    int value() const { return m_value; }
+    void setValue(int v) { m_value = v; update(); }
+
+    GX_PROPERTY(int value, get value, set setValue)
+
+private:
+    int m_value = 0;
+};
+```
+
+### Signals
+
+**`Signal<>`** is an event notification mechanism, declared directly as a class member. It is "emitted" when an event occurs, and other objects receive notifications by "connecting" to it ([lambda expressions](https://en.cppreference.com/w/cpp/language/lambda) are C++'s anonymous function syntax):
+
+```cpp
+class MyWidget : public Widget {
+    GX_OBJECT
+public:
+    Signal<int> valueChanged;
+
+    void setValue(int v) {
+        m_value = v;
+        valueChanged(v);  // Emit signal
+    }
+private:
+    int m_value = 0;
+};
+
+// Connect to a member function
+myWidget->valueChanged.connect(this, &MyClass::onValueChanged);
+
+// Or connect to a lambda
+auto slot = make_slot([](int v) { /* Handle change */ });
+myWidget->valueChanged.connect(slot);
+```
+
+::: tip Comparison with Qt's Signals and Slots
+Qt's classic signals and slots mechanism requires MOC-generated code support, but `Signal<>` is a pure C++ template class that does not depend on the meta-object compiler. Therefore, you do not necessarily have to use `Signal<...>` objects in specific classes; you can use them anywhere.
+
+Since `Signal` is a class, it consumes memory space (even when unconnected). Therefore, it is recommended to use event type enumerations and single signal member variables to save memory, rather than declaring a `Signal` member for every single event.
+:::
+
+### Complete Form of `GX_PROPERTY`
+
+In addition to `get` / `set`, `GX_PROPERTY` supports declaring an associated change signal (`signal`), which is the standard interface for reactive frameworks to subscribe to property changes:
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    int value() const { return m_value; }
+    void setValue(int v) {
+        if (m_value == v) return;
+        m_value = v;
+        update();
+        valueChanged(v);
+    }
+
+    Signal<int> valueChanged;
+
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+
+private:
+    int m_value = 0;
+};
+```
+
+For properties with a declared `signal`, changes are automatically propagated through the reactive framework to JavaScript expressions bound to that property. This is the basis for two-way synchronization between control properties and application data.
+
+The `signal` field in `GX_PROPERTY` does not depend on the parameter type of `Signal<T>`; the framework only cares whether it exists and when it is emitted. Conversely, the `get` field must be provided in this case to allow the framework to read property values on the JavaScript side.
+
+## Guarded Pointers and Memory Safety
+
+In GUI frameworks, asynchronous scenarios easily lead to dangling pointer crashes. A typical case:
+```cpp
+void onNetworkResponse(const String &data) {
+    // Network request takes 2 seconds to return
+    // But within these 2 seconds, the user may have exited the current page, and the label has been destroyed
+    this->label->setText(data); // Segmentation Fault!
+}
+```
+Timer callbacks, I/O callbacks, and all other asynchronous scenarios face the same risk. In scripted frameworks, such use cases are structurally unavoidable, so a safe lifecycle observation mechanism must be provided.
+
+### `Pointer<T>` Guarded Pointers
+
+Glyphix builds weak reference counting support into all derived classes of `PrimitiveObject`. Use `Pointer<T>` to hold non-owning cross-object references. When the target object is destroyed, `Pointer<T>` is automatically set to null, and you can safely use it by checking before dereferencing:
+
+```cpp
+Pointer<Label> m_label; // Declare as member variable
+
+// ...Assign after construction...
+m_label = label;
+
+// In any asynchronous callback that might cause the label to be destroyed:
+void onNetworkResponse(const String &data) {
+    if (!m_label)
+        return; // Label has been destroyed, safely exit
+    m_label->setText(data); // Access is safe here
+}
+```
+
+::: tip When to Use
+Use `Pointer<T>` instead of raw pointers `T *` to track lifecycles when holding pointers across objects without owning their lifecycles. `Signal`'s `connect` mechanism also relies on guarded pointers—when the receiver (the object containing the slot) is destroyed, the connection is automatically severed, preventing dangling callbacks.
+:::
+
+### Thread Limitations
+Guarded pointers do not support cross-thread access; they are essentially limited to use on the UI thread. Furthermore, they are not zero-cost abstractions, as every construction involves reference counting operations.
+
+### `SharedRef<T>` Intrusive Reference Counting
+
+For ordinary value objects that do not inherit from `PrimitiveObject` (such as custom data structures), the framework provides intrusive shared reference counting. Make the value type inherit from `SharedValue`, and then hold it with `SharedRef<T>` to obtain shared semantics similar to [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr) while avoiding additional control block allocations:
+
+```cpp
+class MyData : public SharedValue {
+public:
+    int x = 0;
+    String name;
+};
+
+auto ref1 = make_shared<MyData>();
+ref1->x = 42;
+
+SharedRef<MyData> ref2 = ref1; // Reference count increases, sharing the same object
+```
+
+`SharedRef` also supports Copy-On-Write (COW) semantics: before modifying a copied version, an independent copy is created to ensure multiple holders do not interfere with each other. This mechanism uses atomic reference counting to achieve thread safety.
+
+## Dynamic Type Casting
+
+Standard C++'s [`dynamic_cast`](https://en.cppreference.com/w/cpp/language/dynamic_cast) relies on RTTI (Run-Time Type Information), whereas embedded environments are typically compiled with `-fno-rtti`. `dyn_cast` leverages the meta-object system to provide equivalent runtime-safe downcasting capabilities.
+
+The target type `T` of `dyn_cast<T *>()` must satisfy two conditions:
+1. Inherit from `PrimitiveObject`
+2. Declare the `GX_OBJECT`/`GX_OBJECT_KINDS` macro
+
+```cpp
+PrimitiveObject *obj = getSomeObject();
+
+// Safe downcasting; returns nullptr if casting fails
+auto *btn = dyn_cast<Button *>(obj);
+if (btn)
+    btn->setText("OK");
+
+// Const versions are also supported
+const auto *constBtn = dyn_cast<const Button *>(obj);
+```
+
+::: warning `GX_OBJECT` is a Prerequisite
+`dyn_cast`'s type checking relies on the target class's static meta-object information (`staticMetaObject`). If the target class does not declare `GX_OBJECT`, it lacks the necessary runtime type information, resulting in a compilation error.
+:::
+
+`dyn_cast` is particularly commonly used in Native Module development: the framework frequently passes objects in as base class pointers (`PrimitiveObject *` or `Object *`), requiring `dyn_cast` to safely restore them to concrete types before operating on them.
+
+Considering that sandbox security policies do not trust objects passed from scripts, we cannot assume that runtime object pointers passed in are of the correct type, and therefore must use `dyn_cast` to verify types and safely access their members.
+
+### Memory Leak Traps
+
+A typical `dyn_cast` usage pattern implies a risk of memory leaks, such as:
+```cpp
+auto *session = dyn_cast<Session *>(takeObjectOwnership());
+if (session) {
+    // Successfully cast, access session members and transfer ownership
+}
+```
+The problem is that if the object returned by `takeObjectOwnership()` is not of type `Session`, `dyn_cast` returns `nullptr`, but ownership of the original object has already been transferred—leading to a memory leak if no other mechanism reclaims the object.
+
+When developing Native Module APIs, you may occasionally encounter this issue, and related frameworks provide better APIs to avoid it. However, developers should be aware of this potential risk and not be misled by the safety of `dyn_cast`.
+
+### Is `GX_OBJECT` Necessary?
+
+Not all classes inheriting from `PrimitiveObject` require `GX_OBJECT`. The purpose of the `GX_OBJECT` macro is to register the class with the meta-object system, enabling capabilities such as reflection, property binding, and `dyn_cast`. If your class:
+
+- Does not need to be exposed to JavaScript
+- Does not require reflection mechanisms like `GX_PROPERTY` or `GX_METHOD`
+- Does not need to be safely cast via `dyn_cast`
+
+Then you can omit `GX_OBJECT`, simply inheriting from the base class and using C++ features normally:
+
+```cpp
+// Internal helper class requiring no meta-object capabilities, omit GX_OBJECT
+class InternalBufferManager : public PrimitiveObject {
+public:
+    explicit InternalBufferManager() = default;
+    void flush();
+private:
+    // ...
+};
+```
+
+Classes omitting `GX_OBJECT` still retain the basic capabilities of `PrimitiveObject`, including `deleteLater()` and guarded pointer support, but lose reflection and dynamic type recognition capabilities.
+
+Another scenario is when your final type requires meta-object capabilities, but certain intermediate base classes do not; in this case, the intermediate base classes can omit `GX_OBJECT`. This loses some runtime type information but reduces code size.
+
+::: tip
+If you are unsure whether you need `GX_OBJECT`, it is generally recommended to conservatively include it.
+:::
+
+One final important difference: once marked with `GX_OBJECT`, the class must be located in a header file (`*.h`) and registered with the build system using the `glyphix_add_meta_objects()` CMake macro. Classes without `GX_OBJECT` have no such requirement and can be defined directly in `.cpp` files.
+
+## Runtime Type System
+
+Throughout all previous discussions of `GX_PROPERTY`, one question remained unanswered:
+
+```cpp
+GX_PROPERTY(int value, get value, set setValue)
+```
+
+How does JavaScript know what an `int` is? When `widget.value = 42` is written on the JavaScript side, `42` is JavaScript's `number` type, whereas `setValue(int v)` accepts a C++ `int`. What happens in between? Conversely, how does the `int` returned by `getValue()` become a `number` in JavaScript?
+
+Without any glue code, the framework obviously needs to do some work behind the scenes to bridge C++ static types and dynamic script types. This is a fairly transparent process, and this section explains what happens in the middle.
+
+### The General-Purpose Type Container `Variant`
+
+The answer lies in `Variant`. It is a type-erased container capable of holding values of arbitrary types, serving as the core bridge connecting C++'s static type system with JavaScript's dynamic types.
+
+Whenever the framework needs to cross this boundary, it goes through `Variant`:
+
+1. **Property Read/Write Intermediate Layer**: When properties declared with `GX_PROPERTY` are read and written via reflection APIs, values are passed via `Variant`. The framework converts JavaScript's `JsValue` into a `Variant`, which is then converted by `Variant` into the actual argument type of the C++ setter; the direction is reversed when reading.
+2. **Method Call Argument Marshaling**: Parameters and return values of `GX_METHOD` are represented via `Variant` before being passed to C++ .
+
+```cpp
+Variant v1;                  // Empty value (null)
+Variant v2{42};              // Stores int
+Variant v3{3.14};            // Stores double
+Variant v4{String("Hello")}; // Stores String
+// Variant must be explicitly constructed, implicit conversion is not supported
+// Variant v5 = 42; // Error, must write Variant v5{42};
+
+// Type checking
+if (v2.is<int>()) { /* ... */ }
+// Checking convertibility is not recommended; instead, directly to<T>() and check if it's an invalid value
+if (v3.convertible<double>()) { /* ... */ }
+
+// Read by reference (fastest, requires exact type match)
+int n = v2.as<int>();
+// Read by reference, returns default value on type mismatch
+double d = v2.as<double>(0.0); // int != double, returns 0.0
+// Read with type conversion (by value)
+int fromDouble = v3.to<int>();   // 3.14 -> 3
+String fromInt = v2.to<String>(); // 42 -> "42"
+```
+
+::: tip
+This is not C++17's [`std::variant`](https://en.cppreference.com/w/cpp/utility/variant), but rather closer to [`std::any`](https://en.cppreference.com/w/cpp/utility/any) with support for runtime type identification and automatic type conversion.
+
+Generally, you do not need to directly manipulate `Variant` in business code; the framework automatically handles all conversions. You will only interact with it directly when implementing low-level framework extensions, writing general utility functions, or needing to manipulate runtime reflection APIs directly.
+:::
+
+### Built-in Type Mappings
+
+The framework has built-in bidirectional mappings to JavaScript for common C++ primitive types:
+
+| C++ Type | JavaScript Type | Remarks |
+|:---:|:---:|:---:|
+| `int`, `float`, `double`, etc. | `number` | Numerical types mapped directly |
+| `bool` | `boolean` | |
+| `String` | `string` | |
+| Subclasses of `PrimitiveObject *` | JavaScript object reference | Object lifecycle managed by framework |
+| Value types like `Color`, `Length` | `string` | Represented via specifically formatted strings |
+
+This is why after writing `GX_PROPERTY(int value, ...)`, the JS side can directly do `widget.value = 42`: `int` is in the built-in mapping table, and the framework knows how to convert the type.
+
+::: note Do Not Use C-Strings
+`Variant` requires the stored type `T` to have ownership, so non-owning types such as C-strings (`const char *`) and string views (`String::View`) cannot be stored in `Variant`. Always use `String` to represent text data, and explicitly convert to `String` before storing in `Variant` when necessary.
+
+Using an unsupported string type will result in a compilation error.
+:::
+
+::: important
+The built-in type mapping table does not register `std::string`-related mappings, so storing `std::string` in `Variant` is also not recommended. Unmapped types can be stored normally, but they will be treated as opaque C++ objects and cannot be used in JavaScript.
+:::
+
+### Complex Type Reflection
+
+For classes declared using `GX_OBJECT`, you can also utilize `GX_ENUM` and `GX_STRUCT` to export enumeration and structure member types, allowing them to be used naturally in JavaScript as well. This type export is automatic and requires no manual writing of additional binding code.
+
+#### Enumeration Reflection `GX_ENUM`
+
+When a property or method parameter type is a C++ enumeration, exposing it to JavaScript directly as an integer is neither intuitive nor error-prone. `GX_ENUM` exports enumerations as string constants, allowing JavaScript to operate using readable strings rather than magic numbers:
+
+```cpp
+class ScrollArea : public Widget {
+    GX_OBJECT
+public:
+    enum GX_ENUM ScrollBarStyle {
+        RemoveScrollBar GX_ALIAS("hidden"),
+        LinearScrollBar GX_ALIAS("line"),
+        DotsScrollBar   GX_ALIAS("dots")
+    };
+
+    GX_PROPERTY(ScrollBarStyle indicator, set setScrollBar)
+};
+```
+
+`GX_ENUM` is placed after the `enum` keyword, telling the meta compiler that this enumeration needs to be exported. `GX_ALIAS("...")` specifies a JavaScript-visible string name for each enumeration member—if omitted, the original name of the C++ member is used by default. Application developers use this in JavaScript as follows:
+
+```js
+scroll.indicator = "hidden"; // Corresponds to RemoveScrollBar
+scroll.indicator = "dots";   // Corresponds to DotsScrollBar
+```
+
+When reading the `indicator` property, the framework converts the string `"dots"` into the `DotsScrollBar` enumeration value before passing it to the setter; when reading, it converts the enumeration value back to a string. The entire process is completely transparent to the C++ side, which always operates on concrete enumeration types.
+
+#### Structure Parameter Reflection `GX_STRUCT`
+
+For method parameters, an operation sometimes requires multiple related configuration options. In such cases, parameters can be encapsulated into structures and exported with `GX_STRUCT`, allowing the JavaScript side to pass an object literal:
+
+```cpp
+class Scroll : public ScrollArea {
+    GX_OBJECT
+public:
+    struct GX_STRUCT ScrollOptions {
+        Length left;
+        Length top;
+        ScrollBehavior behavior;
+    };
+    struct GX_STRUCT IndexOptions {
+        int index;
+        ScrollBehavior behavior;
+    };
+
+    GX_METHOD void scrollTo(const ScrollOptions &options);
+    GX_METHOD void scrollBy(const ScrollOptions &options);
+    GX_METHOD void setIndex(const IndexOptions &options);
+};
+```
+
+`GX_STRUCT` is placed after the `struct` keyword, and each field of the structure is automatically exported according to its type (again via built-in type mappings or nested `GX_ENUM`s). Objects can be passed directly on the JS side:
+
+```js
+scroll.scrollTo({ left: 0, top: 200, behavior: "smooth" });
+scroll.setIndex({ index: 3, behavior: "instant" });
+```
+
+The `scrollTo` method on the C++ side always receives strongly typed `ScrollOptions` objects, requiring no parsing whatsoever on the C++ side.
+
+::: warning Do Not Forget Annotations
+When declaring `GX_PROPERTY` or `GX_METHOD`, if the related type is a custom enumeration or structure, make sure to correctly annotate it with `GX_ENUM` or `GX_STRUCT`. Otherwise, these properties or methods cannot be used on the JavaScript side, and no compilation error prompts will be given.
+:::
+
+### Is There an "Intermediate Representation"?
+
+When using `Variant` to bridge C++ and JavaScript, does the framework convert JavaScript objects into a general intermediate representation, such as some JSON-like serialized structure?
+
+The answer is no. `Variant` directly stores C++ objects (including `JsValue`), which includes all type information and operation semantics of the object. The system correctly performs type conversions and method invocations based on the runtime type tags of the `Variant` value, without requiring a specific intermediate representation or serialization process.
+
+============================================================
+FILE_PATH: src/transl/EN/cxxdev/widget-export.md
+
+# Widget Registration and Framework Integration
+
+In the [Widget Development Guide](./widget.md), we implemented a C++ widget class. However, at that stage, it is merely an ordinary C++ object, and application developers cannot use it directly in page code. This article explains how to register a widget with the framework so that it becomes a component usable within applications. Many concepts in this document relate to the [Object System](./object-system.md); reading that section first is recommended.
+
+## Runtime Environment
+
+Widget registration relies on a set of **runtime environment objects**. These are mandatory dependencies for the reactive framework to run, must be explicitly created in `main()` or platform startup code, and their lifecycles must cover the entire duration of the application's execution:
+
+```cpp
+Application app(/* platform */);
+JsVM vm;
+Window window;
+AppletKit kit(&window, "pkgs.db");
+```
+
+These objects manage the runtime environment of the entire application:
+- `Application` is the framework application object that manages all low-level services and maintains the event loop. At the end of initialization, call `app.exec()` to enter the event loop;
+- `JsVM` is the embedded JavaScript engine that hosts the reactive framework, and **must** be created before `AppletKit`;
+- `Window` is the top-level window, serving as the rendering output target;
+- `AppletKit` is the applet manager, responsible for application lifecycles and widget registration.
+
+::: warning Do Not Omit These Objects
+`vm`, `window`, `kit`, and others are RAII objects; the framework manages the runtime environment through their constructors and destructors. Even if there are no direct calls to `vm` in the code, its **very presence** is required—destroying it prematurely or failing to create it will cause the framework to malfunction.
+:::
+
+`Window window` can sometimes be replaced with `Widget window`, etc. The difference is that `Window` renders an opaque background by default, whereas `Widget` is transparent by default.
+
+## Registering Widgets
+
+Widget registration is completed via `AppletKit::installWidget<T>()`. This must be called after `AppletKit` is instantiated and **before** `launch()` starts the first application:
+
+```cpp
+// Register a custom widget (before launch)
+kit.installWidget<ProgressRing>(); // No arguments, registered by class name, written as <progress-ring> in templates
+kit.installWidget<MySpecialChart>("SpecialChart"); // Or registered with a custom name (see below)
+
+kit.launch("com.example.app");     // Start the application
+return app.exec();                 // Enter the event loop
+```
+
+::: tip Built-in Widgets Are Registered by Default
+Built-in widgets provided by the framework, such as buttons and labels, are registered by `installBuiltinWidgets()`. As long as the SDK is built with the CMake option `GX_BUILTIN_BINDINGS` enabled (default `ON`), `AppletKit` will **automatically call** it upon construction, requiring no manual handling. You only need to manually call `kit.installBuiltinWidgets()` if you explicitly disable that option.
+:::
+
+Upon registration, the framework automatically exports its properties, events, methods, as well as the enum and struct types they use, based on the widget class's `GX_OBJECT` metadata, making them available at the application layer.
+
+### Using Widgets in Application Pages
+
+Once successfully registered, application developers can use the widget in page templates just like built-in widgets:
+
+```xml
+<!-- Taking the progress-ring component as an example -->
+<progress-ring
+  class="ring"
+  :value="progress"
+  @completed="onDone">
+</progress-ring>
+```
+
+Here, `:value="progress"` binds the widget's `value` property to the application data `progress`; `@completed` listens to the `completed` event exposed by the widget. The framework automatically handles the bidirectional conversion between JavaScript values and C++ properties, eliminating the need for developers to write any "bridge code."
+
+### Custom Component Names
+
+By default, widgets are registered by their **class name**. If the class name is not suitable to be used directly as a component name, a custom name can be specified during registration:
+
+```cpp
+// Register VendorWaveformGraph as WaveformGraph, written as <waveform-graph> in templates
+kit.installWidget<VendorWaveformGraph>("WaveformGraph");
+```
+
+Custom names should use **PascalCase**, matching the style of C++ class names.
+
+### C++ ↔ UX Naming Conversion
+
+Component tag names correspond to the registration name (by default, the **class name** declared by `GX_OBJECT`, or the custom name specified during registration). It is customary to use kebab-case in templates, **and the ux packaging tool is responsible for name conversion at compile time**:
+
+- Tag names: kebab-case in templates ↔ PascalCase registration names. For example, `<progress-ring>` corresponds to the `ProgressRing` class. The same applies to custom registration names.
+- Property names: kebab-case in templates ↔ camelCase in C++. For example, `ring-color` corresponds to the `ringColor` property.
+
+In other words, the runtime framework performs exact matching using the original names declared in C++ (camelCase / PascalCase), while the kebab-case syntax is merely a convention on the template side, which is converted by the ux tool to interface correctly.
+
+UX components can also use the same PascalCase for tags and camelCase for properties as C++, as detailed in the [Component Naming Specification](/tutorials/name-spec.md).
+
+## Property and Event Exporting
+
+Properties declared with `GX_PROPERTY` are automatically exported according to the following rules:
+
+- The property name is directly identical to the property name in the framework component
+- Properties with a declared setter (`set xxx`) can be assigned values by the application
+- Properties with a declared getter (`get xxx`) can be read by the application
+- When a signal is declared (`signal xxxChanged`), signals indicating property changes are forwarded to bindings
+
+For example, consider the following complete property declaration:
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+    GX_PROPERTY(Color ringColor, get ringColor, set setRingColor)
+    GX_PROPERTY(bool showLabel, get showLabel, set setShowLabel)
+    // ...
+};
+```
+
+Corresponding usage at the application layer:
+
+```xml
+<progress-ring
+  :value="jobProgress"
+  ring-color="#409EFF"
+  :show-label="true">
+</progress-ring>
+```
+
+Properties in templates are written in kebab-case, corresponding to camelCase property names in C++: `ring-color` → `ringColor`, `show-label` → `showLabel` (conversion is handled by the ux packaging tool, see above). `:value` and `:show-label` are dynamic bindings (values are expressions), whereas literals like `ring-color="#409EFF"` are static assignments.
+
+### Event Exporting
+
+Component events are exported through **properties with change signals**, rather than exporting `Signal<>` members directly. Exporting an event takes two steps:
+
+1. Declare a `Signal<...>` member (used internally by C++);
+2. Reference it in the `signal` field of a `GX_PROPERTY`.
+
+The key rule is: the event name listened to on the application side is the **property name**, **not** the name of the signal member.
+
+### Value-Bearing Property Change Events
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    int value() const;
+    void setValue(int v);
+
+    Signal<int> valueChanged;   // Internal signal, this name is invisible to the application
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+};
+```
+
+The application side listens to changes using `@property-name`, so write `@value` (the property name) here, **not** `@value-changed`: even though the signal member is called `valueChanged`, the event name seen by the application is always the property name `value`.
+
+```xml
+<progress-ring :value="progress" @value="onProgressChanged"></progress-ring>
+```
+
+This behavior is completely consistent with framework built-in widgets. For example, the `Slider` value change signal member is called `changed`, but the application side still listens to the property name `value` (`@value` or two-way binding `::value`).
+
+### Value-less Pure Events
+
+For events that carry no value and simply indicate "something happened" (such as "completed"), use `invalid_t` as the property type to declare a property that has only a signal and no read/write value:
+
+```cpp
+Signal<>  completed;   // Emitted when progress completes
+GX_PROPERTY(invalid_t completed, signal completed)
+```
+
+The application side can listen to it like this (without an event value):
+
+```xml
+<progress-ring @completed="onDone"></progress-ring>
+```
+
+You cannot declare a `GX_PROPERTY` with a `void` type, even if it has no `get`/`set` at all; therefore, `invalid_t` must be used as a placeholder type. If you want an event to carry a value, it must be declared as a specific type and provide a `get` method—the parameter type of `Signal<T>` does not automatically become the event value, which always originates from the property's getter.
+
+::: warning `Signal<>` Does Not Automatically Become an Event
+Declaring a `Signal<>` member without referencing it via the `signal` field in any `GX_PROPERTY` means this signal **cannot** be listened to on the application side using `@some-event`. The framework only exposes "property change signals"—that is, the `signal` field—as events, and the event name always derives from the property name.
+:::
+
+## Method Exporting
+
+Member functions declared with `GX_METHOD` are exported as component methods for applications to call in JavaScript:
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    GX_METHOD void reset();               // Method without parameters
+    GX_METHOD void animateTo(int target); // Method with parameters
+};
+```
+
+Unlike properties and events, methods are not used via template tags. Instead, you first obtain the native component object using [`$element()`](../framework/component/component-apis.md#element), and then call methods on it. This requires setting an `id` for the component in the template:
+
+```xml
+<progress-ring id="ring" :value="progress"/>
+```
+
+```js
+onReady() {
+  const ring = this.$element('ring'); // 'ring' is the component id in the template
+  ring.reset();
+  ring.animateTo(80);
+}
+```
+
+Method arguments and return values are automatically marshaled by the framework via `Variant`, requiring no manual conversion code (for details on type bridging, see [Object System · Runtime Type System](./object-system.md#运行时类型系统)). Note that `$element()` must be called during or after the [`onReady()`](../framework/component/life-cycle.md#onready) lifecycle, as detailed in [Native Components](../framework/component/native-component.md).
+
+## Enum and Struct Types
+
+When the type of a property or method parameter is a custom C++ enum or struct, annotate it with `GX_ENUM` or `GX_STRUCT` to export it together. When [registering the widget](#注册控件), the framework automatically installs the corresponding type conversions without requiring manual binding code. Enums appear as string constants on the JavaScript side, and structs appear as object literals:
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    // Note: define aliases for values, otherwise JavaScript side will use
+    // 'Solid' / 'Dashed' names instead of the expected 'solid' / 'dashed'
+    enum GX_ENUM LineStyle {
+        Solid GX_ALIAS("solid") = 0,
+        Dashed GX_ALIAS("dashed"),
+    };
+    // Structs should have default values to avoid undefined fields when created on the JavaScript side
+    struct GX_STRUCT Range { int min = 0; int max = 100; };
+
+    GX_METHOD void setRange(const Range &range);
+
+    GX_PROPERTY(LineStyle lineStyle, get lineStyle, set setLineStyle)
+};
+```
+
+```xml
+<progress-ring line-style="dashed"/>
+```
+
+```js
+this.$element('ring').setRange({ min: 0, max: 100 });
+```
+
+For complete semantics such as enum aliases, struct field mapping, and nested types, refer to [Object System · Complex Type Reflection](./object-system.md#复杂类型反射), which will not be elaborated further here.
+
+::: warning Do Not Forget Annotations
+When custom enums/structs are used in properties or methods, be sure to annotate them with `GX_ENUM` / `GX_STRUCT`; otherwise, they will be unusable on the JavaScript side without any compilation error prompts.
+:::
+
+## Accommodating Sub-widgets (Container Widgets)
+
+If a widget needs to contain sub-content declared by the application, simply implement it as a **container widget**: layout of sub-widgets is handled on the C++ side, and the framework automatically creates sub-components nested within the template declarations as sub-widgets and mounts them under it. Glyphix does not have HTML-like named slots; nested tags in templates directly become sub-widgets of that widget.
+
+Container layout can be implemented in two ways (detailed in the "Layout and Sizing" section of the [Widget Development Guide](./widget.md)):
+
+- Use existing framework layout classes, such as `setLayout(new FlexLayout())` in the constructor;
+- Or override `layoutEvent()`, iterating through `children()` inside it to manually set the geometry of each sub-widget.
+
+At the application layer, use it just like nesting child tags (here, `card-panel` is a container widget implemented and registered by the developer, and `text` is a built-in widget):
+
+```xml
+<card-panel>
+  <text>Title</text>
+  <progress-ring :value="progress"/>
+</card-panel>
+```
+
+## A Complete Example
+
+Below is the definition of a simple number display widget, registered as a framework component:
+
+```cpp
+// number_display.h
+#pragma once
+#include "gx_widget.h"
+#include "gx_color.h"
+
+class NumberDisplay : public Widget {
+    GX_OBJECT
+public:
+    explicit NumberDisplay(Widget *parent = nullptr);
+
+    int value() const { return m_value; }
+    Color textColor() const { return m_color; }
+
+    void setValue(int v);
+    void setTextColor(const Color &c);
+
+    bool event(Event *event) override;   // The only virtual function that needs to be overridden
+
+    Signal<int> valueChanged;            // Internal signal; application side listens via property name value
+
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+    GX_PROPERTY(Color textColor, get textColor, set setTextColor)
+
+protected:
+    // Neither paintEvent nor sizeHint are virtual functions, do not add override
+    void paintEvent(PaintEvent *event);
+    Size sizeHint() const;
+
+    // EventDispatch needs access to protected handler functions
+    friend struct EventTraits<NumberDisplay>;
+
+private:
+    int m_value = 0;
+    Color m_color{0, 0, 0};
+};
+```
+
+```cpp
+// number_display.cpp
+#include "number_display.h"
+#include "gx_format.h"
+#include "gx_painter.h"
+#include "gx_widgetevent.h"   // EventDispatch
+
+NumberDisplay::NumberDisplay(Widget *parent)
+    : Widget(parent) {}
+
+bool NumberDisplay::event(Event *event) {
+    // Dispatch events to paintEvent; declaring PaintEvent allows compile-time checking for omissions
+    return EventDispatch<Widget, PaintEvent>{}(this, event);
+}
+
+void NumberDisplay::setValue(int v) {
+    if (m_value == v) return;
+    m_value = v;
+    update();
+    valueChanged(v);
+}
+
+void NumberDisplay::setTextColor(const Color &c) {
+    if (m_color == c) return;
+    m_color = c;
+    update();
+}
+
+Size NumberDisplay::sizeHint() const {
+    return Size(60, 30);
+}
+
+void NumberDisplay::paintEvent(PaintEvent *) {
+    Painter p(this);
+    p.setBrush(m_color);   // Text color is determined by the Brush, not the Pen
+    p.setFont(Font(20));
+    p.drawText(rect(), format("{}", m_value), AlignCenter);
+}
+```
+
+Registration:
+
+```cpp
+kit.installWidget<NumberDisplay>();
+```
+
+Application-layer usage:
+
+```xml
+<number-display
+  :value="count"
+  text-color="#333333"
+  @value="onCountChanged">
+</number-display>
+```
+
+With this, the entire workflow from C++ implementation to application usage is complete: the `<number-display>` tag is converted to the registration name `NumberDisplay` by the ux tool and recognized.
+
+Whenever the application data `count` changes, the `:value` binding calls `NumberDisplay::setValue()`; when the widget internally emits the `valueChanged` signal, the framework triggers an event named `value` (taking the event name from the property name), thereby invoking the application's `onCountChanged`. If you want bidirectional synchronization between `count` and the widget, you can use `::value="count"` instead.
 
