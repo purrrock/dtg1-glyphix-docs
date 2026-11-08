@@ -2,6 +2,2988 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
+FILE_PATH: src/original_docs/cxxdev/object-system.md
+
+# 对象系统
+
+Glyphix 的 C++ 框架有一套以 `PrimitiveObject` 为根基的对象模型，理解它是后续开发的基础。
+
+对象系统由三个相互配合的部分构成：**对象基类体系**定义了所有托管对象的公共能力与生命周期规则；**元对象系统**通过构建期的元对象编译器为 C++ 类生成元数据，赋予它反射、属性绑定和 JavaScript 导出的能力；**内存安全机制**则通过守卫指针和引用计数解决 GUI 框架中普遍存在的悬空指针问题。
+
+<ArchDiagram max-width="540px">
+  <div>
+    JavaScript 脚本层
+    <div class="remark">属性绑定 · 方法调用 · 事件响应</div>
+  </div>
+  <div>
+    元对象系统
+    <div class="group row">
+      <div>GX_OBJECT<div class="remark">元编译器注册</div></div>
+      <div>GX_PROPERTY<div class="remark">属性/方法反射</div></div>
+      <div>Variant<div class="remark">C++ ↔ JS 类型桥接</div></div>
+      <div>dyn_cast<div class="remark">安全向下转型</div></div>
+    </div>
+  </div>
+  <div class="subject">
+    对象基类体系
+    <div class="group row">
+      <div>PrimitiveObject<div class="remark">反射支持 · 生命周期管理</div></div>
+      <div>Object<div class="remark">父子树结构 · 级联销毁</div></div>
+      <div>Widget<div class="remark">UI 控件基类</div></div>
+    </div>
+  </div>
+  <div>
+    内存安全机制
+    <div class="group row">
+      <div>Signal&lt;&gt;<div class="remark">事件通知 · 自动断联</div></div>
+      <div>Pointer&lt;T&gt;<div class="remark">守卫弱引用</div></div>
+      <div>SharedRef&lt;T&gt;<div class="remark">侵入式共享引用</div></div>
+    </div>
+  </div>
+</ArchDiagram>
+
+## 反射与元对象编译器
+
+标准 C++ 的类是 “沉默” 的：拿到一个对象指针，你无法在运行时知道它有哪些成员、叫什么名字、怎么读写。这对于不需要脚本化的静态 C++ 开发来说不是障碍。
+
+但 Glyphix 的工作方式不同。当应用的页面模板写下 `:value="progress"`，响应式框架需要在运行时按字符串 `"value"` 找到控件对应的属性，并在数据变化时自动刷新。这种 "程序运行时能了解自己的结构" 的能力叫做**反射（Reflection）**，标准 C++ 并不支持。
+
+Glyphix 的解决方案是在构建流程中加入一个**元对象编译器（Meta Compiler）**。它在正式的 C++ 编译之前扫描源代码，为需要参与对象系统的类生成元数据。开发者只需在类定义开头放上 **`GX_OBJECT`** 宏，元对象编译器就会处理这个类——此后框架就能按名称读写它的属性或调用方法，并能在 JavaScript 中访问它。
+
+你暂时不需要了解元对象系统的内部原理。记住一条规则就够了：凡是需要反射能力的类，都必须在定义时加上 `GX_OBJECT` 宏，并继承自 `PrimitiveObject` 或 `Object`。
+
+## `PrimitiveObject` 与 `Object`
+
+框架的对象体系分为两级：
+
+**`PrimitiveObject`** 是所有**托管对象**的根基类。继承它的类就拥有了属性反射、动态转型、安全延迟销毁等框架能力。但 `PrimitiveObject` 本身**没有**父子树结构——它就是一个“框架可以感知的 C++ 对象”。`AsyncSession`、`BindableObject` 等类型都继承自它，因为这些类不需要组成树。
+
+**`Object`** 继承自 `PrimitiveObject`，额外增加了**父子树结构**：构造时传入 `parent` 指针，父对象销毁时所有子对象也会递归销毁。控件树（Widget Tree）就是通过这一机制组织的。
+
+::: tip 类比其他框架
+如果你有 Qt 开发经验，可以将 Glyphix 的元对象系统类比为 Qt 的 MOC 系统：`GX_OBJECT` 对应 `Q_OBJECT`。但也有许多差异，如 Glyphix 将 Qt 中 `QObject` 的能力拆分成了两层；`Signal` 也只是一个不依赖元对象编译器的普通模板类。
+
+其他框架如 Unreal Engine 的 UCLASS 也有类似的反射系统。
+:::
+
+选择哪个基类取决于你的类是否需要成为树的一部分：
+
+```cpp
+// 需要参与对象树 → 继承 Object
+class MySensor : public Object {
+    GX_OBJECT
+public:
+    explicit MySensor(Object *parent = nullptr) : Object(parent) {}
+};
+
+// 只需框架感知，不参与树 → 继承 PrimitiveObject
+class MyNetworkSession : public PrimitiveObject {
+    GX_OBJECT_KINDS(ExplicitDeleteKind)
+public:
+    MyNetworkSession() = default;
+};
+```
+
+代码中的 `GX_OBJECT_KINDS(ExplicitDeleteKind)` 是一个附加声明，它和 `GX_OBJECT` 宏一样声明元对象类，但告知框架这个对象的生命周期由开发者负责，不会被 JavaScript 自动回收。`AsyncSession` 等生命周期敏感的类型都使用了它。
+
+## 属性与信号
+
+**`GX_PROPERTY`** 宏用于声明一个可被框架感知的属性，关联对应的 getter 和 setter。声明后属性可以由框架的响应式系统驱动——值变化时依赖它的 UI 自动刷新，动画系统也可以对它做插值：
+
+```cpp
+class MyWidget : public Widget {
+    GX_OBJECT
+public:
+    int value() const { return m_value; }
+    void setValue(int v) { m_value = v; update(); }
+
+    GX_PROPERTY(int value, get value, set setValue)
+
+private:
+    int m_value = 0;
+};
+```
+
+### 信号（Signal）
+
+**`Signal<>`** 是事件通知机制，直接声明为类成员。事件发生时“发射”它，其他对象通过“连接”来接收通知（[lambda 表达式](https://en.cppreference.com/w/cpp/language/lambda)是 C++ 的匿名函数语法）：
+
+```cpp
+class MyWidget : public Widget {
+    GX_OBJECT
+public:
+    Signal<int> valueChanged;
+
+    void setValue(int v) {
+        m_value = v;
+        valueChanged(v);  // 发射信号
+    }
+private:
+    int m_value = 0;
+};
+
+// 连接到成员函数
+myWidget->valueChanged.connect(this, &MyClass::onValueChanged);
+
+// 或者连接到 lambda
+auto slot = make_slot([](int v) { /* 响应变化 */ });
+myWidget->valueChanged.connect(slot);
+```
+
+::: tip 和 Qt 的信号槽对比
+Qt 的经典信号槽机制需要 MOC 生成代码支持，但 `Signal<>` 是一个纯 C++ 模板类，不依赖元对象编译器。因此不一定要在特定类中使用 `Signal<...>` 对象，你可以在任何地方使用它。
+
+由于 `Signal` 是一个类，它会占据内存空间（即便没有连接），因此建议尽量使用事件类型枚举和单一信号成员变量来节约内存，而不是为每个事件都声明一个 `Signal` 成员。
+:::
+
+### `GX_PROPERTY` 的完整形式
+
+`GX_PROPERTY` 除了 `get` / `set` 之外，还支持声明关联的变化信号（`signal`），这是响应式框架订阅属性变化的标准接口：
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    int value() const { return m_value; }
+    void setValue(int v) {
+        if (m_value == v) return;
+        m_value = v;
+        update();
+        valueChanged(v);
+    }
+
+    Signal<int> valueChanged;
+
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+
+private:
+    int m_value = 0;
+};
+```
+
+声明了 `signal` 的属性，其变化会通过响应式框架自动传递给绑定了该属性的 JavaScript 表达式。这是控件属性与应用数据双向同步的基础。
+
+`GX_PROPERTY` 中的 `signal` 字段不依赖 `Signal<T>` 的参数类型，框架只关心它是否存在以及何时被发射。相反，此时必须提供 `get` 字段来让框架在 JavaScript 侧读取属性值。
+
+## 守卫指针与内存安全
+
+GUI 框架中，异步场景容易引发悬空指针崩溃。一个典型案例：
+```cpp
+void onNetworkResponse(const String &data) {
+    // 网络请求耗时 2 秒才返回
+    // 但在这 2 秒内，用户可能已经退出当前页面，label 已被销毁
+    this->label->setText(data); // Segmentation Fault!
+}
+```
+定时器回调、IO 回调等所有异步场景都面临同等风险。在脚本化框架中，这种用例是结构性不可避免的，因此必须提供一种安全的生命周期观察机制。
+
+### `Pointer<T>` 守卫指针
+
+Glyphix 为 `PrimitiveObject` 的所有派生类内置了弱引用计数支持。使用 `Pointer<T>` 持有非所有权的跨对象引用，当目标对象被销毁时，`Pointer<T>` 会自动被置空，解引用前检查即可安全使用：
+
+```cpp
+Pointer<Label> m_label; // 声明为成员变量
+
+// ...构造后赋值...
+m_label = label;
+
+// 在任何可能导致 label 被销毁的异步回调中：
+void onNetworkResponse(const String &data) {
+    if (!m_label)
+        return; // label 已被销毁，安全退出
+    m_label->setText(data); // 此时访问是安全的
+}
+```
+
+::: tip 何时使用
+跨对象持有指针但不拥有其生命周期时，用 `Pointer<T>` 代替裸指针 `T *` 来追踪生命周期。`Signal` 的 `connect` 机制也依赖守卫指针——当接收者（slot 所在对象）被销毁时，连接自动断开，不会触发悬空回调。
+:::
+
+::: warning 线程限制
+守卫指针不支持跨线程访问，它们基本仅限于 UI 线程使用，同时也不是零开销抽象，每次构造都会涉及引用计数操作。
+:::
+
+### `SharedRef<T>` 侵入式引用计数
+
+对于不继承自 `PrimitiveObject` 的普通值对象（如自定义数据结构），框架提供了侵入式的共享引用计数。让值类型继承 `SharedValue`，再用 `SharedRef<T>` 持有它，即可获得类似 [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr) 的共享语义，同时避免额外的控制块分配：
+
+```cpp
+class MyData : public SharedValue {
+public:
+    int x = 0;
+    String name;
+};
+
+auto ref1 = make_shared<MyData>();
+ref1->x = 42;
+
+SharedRef<MyData> ref2 = ref1; // 引用计数增加，共享同一对象
+```
+
+`SharedRef` 还支持写时复制（COW）语义：在对拷贝版本进行修改前，创建一个独立副本，确保多个持有者之间互不干扰。该机制使用原子引用计数实现线程安全。
+
+## 动态类型转换
+
+标准 C++ 的 [`dynamic_cast`](https://en.cppreference.com/w/cpp/language/dynamic_cast) 依赖 RTTI（运行时类型信息），而嵌入式环境通常以 `-fno-rtti` 编译。`dyn_cast` 利用元对象系统提供了等效的运行时安全向下转型能力。
+
+`dyn_cast<T *>()` 的目标类型 `T` 必须满足两个条件：
+1. 继承自 `PrimitiveObject`
+2. 声明了 `GX_OBJECT`/`GX_OBJECT_KINDS` 宏
+
+```cpp
+PrimitiveObject *obj = getSomeObject();
+
+// 安全的向下转型，转型失败返回 nullptr
+auto *btn = dyn_cast<Button *>(obj);
+if (btn)
+    btn->setText("OK");
+
+// const 版本同样支持
+const auto *constBtn = dyn_cast<const Button *>(obj);
+```
+
+::: warning `GX_OBJECT` 是前提
+`dyn_cast` 的类型检查依赖目标类的静态元对象信息（`staticMetaObject`）。如果目标类没有声明 `GX_OBJECT`，则缺乏必要的运行时类型信息，并出现编译错误。
+:::
+
+在 Native Module 开发中，`dyn_cast` 尤为常用：框架经常将对象以基类指针（`PrimitiveObject *` 或 `Object *`）传入，需要 `dyn_cast` 来安全地还原为具体类型再操作。
+
+考虑到沙箱安全策略不信任脚本传入的对象，我们不能假设传入的运行时对象指针是正确的类型，因此必须用 `dyn_cast` 来验证类型并安全地访问其成员。
+
+### 内存泄漏陷阱
+
+典型的 `dyn_cast` 使用模式暗含一个内存泄漏风险，如：
+```cpp
+auto *session = dyn_cast<Session *>(takeObjectOwnership());
+if (session) {
+    // 成功转型，访问 session 的成员并转移所有权
+}
+```
+问题在于，如果 `takeObjectOwnership()` 返回的对象不是 `Session` 类型，`dyn_cast` 会返回 `nullptr`，但原始对象的所有权已经被转移了——如果没有其他机制来回收这个对象，就会导致内存泄漏。
+
+在开发 Native Module API 时，有时会遇到这种问题，相关框架提供更好的 API 来避免这种情况。但开发者应该意识到这个潜在风险，不要被 `dyn_cast` 的安全性误导。
+
+### `GX_OBJECT` 是否必要
+
+并非所有继承自 `PrimitiveObject` 的类都需要 `GX_OBJECT`。`GX_OBJECT` 宏的作用是将类注册到元对象系统，启用反射、属性绑定和 `dyn_cast` 等能力。如果你的类：
+
+- 不需要暴露给 JavaScript
+- 不需要 `GX_PROPERTY`、`GX_METHOD` 等反射机制
+- 不需要被 `dyn_cast` 安全转型
+
+那么可以省略 `GX_OBJECT`，只继承基类并正常使用 C++ 特性即可：
+
+```cpp
+// 不需要任何元对象能力的内部辅助类，省略 GX_OBJECT
+class InternalBufferManager : public PrimitiveObject {
+public:
+    explicit InternalBufferManager() = default;
+    void flush();
+private:
+    // ...
+};
+```
+
+省略 `GX_OBJECT` 的类仍然具有 `PrimitiveObject` 的基础能力，包括 `deleteLater()` 和守卫指针支持，只是失去了反射和动态类型识别能力。
+
+另一种情况是，你的最终类型需要元对象能力，但中间的某些基类不需要，那么中间基类可以不声明 `GX_OBJECT`。这会丢失一些运行时类型信息，但能减小代码量。
+
+::: tip
+如果你不确定是否需要 `GX_OBJECT`，通常建议保守地加上它。
+:::
+
+最后一个重要的差异在于：一旦使用 `GX_OBJECT` 标记，类必须位于头文件（`*.h`）中，并使用 `glyphix_add_meta_objects()` CMake 宏注册到构建系统中。没有 `GX_OBJECT` 的类则没有这个要求，可以直接在 `.cpp` 文件中定义。
+
+## 运行时类型系统
+
+在前面所有关于 `GX_PROPERTY` 的讨论中，有一个问题从未被回答：
+
+```cpp
+GX_PROPERTY(int value, get value, set setValue)
+```
+
+JavaScript 怎么知道 `int` 是什么？当 JavaScript 侧写下 `widget.value = 42`，这个 `42` 是 JavaScript 的 `number` 类型。而 `setValue(int v)` 接受的是 C++ 的 `int`。这之间发生了什么？反过来，`getValue()` 返回的 `int` 又怎么变成了 JavaScript 中的 `number`？
+
+在没有任何胶水代码的情况下，框架显然需要在幕后做一些工作来桥接 C++ 静态类型和动态的脚本类型。这是一个相当透明的过程，本节将解释中间发生了什么。
+
+### 通用类型容器 `Variant`
+
+答案在于 `Variant`。它是一个可以容纳任意类型值的类型擦除容器，是连接 C++ 静态类型系统和 JavaScript 动态类型的核心桥梁。
+
+每当框架需要跨越这道界限，它都走 `Variant` 这条路：
+
+1. **属性读写中间层**：`GX_PROPERTY` 声明的属性通过反射 API 读写时，值以 `Variant` 传递。框架将 JavaScript 的 `JsValue` 转换成 `Variant`，再由 `Variant` 转换成 C++ setter 的实际参数类型；读取时方向相反。
+2. **方法调用参数编组**：`GX_METHOD` 的参数和返回值在传递给 C++ 之前，都先经过 `Variant` 表示。
+
+```cpp
+Variant v1;                  // 空值（null）
+Variant v2{42};              // 存储 int
+Variant v3{3.14};            // 存储 double
+Variant v4{String("Hello")}; // 存储 String
+// Variant 必须显式构造，不支持隐式转换
+// Variant v5 = 42; // 错误，必须写 Variant v5{42};
+
+// 类型检查
+if (v2.is<int>()) { /* ... */ }
+// 不建议检查可转换性，而是直接 to<T>() 后判断是否为非法值
+if (v3.convertible<double>()) { /* ... */ }
+
+// 按引用读取（最快，要求类型精确匹配）
+int n = v2.as<int>();
+// 按引用读取，类型不匹配时返回默认值
+double d = v2.as<double>(0.0); // int != double，返回 0.0
+// 带类型转换的读取（按值）
+int fromDouble = v3.to<int>();   // 3.14 -> 3
+String fromInt = v2.to<String>(); // 42 -> "42"
+```
+
+::: tip
+这不是 C++17 的 [`std::variant`](https://en.cppreference.com/w/cpp/utility/variant)，更像是支持运行时类型识别和自动类型转换的 [`std::any`](https://en.cppreference.com/w/cpp/utility/any)。
+
+通常你不需要在业务代码中直接操作 `Variant`，框架自动完成所有转换。只有在实现低层框架扩展、编写通用工具函数，或需要直接操作运行时反射 API 时，才会直接与它打交道。
+:::
+
+### 内置类型映射
+
+框架为常见的 C++ 基础类型内置了与 JavaScript 的双向映射：
+
+| C++ 类型 | JavaScript 类型 | 备注 |
+|:---:|:---:|:---:|
+| `int`、`float`、`double` 等 | `number` | 数值类型直接映射 |
+| `bool` | `boolean` | |
+| `String` | `string` | |
+| `PrimitiveObject *` 的子类 | JavaScript 对象引用 | 由框架管理对象生命周期 |
+| `Color`、`Length` 等值类型 | `string` | 通过特定格式的字符串表示 |
+
+这就是为什么你写下 `GX_PROPERTY(int value, ...)` 后，JS 侧能直接做 `widget.value = 42`：`int` 在内置映射表中，框架知道如何转换类型。
+
+::: note 不要使用 C 字符串
+`Variant` 要求存储类型 `T` 具有所有权，因此 C 字符串（`const char *`）、字符串切片（`String::View`）等非拥有类型不能存储在 `Variant` 中。请始终使用 `String` 来表示文本数据，必要时需要显式转换为 `String` 后存储到 `Variant`。
+
+如果使用了不受支持的字符串类型，会导致编译错误。
+:::
+
+::: important
+内置类型映射表没有注册 `std::string` 相关的映射，因此也不建议在 `Variant` 中存储 `std::string`。未映射的类型可以正常存储，但它会被当作一个不透明的 C++ 对象处理，无法在 JavaScript 中使用。
+:::
+
+### 复杂类型反射
+
+对于使用 `GX_OBJECT` 声明的类，还可以利用 `GX_ENUM` 和 `GX_STRUCT` 来导出枚举和结构体成员类型，让它们也能在 JavaScript 中以自然的方式使用。这种类型导出是自动的，不需要再手写额外的绑定代码。
+
+#### 枚举反射 `GX_ENUM`
+
+当属性或方法的参数类型是 C++ 枚举时，直接以整数暴露给 JavaScript 既不直观也容易出错。`GX_ENUM` 将枚举导出为字符串常量，让 JavaScript 用可读字符串而非魔法数字来操作：
+
+```cpp
+class ScrollArea : public Widget {
+    GX_OBJECT
+public:
+    enum GX_ENUM ScrollBarStyle {
+        RemoveScrollBar GX_ALIAS("hidden"),
+        LinearScrollBar GX_ALIAS("line"),
+        DotsScrollBar   GX_ALIAS("dots")
+    };
+
+    GX_PROPERTY(ScrollBarStyle indicator, set setScrollBar)
+};
+```
+
+`GX_ENUM` 放在 `enum` 关键字后，告诉元对象编译器这个枚举需要导出。`GX_ALIAS("...")` 为每个枚举成员指定 JavaScript 可见的字符串名称——如果省略，则默认使用 C++ 成员的原始名称。应用开发者在 JavaScript 中这样使用：
+
+```js
+scroll.indicator = "hidden"; // 对应 RemoveScrollBar
+scroll.indicator = "dots";   // 对应 DotsScrollBar
+```
+
+框架在读取 `indicator` 属性时，将字符串 `"dots"` 转换为 `DotsScrollBar` 枚举值后再传给 setter；读取时将枚举值转回字符串。整个过程对 C++ 侧完全透明，C++ 代码始终操作的是具体枚举类型。
+
+#### 结构体参数反射 `GX_STRUCT`
+
+对于方法参数，有时一个操作需要多个相关配置项。此时可以将参数封装成结构体，并用 `GX_STRUCT` 导出，让 JavaScript 侧传入一个对象字面量：
+
+```cpp
+class Scroll : public ScrollArea {
+    GX_OBJECT
+public:
+    struct GX_STRUCT ScrollOptions {
+        Length left;
+        Length top;
+        ScrollBehavior behavior;
+    };
+    struct GX_STRUCT IndexOptions {
+        int index;
+        ScrollBehavior behavior;
+    };
+
+    GX_METHOD void scrollTo(const ScrollOptions &options);
+    GX_METHOD void scrollBy(const ScrollOptions &options);
+    GX_METHOD void setIndex(const IndexOptions &options);
+};
+```
+
+`GX_STRUCT` 放在 `struct` 关键字后，结构体的每个字段按其类型（同样经由内置类型映射或嵌套的 `GX_ENUM`）自动导出。JS 侧可以直接传入对象：
+
+```js
+scroll.scrollTo({ left: 0, top: 200, behavior: "smooth" });
+scroll.setIndex({ index: 3, behavior: "instant" });
+```
+
+C++ 侧的 `scrollTo` 接收到的始终是强类型的 `ScrollOptions` 对象，不需要在 C++ 侧做任何解析。
+
+::: warning 不要遗忘标注
+在声明 `GX_PROPERTY` 或 `GX_METHOD` 时，如果相关类型是一个自定义的枚举或结构体，务必正确标注 `GX_ENUM` 或 `GX_STRUCT`。否则 JavaScript 侧无法使用这些属性或方法，并且没有任何编译错误提示。
+:::
+
+### 存在一种“中间表示”吗？
+
+使用 `Variant` 来桥接 C++ 和 JavaScript 时，框架是否会将 JavaScript 对象转换成一个通用的中间表示，如某种类似 JSON 的序列化结构？
+
+答案是否定的。`Variant` 直接存储 C++ 对象（包括 `JsValue`），这也包括该对象的所有类型信息和操作语义。系统会根据 `Variant` 值的运行时类型标记来正确地进行类型转换和方法调用，而不需要特定的中间表示或者序列化过程。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/async-examples.md
+
+# 异步开发示例
+
+如果你感觉[异步功能开发](async.md)的章节内容过多且不够直观，本文档将提供一些典型的、较为简单的示例，帮助你应对一些常见的异步开发场景。
+
+这些场景并不极端复杂，但侧重于：
+- 一个典型的异步调用模式，重点在于跨线程、跨语言的调用关系；
+- 这些场景可能更琐碎，存在一大批需要对接的系统 API，对代码膨胀较为敏感；
+- 存在典型的 C API 交互需求，而不是标准的 C++ 接口。
+
+你可以在 SDK 示例中找到这些场景的完整实现，并可以直接在 PC 上模拟运行。
+
+## 场景：对接 C 闹钟接口
+
+嵌入式系统中常见的异步模式是“C 回调”：调用方提交一个任务，并传入一个函数指针作为完成通知，操作完成后由 worker 线程调用该回调。
+
+::: important async 只支持线程模型
+Glyphix 框架的异步功能只支持普通的线程上下文，不能在中断中使用。如果你的异步上下文是中断处理程序，那么应该配备一个线程来中转。
+:::
+
+这里以一个闹钟服务为例。它提供的 C 异步接口是这样的：
+
+```c
+// 以 alarm_async_create 为例，其他操作的形式类似
+void alarm_async_create(AlarmService *svc, uint32_t interval_ms, ...,
+                        alarm_create_cb_t done_cb, void *done_ctx);
+
+// 完成回调的函数指针类型，在 worker 线程被调用
+typedef void (*alarm_create_cb_t)(alarm_err_t err, alarm_id_t id, void *ctx);
+```
+
+接下来说明如何将这类典型的 C 回调接口桥接到 JavaScript 的 Promise。
+
+### 多个操作共用 Session 类型
+
+闹钟服务有 `create`、`cancel`、`setEnabled`、`update`、`snooze`、`getInfo`、`list`、`count` 等一批操作。如果为每个操作单独定义一个客户端类（client），会产生大量模板实例化。
+
+对于这类“实际逻辑均在 C 层完成，C++ 侧只做参数传递”的场景，可以定义一个只包含错误码映射的轻量客户端，让所有操作共用一个 `ResultSession` 实例化：
+
+```cpp
+struct AlarmClient {
+    // 将 C 层的 alarm_err_t 转换为可读的错误字符串，
+    // 供 Promise 被 reject 时传给 JavaScript 侧的 catch。
+    static const char *errorMessage(async::Status status) {
+        switch (status.value()) {
+        case ALARM_OK:              return "ok";
+        case ALARM_ERR_NOT_FOUND:   return "not_found";
+        case ALARM_ERR_TABLE_FULL:  return "table_full";
+        case ALARM_ERR_INVALID_ARG: return "invalid_arg";
+        default:                    return "unknown_error";
+        }
+    }
+};
+
+// 所有闹钟操作共用这一个 Session 类型
+using AlarmSession = async::ResultSession<AlarmClient>;
+```
+
+`AlarmClient` 不需要实现 `resolve()` 方法，因为这里不使用默认的线程池执行器，实际的异步操作由闹钟服务的 worker 线程完成，C++ 侧只负责将结果投递回 UI 线程。
+
+### 基本绑定模式
+
+以 `alarm.create()` 为例，展示完整的绑定流程：
+
+```cpp
+static JsValue jsAlarmCreate(JsCtx ctx) {
+    auto *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
+        return JsValue{};
+
+    // 从 JavaScript 传入的 options 对象中读取参数
+    const JsValue &opts = ctx.arg(0);
+    uint32_t intervalMs = static_cast<uint32_t>(opts["interval"].toInt());
+    String label        = opts["label"].toString();
+    alarm_repeat_t mask = parseRepeatMask(opts["repeat"]);
+
+    // 创建会话，并从 options 对象中提取 resolve/reject 回调（支持两种异步风格）
+    auto *session = async::make<AlarmSession>(applet);
+    session->setResolver(opts);
+
+    // C 回调：在 worker 线程中被调用，通过 resolve() 跨线程通知 JavaScript
+    auto done = +[](alarm_err_t err, alarm_id_t id, void *data) {
+        auto *s = static_cast<AlarmSession *>(data);
+        s->resolve(err == ALARM_OK
+            ? async::Result<int>(id) // 成功：resolve 新建的闹钟 ID
+            : async::Status(err));   // 失败：reject，错误消息来自 errorMessage()
+    };
+
+    // 调用 C 服务的异步闹钟创建接口，传入回调和会话指针
+    alarm_async_create(AppletAlarmService::instance(),
+                       intervalMs, mask, label.c_str(), /*...*/,
+                       onAlarmFired, nullptr, done, session);
+    // 返回 Promise 对象给 JavaScript，框架会在 resolve() 被调用时自动决议它
+    return session->promise();
+}
+```
+
+这里有几个固定的套路，可以直接复制使用：
+
+- `async::make<AlarmSession>(applet)` 创建会话并绑定到当前 Applet，以满足生命周期要求。
+- `session->setResolver(opts)` 让同一套代码同时支持[回调风格和 Promise 风格](/api/README.md#快应用异步接口)的异步调用。
+- `+[](... void *data)` 通过一元 `+` 将 lambda 转换为普通函数指针，满足 C 回调的类型要求。
+- 将 `session` 作为 `void *` 透传给 C API，在回调中转型回来再调用 `resolve()`。
+- `resolve()` 是线程安全的，它将结果封装为事件投递回 UI 线程，再驱动 Promise 的决议。
+
+::: tip 利用 lambda 表达式写回调
+在 C 中，回调函数通常是一个静态函数，可以使用 C++ 的 lambda 表达式直接就近嵌套定义回调函数，例如：
+```cpp
+auto done = +[](alarm_err_t err, alarm_id_t id, ...) { ... }
+alarm_async_create(..., done, session);
+```
+这样可以避免定义一大批单独的静态函数，代码更紧凑清晰。
+:::
+
+其余操作（`cancel`、`setEnabled`、`snooze` 等）的结构完全相同，只有参数读取和 C API 调用不同：
+
+```cpp
+static JsValue jsAlarmCancel(JsCtx ctx) {
+    auto *applet = Applet::current(ctx.vm());
+    if (!applet || ctx.argc() < 1)
+        return JsValue{};
+
+    alarm_id_t id = ctx.arg(0).toInt();
+
+    auto *session = async::make<AlarmSession>(applet);
+    session->setResolver(ctx.arg(0));
+
+    auto done = +[](alarm_err_t err, void *data) {
+        // 没有返回值时，用 resolve<void> 即可
+        static_cast<AlarmSession *>(data)->resolve<void>(async::Status(err));
+    };
+    alarm_async_cancel(AppletAlarmService::instance(), id, done, session);
+
+    return session->promise();
+}
+```
+
+::: important 不要遗漏参数检查
+`session->setResolver(ctx.arg(0))` 依赖对 `ctx.argc()` 的检查。如果函数开头没有检查参数数量，那么要在调用 `setResolver()` 时检查参数数量：
+```cpp
+session->setResolver(ctx.argc() ? ctx.arg(0) : JsValue{});
+```
+:::
+
+### 注册自定义 C 结构体的类型转换
+
+`alarm.getInfo()` 返回一个 `alarm_info_t` 结构体，需要将它转换为 JavaScript 对象。为此，先在 `gx` 命名空间中特化 `js_cast<T>`：
+
+```cpp
+template<> JsValue gx::js_cast<alarm_info_t>(const alarm_info_t &info) {
+    JsValue obj = JsVM::current().newObject();
+    obj["id"]          = info.id;
+    obj["label"]       = info.label;
+    obj["interval"]    = double(info.interval_ms);
+    obj["repeatMask"]  = info.repeat_mask;
+    obj["enabled"]     = bool(info.enabled);
+    obj["remaining"]   = double(info.remaining_ms);
+    obj["fireCount"]   = int(info.fire_count);
+    obj["snooze"]      = int(info.snooze_ms);
+    obj["snoozed"]     = bool(info.snoozed);
+    return obj;
+}
+```
+
+特化完成后，在绑定函数中直接将结构体实例传给 `resolve()` 即可：
+
+```cpp
+auto done = +[](alarm_err_t err, const alarm_info_t *info, void *data) {
+    auto *s = static_cast<AlarmSession *>(data);
+    if (err != ALARM_OK || !info) {
+        // 异常路径，返回错误状态触发 reject，错误消息来自 errorMessage()
+        s->resolve<alarm_info_t>(async::Status(err));
+        return;
+    }
+    s->resolve<alarm_info_t>(*info);  // 框架在 UI 线程自动调用 js_cast
+};
+alarm_async_get_info(AppletAlarmService::instance(), id, done, session);
+```
+
+::: tip
+`js_cast()` 由框架在结果回到 UI 线程之后才调用，不在 worker 线程中执行。这意味着在 `js_cast()` 内部可以安全地使用 `JsVM::current()` 等 UI 线程专属 API。
+:::
+
+对于 `alarm.list()` 这种返回数组的情况，可以直接构造 `std::vector<int>` 并 resolve，无需定义额外的类型转换：
+
+```cpp
+auto done = +[](alarm_err_t /*err*/, const alarm_id_t *ids, int count, void *data) {
+    auto *s = static_cast<AlarmSession *>(data);
+    s->resolve<std::vector<int>>(std::vector<int>{ids, ids + count});
+};
+alarm_async_list(AppletAlarmService::instance(), done, session);
+```
+
+### 闹钟触发回调：将事件送回 JavaScript
+
+闹钟触发时，C 层会从 worker 线程调用 `alarm_fire_cb_t` 回调。这个场景和前面的“查询结果”有些不同，需要专门设计事件通知机制。
+
+#### 为什么不用 JavaScript 回调函数
+
+直觉上，让应用在注册闹钟时传入一个回调函数似乎合理：
+
+```javascript
+// ❌ 这在闹钟场景下行不通
+alarm.create({ interval: 60000, onFired: (event) => { /* ... */ } })
+```
+
+问题是，闹钟是跨越应用生命周期的：闹钟创建后，应用可能会在闹钟触发之前的任意时刻被杀死；许多设备还支持重启后触发闹钟。
+
+一个 JavaScript 回调函数（`JsValue`）只在当前应用实例的 JavaScript 运行时中有效。一旦应用被关闭，这个运行时连同所有 `JsValue` 都会被销毁。此时 C++ 侧没办法继续保留这个 JavaScript 回调，更别说在闹钟触发时调用它了。
+
+这不只是闹钟的问题，**任何可能在跨应用存活期触发的事件，都无法通过 JavaScript 回调解决**，例如定时任务、离线消息推送、后台下载完成通知等。
+
+#### 使用约定方法名代替回调引用
+
+最简单的解决方法是：不由应用“注册回调”，而是系统在事件发生时主动**启动**应用，并以约定好的方法名调用应用对象上的处理方法。
+
+这与应用生命周期函数（`onCreate`、`onShow` 等）的思路一致——系统按需启动应用，调用已知的入口方法，而不是持有事先注册的回调。应用侧按约定实现对应方法即可：
+
+```javascript
+// app.js — 应用模型对象导出的处理方法（按约定实现）
+export default {
+  onAlarmFired(event) {
+    // event: { id, label, interval, ... }
+    console.log('alarm fired:', event)
+  }
+}
+```
+
+C++ 侧的实现：先在 worker 线程读取快照，再切回主线程启动应用并调用方法：
+
+```cpp
+static void onAlarmFired(alarm_id_t id, void * /*user_data*/) {
+    // 在 worker 线程读取快照，避免跨线程访问闹钟表
+    alarm_info_t info{};
+    alarm_get_info(id, &info);
+
+    // 切换回主线程再操作 JavaScript
+    App()->postTask([info] {
+        auto *svc = AppletAlarmService::instance();
+        // 用 launch() 启动（或唤醒）目标应用，即使它当前不在运行
+        auto *applet = AppletKit::instance()->launch(svc->alarmAppletName);
+        if (!applet) return;
+
+        auto &vm = JsVM::current();
+        // 调用 app.js 导出对象上的约定方法，事件参数为闹钟信息的 JavaScript 对象
+        JsValue event = js_cast(info);
+        applet->modelObject().callMethod("onAlarmFired", {event}).reportError();
+    });
+}
+```
+
+几个要点：
+
+- **不要**在 worker 线程中直接操作 `JsValue` 或调用任何 JavaScript API，它们只能在 UI 线程中使用。
+- 使用 `App()->postTask()` 将闭包投递到主事件循环中执行，这是切回主线程最简单的方式。
+- 用 `AppletKit::launch()` 而不是查找现有实例；`launch()` 在应用不存在时会重新启动它，在应用已经运行时则返回现有实例。
+- `callMethod()` 返回值上的 `.reportError()` 会将可能发生的 JavaScript 异常打印到日志，而不是静默忽略。
+
+::: tip 约定方法名是最简单的事件处理方式
+可以将这种模式理解为：app.js 的导出对象就是应用暴露给系统的“入口点集合”，系统在需要时调用其中的方法，就像调用 `onCreate`、`onShow` 一样。
+
+这种方法不太通用，但对受控的系统应用来说基本够用，且实现简单，不需要复杂的持久化和回调管理机制。
+:::
+
+### 注册库加载器
+
+所有绑定函数编写完成后，还需要将它们“装配”成一个 JavaScript 可以导入的[库对象](native-module.md#library-loader)，并注册到框架中。
+
+库加载器是一个在应用调用 `app.loadLibrary('vendor.alarm')` 时被触发的 C++ 函数，它负责创建并返回一个包含所有导出方法的 JavaScript 对象：
+
+```cpp
+static JsValue libAlarmLoader(Applet *applet) {
+    // 可以在这里检查应用的包名，拒绝未授权的应用访问。也可以检查字段。
+    if (!applet || applet->objectName() != "com.vendor.alarm")
+        return JsValue{};
+
+    JsValue lib = JsVM::current().newObject();
+
+    // 将绑定函数挂载到库对象上，属性名就是 JavaScript 侧调用的方法名
+    lib["create"]     = jsAlarmCreate;
+    lib["cancel"]     = jsAlarmCancel;
+    lib["list"]       = jsAlarmList;
+    lib["count"]      = jsAlarmCount;
+    // ...
+    return lib;
+}
+```
+
+然后在初始化阶段将加载器注册到 `AppletKit`：
+
+```cpp
+AppletKit kit{&window};
+kit.setLibraryLoader("vendor.alarm", libAlarmLoader);
+```
+
+JavaScript 侧通过 `app.loadLibrary()` 导入，返回值就是加载器返回的库对象：
+
+```javascript
+const alarm = app.loadLibrary('vendor.alarm')
+
+const id = await alarm.create({ interval: 60000, label: '起床' })
+```
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/widget-export.md
+
+# 控件注册与框架集成
+
+在[控件开发指南](./widget.md)中，我们实现了一个 C++ 控件类。但此时它还只是一个普通的 C++ 对象，应用开发者无法在页面代码中直接使用。本文介绍如何将控件注册到框架，使其成为可在应用中使用的组件。本文档的许多概念涉及[对象系统](./object-system.md)，建议先阅读相关内容。
+
+## 运行环境
+
+控件注册依赖一组**运行环境对象**。它们是响应式框架运行所必需的依赖，必须在 `main()` 或平台启动代码中显式创建，并且其生命周期要覆盖整个应用运行期间：
+
+```cpp
+Application app(/* platform */);
+JsVM vm;
+Window window;
+AppletKit kit(&window, "pkgs.db");
+```
+
+这几个对象负责整个应用的运行环境：
+- `Application` 框架应用对象负责所有底层服务并维护事件循环，在初始化的最后调用 `app.exec()` 进入事件循环；
+- `JsVM` 是内嵌的 JavaScript 引擎，承载响应式框架的运行，**必须**在 `AppletKit` 之前创建；
+- `Window` 是顶层窗口，作为渲染输出目标；
+- `AppletKit` 是应用（Applet）管理器，负责应用生命周期与控件注册。
+
+::: warning 不要省略这些对象
+`vm`、`window`、`kit` 等是 RAII 对象，框架通过它们的构造/析构来管理运行环境。即使代码里看不到对 `vm` 的直接调用，它的**存在本身**就是必需的——提前销毁或不创建会导致框架无法工作。
+:::
+
+`Window window` 有时候也可以替换成 `Wigdet window` 等，区别在于 `Window` 默认绘制不透明背景，而 `Widget` 默认透明。
+
+## 注册控件
+
+控件的注册通过 `AppletKit::installWidget<T>()` 完成，在 `AppletKit` 实例化之后、`launch()` 启动第一个应用**之前**调用：
+
+```cpp
+// 注册自定义控件（在 launch 之前）
+kit.installWidget<ProgressRing>(); // 无参数，以类名注册，模板中写作 <progress-ring>
+kit.installWidget<MySpecialChart>("SpecialChart"); // 或用自定义名称注册（见下文）
+
+kit.launch("com.example.app");     // 启动应用
+return app.exec();                 // 进入事件循环
+```
+
+::: tip 内置控件默认已注册
+框架自带的按钮、标签等内置控件由 `installBuiltinWidgets()` 注册。只要 SDK 构建时启用了 CMake 选项 `GX_BUILTIN_BINDINGS`（默认 `ON`），`AppletKit` 构造时就会**自动调用**它，无需手动处理。仅当显式关闭该选项时，才需要自己调用 `kit.installBuiltinWidgets()`。
+:::
+
+注册后，框架会根据控件类的 `GX_OBJECT` 元数据，自动导出其属性、事件、方法，以及它们用到的枚举、结构体类型，使其在应用层可用。
+
+### 在应用页面中使用
+
+注册成功后，应用开发者可以在页面模板中像使用内置控件那样使用它：
+
+```xml
+<!-- 以 progress-ring 组件为例 -->
+<progress-ring
+  class="ring"
+  :value="progress"
+  @completed="onDone">
+</progress-ring>
+```
+
+这里 `:value="progress"` 把控件的 `value` 属性绑定到应用数据 `progress`；`@completed` 监听控件暴露的 `completed` 事件。框架自动完成 JavaScript 值与 C++ 属性的互相转换，开发者无需写任何"桥接代码"。
+
+### 自定义组件名称
+
+默认情况下，控件以**类名**注册。如果类名不适合直接作为组件名，可以在注册时指定一个自定义名称：
+
+```cpp
+// 将 VendorWaveformGraph 以 WaveformGraph 注册，模板中写作 <waveform-graph>
+kit.installWidget<VendorWaveformGraph>("WaveformGraph");
+```
+
+自定义名称要使用**大驼峰（PascalCase）**形式，与 C++ 类名风格一致。
+
+### C++ ↔ UX 命名转换
+
+组件标签名对应注册时的名称（默认为 `GX_OBJECT` 声明的**类名**，或注册时指定的自定义名称）。模板里习惯用短横线（kebab-case）书写，**ux 打包工具在编译期负责名称转换**：
+
+- 标签名：模板中的 kebab-case ↔ 注册名的大驼峰（PascalCase）。如 `<progress-ring>` 对应类 `ProgressRing`。自定义注册名也如此。
+- 属性名：模板中的 kebab-case ↔ C++ 中的 camelCase。如 `ring-color` 对应属性 `ringColor`。
+
+也就是说，运行时框架按 C++ 中声明的原始名称（camelCase / PascalCase）精确匹配，而短横线写法只是模板侧的书写习惯，由 ux 工具转换后对接。
+
+ux 组件中也可以使用与 C++ 相同的标签 PascalCase 和属性 camelCase，参见[组件命名规范](/tutorials/name-spec.md)。
+
+## 属性和事件导出
+
+`GX_PROPERTY` 声明的属性会被自动导出，规则如下：
+
+- 属性名即框架组件中的属性名，二者直接对应
+- 声明了 setter 的属性（`set xxx`）可以被应用赋值
+- 声明了 getter 的属性（`get xxx`）可以被应用读取
+- 声明了 signal（`signal xxxChanged`）时，属性变化的信号会被传递给绑定
+
+例如以下完整的属性声明：
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+    GX_PROPERTY(Color ringColor, get ringColor, set setRingColor)
+    GX_PROPERTY(bool showLabel, get showLabel, set setShowLabel)
+    // ...
+};
+```
+
+在应用层对应的用法：
+
+```xml
+<progress-ring
+  :value="jobProgress"
+  ring-color="#409EFF"
+  :show-label="true">
+</progress-ring>
+```
+
+模板里属性以短横线（kebab-case）书写，对应 C++ 中的 camelCase 属性名：`ring-color` → `ringColor`，`show-label` → `showLabel`（转换由 ux 打包工具完成，见上文）。`:value`、`:show-label` 是动态绑定（值为表达式），而 `ring-color="#409EFF"` 这样的字面量则是静态赋值。
+
+### 事件导出
+
+组件事件是通过**带变化信号的属性**导出的，而不是直接导出 `Signal<>` 成员。导出一个事件需要两步：
+
+1. 声明一个 `Signal<...>` 成员（C++ 内部使用）；
+2. 在某个 `GX_PROPERTY` 的 `signal` 字段中引用它。
+
+关键规则是：应用侧监听的事件名是**属性名**，而**不是**信号成员的名字。
+
+### 带值的属性变化事件
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    int value() const;
+    void setValue(int v);
+
+    Signal<int> valueChanged;   // 内部信号，这个名字对应用不可见
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+};
+```
+
+应用侧用 `@属性名` 监听变化，因此这里写 `@value`（属性名），而**不是** `@value-changed`：尽管信号成员叫 `valueChanged`，应用看到的事件名始终是属性名 `value`。
+
+```xml
+<progress-ring :value="progress" @value="onProgressChanged"></progress-ring>
+```
+
+这一点和框架内置控件完全一致。例如 `Slider` 的值变化信号成员叫 `changed`，但应用侧监听的仍是属性名 `value`（`@value` 或双向绑定 `::value`）。
+
+### 无值的纯事件
+
+对于不携带数值、只表示“某件事发生了”的事件（如“完成”），用 `invalid_t` 作为属性类型声明一个只有信号、没有读写值的属性：
+
+```cpp
+Signal<>  completed;   // 进度完成时发射
+GX_PROPERTY(invalid_t completed, signal completed)
+```
+
+应用侧可以这样监听（没有事件值）：
+
+```xml
+<progress-ring @completed="onDone"></progress-ring>
+```
+
+你无法将一个 `GX_PROPERTY` 声明为 `void` 类型，即便它根本没有 `get`/`set`，因此要用 `invalid_t` 作为占位类型。如果你希望事件携带值，必须声明为一个具体类型，并提供 `get` 方法——`Signal<T>` 的参数类型不会自动成为事件值，而是始终来自属性的 getter。
+
+::: warning `Signal<>` 不会自动成为事件
+只声明一个 `Signal<>` 成员、却不在任何 `GX_PROPERTY` 中用 `signal` 字段引用它，这个信号是**无法**在应用侧用 `@some-event` 监听的。框架只会把“属性的变化信号”，也就是 `signal` 字段暴露为事件，事件名始终来自属性名。
+:::
+
+## 方法导出
+
+用 `GX_METHOD` 声明的成员函数会作为组件方法导出，供应用在 JavaScript 中调用：
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    GX_METHOD void reset();               // 无参方法
+    GX_METHOD void animateTo(int target); // 带参方法
+};
+```
+
+与属性、事件不同，方法不通过模板标签使用，而是先用 [`$element()`](../framework/component/component-apis.md#element) 取得原生组件对象，再在其上调用。对应模板需要给组件设置 `id`：
+
+```xml
+<progress-ring id="ring" :value="progress"/>
+```
+
+```js
+onReady() {
+  const ring = this.$element('ring'); // 'ring' 为模板中组件的 id
+  ring.reset();
+  ring.animateTo(80);
+}
+```
+
+方法的参数与返回值由框架经 `Variant` 自动编组，无需手写转换代码（类型桥接的细节见[对象系统](./object-system.md#运行时类型系统)）。注意 `$element()` 须在 [`onReady()`](../framework/component/life-cycle.md#onready) 生命周期及之后调用，详见[原生组件](../framework/component/native-component.md)。
+
+## 枚举与结构体类型
+
+当属性或方法参数的类型是自定义的 C++ 枚举或结构体时，用 `GX_ENUM` / `GX_STRUCT` 标注即可一并导出，[注册控件](#注册控件)时框架会自动安装相应的类型转换，无需手写绑定代码。枚举在 JavaScript 侧表现为字符串常量，结构体表现为对象字面量：
+
+```cpp
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    // 注意为值定义别名，否则 JavaScript 侧会使用
+    // 'Solid' / 'Dashed' 名称，而不是预期的 'solid' / 'dashed'
+    enum GX_ENUM LineStyle {
+        Solid GX_ALIAS("solid") = 0,
+        Dashed GX_ALIAS("dashed"),
+    };
+    // 结构体注意写默认值，以免在 JavaScript 侧创建时出现未定义字段
+    struct GX_STRUCT Range { int min = 0; int max = 100; };
+
+    GX_METHOD void setRange(const Range &range);
+
+    GX_PROPERTY(LineStyle lineStyle, get lineStyle, set setLineStyle)
+};
+```
+
+```xml
+<progress-ring line-style="dashed"/>
+```
+
+```js
+this.$element('ring').setRange({ min: 0, max: 100 });
+```
+
+枚举别名、结构体字段映射、嵌套类型等完整语义见[对象系统 · 复杂类型反射](./object-system.md#复杂类型反射)，此处不再展开。
+
+::: warning 不要遗忘标注
+属性或方法用到自定义枚举/结构体时，务必标注 `GX_ENUM` / `GX_STRUCT`，否则 JavaScript 侧无法使用，且没有任何编译错误提示。
+:::
+
+## 容纳子控件（容器型控件）
+
+如果控件需要容纳应用声明的子内容，只需把它实现为一个**容器型控件**：在 C++ 侧负责子控件的布局，框架会自动把模板里嵌套声明的子组件创建为子控件并挂载到它下面。Glyphix 没有 HTML 那样的具名插槽（slot），模板中嵌套的标签会直接成为该控件的子控件。
+
+容器的布局有两种实现方式（详见[控件开发指南](./widget.md)的「布局与尺寸」一节）：
+
+- 使用框架现成的布局类，例如在构造函数中 `setLayout(new FlexLayout())`；
+- 或覆写 `layoutEvent()`，在其中遍历 `children()` 手动设置每个子控件的几何。
+
+在应用层，像嵌套子标签一样使用即可（这里 `card-panel` 是开发者实现并注册的容器控件，`text` 为内置控件）：
+
+```xml
+<card-panel>
+  <text>标题</text>
+  <progress-ring :value="progress"/>
+</card-panel>
+```
+
+## 一个完整的例子
+
+以下定义一个简单的数字显示控件，并将其注册为框架组件：
+
+```cpp
+// number_display.h
+#pragma once
+#include "gx_widget.h"
+#include "gx_color.h"
+
+class NumberDisplay : public Widget {
+    GX_OBJECT
+public:
+    explicit NumberDisplay(Widget *parent = nullptr);
+
+    int value() const { return m_value; }
+    Color textColor() const { return m_color; }
+
+    void setValue(int v);
+    void setTextColor(const Color &c);
+
+    bool event(Event *event) override;   // 唯一需要覆写的虚函数
+
+    Signal<int> valueChanged;            // 内部信号；应用侧通过属性名 value 监听
+
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+    GX_PROPERTY(Color textColor, get textColor, set setTextColor)
+
+protected:
+    // paintEvent / sizeHint 都不是虚函数，不能加 override
+    void paintEvent(PaintEvent *event);
+    Size sizeHint() const;
+
+    // EventDispatch 需要访问 protected 处理函数
+    friend struct EventTraits<NumberDisplay>;
+
+private:
+    int m_value = 0;
+    Color m_color{0, 0, 0};
+};
+```
+
+```cpp
+// number_display.cpp
+#include "number_display.h"
+#include "gx_format.h"
+#include "gx_painter.h"
+#include "gx_widgetevent.h"   // EventDispatch
+
+NumberDisplay::NumberDisplay(Widget *parent)
+    : Widget(parent) {}
+
+bool NumberDisplay::event(Event *event) {
+    // 把事件分发给 paintEvent；声明 PaintEvent 可在编译期检查遗漏
+    return EventDispatch<Widget, PaintEvent>{}(this, event);
+}
+
+void NumberDisplay::setValue(int v) {
+    if (m_value == v) return;
+    m_value = v;
+    update();
+    valueChanged(v);
+}
+
+void NumberDisplay::setTextColor(const Color &c) {
+    if (m_color == c) return;
+    m_color = c;
+    update();
+}
+
+Size NumberDisplay::sizeHint() const {
+    return Size(60, 30);
+}
+
+void NumberDisplay::paintEvent(PaintEvent *) {
+    Painter p(this);
+    p.setBrush(m_color);   // 文本颜色由画刷（Brush）决定，而非画笔
+    p.setFont(Font(20));
+    p.drawText(rect(), format("{}", m_value), AlignCenter);
+}
+```
+
+注册：
+
+```cpp
+kit.installWidget<NumberDisplay>();
+```
+
+应用层使用：
+
+```xml
+<number-display
+  :value="count"
+  text-color="#333333"
+  @value="onCountChanged">
+</number-display>
+```
+
+至此，从 C++ 实现到应用使用，整个流程完整：`<number-display>` 标签经 ux 工具转换为注册名 `NumberDisplay` 而被识别。
+
+每当应用数据 `count` 变化时，`:value` 绑定会调用 `NumberDisplay::setValue()`；当控件内部发射 `valueChanged` 信号时，框架触发名为 `value` 的事件（事件名取属性名），从而调用应用的 `onCountChanged`。若希望 `count` 与控件双向同步，可改用 `::value="count"`。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/widget.md
+
+---
+headerDepth: 2
+---
+# 控件开发指南
+
+在 Glyphix 中，所有可见的 UI 元素都是 `Widget`（控件）。框架内置了按钮、标签、图片、滚动区域等常用控件，但设备厂商往往需要根据自己的产品特色开发定制化的控件。例如，智能手表可能因为较小的圆形屏幕而定制特殊的列表动效，仪表设备则需要定制专门的图表控件。这篇文档介绍如何用 C++ 实现一个新控件。
+
+## 控件基础
+
+`Widget` 是一个矩形区域，它有位置、大小、可见性、透明度等基本属性，可以接收事件，并负责绘制自身的内容。控件以树形结构组织：一个父控件包含若干子控件，子控件的坐标相对于父控件。
+
+每个控件都有一个**逻辑更新周期**：当控件的状态发生变化（例如数据更新了），调用 `update()` 标记为"需要重绘"，框架会在下一个渲染帧统一重绘所有已标记的控件，而不是立即重绘——这避免了同一帧内多次重复绘制。
+
+### 控件与组件系统
+
+UI 控件通常实现为一个 C++ 类，继承自 `Widget`，并符合标准的 C++ 面向对象设计。Glyphix 的响应式框架和组件系统则支持将这些 C++ 控件直接暴露为原生组件，并以模板化、声明式的方式来使用。
+
+这种设计使得 C++ 侧的控件开发和前端组件使用可以相对独立，并保持双方习惯的开发方式。例如，在 C++ 中，你可以使用类似 LVGL 或者 Qt Widgets 的方式来构建界面，而完全不需要接受前端框架流行的声明式风格。
+
+### 与其他框架的对比
+
+Glyphix 控件系统在设计上类似于 Qt Widgets 或 LVGL 等传统 C/C++ UI 框架。所以你会发现开发一个新控件的方式和知识体系与这些框架非常相似：
+- 通过继承 `Widget` 来创建新控件类；
+- 存在布局系统、事件系统、绘制系统等核心机制；
+- 通过属性系统和信号机制实现数据绑定和事件通知；
+- 具有坐标系、尺寸等几何概念，并且支持嵌套的控件树结构。
+
+::: tip 不建议使用 C++ 控件开发 UI
+Glyphix 的设计初衷并非直接在 C++ 侧开发 UI，因此我们不会提供相关的文档和示例。
+:::
+
+## 创建自定义控件
+
+本节以一个环形进度条控件（`ProgressRing`）为例，逐步说明开发一个自定义控件所需的各个要素。
+
+::: tip 控件综合示例
+SDK 附带的 [slider-demo](./widget-slider-demo.md) 示例是本文档所有知识点的完整实践，包括继承现有控件、绘制、事件处理、属性声明、`ValueAnimation` 动画，以及 `StyleEngine` 定制。建议在阅读完本文档后参阅。
+:::
+
+### 定义控件类
+
+新建一个控件，继承 `Widget`，在类定义最开始加上 `GX_OBJECT` 宏，并**覆写 `event()`** 虚函数作为事件处理的入口：
+
+```cpp
+// progressring.h
+#include "gx_widget.h"
+
+class ProgressRing : public Widget {
+    GX_OBJECT
+public:
+    explicit ProgressRing(Widget *parent = nullptr)
+        : Widget(parent), m_value(0) {}
+
+    int value() const { return m_value; }
+    void setValue(int v);
+    bool event(Event *event) override;
+
+    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+    Signal<int> valueChanged;
+
+protected:
+    void paintEvent(PaintEvent *event);
+
+    // EventDispatch 需要访问 protected 方法，声明友元
+    friend struct EventTraits<ProgressRing>;
+
+private:
+    int m_value;  // [0, 100]
+};
+```
+
+`GX_OBJECT` 是必不可少的，它触发元对象编译器为此类生成元数据，使控件可以被框架的属性系统、动画系统和组件系统正确感知（详见[对象系统](./object-system.md)）。
+
+### 绘制控件
+
+在 `.cpp` 文件中包含 `gx_widgetevent.h`，实现 `event()` 和 `paintEvent()`：
+
+```cpp
+// progressring.cpp
+#include "progressring.h"
+#include "gx_widgetevent.h"
+
+bool ProgressRing::event(Event *event) {
+    return EventDispatch<Widget>{}(this, event);
+}
+
+void ProgressRing::paintEvent(PaintEvent *event) {
+    Widget::paintEvent(event);
+    Painter p(this);
+    // ... 详见绘制章节
+}
+```
+
+自定义绘制通过实现 `paintEvent()` 完成；构造 `Painter` 时传入 `this` 指针，即可获得与当前控件关联的绘图上下文，然后调用各类绘制方法进行绘制。有关 `Painter` API 的完整说明，参见[绘制](./painting.md)章节。
+
+### 处理事件
+
+Glyphix 的事件系统**并不依赖虚函数继承**来分发事件，`paintEvent()`、`gestureEvent()` 等方法都不是 `virtual` 的，**不要**在声明时加 `override`（会编译报错）。框架通过 `EventDispatch` 在**编译期**按事件类型将调用路由到正确的处理函数。
+
+唯一需要（也必须）覆写的虚函数是 **`event()`**，在其中委托给 `EventDispatch`：
+
+```cpp
+bool ProgressRing::event(Event *event) {
+    return EventDispatch<Widget>{}(this, event);
+}
+```
+
+`EventDispatch` 的第一个模板参数通常是**直接基类**（也就是 `ProgressRing` 继承的那个类，此处为 `Widget`）。它会在编译期检查当前类是否直接声明了对应的处理函数，有则调用，否则自动回退到基类实现。处理函数的返回值为 `bool` 时表示是否消费了该事件；返回 `void` 时视为已消费。
+
+::: tip 基类选择技巧
+`EventDispatch` 的基类参数选择有一些优化技巧，通常可以选择直接基类，但也可以用更高层的祖先类，这会造成细微的代码大小和性能差异。但一般不需要过于纠结，也不用担心误用出错——只要编译通过了，事件分发就会正确工作。
+:::
+
+::: important
+下文中提到“覆写 `xxxEvent()`”的说法时，请注意仅仅是在派生控件类中**声明**了一个与基类事件处理函数签名相同但**非虚**的成员函数。这**不是**虚函数，不能加 `override`，也不依赖虚函数机制来分发事件。
+
+IDE 可能提示将这些成员函数改为虚函数，不要理会这个提示。
+:::
+
+如果要处理手势输入，声明 `gestureEvent()` 并在类中实现：
+
+```cpp
+// 在头文件 protected 区域增加声明：
+bool gestureEvent(GestureEvent *event);
+
+// 在 .cpp 中实现：
+bool ProgressRing::gestureEvent(GestureEvent *event) {
+    if (event->type() == Event::Press) {
+        // ...
+        return true;   // 返回 true 表示事件已消费，不再向父控件传递
+    }
+    return false;
+}
+```
+
+可处理的事件类型：
+
+| 方法签名 | 触发时机 |
+|---|---|
+| `bool gestureEvent(GestureEvent *)` | 手势事件，包括 Press、Pan、Swipe 等 |
+| `bool wheelEvent(WheelEvent *)` | 滚轮或旋钮输入（如表冠） |
+| `bool keyEvent(KeyEvent *)` | 实体按键 |
+| `void resizeEvent(ResizeEvent *)` | 控件尺寸变化 |
+| `void moveEvent(MoveEvent *)` | 控件位置变化 |
+| `bool focusEvent(FocusEvent *)` | 焦点变化 |
+| `void paintEvent(PaintEvent *)` | 重绘请求 |
+| `bool layoutEvent(LayoutEvent *)` | 布局请求 |
+| `void tickEvent(TickEvent *)` | 逐帧 tick（需主动调用 `requestNextTick()` 启用） |
+
+如果某些事件处理函数对当前控件是**必须实现**的，可以在 `EventDispatch` 的模板参数中声明，遗漏或签名不匹配时编译报错：
+
+```cpp
+bool MyButton::event(Event *event) {
+    // 若未正确声明 paintEvent 或 gestureEvent，编译失败
+    return EventDispatch<Widget, PaintEvent, GestureEvent>{}(this, event);
+}
+```
+
+::: tip 声明必要事件处理函数
+尽管可以使用 `EventDispatch<Widget>` 来自动分发所有事件，但是**强烈建议**显式声明当前控件需要处理的事件类型，这样可以在编译期尽可能地检查遗漏或笔误，并减少人工审核的负担。
+:::
+
+### 属性与信号
+
+使用 `GX_PROPERTY` 宏向框架暴露属性，使其可被应用层绑定、也可作为属性动画的目标：
+
+```cpp
+// 声明 value 属性，getter 为 value()，setter 为 setValue()
+// signal 字段关联变化信号，供响应式框架订阅
+GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
+```
+
+声明后，`value` 属性可以：
+- 被应用层模板直接绑定（如 `<progress-ring :value="progress"/>`）
+- 被属性动画系统平滑过渡（当属性类型支持插值时）
+
+在 setter 中调用 `update()` 触发重绘，在合适时机发射信号通知外部：
+
+```cpp
+void ProgressRing::setValue(int v) {
+    if (m_value == v) return;
+    m_value = v;
+    update();          // 标记下一帧重绘
+    valueChanged(v);   // 发射信号
+}
+```
+
+`Signal<T>` 是普通的模板成员变量，直接像函数调用一样发射。无参信号使用 `Signal<>`，调用时不传参数。关于属性与信号的完整语义，参见[对象系统](./object-system.md)中的相关章节。
+
+### 布局
+
+控件实例化后，通过 `setGeometry()` 手动指定位置和大小；如果父控件使用自动布局，则覆写 `sizeHint()` 来声明控件的期望大小：
+
+```cpp
+Size ProgressRing::sizeHint() const {
+    return Size(80, 80);
+}
+```
+
+对于自身需要管理子控件布局的容器控件，在 `layoutEvent()` 中完成子控件的几何计算，或通过 `setLayout()` 挂载框架提供的布局类（如 `FlexLayout`）。详见[布局与尺寸](#布局与尺寸)章节。
+
+## 绘制
+
+### Painter 初始化
+
+在控件的 `paintEvent()` 成员函数中构造 `Painter` 即可开始绘制：
+
+```cpp
+void ProgressRing::paintEvent(PaintEvent *event) {
+    Painter p(this);
+    // 后续所有绘制通过 p 完成
+}
+```
+
+绘制坐标系以**控件左上角为原点**，向右为 $+x$，向下为 $+y$，单位为像素。`rect()` 返回当前控件的本地矩形 `(0, 0, width(), height())`，是绘制时最常用的参考区域。
+
+如果控件通过应用层样式或 `StyleModifier` 设置了背景色等框架管理的样式属性，可以在绘制自定义内容之前先调用基类来处理这些背景：
+
+```cpp
+void ProgressRing::paintEvent(PaintEvent *event) {
+    Widget::paintEvent(event);  // 先绘制框架管理的背景（如有）
+    Painter p(this);
+    // ...
+}
+```
+
+不调用基类时，框架管理的背景样式将被忽略，控件完全由自己的 `paintEvent` 负责全部视觉呈现。
+
+### 绘制状态
+
+`Painter` 维护一组当前绘制状态，每次绘制调用都使用当前状态，直到下次修改。
+
+#### 画刷（Brush）
+
+画刷决定**填充类**方法（`fillRect`、`fillRoundedRect`、`fillPath` 等），以及**文本**使用的颜色：
+
+```cpp
+p.setBrush(Color(200, 200, 200));   // RGB 灰色
+p.setBrush(Color{"#35a7ff"});       // 十六进制字符串
+p.setBrush(Color::White);           // 预定义常量
+p.setBrush(Color(0xff4486ff));      // ARGB 十六进制整数（0xff 为完全不透明）
+```
+
+#### 画笔（Pen）
+
+画笔决定**描边类**方法（`drawRect`、`drawArc`、`drawLine` 等）使用的颜色和线宽：
+
+```cpp
+Pen pen(Color(64, 156, 255));
+pen.setSize(6);    // 线宽 6px
+p.setPen(pen);
+```
+
+#### 其他状态
+
+```cpp
+p.setFont(Font(18));     // 18px 字号，影响 drawText()
+p.setOpacity(127);      // 透明度 [0, 255]，影响此后所有绘制
+```
+
+所有状态仅作用于当前 `Painter` 实例，不同控件各自构造的 `Painter` 完全独立，互不干扰。
+
+### 基础形状
+
+#### 矩形
+
+```cpp
+p.setBrush(Color::White);
+p.fillRect(rect());                    // 填充整个控件区域
+p.fillRect(Rect(10, 10, 60, 20));      // 填充指定矩形
+
+p.fillRoundedRect(rect(), 8.0f);       // 圆角填充，圆角半径 8px
+p.drawRoundedRect(rect(), 8.0f);       // 圆角描边（不填充，使用 Pen 颜色）
+```
+
+圆角半径等于宽高较小值的一半时，矩形变成胶囊形状，这在按钮和进度条中非常常见：
+
+```cpp
+float radius = min(box.width(), box.height()) * 0.5f;
+p.fillRoundedRect(box, radius);
+```
+
+#### 直线
+
+```cpp
+p.drawLine(Point(0, cy), Point(width(), cy));   // 水平分隔线
+```
+
+#### 圆弧
+
+`drawArc` 以圆心坐标和半径指定弧形，`startAngle`/`endAngle` 单位为度数，$0°$ 对应 $3$ 点钟方向，顺时针增大：
+
+```cpp
+float cx = width() / 2.0f;
+float cy = height() / 2.0f;
+float radius = min(cx, cy) - 4.0f;
+
+// 绘制完整圆弧（背景圆环），从 -90°（12 点钟）绕一圈
+Pen bgPen(Color(200, 200, 200));
+bgPen.setWidth(6);
+p.setPen(bgPen);
+p.drawArc({cx, cy}, radius, -90.0f, -90.0f + 360.0f);
+
+// 绘制进度弧（从 12 点钟顺时针到 progress 对应位置）
+if (m_value > 0) {
+    Pen fgPen(Color(64, 156, 255));
+    fgPen.setWidth(6);
+    p.setPen(fgPen);
+    p.drawArc({cx, cy}, radius, -90.0f, -90.0f + 360.0f * m_value / 100.0f);
+}
+```
+
+弧的视觉粗细由当前 `Pen` 的线宽决定。
+
+### 矢量路径 `VectorPath`
+
+对于矩形和圆弧无法描述的复杂形状，使用 `VectorPath` 构建任意轮廓，再通过 `fillPath()` 或 `drawPath()` 渲染。
+
+```cpp
+#include "gx_vectorpath.h"
+```
+
+`VectorPath` 的工作方式类似“画笔轨迹”：用 `moveTo` 落笔、`lineTo` 直线段、`arcTo` 圆弧段依次描述轮廓，最后由 `Painter` 统一渲染。
+
+#### 直线段路径
+
+```cpp
+VectorPath path;
+path.moveTo(x0, y0);   // 落笔（不绘制）
+path.lineTo(x1, y1);   // 直线到 (x1, y1)
+path.lineTo(x2, y2);
+path.lineTo(x0, y0);   // 回到起点，形成封闭三角形
+
+p.fillPath(path, Color(64, 156, 255)); // 填充封闭区域
+```
+
+`fillPath()` 自动将路径作为封闭区域处理，即使最后没有显式回到起点。`drawPath()` 则用当前 `Pen` 绘制路径轮廓而不填充。
+
+#### 圆弧段路径
+
+`arcTo` 参数为圆心、$x/y$ 半径（椭圆时两者不等）、起始角度和扫过角度（角度制，顺时针为正）：
+
+```cpp
+// 绘制水平胶囊形：左端半圆 + 右端半圆，arcTo 自动用连线衔接两段
+float r  = rect.height() * 0.5f;
+float x1 = rect.left() + r;
+float x2 = rect.right() - r;
+float y  = rect.top() + r;
+
+VectorPath path;
+path.arcTo(PointF(x1, y), r, r, 90.0f, 270.0f);    // 左端半圆（从 9 点到 3 点逆时针）
+path.arcTo(PointF(x2, y), r, r, -90.0f, 90.0f);    // 右端半圆（从 3 点到 9 点逆时针）
+p.fillPath(path);
+```
+
+`arcTo` 会在路径当前终点和新圆弧起点之间自动插入一条直线，因此两段圆弧首尾自然衔接，无需额外调用 `lineTo`。
+
+#### 曲线
+
+使用 `conicTo` 或 `cubicTo` 可以构建二次或三次贝塞尔曲线段，配合 `moveTo` 和 `lineTo` 可以描述复杂的轮廓：
+
+```cpp
+VectorPath path;
+path.moveTo(x0, y0);
+// 二次贝塞尔曲线，(cx, cy) 为控制点
+path.conicTo(cx, cy, x1, y1);
+// 三次贝塞尔曲线，(cx1, cy1) 和 (cx2, cy2) 为控制点
+path.cubicTo(cx1, cy1, cx2, cy2, x2, y2);
+// 使用指定画刷填充路径
+p.fillPath(path, brush);
+```
+
+#### 组合路径示例
+
+将多段指令组合，可以构建任意复杂的形状。以 `WaveSlider` 中波浪填充区域为例，路径包含顶部波形折线和底部圆角边：
+
+```cpp
+VectorPath path;
+path.moveTo(leftX, waveY(leftX));
+for (int i = 1; i <= sampleCount; ++i) {
+    float x = leftX + (rightX - leftX) * float(i) / sampleCount;
+    path.lineTo(x, waveY(x));           // 顶部波浪轮廓
+}
+path.lineTo(rightX, bottomEdge(rightX)); // 右侧下降
+for (int i = sampleCount - 1; i >= 0; --i) {
+    float x = leftX + (rightX - leftX) * float(i) / sampleCount;
+    path.lineTo(x, bottomEdge(x));       // 底边（沿圆角矩形底部返回）
+}
+path.lineTo(leftX, waveY(leftX));        // 回到起点
+p.fillPath(path);
+```
+
+### 文字
+
+`drawText()` 在矩形范围内排列并绘制文本，文字颜色由当前 `Brush` 决定，字体由 `setFont()` 设置：
+
+```cpp
+p.setFont(Font(18));
+p.setBrush(Color(50, 50, 50));
+p.drawText(rect(), format("{}%", m_value), AlignCenter);
+```
+
+::: tip 格式化字符串
+`format()` 是框架提供的格式化函数，语法类似 [`std::format`](https://en.cppreference.com/w/cpp/utility/format/format)，可跨平台使用。
+:::
+
+对齐标志可自由组合：
+
+| 标志 | 含义 |
+|---|---|
+| `AlignLeft` | 水平左对齐 |
+| `AlignHCenter` | 水平居中 |
+| `AlignRight` | 水平右对齐 |
+| `AlignTop` | 垂直顶对齐 |
+| `AlignVCenter` | 垂直居中 |
+| `AlignBottom` | 垂直底对齐 |
+| `AlignCenter` | 水平 + 垂直居中（等同于 `AlignHCenter \| AlignVCenter`）|
+
+`font()` 方法返回控件当前从样式系统继承的字体，在绘制中使用它可以使控件自动跟随应用字号变化：
+
+```cpp
+p.setFont(font());   // 使用控件继承的样式字体，而非固定字号
+```
+
+`drawText()` 还支持更复杂的文本布局，例如多行文本、自动换行等，详见 API 文档。
+
+### 图片
+
+`drawImage()` 将图片绘制到指定矩形内：
+
+```cpp
+Image img{"file://path/to/icon.png"};
+p.drawImage(widget->rect(), img); // 将图片绘制到指定区域，不会自动缩放
+```
+
+实际使用中图片通常来自资源系统，加载方式取决于平台和打包配置。
+
+### 完整示例
+
+以下是 `ProgressRing` 的完整 `paintEvent`，综合运用了上述绘制能力：
+
+```cpp
+void ProgressRing::paintEvent(PaintEvent *event) {
+    // 若控件有背景样式由框架管理，先调用基类
+    // Widget::paintEvent(event);
+
+    Painter p(this);
+
+    float cx = width() / 2.0f;
+    float cy = height() / 2.0f;
+    float radius = min(cx, cy) - 4.0f;
+    float startAngle = -90.0f;   // 从 12 点钟方向开始
+
+    // 绘制灰色背景圆环
+    Pen bgPen(Color(200, 200, 200));
+    bgPen.setWidth(6);
+    p.setPen(bgPen);
+    p.drawArc({cx, cy}, radius, startAngle, startAngle + 360.0f);
+
+    // 绘制彩色进度弧
+    if (m_value > 0) {
+        Pen fgPen(Color(64, 156, 255));
+        fgPen.setWidth(6);
+        p.setPen(fgPen);
+        p.drawArc({cx, cy}, radius,
+          startAngle, startAngle + 360.0f * m_value / 100.0f);
+    }
+
+    // 在圆环中心绘制百分比数字
+    p.setFont(Font(18));
+    p.setBrush(Color(50, 50, 50));
+    p.drawText(rect(), format("{}%", m_value), AlignCenter);
+}
+```
+
+## 布局与尺寸
+
+覆写 `sizeHint()` 告知布局系统控件的"期望大小"。当父控件使用自动布局时，布局系统会参考这个值来分配空间：
+
+```cpp
+Size ProgressRing::sizeHint() const {
+    return Size(80, 80);  // 建议显示为 80×80px
+}
+```
+
+如果控件是高度随宽度变化的（例如等比缩放的图片），覆写 `heightForWidth()`：
+
+```cpp
+int AspectWidget::heightForWidth(int width) const {
+    return width; // 正方形比例
+}
+```
+
+对于需要手动管理子控件布局的情况，覆写 `layoutEvent()` 并在其中设置子控件的几何：
+
+```cpp
+bool ContainerWidget::layoutEvent(LayoutEvent *event) {
+    // 将子控件从上往下排列
+    int y = 0;
+    for (auto *child : children()) {
+        auto *w = dyn_cast<Widget *>(child);
+        if (w && w->isVisible()) {
+            w->setGeometry(0, y, width(), w->sizeHint().height());
+            y += w->height();
+        }
+    }
+    return true;
+}
+```
+
+也可以使用框架提供的现成布局类（如 `FlexLayout`、`StackLayout`），通过 `setLayout(new FlexLayout())` 挂载。
+
+::: tip 使用现成的布局类
+除非你要制作特殊布局的容器控件，否则建议使用框架提供的布局类来管理子控件的布局，这种情况下不需要覆写 `layoutEvent()`。
+
+实现一个完整的布局算法是比较复杂的，需要处理 `sizeHint()` 等多个方面的交互，并且还要考虑性能优化。
+:::
+
+## 动画
+
+框架提供了三类动画机制：**样式动画**、**属性动画**和 **`ValueAnimation`**。样式动画和属性动画主要用于**应用层**（即使用控件的一侧），而在实现自定义控件时，最常直接用到的是 `ValueAnimation`。
+
+### ValueAnimation
+
+`ValueAnimation<T>` 是一个对任意类型 `T` 进行插值的动画类。每一帧它会根据当前进度计算出插值结果，并通过 `value` 信号发射出来。你只需将信号连接到自己的更新逻辑即可：
+
+```cpp
+#include "gx_valueanimation.h"
+
+// 在控件成员中声明动画对象，一般使用指针以便在需要时动态创建和销毁
+ValueAnimation<int> *m_animation = nullptr;
+```
+
+```cpp
+// 在某处初始化并启动
+m_animation = new ValueAnimation<int>;
+m_animation->setValueLimits(0, 100);  // 从 0 插值到 100
+m_animation->setDuration(800);        // 800 毫秒
+m_animation->value.connect(this, &MyWidget::onAnimationValue);
+m_animation->start();
+
+// 帧回调：接收每帧计算出的插值
+void MyWidget::onAnimationValue(int v) {
+    m_currentValue = v;
+    update();  // 触发重绘
+}
+```
+
+动画结束时发射 `finished` 信号。如果不需要手动管理生命周期，可以用 `DeleteOnStop` 策略让动画在播放完毕后自动销毁：
+
+```cpp
+// 动画对象不需要外部访问，直接 new 后自动销毁
+auto *anim = new ValueAnimation<int>;
+anim->setValueLimits(0, 100);
+anim->setDuration(500);
+anim->value.connect(this, &MyWidget::onValue);
+anim->start(AbstractAnimation::DeleteOnStop);  // 播完自动 delete
+```
+
+框架内置了以下类型的插值支持：`int`、`float`（以及其他数值类型）、`Color`、`Point`、`Pen`、`Brush`、`Length`、`Transform` 等。
+
+其他常用配置：
+
+```cpp
+// 无限循环播放
+anim->setRepeat(AbstractAnimation::Infinity);
+
+// 来回交替播放（正放→倒放→正放……）
+anim->setDirection(AbstractAnimation::Alternate);
+
+// 设置缓动曲线
+#include "gx_easecurve.h"
+anim->setEaseCurve(easing::make_curve<easing::Ease>());
+```
+
+### 样式动画与属性动画
+
+**样式动画**（`StyleAnimation`）通过类似 CSS transition 的方式定义过渡效果，当控件的样式状态切换时由框架自动播放，主要在应用层组件的样式配置中使用。
+
+**属性动画**（`PropertyAnimation`）通过属性名字符串驱动 `GX_PROPERTY` 声明的属性，常用于应用层对控件属性做动画：
+
+```cpp
+#include "gx_propertyanimation.h"
+
+auto *anim = new PropertyAnimation(widget, "value");
+anim->setStartValue(Variant{0});
+anim->setStopValue(Variant{100});
+anim->setDuration(1000);
+anim->start(AbstractAnimation::DeleteOnStop);
+```
+
+在实现控件本身时，通常不需要使用属性动画，因为 `ValueAnimation` 更直接，也没有按名称查找属性的开销。
+
+## 文本显示控件
+
+实现带有文本内容的控件时，除了基本的绘制逻辑外，还需要处理文本测量、布局缓存、样式联动等问题。`Label` 是框架最典型的文本控件，其实现可以作为类似控件的参考模板。
+
+### 使用 `updateLayout()`
+
+`update()` 仅标记控件需要**重绘**，不影响布局系统。而文本内容变化时，控件的期望大小（`sizeHint()` 返回值）通常也会随之改变，此时必须同时调用 `updateLayout()` 来触发父控件的布局重新计算：
+
+```cpp
+void MyTextWidget::setText(const String &text) {
+    if (m_text == text)
+        return;
+    m_text = text;
+    update();        // 触发重绘
+    updateLayout();  // 通知父布局重新计算（因为 sizeHint 变了）
+}
+```
+
+仅调用 `update()` 的后果是：文本内容已更新，但控件大小仍是旧文本计算出来的值，排版会错乱。
+
+### 文本测量与 `sizeHint()`
+
+`FontMetrics` 是文本测量的核心工具，用它来实现 `sizeHint()` 和 `heightForWidth()`：
+
+```cpp
+#include "gx_fontmetrics.h"
+
+Size MyTextWidget::sizeHint() const {
+    if (m_text.empty())
+        return Size{0, int(font().pixelSize() * 1.2f)};
+    FontMetrics fm(font());
+    // 单行文本：直接测量宽度
+    return Size{fm.width(m_text), int(font().pixelSize() * 1.2f)};
+}
+```
+
+对于支持自动换行的多行文本，还需要实现 `heightForWidth()`，告知布局系统在给定宽度下控件的高度：
+
+```cpp
+int MyTextWidget::heightForWidth(int width) const {
+    if (width == 0) return 0;
+    FontMetrics fm(font());
+    float lineHeight = font().pixelSize() * 1.2f;
+    // boundingRect 计算给定宽度下文本的实际边界
+    return fm.boundingRect(m_text, width, 1024 * 1024, 0, 0, lineHeight).height();
+}
+```
+
+如果控件是严格的单行（不随宽度换行），`heightForWidth()` 返回 `-1` 表示不依赖宽度：
+
+```cpp
+int SingleLineWidget::heightForWidth(int) const { return -1; }
+```
+
+### 响应样式与尺寸变化
+
+字体、颜色等样式属性变化时，文本的测量结果也会改变。覆写 `styleEvent()` 来响应样式变化，调用基类实现后刷新与样式相关的缓存，再触发布局更新：
+
+```cpp
+void MyTextWidget::styleEvent(StyleEvent *event) {
+  // 必须先调用基类，它会更新内部样式数据
+    Widget::styleEvent(event);
+    // 字体等样式改变后，sizeHint 的返回值可能变化
+    updateLayout();
+}
+```
+
+同样，控件尺寸变化时如果有依赖宽度的文本换行计算，需要在 `resizeEvent()` 中触发更新：
+
+```cpp
+void MyTextWidget::resizeEvent(ResizeEvent *event) {
+    Widget::resizeEvent(event); // 调用基类
+    update();                   // 尺寸变化后重绘内容
+}
+```
+
+::: important
+`styleEvent()`、`resizeEvent()` 等事件处理函数的基类实现通常有不可省略的副作用，**必须调用**。调用时机取决于你的逻辑需要：大多数情况下先调用基类，再执行自己的逻辑。
+:::
+
+### 覆写 `event()`
+
+将 `StyleEvent`、`ResizeEvent` 等需要处理的事件类型全部列入 `EventDispatch` 的模板参数，以获得编译期检查：
+
+```cpp
+bool MyTextWidget::event(Event *event) {
+    return EventDispatch<Widget,
+        PaintEvent, ResizeEvent, StyleEvent>{}(this, event);
+}
+```
+
+### 流式布局与行内元素
+
+`setFlowLayout(true)` 将**容器控件**设置为流式布局（flow layout）模式，效果类似 CSS 的块级流，框架会自动将子元素按行排布，无需通过 `setLayout()` 创建独立的布局对象。`Label` 在构造函数中就启用了这一模式，从而使自己可以作为 `SpanLabel` 容器（内嵌多个带不同样式的子标签）：
+
+```cpp
+Label::Label(Widget *parent) : Widget(parent) {
+    setFlowLayout(true);
+}
+```
+
+`setInlineWidget(true)` 则是针对**子元素**的设置，将该控件标记为行内（inline）元素，使其像文字一样嵌入父容器的文本流中参与排版。例如，在富文本行内嵌入一个图标控件：
+
+```cpp
+auto *icon = new ImageBox(label);
+// 作为行内元素与文字混排。ImageBox 默认已经是行内的了，这里只是示例说明。
+icon->setInlineWidget(true);
+```
+
+当 `Label` 作为容纳行内子元素的 `SpanLabel` 容器使用时，布局系统会自动协调 `Label` 自身的文本测量逻辑和作为容器时对子元素的排布。两者共用同一套布局机制，开发者不需要手动干预这一过程。
+
+## AbstractScrollArea 与可滚动控件
+
+当控件需要滚动行为时，不必从头实现手势识别、惯性滚动和回弹效果，直接继承 `AbstractScrollArea` 即可获得这些能力。框架内置的 `ScrollArea`（列表滚动）和 `TextField`（单行文本输入）都基于它实现。
+
+### 基本结构
+
+继承 `AbstractScrollArea` 的控件遵循一个固定的结构：控件本身是"视口"，内部有一个**内容控件**（content widget）负责承载实际内容，滚动时移动的是内容控件而非视口本身。
+
+构造函数中完成初始化：
+
+```cpp
+// myticker.h
+#include "gx_abstractscorllarea.h"
+
+class MyTicker : public AbstractScrollArea {
+    GX_OBJECT
+public:
+    explicit MyTicker(Widget *parent = nullptr);
+    bool event(Event *event) override;
+
+protected:
+    bool layoutEvent(LayoutEvent *event);
+    friend struct EventTraits<MyTicker>;
+};
+```
+
+```cpp
+// myticker.cpp
+#include "myticker.h"
+#include "gx_widgetevent.h"
+
+MyTicker::MyTicker(Widget *parent) : AbstractScrollArea(parent) {
+    setDirection(Horizontal);     // 水平滚动
+    setDamping(5);                // 调整阻尼（数值越大摩擦越强）
+
+    auto *content = new Widget;   // 创建内容控件
+    setContentWidget(content);
+}
+
+bool MyTicker::event(Event *event) {
+    return EventDispatch<AbstractScrollArea, LayoutEvent>{}(this, event);
+}
+```
+
+将 `EventDispatch` 的基类参数设为 `AbstractScrollArea`（而非 `Widget`），可以让未被当前类处理的事件（手势、滚轮、resize 等）自动回退到 `AbstractScrollArea` 的实现，从而保留完整的滚动行为。
+
+### 配置滚动参数
+
+```cpp
+setDirection(Vertical);          // 垂直滚动（默认）
+setDirection(Horizontal);        // 水平滚动
+setDamping(3);                   // 较低阻尼：惯性更强，滑行更远
+setDamping(20);                  // 较高阻尼：惯性较弱，接近无惯性
+setScrollBar(true);              // 显示滚动条
+setBouncesPolicy(SnapType::SnapEdge);  // 边缘回弹策略
+```
+
+`AbstractScrollArea` 还提供了 `scrollTo(x, y, behavior)` 来以编程方式控制滚动位置，`behavior` 为 `Instant`（立即跳转）或 `Smooth`（带动画）。
+
+::: tip 惯性阻尼
+对于 `TextField` 这类需要精确控制滚动位置的控件，通常会设置较高的阻尼值以弱化惯性；而对于 `ScrollArea` 这类以浏览为主的控件，则可以设置较低的阻尼以获得更流畅的滚动体验。
+
+阻尼不要设置得太低，否则超长距离的滚动可能导致内容缓存失效，出现卡顿。
+:::
+
+### 在事件分发中调用基类
+
+有时需要对某事件做额外处理，再将控制权交给 `AbstractScrollArea` 的默认实现。典型的做法是在处理函数中直接调用基类方法：
+
+```cpp
+// TextField 的做法：只在有文字时才转发手势给滚动区
+bool TextField::gestureEvent(GestureEvent *event) {
+    if (text().empty()) // 无文字时直接忽略
+        return false;
+    // 其余情况交给基类滚动逻辑
+    return AbstractScrollArea::gestureEvent(event);
+}
+```
+
+这种模式下，`EventDispatch` 的基类参数使用 `Widget`，当前类自行决定何时调用哪个基类方法：
+
+```cpp
+bool TextField::event(Event *event) {
+    // 用 Widget 作为基类，完全由自己控制 AbstractScrollArea 行为的调用时机
+    return EventDispatch<Widget, GestureEvent, ResizeEvent>{}(this, event);
+}
+```
+
+### 内容控件的事件过滤
+
+内容控件负责布局和承载子控件，但它的某些事件（如布局请求）有时需要容器来拦截和自定义处理。通过 `setEventFilter(this)` 将容器注册为内容控件的事件过滤器，然后覆写 `eventFilter()` 处理感兴趣的事件：
+
+```cpp
+// 在构造函数中注册
+content->setEventFilter(this);
+
+// 拦截内容控件的布局请求
+bool MyTicker::eventFilter(Object *receiver, Event *e) {
+    if (receiver == contentWidget() && e->type() == Event::Layout) {
+        auto *lv = static_cast<LayoutEvent *>(e);
+        if (lv->isLayoutRequest()) {
+            // 自定义布局逻辑……
+            return true; // 返回 true 阻止事件继续传递
+        }
+    }
+    // 其余情况交给基类
+    return AbstractScrollArea::eventFilter(receiver, e);
+}
+```
+
+::: tip
+未被处理的事件应回退给 `AbstractScrollArea::eventFilter()`，它负责与滚动条等内部机制的交互。
+:::
+
+### 设置行内控件
+
+调用 `setInlineWidget(true)` 可以让控件参与行内布局（inline layout），适合嵌入文本流中的场景，`TextField` 就是这样处理使其可以像文字一样嵌入行内。
+
+### ScrollArea 及派生类
+
+`ScrollArea` 是 `AbstractScrollArea` 的一个派生类，在滚动基础上增加了**索引导航**（`index()`/`setIndex()`）、**吸附模式**（snap）和**视觉特效**（visual effect）等能力，是列表、走马灯等场景的首选基类。`Swiper` 则在 `ScrollArea` 之上进一步增加了分页（`pageLength`）和指示点（indicator）等功能，适合轮播图等模式。
+
+这些类通常**不需要进一步派生**，大多数定制需求可以通过配置参数和挂载周边设施来实现，而无需子类化。
+
+#### 视觉特效 VisualEffect
+
+`ScrollArea` 支持通过 `setVisualEffect()` 挂载一个 `VisualEffect` 对象，在绘制每个子控件之前对其施加透明度、缩放、位移等视觉变换，从而实现滚动时的动态效果。框架内置了以下几种效果：
+
+| 类名 | 效果 |
+|---|---|
+| `FisheyeVisualEffect` | 鱼眼效果，中心元素放大，边缘缩小 |
+| `FadeVisualEffect` | 边缘渐隐，距离视口中心越远透明度越低 |
+| `CollapseVisualEffect` | 折叠效果，元素向上（或向下）边缘聚拢缩小 |
+| `BlendVisualEffect` | 在两种效果之间按进度插值过渡 |
+
+```cpp
+#include "gx_visualeffect.h"
+
+scrollArea->setVisualEffect(make_shared<FisheyeVisualEffect>());
+```
+
+如需自定义效果，继承 `VisualEffect` 并实现 `resolve()` 方法。`resolve()` 接收目标子控件、视口矩形和子控件中心点，返回一个 `PaintModifier`，其中可设置 `opacity`、`scale`、`translate` 等属性。
+
+有关 `ScrollArea` 和 `Swiper` 的完整参数说明，以及如何实现自定义 `VisualEffect`，将在[滚动区域](./scroll-area.md)中单独介绍。
+
+## 控件树与生命周期
+
+在 C++ 中创建控件时，通过构造函数的 `parent` 参数建立父子关系：
+
+```cpp
+// parent 销毁时，child 也会随之销毁
+auto *parent = new Widget(window);
+auto *child  = new ProgressRing(parent);
+child->setGeometry(10, 10, 80, 80);
+```
+
+无论是手动 `delete` 父控件，还是框架在应用退出时清理控件树，所有子控件都会被自动销毁。你不需要在析构函数中 `delete` 子控件。
+
+如果需要延迟销毁（例如在事件处理函数内部），可以使用 `deleteLater()`，它会在当前事件处理完成后再销毁对象，避免"在回调中销毁自己"这类问题。
+
+在响应式框架中，控件树由组件框架维护，定制开发时只需要[注册控件类](./widget-export.md)。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/README.md
+
+# C++ 原生开发
+
+Glyphix 是一个面向嵌入式设备的应用框架，它提供了一套以 JavaScript 为主、类 Vue Options API 风格的应用开发体验。然而，框架的核心运行时是用 C++ 实现的，因此硬件厂商可以通过 C++ 来扩展和定制框架功能——这正是 “C++ 原生开发” 的用武之地。
+
+这份文档面向具有嵌入式开发经验的 C++ 开发者，旨在帮助你理解 Glyphix 的 C++ 扩展机制，并能够动手实现以下两类功能：
+
+- **Native Module（原生模块）**：将 C++ 功能封装为 JavaScript 可调用的 API，例如文件访问、硬件传感器读取、蓝牙通信等系统能力。
+- **Native Widget（原生控件）**：用 C++ 实现自定义 UI 控件，并将其注册为框架[组件](/framework/component/native-component.md)，供应用在界面中直接使用，就如同使用内置的 `div`、`image`、`button` 组件一样。
+
+::: tip
+在应用开发中，我们使用“组件”来指代 UI 元素，而在 C++ 层使用“控件（Widget）”来指代 UI 元素。本文档会区分这两个术语：**控件**是 C++ 层的概念，**组件**是响应式框架中的概念。
+:::
+
+## 框架运行模型
+
+Glyphix 的运行时由多个层次构成，下图展示了完整的分层架构：
+
+<ArchDiagram max-width="560px">
+  <div>
+    应用沙箱（Applet × N）
+    <div class="remark">独立 JavaScript Realm · 生命周期隔离</div>
+  </div>
+  <div>
+    响应式框架（C++）
+    <div class="group row">
+      <div>AppletKit<div class="remark">应用路由 · 后台管理</div></div>
+      <div>组件系统<div class="remark">Template · Reactive Render</div></div>
+      <div>JsVM 桥接层<div class="remark">JerryScript / QuickJS</div></div>
+    </div>
+    <div class="group row">
+      <div>Applet<div class="remark">C++ ↔ JavaScript Sandbox</div></div>
+      <div>异步会话<div class="remark">ResultSession · Signals</div></div>
+      <div>Native Module<div class="remark">系统 API 扩展</div></div>
+    </div>
+  </div>
+  <div>
+    C++ 核心框架
+    <div class="group row">
+      <div>控件系统<div class="remark">Object · Widget</div></div>
+      <div>布局引擎<div class="remark">Flex · Flow · Stack</div></div>
+      <div>样式引擎<div class="remark">CSS · Transition</div></div>
+    </div>
+    <div class="group row">
+      <div>事件系统<div class="remark">Touch · Key · Wheel</div></div>
+      <div>Painter<div class="remark">2D 绘制</div></div>
+      <div>动画引擎<div class="remark">Property · Ease</div></div>
+      <div>Signal / Slot</div>
+    </div>
+  </div>
+  <div>
+    平台适配层
+    <div class="group row">
+      <div>图形后端<div class="remark">Framebuffer · GPU</div></div>
+      <div>输入驱动<div class="remark">Touch · Key · Wheel</div></div>
+      <div>文件系统<span class="remark">File · Dir</span></div>
+      <div>IO/时间<span class="remark">Logger · Time</span></div>
+    </div>
+  </div>
+  <div>
+    硬件 / OS
+    <div class="remark">RTOS · Linux · WASM</div>
+  </div>
+</ArchDiagram>
+
+最底层是**平台适配层**，负责图形渲染、输入事件、文件系统等平台相关的抽象。这一层通常由设备厂商实现，或由 Glyphix 提供对应平台的参考实现。
+
+其上是 **C++ 核心框架**，包含完整的控件系统（`Widget`）、事件分发、动画引擎、布局系统和样式引擎。所有的 UI 元素最终都以 C++ 控件树的形式组织和渲染。
+
+再上层是**响应式框架**，负责将 C++ 核心能力桥接到 JavaScript 应用。它内嵌 JavaScript 引擎（JerryScript 或 QuickJS），通过 `JsVM` 和 `JsValue` 类实现 C++ 与 JavaScript 的双向交互。AppletKit 管理应用（Applet）的完整生命周期，组件系统实现响应式数据绑定和模板渲染，异步会话框架则将 C++ 的异步操作映射为 JavaScript 的 Promise。响应式框架本身也是用 C++ 实现的。
+
+最上层是**应用沙箱**，每个运行的应用（Applet）拥有独立的 JavaScript 执行环境（Realm），彼此完全隔离。应用退出时，其沙箱内的所有资源会被自动回收。
+
+### 系统协作原理
+
+架构题呈现了模块划分，但刻意隐藏了模块间的协作和耦合关系。实际上，整个框架由一套共同的底层机制协作运转。理解这些机制，能帮助你在实践中知道“自己在做什么、为什么这么做”。
+
+整个框架由一套**对象系统**贯穿，它赋予类运行时感知能力，包括 C++ 类的属性反射与事件通知能力，以及必要的生命周期安全性。Widget、Native Module、应用框架和异步会话都依赖这同一套地基，详见[对象系统](./object-system.md)。
+
+**Widget** 以对象树加上绘制与事件分发构成 UI 骨架；JavaScript 应用层则使用**组件化**的声明式编程模型，两者通过对象的属性等反射能力自然衔接。**异步会话**等复杂的功能也依赖对象系统的生命周期模型来保证正确性。
+
+通过**元对象编译器**和其他抽象机制，Glyphix 并不需要开发者手写绑定代码，即可将 C++ 开发的控件类暴露给 JavaScript 使用。同时，C++ 侧也保留功能完整性，理论上讲你可以直接用 C++ 开发一个完整的应用（虽然不建议这么做）。
+
+### 编程模型
+
+Glyphix 项目不限制特定的编程范式，例如对象系统是一个经典的面向对象模型，但响应式框架则为应用开发者提供声明式的组件化开发体验。
+
+我们不建议开发者去实践“一切皆对象”、刻意套用设计模式，或者追求不必要的抽象。我们的设计原则更倾向于**实用主义**，以满足嵌入式系统的**资源限制**和开发效率为首要目标。
+
+## 文档约定
+
+### 这份文档是什么？
+
+这是 Glyphix C++ 原生开发的指南文档，而**不是** API 参考文档。它介绍框架的设计理念、核心机制和开发流程，帮助你理解如何扩展框架功能，并通过示例代码展示具体实现细节。
+
+在实际开发中，请务必参考 API 文档，它跟随 SDK 一起分发，请联系你的厂商获取访问权限。
+
+### 示例代码说明
+
+Glyphix 框架中的所有 C++ 代码都在 `gx` 命名空间下，文档中默认假设已经 `using namespace gx;`，因此类名和函数名不带 `gx::` 前缀。例如：
+
+```cpp
+#include "gx_widget.h"
+
+using namespace gx; // 文档中默认假设已经引入 gx 命名空间
+
+class MyWidget : public Widget {
+    // ...
+};
+```
+
+中，`Widget` 实际上是 `gx::Widget`，但为了简洁起见，我们省略了命名空间前缀。
+
+::: tip C++ 学习资源
+如果你主要使用 C 开发，熟悉 MCU、RTOS、驱动或 LVGL，但没有系统学习过 C++，建议先阅读 [C++ 学习建议](./cpp-guide.md)。它只覆盖进入 Glyphix 原生开发真正需要的那部分 C++，并整理了适合嵌入式开发者的外部资源。
+:::
+
+## 开发路径
+
+无论你的目标是什么，建议先通读[对象系统](./object-system)中关于 `GX_OBJECT`、`GX_PROPERTY` 和 `Signal` 的基本用法——它们在所有开发场景中都会用到。
+
+根据你的目标，选择合适的文档继续阅读：
+
+- [SDK 项目配置](./sdk-setup)：如何配置 SDK 项目的构建环境，包括 `glyphix_add_meta_objects()` 注册、宿主机构建和交叉编译。
+- [Native Module 开发](./native-module)：如何为应用提供新的系统 API，例如获取传感器数据、调用底层 SDK 功能。
+- [异步功能开发](./async)：如何为应用扩展异步功能，例如网络请求、文件 IO、耗时计算等。
+- [控件开发指南](./widget.md)：如何实现新的 UI 控件（如自定义图表、特殊的动效列表等）。
+- [控件注册与导出](./widget-export.md)：将自定义控件注册为框架组件，供应用直接使用。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/platform-font-fallback.md
+
+# 平台字体回退
+
+Glyphix 框架内置了一套基于 font-face / font-family 的字体加载与回退机制。但目标平台通常自带完善的字体管线（如 Windows DirectWrite、macOS CoreText），它们已实现系统字体回退与相关优化。
+
+为充分利用平台字体管线，Glyphix 允许你接管字体回退：当框架内字体无法覆盖某个字符时，转交平台去查找并渲染合适的系统字体。本文面向 Glyphix 的系统开发者，带你一步步完成对接。
+
+涉及的公共头文件：
+- `gx_unite.h`：含 UniTE 公共接口，以及引擎安装函数 `installEngine()`；
+- `gx_shapingadapter.h`：此为主要接口；
+- `gx_fontdriver.h`：提供 `FontDriver` 封装机制；
+- `gx_fontloader.h`：提供字体加载器接口。
+
+## 整体思路
+
+一段文本要在屏幕上显示，会经过下面这条管线：应用文本交由**段落布局引擎**分行、定位；每段同脚本、同方向的文本被**塑形**成字形；缺字时由**字体回退**补齐；字形再交**字体驱动**渲染成位图；而所有字体都来自**字体管理**层的注册、加载与复用。
+
+<ArchDiagram max-width="560px">
+  <div>应用文本<div class="remark">段落 · 字符串 · 样式</div></div>
+  <div>
+    段落布局引擎
+    <div class="group row">
+      <div>轻量引擎 LiTE<div class="remark">简单排版（默认引擎）</div></div>
+      <div>UniTE 引擎<div class="remark">BiDi · Shape · 复杂脚本</div></div>
+    </div>
+  </div>
+  <div>
+    塑形 · 字体回退
+    <div class="group row">
+      <div>HarfBuzz<div class="remark">GSUB / GPOS</div></div>
+      <div>Simple Shape<div class="remark">字符 → 字形</div></div>
+      <div class="subject">FontFallbackShaper<div class="remark">family 回退 · 平台系统字体</div></div>
+    </div>
+  </div>
+  <div>
+    字体渲染
+    <div class="group row">
+      <div>FontDriver<div class="remark">TTF / FreeType</div></div>
+      <div>FontDriverFamily<div class="remark">多 face 级联</div></div>
+      <div class="subject">PlatformFont 包装器<div class="remark">绘制平台回退字形</div></div>
+    </div>
+    <div>GlyphCache - 字形位图缓存</div>
+  </div>
+  <div>
+    字体管理 FontManager
+    <div class="group row">
+      <div>注册 / 查找<div class="remark">face · family · 属性</div></div>
+      <div class="subject">FontLoader<div class="remark">加载 face，注入包装器</div></div>
+    </div>
+  </div>
+</ArchDiagram>
+
+图中高亮的三部分即本文涉及内容：
+1. 回退策略 `FontFallbackShaper`，用于找出缺字并回退塑形；
+2. 负责绘制平台回退字体的 `PlatformFont` 包装器，与 `FontFallbackShaper` 配套使用；
+3. 用于加载平台回退字体包装器的 `FontLoader`，将注册到 `FontManager` 中。
+
+其余各层框架已实现，文本塑形（`ShapingAdapter`）通常无需重头实现，直接复用参考实现即可。
+
+### 前置条件
+
+按本文档实现平台字体回退功能前，需要：
+
+- 启用 UniTE 文本引擎（相比默认轻量引擎，它支持复杂脚本塑形与多级回退）。
+- 目标平台支持完整的字体管线，能提供系统字体的塑形、脚本映射等高级功能。这通常是一个复杂的子系统，大部分 MCU RTOS 平台不具备。
+
+::: important
+相比于默认的 LiTE 引擎，启用 UniTE 以及完整的字体管线需要更多的内存和固件空间。且该引擎的性能较轻量的 LiTE 要差，需要评估是否需要为了完整的 Unicode 支持和国际化需求而启用它。
+:::
+
+## 复用塑形后端
+
+`ShapingAdapter` 负责把字符塑形成字形。自带的 `HarfBuzzShaper`（`gx_harfbuzz_shaper.cpp`）已实现完整的 OpenType 塑形，它调用 HarfBuzz 塑形，再把字形索引、advance、偏移按目标像素尺寸写入输出。
+
+`HarfBuzzShaper` 依赖 Freetype 读取字体文件，因此需要同时引入 HarfBuzz 和 Freetype 库。若目标平台已经存在这些库，请保证版本一致，否则可能出现链接或运行时错误。
+
+::: tip
+和 HarfBuzz 的[职责](https://harfbuzz.github.io/what-harfbuzz-doesnt-do.html)类似，`ShapingAdapter` 也不处理包含不同字体的文本 run，这也包括下文介绍的“字体回退”机制情况。因此，只要 shaping 中使用的字体缺字，`ShapingAdapter` 实现就会返回 `.notdef` 字形（索引 `0`），并由回退策略去处理。
+:::
+
+## 实现回退策略
+
+`FontFallbackShaper` 是回退的核心。引擎每塑形一截文本就调用它一次，要求交回一份**不含缺字**的字形序列作为塑形结果。与 `ShapingAdapter` 不同，它不只是针对单一 font-face 的塑形，而是设计用于两级回退。
+
+### 两级回退级联
+
+`FontFallbackShaper::shape()` 回退按“由近及远”分两级：
+
+- **第一级**：在当前 family 内部用其它字体互相补字。框架已实现，你只需调用 `builtinShape()`。
+- **第二级**：第一级仍补不上的缺字，交给平台系统字体。这一级由你实现。
+
+缺字在数据里表现为字形索引为 `0`，即 `.notdef`。`shape()` 的返回值 `FallbackResult` 用位标志表达结果：`result & NotNeeded` 为真表示已无缺字、可直接结束；否则常见返回 `FullyResolved`（全部处理完）或 `PartiallyResolved`（仍有残留 `.notdef`）。
+
+### `shape()` 函数骨架
+
+先调用第一级；若已无缺字就返回，否则进入第二级的平台字体回退。`m_shaper` 是这个回退器持有的 `ShapingAdapter`（通常就是 `HarfBuzzShaper`）。
+
+```cpp
+FallbackResult shape(GlyphRunBundle &storage,
+                     TextSpan text,
+                     FontDriver *font) override {
+    // 第一级：使用 builtin API 处理 family 内的回退
+    auto r = builtinShape(storage, text, font, &m_shaper);
+    if (r & NotNeeded)
+        return r;                                  // 已无缺字，结束
+    return resolveByPlatform(storage, text, font); // 第二级，见下
+}
+```
+
+`builtinShape()` 是唯一依赖 `ShapingAdapter` 的地方，这种情况下你通常需要将 `PlatformFallbackShaper` 实现如下：
+```cpp
+class PlatformFallbackShaper : public FontFallbackShaper {
+    HarfBuzzShaper m_shaper; // 直接定义成员变量，不需要指针引用
+
+public:
+    PlatformFallbackShaper() = default;
+    FallbackResult shape(GlyphRunBundle &storage,
+                         TextSpan text, FontDriver *font) override;
+};
+```
+请注意，`m_shaper` 仅仅是你的平台回退策略的私有成员变量，完全不需要暴露给外部使用。`shape()` 内部调用 `builtinShape()` 时传入 `&m_shaper` 即可。
+
+::: tip
+极端情况下（如初步适配阶段）可以不管 family 内的回退，直接跳过 `builtinShape()`，只处理第二级平台回退。此时可以省去 `m_shaper` 成员变量。
+
+无论如何，`ShaperAdapter` 具体类通常不能定义为局部变量，因为它可能持有 HarfBuzz 的缓存状态，若每次塑形都重新创建会导致严重的性能下降。
+:::
+
+### 取得平台字体
+
+第二级要把缺字交给平台，并最终让包装器去渲染。`fallbackFont(font)` 返回注册在 family 末项的那个包装器（见后文）。它的静态类型是 `FontDriver *`，你需要转回自己的包装器类型，才能调用你自定义的登记、查询接口。
+
+```cpp
+// 转型也可用 dyn_cast，但如果只有一个包装器类型，static_cast 也安全
+auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
+if (wrapper == nullptr)
+    return PartiallyResolved; // family 末项没有包装器，无法继续
+```
+
+::: warning 必须成对实现
+回退策略与包装器是配套的一对：上面的 `static_cast` 要求 `fallbackFont()` 返回的正是你自己的包装器类型。务必保证安装的回退器与注册的包装器相互匹配。
+:::
+
+### 简单回退塑形
+
+最常见且适合起步的情形是：整段 run 都可用同一平台字体塑形（即某一系统字体文件完全覆盖该脚本）。此时按 `storage.run().spec.script` 选定平台字体，对整 run 重塑一次，整段写入同一个 `faceId`，**直接覆盖第一级结果**，无需与已解析字形做合并。
+
+UniTE 按 script 切分 run，同一段文本里的拉丁与 CJK 本就是不同 run。当主字体主打拉丁、遇到 CJK, Arabic, Devanagari 等 script 时，该 run 经 `builtinShape()` 后往往整段都是 `.notdef`，整段重塑并覆盖不会丢失任何已解析字形。所以多语言排版绝大多数走这条路径，并非退化特例。
+
+```cpp
+// 按脚本选定平台字体（平台字体句柄，非 FontDriver），登记得 faceId
+auto sysFont = platformFontForScript(storage.run().spec.script);
+uint32_t faceId = wrapper->registerFont(sysFont);
+// 你的塑形步骤产出 glyphCount 个字形（此处以 HarfBuzz 产物演示）
+auto &run = storage.resize(glyphCount);
+for (int i = 0; i < glyphCount; ++i) {
+    run.data.glyphIds[i]   = GlyphIds::encodeFallback(gid[i], faceId);
+    run.data.xAdvances[i]  = uint16_t(scale(pos[i].x_advance));
+    run.data.xOffsets[i]   = int16_t(scale(pos[i].x_offset));
+    run.data.yOffsets[i]   = int16_t(scale(pos[i].y_offset));
+    run.data.clusterMap[i] = static_cast<int>(info[i].cluster);
+}
+```
+
+`pos`, `info`, `gid` 和 `scale` 字段来自你的塑形步骤，上面用 HarfBuzz 的输出作演示。
+
+::: tip 平台塑形能力
+平台通常自带塑形能力（如 DirectWrite、CoreText），是否复用 HarfBuzz 按具体平台决定；演示中的 HarfBuzz 产物替换为平台塑形输出即可。RTL run（`spec.bidiLevel & 1`）需把方向传给塑形器。
+:::
+
+此方法的前提是整段 run 映射到单一平台字体。它**不适用 Common script**（Emoji、符号等）：同一 run 内不同字符可能分属多种平台字体，需要下文的复杂回退。
+
+### 复杂回退塑形
+
+当一个 run 内需要多种平台字体、或仅部分簇需要回退时，简单方案不再适用。考虑到具体的回退和合并算法取决于平台 API，本文档只约束合并后 `GlyphRun` 必须满足的语义，实现需自行处理：
+
+- 第一级已解析的字形**原样保留**，第二级只替换仍为 `.notdef` 的簇。
+- 每个字形槽填齐 `glyphIds`, `xAdvances`, `xOffsets`, `yOffsets`, `clusterMap`；回退字形用 `encodeFallback(gid, faceId)` 标记。
+- `clusterMap[i]` 为该字形对应源码点相对**本 run** 的偏移（与 `spec.text` 一致，范围 `[0, text.length())`），供绘制回映与按行裁剪。
+- 字形数量可变：用 `storage.resize()/reset()` 调整存储，然后逐槽写入。`GlyphRunBundle` 内部会自动更新 `run().glyphCount`。
+- 同一源簇映射到多个字形时，顺序与 advance 之和须正确；GSUB 合簇吞并的码点应产出零 advance 字形，避免空隙或错位。
+- `faceId` 须为包装器登记过、全生命周期稳定的 ID；RTL run 的字形顺序与塑形方向须一致。
+- 返回值：全部补齐返回 `FullyResolved`，仍有残留返回 `PartiallyResolved`。
+
+只要输出满足上述约束，框架即可正确渲染，具体是分段查询平台 API、还是复用 HarfBuzz 逐字体塑形，可按平台选择。
+
+### 行高与缓存
+
+行高取决于每个字形**实际由哪个字体绘制**。`builtinLineMetrics()` 负责 family 内字形的部分；带回退标记（`isFallback()`）的字形则向包装器查询其系统字体的升降部并入。回退字形在 `GlyphIds` 里由 `encodeFallback` 编码，其 `fontIndex()` 即写入的 `faceId`，据此向包装器取回对应平台字体。
+
+```cpp
+VerticalMetrics resolveLineMetrics(const GlyphIds *gids, int count,
+                                   FontDriver *font) const override {
+    // 处理 family 内的字形
+    VerticalMetrics m = builtinLineMetrics(gids, count, font);
+    // 处理平台回退字形
+    auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
+    if (wrapper == nullptr)
+        return m;
+    // 对 gids[i].isFallback() 的字形，向包装器查 asc/descent 并入 m
+    for (auto gid : utils::span<const GlyphIds>(gids, count)) {
+        if (!gid.isFallback())
+            continue; // 只处理回退字形
+        uint32_t faceId = gid.fontIndex(); // 回退字形的 fontIndex() 即 faceId
+        auto face = wrapper->fontForFaceId(faceId); // 平台字体句柄（非 FontDriver）
+        if (face == nullptr)
+            continue;
+        m.ascent = max(face->ascender(), m.ascent);
+        m.descent = min(face->descender(), m.descent);
+    }
+    return m;
+}
+```
+
+也可以汇总整行的回退字体并一次性查询它们的 asc/descent，避免循环中逐字形查询。
+
+`flush()` 用来释放包装器缓存的系统字体：
+
+```cpp
+void flush(FontDriver *font) override {
+    if (auto *w = static_cast<PlatformFont *>(fallbackFont(font)))
+        w->releaseFonts();
+}
+```
+
+::: tip
+`flush()` 在段落销毁或内存紧张时由框架调用，请在其中清理包装器持有的平台资源。
+:::
+
+## 回退字体 `FontDriver` 包装器
+
+包装器负责把上一步塑形的字形渲染成位图。它继承 `FontDriver`，构造时带上 `PlatformFallback` 标记，这样框架就知道它是回退字体。
+
+```cpp
+class PlatformFont : public FontDriver {
+public:
+    PlatformFont(const String &family, const FontAttribute &attr)
+        : FontDriver(family, attr, Vector | PlatformFallback) {}
+    // ... bitmapOf / metricsOf ...
+protected:
+    void requestHandler(int) override {}
+};
+```
+
+该字体包装器并不用于加载某种字体文件（如 `FontDriverTTF` 那样）。它的作用是把回退字形交给平台字体管线去处理，而内部实现对 Glyphix 是不透明的。
+
+### 双模式查询
+
+包装器收到的 `code` 有两种含义，用 `CodeAsGlyphId` 位区分：
+
+- **带标记**：按字形索引查询，高位携带 `faceId`，低位为字形索引。解出后路由到对应平台字体，再以 `glyphId` 查询对应的 `GlyphBitmap`。
+- **不带标记**：Unicode 字符查询，按 codepoint 在已登记平台字体里兜底查找，内部自己转换为字形索引再查询。
+
+常见的 `bitmapOf()` 实现如下：
+
+```cpp
+bool bitmapOf(uint32_t code, GlyphBitmap *bitmap) override {
+    if (code & CodeAsGlyphId) { // 按字形索引
+        uint32_t faceId  = (code >> 16) & 0x3ff;
+        uint32_t glyphId =  code & 0xffff;
+        auto face = fontForFaceId(faceId); // 平台字体句柄（非 FontDriver）
+        return face && face->bitmapOf(glyphId, bitmap);
+    }
+    // Unicode 字符查找，这里遍历已注册字体，也可以用更高效的映射表
+    for (auto *face : registeredFonts()) {
+        uint32_t glyphId = face->glyphIndexOf(code);
+        if (face->bitmapOf(glyphId, bitmap))
+            return true;
+    }
+    return false;
+}
+```
+
+::: tip
+`fontForFaceId()` 返回的是平台字体句柄，**并非 `FontDriver`**；上述 `face->bitmapOf(...)`、`face->glyphIndexOf(...)` 是对该句柄操作的伪代码，分别表示“按 `glyphId` 取 `GlyphBitmap`”，“按码点取 `glyphId`”。
+:::
+
+`metricsOf()` 用同样的双模式逻辑；`advancesOf()`、`baseline()` 等也从平台字体计算。`duplicate()` 复制一份映射表即可。
+
+### `faceId` 映射
+
+包装器维护一张 `faceId` → 平台字体的映射，供回退策略登记、渲染时查回。
+
+`faceId` 是 $10$ 位整数（$[0, 1023]$），含义完全由实现定义，唯一要求是**全生命周期稳定**。有两种常见做法：
+
+- **按脚本固定**：直接用 `Script` 枚举值作 `faceId`，包装器按脚本持有对应平台字体，登记时即按脚本写入，无需运行时分配。
+- **按需分配**：每遇到一个新平台字体就分配下一个索引，维护一张增长表。
+
+按脚本固定的例子（`faceId` 即脚本值）：
+```cpp
+PlatformFontHandle fontForScript(Script script) {
+    switch (script) {
+    case Script::Han:    return sysHanFont;
+    case Script::Arabic: return sysArabicFont;
+    case Script::Latin:  return sysLatinFont;
+    // ...
+    }
+    return sysDefaultFont;
+}
+```
+你需要自行处理脚本→字体映射、`faceId` 分配与平台字体对象缓存。
+
+::: tip
+`faceId` 是回退策略与包装器之间的契约：`PlatformFallbackShaper` 用它编码字形，`PlatformFont` 用它解码回系统字体。两端对 `faceId` 的解释必须一致，并且要保证可以由 $10\rm bit$ 整数表示。
+:::
+
+## 注册包装器
+
+最后让框架把包装器纳入 family 加载。实现 `FontLoader::load()`，对某个通用 family 名返回包装器，再装进 `FontManager`：
+
+```cpp
+struct PlatformFontLoader : public FontLoader {
+    FontDriver *load(const String &face, const FontAttribute &attr) override {
+        if (face == "sans-serif")
+            return new PlatformFont(face, attr);
+        return nullptr;
+    }
+};
+
+CoreApp()->fontManager()->install(new PlatformFontLoader);
+```
+
+应用以 `"<primary-face>,sans-serif"` 形式请求字体时，框架按逗号顺序把各部分合并进同一个 family，包装器作为最后一项成为兜底 face，`fallbackFont()` 便能取到它。
+
+`PlatformFont` 和 `PlatformFontLoader` 通常只注册为 `sans-serif` 这类通用 family 名的字体，而不是某个具体的系统字体名。这样应用就可以在不同平台上使用同一 family 名，而不需要知道平台的具体字体。
+
+::: warning 功能限制
+包装器总在 family 末项目前依赖应用按上述顺序书写 family 名。自动保证该顺序的机制尚在完善中。
+:::
+
+## 安装并装配
+
+`gx_unite.h` 的 `installEngine()` 把你的回退策略接入引擎：
+
+```cpp
+unite::installEngine(*CoreApp()->typesetCore(),
+                     std::make_unique<PlatformFallbackShaper>());
+```
+
+完整装配顺序：
+
+1. `fontManager()->install(new PlatformFontLoader)`：注册包装器加载器。
+2. `installEngine(...)`：安装持有塑形后端的回退策略。
+3. 以 `"<primary-face>,sans-serif"` 形式请求字体，照常布局、绘制。
+
+## 注意事项
+
+- advance / 偏移一律为 Q26.6 定点（值 = 像素 × 64）。
+- 仍未补齐的 `.notdef`（字形索引为 $0$）在渲染时被跳过，对应位置会显示空白或豆腐块。
+- `faceId` 仅 $10$ 位，单个 family 同时活跃的系统字体上限为 $1024$ 个。
+- 回退策略与包装器必须成对实现并保持类型一致（依赖 `static_cast`）。
+- 在 `flush()` 中务必释放包装器持有的平台字体缓存。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/global-assets-migrate.md
+
+# 全局资源迁移指南
+
+本文面向 Glyphix 下游集成项目，帮助你将历史项目中的全局资源加载方式升级到最新方案，获得易于管理、编辑的全局资源布局，不再依赖厂商的打包或转换工具支持。
+
+早期 Glyphix 采用 `global.pkg` 二进制归档包管理全局资源（字体文件、字体映射表等），后来逐步演进为直接使用未打包资源文件，最终字体映射文件的格式也从二进制转为标准 JSON <version-badge since="0.9" /> 。如果你维护的入口代码仍沿用旧写法，可以按本文升级。
+
+::: tip
+使用旧模式存在维护麻烦、难以管理和编辑全局资源的问题，建议立即升级。
+:::
+
+## 去除 `global.pkg`
+
+### 旧代码特征
+
+如果你的入口代码中存在类似以下任一模式，说明你正在使用 `global.pkg`：
+
+```cpp
+EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
+static String globalUri(const String &path) { return "pkg:///" + path; }
+```
+
+这两行的效果是：将所有 `pkg:///` 协议的资源请求路由到 `/global.pkg` 这个二进制归档包内部的文件。
+
+为什么需要去除：
+- 每次更换字体等资源，都必须重新运行打包工具生成 `.pkg` 文件
+- 调试时无法直接查看或替换 `.pkg` 内部的单个文件，也难以核对内容
+- 打包流程依赖专用工具，增加沟通和维护成本
+
+### 迁移操作
+
+**第一步：解出 `global.pkg` 中的资源。**
+
+如果你已经没有 `.pkg` 源文件，可以从 `global.pkg` 中解出内容（使用 Glyphix 命令行工具或索取原始资源文件）。通常需要解出以下内容：
+
+```
+fonts/
+    NotoSans-Regular.ttf
+    NotoSansSC-Regular.ttf
+    ...
+    font-faces          ← 字体映射文件（后续会升级为 JSON）
+```
+
+将解出的目录放置到你的项目资源目录中，例如 `/fonts/`。
+
+**第二步：移除 `global.pkg` 相关代码。**
+
+1. 删除 `EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg")` 整行
+2. 删除 `globalUri()` 这类包装函数
+3. 将所有 `pkg:///xxx` 的资源引用改为直接文件路径，即 `/xxx`
+
+**第三步：修改字体加载代码。**
+
+假设你的初始化代码原本类似：
+
+```cpp
+static String globalUri(const String &path) { return "pkg:///" + path; }
+
+static void setupFont(const String &fontMap) {
+    String uri = globalUri(fontMap);
+    FontFaceMap &map = App()->fontManager()->faces();
+    if (!map.readFile(uri))
+        LogError() << "Failed to load font face map: " << fontMap;
+}
+
+int main() {
+    Application app;
+    EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
+    setupFont("font-faces");
+    // ...
+}
+```
+
+改为直接使用文件路径（没有 `globalUri()` 函数和 `GlobalPackage` 注册）：
+
+```cpp
+static void setupFont(const String &fontMap) {
+    auto &map = App()->fontManager()->faces();
+    if (!map.readFile(fontMap))
+        LogError() << "Failed to load font face map: " << fontMap;
+}
+
+int main() {
+    Application app;
+    setupFont("/fonts/font-faces");
+    // ...
+}
+```
+
+此时资源布局变为：
+
+```
+/fonts/
+    font-faces          ← 二进制格式
+    NotoSans-Regular.ttf
+    ...
+```
+
+这个阶段你仍然使用二进制的 `font-faces` 文件，下一节将其升级为 JSON。
+
+## 改用 JSON 字体映射文件
+
+### 旧代码特征
+
+```cpp
+FontFaceMap &map = App()->fontManager()->faces();
+map.readFile("/fonts/font-faces");
+```
+
+`readFile` 读取的是自定义二进制格式文件，这个二进制文件不能手工编辑，必须从 CSS 文件用打包工具转换生成。
+
+### JSON 格式说明
+
+现在我们直接用 JSON 文件描述字体映射关系。你只需要创建一个 `font-faces.json` 文件，格式如下：
+
+```json
+{
+  "font-faces": [
+    {
+      "family": "sans-serif",
+      "weight": 400,
+      "style": "normal",
+      "urls": [
+        "NotoSans-Regular.ttf",
+        "NotoSansSC-Regular.ttf",
+        "NotoSansJP-Regular.ttf"
+      ]
+    },
+    {
+      "family": "sans-serif",
+      "weight": 700,
+      "style": "normal",
+      "urls": [
+        "NotoSans-Bold.ttf"
+      ]
+    },
+    {
+      "family": "serif",
+      "weight": 400,
+      "style": "normal",
+      "urls": [
+        "NotoSerif-Regular.ttf"
+      ]
+    }
+  ]
+}
+```
+
+字段说明：
+
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `family` | 字符串 | 是 | - | 字体族名，如 `sans-serif`、`serif` |
+| `weight` | 整数 | 否 | 400 | CSS 字重值（100-900），400 为常规，700 为加粗 |
+| `style` | 字符串 | 否 | normal | 字体样式，可选 `italic` 或 `oblique` |
+| `urls` | 字符串数组 | 是 | - | 字体文件路径，相对于 JSON 文件所在目录 |
+
+下面对关键字段做进一步说明。
+
+**weight 字段**
+
+weight 直接填 CSS 字重数值，会舍入到最近的标准值：
+
+- `100` Thin
+- `400` Regular（默认值，不填即可）
+- `700` Bold
+- `900` Black
+
+**urls 路径解析**
+
+`urls` 中的路径相对于 JSON 文件所在的目录解析。例如 JSON 文件位于 `/fonts/font-faces.json`，则 `urls` 中写 `"fonts/NotoSans-Regular.ttf"` 最终解析为 `/fonts/fonts/NotoSans-Regular.ttf`。
+
+因此建议 JSON 文件直接放置在字体文件同级目录，这样 URL 可以直接写文件名。例如目录布局为：
+
+```
+/fonts/
+    font-faces.json
+    NotoSans-Regular.ttf
+    NotoSansSC-Regular.ttf
+    NotoSans-Bold.ttf
+```
+
+此时 JSON 内容如上述代码所示。
+
+### 代码修改
+
+将初始化代码中的 `readFile` 替换为 `readJSON`：
+
+```cpp
+#include "gx_fontmanager.h"
+
+static void setupFont() {
+    auto &map = App()->fontManager()->faces();
+    if (!map.readJSON("/fonts/font-faces.json"))
+        LogError() << "Failed to load font-faces.json";
+    App()->setFont(Font("sans-serif", 24));
+}
+
+int main() {
+    Application app;
+    setupFont();
+    // ...
+}
+```
+
+就这一处 API 调用变更，其余代码无需修改。之后你可以直接编辑 `font-faces.json` 来增删字体或调整映射关系，不再需要任何转换工具。
+
+## FAQ
+
+**如何处理同一个 family 有 Regular、Bold、Italic 等多个变体？**
+
+在 `font-faces` 数组中为每个变体添加独立条目，用 `weight` 和 `style` 区分：
+
+```json
+{
+  "font-faces": [
+    {
+      "family": "sans-serif",
+      "weight": 400,
+      "style": "normal",
+      "urls": ["NotoSans-Regular.ttf"]
+    },
+    {
+      "family": "sans-serif",
+      "weight": 700,
+      "style": "normal",
+      "urls": ["NotoSans-Bold.ttf"]
+    },
+    {
+      "family": "sans-serif",
+      "weight": 400,
+      "style": "italic",
+      "urls": ["NotoSans-Italic.ttf"]
+    }
+  ]
+}
+```
+
+MCU 项目通常只使用 `normal` 字重的 Regular `sans-serif` 字体，系统会自动回退。
+
+**`urls` 数组里可以放多个文件吗？什么时候需要？**
+
+可以。当一个字体族需要覆盖多语种字符时，将多个字体文件放入同一个 `urls` 数组。例如 `sans-serif` 需要同时支持拉丁字母、中日韩文字、阿拉伯文：
+
+```json
+{
+  "family": "sans-serif",
+  "weight": 400,
+  "style": "normal",
+  "urls": [
+    "NotoSans-Regular.ttf",
+    "NotoSansSC-Regular.ttf",
+    "NotoSansJP-Regular.ttf",
+    "NotoSansArabic.ttf"
+  ]
+}
+```
+
+引擎渲染文本时会按顺序在这些文件中查找字符字形，第一个匹配到的字形将被使用。
+
+**字体文件必须和 JSON 放在同一目录吗？**
+
+不是。`urls` 中的路径相对于 JSON 文件所在目录解析，你可以使用相对路径将字体放在子目录中。也可以使用绝对路径，此时不受 JSON 目录影响。
+
+**可以直接在代码中传入 JSON 字符串吗？**
+
+可以。使用两参数重载版本：
+
+```cpp
+map.readJSON("/fonts/", R"({
+  "font-faces": [
+    {"family": "sans-serif", "urls": ["NotoSans-Regular.ttf"]}
+  ]
+})");
+```
+
+第一个参数是 baseUri，用于解析 `urls` 中的相对路径。
+
+
+============================================================
+FILE_PATH: src/original_docs/cxxdev/cpp-guide.md
+
+# C++ 学习建议
+
+这篇文档不是 C++ 教程，而是为准备阅读本目录文档的开发者提供前置知识的快速学习建议。
+
+它假设你已经长期使用 C 开发，熟悉 MCU、RTOS、驱动、LVGL 或类似的嵌入式框架；你应该有大量的编程经验，但可能并不熟悉 Glyphix 所需的那部分 C++ 知识。
+
+::: tip
+如果你的目标是开发 Native Module、异步功能或 Native Widget，请先看完本文，再继续阅读[对象系统](./object-system.md)和其他章节。这样能避开很多“代码看得懂，但就是写不出来”的问题。
+:::
+
+## C++ 能力子集
+
+Glyphix 项目禁用了一些 C++ 特性，开发者完全不需要学习它们：
+
+- 禁用 **RTTI**：不能用 `dynamic_cast`、`typeid` 这一套运行时类型识别机制。需要安全向下转型时，请直接使用 [`dyn_cast`](object-system.md#动态类型转换)。
+- 禁用**异常**：不需要把 `try` / `catch` / `throw` 作为主路径来学习。错误处理优先使用返回值、状态码、对象状态和显式检查。这一点和 C 的错误处理习惯类似。
+
+
+除此之外，Glyphix 的运行时还有一些特殊约束，这主要是 MCU 系统的碎片化和兼容性限制导致的：
+1. `std::thread` 和 `std::mutex` 等 C++ 标准库的并发工具在 MCU 上不可用。
+2. `std::chrono` 等时间库在 MCU 上也不可用。
+3. 不要使用静态局部变量（function-local static），C++11 起保证的原子初始化在 MCU 上**大概率不可靠**。
+4. 不要使用带堆分配的全局变量（对象），因为 MCU 上的全局构造阶段可能不受控，且堆内存可能不可用。
+
+其中，3 和 4 是很常见的情况，要格外注意。
+
+## 需要掌握的 C++ 知识
+
+下面这些内容，足以支撑本目录的大部分文档。
+
+### 类和面向对象编程
+
+至少要能读懂并编写这样的代码：
+
+```cpp
+class MyWidget : public Widget {
+public:
+    explicit MyWidget(Widget *parent = nullptr)
+        : Widget(parent) {}
+
+    void setValue(int value);
+    int value() const;
+};
+```
+
+你需要理解：
+
+- 类和结构体的区别（没太大区别，主要是默认访问权限）
+- 公有继承的含义（一般只用公有继承）
+- 构造函数和初始化列表
+- 成员函数、**`const` 成员函数**
+- 什么时候是覆写基类接口，什么时候只是声明一个普通成员函数
+
+这些知识会直接出现在[对象系统](./object-system.md)、[控件开发指南](./widget.md)和[控件注册与导出](./widget-export.md)中。
+
+### 指针、引用和 `const`
+
+如果你熟悉 C，这部分最容易“自认为已经会了”，但 C++ 用法比 C 更严格。
+
+必须真正掌握的点：
+
+- `T *` 和 `T &` 的区别
+- 何时传指针，何时传引用
+- **`const T *`**、`T *const`、**`const T &`** 的含义
+- 为什么 `const` 成员函数很常见
+- 为什么对象不应该像 C 那样随意按字节处理
+
+在 Glyphix 里，这些知识直接关系到接口设计和生命周期安全。
+
+### 生命周期与资源管理
+
+这是从 C 迁移到 C++ 时最重要的一节。
+
+你需要建立这样的习惯：
+
+- 对象会在离开作用域时自动析构
+- 构造函数负责建立有效状态
+- 析构函数负责释放资源
+- 不要把“清理资源”放到函数尾部手动收尾
+- 不要把复杂对象当作普通内存块去 `memset` / `memcpy`
+
+
+Glyphix 的大量设施和特性都建立在 C++ 的对象生命周期模型之上，这包括 RAII 等主题。
+
+### 模板的基础用法
+
+这部分不需要深入理解，但至少要能看懂：
+
+- `Signal<int>`
+- `Pointer<Label>`
+- `SharedRef<MyData>`
+- `async::ResultSession<Client>`
+- `std::vector<T>`
+
+并知道“模板是带类型参数的代码生成机制”，而不是某种只有库作者才会碰的高级技巧。
+
+在 Glyphix 文档中，模板主要以两种形式出现：
+
+- **泛型容器/工具类型**，例如 `Signal<T>`、`Pointer<T>`
+- **特化点**，例如为自定义类型补充 `js_cast<T>`
+
+开发者至少应该理解基础术语如“模板参数”、“实例化”、“特化”，并能够读懂模板类型的声明和使用。但不要求能够定义自己的模板类或函数。
+
+### lambda 表达式
+
+在现代 C++ 中，lambda 是一种很实用的一次性函数写法。你至少要能读懂：
+
+```cpp
+mod["double"] = [](JsCtx ctx) -> JsValue {
+    return ctx.arg(0).asInt(0) * 2;
+};
+```
+
+以及：
+
+```cpp
+int factor = readScaleFactorFromConfig();
+mod["scale"] = [factor](JsCtx ctx) -> JsValue {
+    return ctx.arg(0).asInt(0) * factor;
+};
+```
+
+首先应该熟悉 lambda 的基本语法和捕获机制，并重点理解：
+
+- lambda 是匿名函数对象
+- 无捕获 lambda 常可当普通函数指针用
+- 带捕获 lambda 会携带状态
+- 一旦 lambda 被异步持有，捕获对象的生命周期就变得非常重要
+
+这直接影响[Native Module 开发](./native-module.md)和[异步开发示例](./async-examples.md)中的代码安全性。
+
+::: tip lambda 非常常见
+lambda 实际上完全占据了回调函数的生态位，这意味着它们到处都是。从某种程度上说，lambda 可能是最重要的 C++ 语法点。
+
+**无捕获**的 lambda 表达式几乎等同于 C 函数指针，只是语法不同并能够缓解“起名困难症”。
+:::
+
+### 标准库的最小工作集
+
+不用系统学习整套 STL，但建议先熟悉这些最常见部件：
+
+- `std::vector`
+- `std::array`
+- `std::move`
+- 基本算法 `<algorithm>`、迭代器和范围 `for`
+
+::: tip 关联容器
+Glyphix 自己实现了 `HashMap` 和 `HashSet`，它们和 `std::unordered_map` 非常相似。但不推荐使用 `std::map`，`std::unordered_map` 等关联容器，因为它们的性能较差，并且 `std::map` 的代码膨胀明显。
+:::
+
+### C 与 C++ 互操作
+
+如果你要对接底层 SDK，这部分几乎一定会用到。
+
+至少要会：
+
+- `extern "C"` 的作用
+- C 回调函数指针
+- `void *` 上下文参数，以及 `void *` 在 C++ 中的隐式转换限制
+- C 结构体与 C++ 包装层的分工
+
+你在[异步开发示例](./async-examples.md)里会看到很典型的模式：C API 负责真正的异步执行，C++ 层只做参数包装、生命周期管理和结果回传。
+
+::: tip 难度预期
+这部分不难，但很容易出链接错误。你可能需要学会解决混用 C/C++ 头文件时的 `extern "C"` 等导致的各种问题。
+:::
+
+## 推荐的学习顺序
+
+建议按下面的顺序补齐，而不是从一本大部头教材从第一页开始读。
+
+### 先建立“从 C 到 C++”的迁移视角
+
+[ISO C++ FAQ](https://isocpp.org/faq)
+- 优先看“Learning C++ if you already know C”和“How to mix C and C++”相关条目。
+- 这套内容很适合有经验的 C 开发者，因为它默认你已经理解内存、接口、构建和底层约束。
+
+### 快速建立 Modern C++ 印象
+
+[A Tour of C++](https://www.stroustrup.com/Tour.html)
+- 如果你愿意接受一本短书，这是最值得投入的一本。
+- 它不是“零基础编程教学”，而是给有经验开发者看的现代 C++ 总览。
+- 目标不是全部记住，而是知道 C++ 的主要构件有哪些，各自解决什么问题。
+
+### 语法和标准库查询手册
+
+[cppreference](https://en.cppreference.com/w/cpp)
+- 适合边做边查，不适合顺序通读。
+- 当你在阅读 Glyphix 文档时遇到 `override`、lambda、初始化列表、模板特化、`std::vector` 等语法或库名，可以直接查这里。
+- 如果你需要回顾 C 语言的某些细节，也可以在这里查。
+
+### 把编码习惯切换到现代 C++
+
+[C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+- 这不是教程，而是工程实践指南，也有出版物版本。
+- 不建议全文顺序阅读；优先看这些章节：
+  - `P`：总原则
+  - `I`：接口设计
+  - `F`：函数
+  - `C`：类与对象
+  - `R`：资源管理
+  - `ES`：表达式与语句
+  - `CPL`：与 C 互操作
+  - `SF`：源文件组织
+  - `SL`：标准库使用
+  - `CP`：并发，按需阅读
+
+[Embedded Artistry 的 C++ 相关文章](https://embeddedartistry.com/blog/tag/cpp/)
+- 更适合作为专题阅读，而不是系统课程。
+- 比较值得关注的话题包括：不用堆时如何使用 C++、强类型寄存器封装、程序在 `main()` 之前发生了什么。
+
+## 建议怎样把这些资源用起来
+
+比较高效的方式不是“先学一阵子 C++ 再开始看 Glyphix”，而是并行进行：
+
+1. 先通读本文，知道要补哪些知识。
+2. 读一遍[A Tour of C++](https://www.stroustrup.com/Tour.html)或 FAQ 中和 C 迁移相关的部分。
+3. 开始阅读[对象系统](./object-system.md)和[Native Module 开发](./native-module.md)。
+4. 遇到看不懂的语法时，用 [cppreference](https://en.cppreference.com/w/cpp) 精确查询。
+5. 遇到“为什么现代 C++ 倾向这样写”这类问题，再去看 [C++ Core Guidelines]。(https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 的对应章节。
+
+这样学习的节奏更接近真实工作，也更适合已经有嵌入式经验的开发者。
+
+## 把本文和 cxxdev 文档对应起来
+
+如果你准备继续往下读，可以这样对应重要知识点：
+
+- [对象系统](./object-system.md)：类、继承、生命周期、引用、模板基础
+- [SDK 项目配置](./sdk-setup.md)：头文件、源文件、构建系统、最基本的类声明知识
+- [Native Module 开发](./native-module.md)：函数接口、lambda、对象生命周期、C/C++ 互操作
+- [异步功能开发](./async.md)：模板、线程模型、对象所有权、回调约束
+- [控件开发指南](./widget.md)：继承、成员函数、事件处理、对象树和绘制流程
+
+
+============================================================
 FILE_PATH: src/original_docs/cxxdev/widget-slider-demo.md
 
 # 自定义 Widget 实战
@@ -702,521 +3684,710 @@ Glyphix 还可以把子控件、动画和运行时状态直接写成类成员，
 
 
 ============================================================
-FILE_PATH: src/original_docs/cxxdev/cpp-guide.md
+FILE_PATH: src/original_docs/cxxdev/sdk-setup.md
 
-# C++ 学习建议
+# SDK 项目配置
 
-这篇文档不是 C++ 教程，而是为准备阅读本目录文档的开发者提供前置知识的快速学习建议。
+Glyphix 以预编译库的形式分发给设备厂商，本文介绍如何在 SDK 项目中配置构建环境，以便在其基础上开发 Native Module、Native Widget 或平台适配代码。
 
-它假设你已经长期使用 C 开发，熟悉 MCU、RTOS、驱动、LVGL 或类似的嵌入式框架；你应该有大量的编程经验，但可能并不熟悉 Glyphix 所需的那部分 C++ 知识。
+### 前置条件
+
+开始之前请确保已安装：
+- CMake 3.14 或更高版本
+- 支持 C++14 的 C++ 编译器（GCC、Clang 或 MSVC）
+- Glyphix 元对象编译器 `meta`（与 SDK 匹配，获取方式详见下文）
+- 交叉编译工具链（如需构建嵌入式目标）
+
+::: tip 系统要求
+- MSVC 工具链需要安装 Visual Studio 2022 或更高版本。
+- Linux 建议使用带桌面环境的发行版，如 Ubuntu 22.04 或更高版本。
+- 不建议使用 Ubuntu 20.04，因为它的包版本通常过旧，经常要手动安装新版软件。
+- 使用 WSL、Docker 等不带图形界面的环境将无法运行模拟器和 GUI 示例。
+- 目前宿主环境仅提供 Linux 预编译库，目前尚未准备好 Windows 和 macOS 的预编译库。
+:::
+
+## SDK 包结构
+
+解压后的 SDK 包含以下目录：
+
+```
+glyphix-sdk/
+├── libs/
+│   └── <target-triple>/       # 按目标三元组区分的预编译库
+│       ├── include/           # Glyphix 头文件（gx_*.h）
+│       └── lib/               # 静态库（libglyphix-core.a 等）
+├── cmake/
+│   ├── GlyphixSDK.cmake       # SDK 主配置脚本
+│   ├── meta.cmake             # 元对象编译器集成（glyphix_add_meta_objects）
+│   ├── cross-compile.cmake    # 交叉编译工具链加载
+│   ├── arch/                  # 各架构的编译参数（mips-linux-gnu、cortex-m33 等）
+│   └── toolchain/             # 各工具链的 CMake 工具链文件
+├── wrapper/                   # 平台适配层（网络、文件系统等宿主机实现）
+├── app/                       # 示例应用入口（emulator、async 等）
+└── vendor/                    # 第三方依赖库
+```
+
+### `libs/<target-triple>/`
+
+SDK 的预编译库以**目标三元组**（target triple）为目录名区分平台，例如：
+
+- `x86_64-linux-gnu/`： 64 位 Linux 宿主机开发/模拟
+- `mips-linux-gnu/`：MIPS Linux 嵌入式目标
+- `cortex_m55-none-gnu/`：Cortex-M55 裸机目标
+
+`include/` 目录下包含所有 Glyphix 公共头文件，均以 `gx_` 为前缀。`lib/` 目录下为静态库，核心库包括：
+
+| 库文件 | 说明 |
+|:---|:---|
+| `libglyphix-core.a` | 核心框架（对象系统、控件树、事件等） |
+| `libglyphix-widgets.a` | 内置控件库 |
+| `libglyphix-reactive.a` | 响应式框架（JavaScript 桥接层） |
+| `libglyphix-platform.a` | 平台抽象层接口 |
+| `libglyphix-service.a` | 系统服务层 |
+
+::: tip 预编译 vendor 库
+SDK 分发包中还包含一些预编译的第三方库，例如 `libfreetype.a` 等。方便起见，我们没有直接分发这些库的源代码，但你可以不使用预编译库，而是直接使用源码构建。
+:::
+
+## 准备工作
+
+### 配置元对象编译器
+
+`meta` 元对象编译器与 SDK 分开分发，以独立压缩包的形式提供。解压后会得到 `bin/` 和 `lib/` 两个目录，**两者都必须保留在同一目录下**，`meta` 可执行文件依赖 `lib/` 中的运行时库。
+
+在 Linux 和 macOS 中，推荐解压到 `/usr/local`，这样 `meta` 会自动位于 `PATH` 中：
+
+::: code-tabs#bash
+
+@tab Linux
+
+```bash
+sudo tar -xJf glyphix-meta-vX.X-linux-x86_64.tar.xz -C /usr/local
+```
+
+@tab macOS
+
+```bash
+sudo tar -xJf glyphix-meta-vX.X-darwin-arm64.tar.xz -C /usr/local
+```
+
+:::
+
+也可以解压到任意目录，然后将其中的 `bin/` 目录加入 `PATH`。完成后通过以下命令确认是否可用：
+
+```bash
+meta --version
+```
+
+如果不希望修改 `PATH`，可以在 CMake 配置时通过 `-DGX_META=/path/to/bin/meta` 显式指定可执行文件的完整路径。
+
+## 配置 CMakeLists.txt
+
+### 最小配置
 
 ::: tip
-如果你的目标是开发 Native Module、异步功能或 Native Widget，请先看完本文，再继续阅读[对象系统](./object-system.md)和其他章节。这样能避开很多“代码看得懂，但就是写不出来”的问题。
+本节介绍的 CMake 配置类似 Glyphix SDK 项目的标准示例模板，你可以直接参考 SDK 的源文件。
 :::
 
-## C++ 能力子集
+以下是一个最小可运行的 `CMakeLists.txt`，展示了项目的标准配置骨架：
 
-Glyphix 项目禁用了一些 C++ 特性，开发者完全不需要学习它们：
+```cmake
+cmake_minimum_required(VERSION 3.14)
 
-- 禁用 **RTTI**：不能用 `dynamic_cast`、`typeid` 这一套运行时类型识别机制。需要安全向下转型时，请直接使用 [`dyn_cast`](object-system.md#动态类型转换)。
-- 禁用**异常**：不需要把 `try` / `catch` / `throw` 作为主路径来学习。错误处理优先使用返回值、状态码、对象状态和显式检查。这一点和 C 的错误处理习惯类似。
+# 必须在 project() 之前加载，以便在 project() 探测编译器时工具链已就位
+include(cmake/cross-compile.cmake)
 
+project(my_glyphix_app)
+set(CMAKE_CXX_STANDARD 14)
 
-除此之外，Glyphix 的运行时还有一些特殊约束，这主要是 MCU 系统的碎片化和兼容性限制导致的：
-1. `std::thread` 和 `std::mutex` 等 C++ 标准库的并发工具在 MCU 上不可用。
-2. `std::chrono` 等时间库在 MCU 上也不可用。
-3. 不要使用静态局部变量（function-local static），C++11 起保证的原子初始化在 MCU 上**大概率不可靠**。
-4. 不要使用带堆分配的全局变量（对象），因为 MCU 上的全局构造阶段可能不受控，且堆内存可能不可用。
+# 加载 Glyphix SDK（设置头文件路径、链接目录、glyphix::sdk 目标）
+include(cmake/GlyphixSDK.cmake)
 
-其中，3 和 4 是很常见的情况，要格外注意。
-
-## 需要掌握的 C++ 知识
-
-下面这些内容，足以支撑本目录的大部分文档。
-
-### 类和面向对象编程
-
-至少要能读懂并编写这样的代码：
-
-```cpp
-class MyWidget : public Widget {
-public:
-    explicit MyWidget(Widget *parent = nullptr)
-        : Widget(parent) {}
-
-    void setValue(int value);
-    int value() const;
-};
+add_subdirectory(vendor)  # 第三方依赖（如有）
+add_subdirectory(src)     # 你的源代码
 ```
 
-你需要理解：
+在 `src/CMakeLists.txt` 中创建目标并链接 SDK：
 
-- 类和结构体的区别（没太大区别，主要是默认访问权限）
-- 公有继承的含义（一般只用公有继承）
-- 构造函数和初始化列表
-- 成员函数、**`const` 成员函数**
-- 什么时候是覆写基类接口，什么时候只是声明一个普通成员函数
+```cmake
+add_executable(my_app
+  main.cpp
+  my_module.cpp
+  my_widget.cpp
+)
 
-这些知识会直接出现在[对象系统](./object-system.md)、[控件开发指南](./widget.md)和[控件注册与导出](./widget-export.md)中。
+# 链接 Glyphix SDK
+target_link_libraries(my_app PRIVATE glyphix::sdk)
 
-### 指针、引用和 `const`
-
-如果你熟悉 C，这部分最容易“自认为已经会了”，但 C++ 用法比 C 更严格。
-
-必须真正掌握的点：
-
-- `T *` 和 `T &` 的区别
-- 何时传指针，何时传引用
-- **`const T *`**、`T *const`、**`const T &`** 的含义
-- 为什么 `const` 成员函数很常见
-- 为什么对象不应该像 C 那样随意按字节处理
-
-在 Glyphix 里，这些知识直接关系到接口设计和生命周期安全。
-
-### 生命周期与资源管理
-
-这是从 C 迁移到 C++ 时最重要的一节。
-
-你需要建立这样的习惯：
-
-- 对象会在离开作用域时自动析构
-- 构造函数负责建立有效状态
-- 析构函数负责释放资源
-- 不要把“清理资源”放到函数尾部手动收尾
-- 不要把复杂对象当作普通内存块去 `memset` / `memcpy`
-
-
-Glyphix 的大量设施和特性都建立在 C++ 的对象生命周期模型之上，这包括 RAII 等主题。
-
-### 模板的基础用法
-
-这部分不需要深入理解，但至少要能看懂：
-
-- `Signal<int>`
-- `Pointer<Label>`
-- `SharedRef<MyData>`
-- `async::ResultSession<Client>`
-- `std::vector<T>`
-
-并知道“模板是带类型参数的代码生成机制”，而不是某种只有库作者才会碰的高级技巧。
-
-在 Glyphix 文档中，模板主要以两种形式出现：
-
-- **泛型容器/工具类型**，例如 `Signal<T>`、`Pointer<T>`
-- **特化点**，例如为自定义类型补充 `js_cast<T>`
-
-开发者至少应该理解基础术语如“模板参数”、“实例化”、“特化”，并能够读懂模板类型的声明和使用。但不要求能够定义自己的模板类或函数。
-
-### lambda 表达式
-
-在现代 C++ 中，lambda 是一种很实用的一次性函数写法。你至少要能读懂：
-
-```cpp
-mod["double"] = [](JsCtx ctx) -> JsValue {
-    return ctx.arg(0).asInt(0) * 2;
-};
+# 为含有 GX_OBJECT 的头文件生成元数据
+glyphix_add_meta_objects(my_app
+  my_module.h
+  my_widget.h
+)
 ```
 
-以及：
+### 注册元对象（`glyphix_add_meta_objects`）
 
-```cpp
-int factor = readScaleFactorFromConfig();
-mod["scale"] = [factor](JsCtx ctx) -> JsValue {
-    return ctx.arg(0).asInt(0) * factor;
-};
+[对象系统](./object-system)文档中提到，任何声明了 `GX_OBJECT` 的类都必须注册到构建系统，由元对象编译器为其生成 `*_meta.cpp` 文件。`glyphix_add_meta_objects()` 是完成这一步骤的 CMake 函数：
+
+```cmake
+glyphix_add_meta_objects(<target> [header1.h header2.h ...])
 ```
 
-首先应该熟悉 lambda 的基本语法和捕获机制，并重点理解：
+它接受目标名称和一组**头文件**路径作为参数。对每个头文件，`meta` 工具会在构建目录下的 `meta/` 子目录中生成对应的 `*_meta.cpp`，并自动加入目标的源文件列表参与编译。
 
-- lambda 是匿名函数对象
-- 无捕获 lambda 常可当普通函数指针用
-- 带捕获 lambda 会携带状态
-- 一旦 lambda 被异步持有，捕获对象的生命周期就变得非常重要
+**示例：** 假设项目有如下结构：
 
-这直接影响[Native Module 开发](./native-module.md)和[异步开发示例](./async-examples.md)中的代码安全性。
+```
+src/
+├── CMakeLists.txt
+├── main.cpp
+├── sensors/
+│   ├── step_counter.h       # 包含 GX_OBJECT
+│   └── step_counter.cpp
+└── widgets/
+    ├── activity_ring.h      # 包含 GX_OBJECT
+    └── activity_ring.cpp
+```
 
-::: tip lambda 非常常见
-lambda 实际上完全占据了回调函数的生态位，这意味着它们到处都是。从某种程度上说，lambda 可能是最重要的 C++ 语法点。
+对应的 `CMakeLists.txt`：
 
-**无捕获**的 lambda 表达式几乎等同于 C 函数指针，只是语法不同并能够缓解“起名困难症”。
+```cmake
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/meta.cmake)
+
+add_executable(my_app
+  main.cpp
+  sensors/step_counter.cpp
+  widgets/activity_ring.cpp
+)
+target_link_libraries(my_app PRIVATE glyphix::sdk)
+
+glyphix_add_meta_objects(my_app
+  sensors/step_counter.h
+  widgets/activity_ring.h
+)
+```
+
+::: tip 只传头文件，不传 .cpp
+`glyphix_add_meta_objects()` 只需要传入包含 `GX_OBJECT` 声明的**头文件**（`.h`）。元对象编译器读取头文件中的宏声明来生成代码，不需要解析实现文件。相反，`.cpp` 文件中不能定义含 `GX_OBJECT` 的类。
 :::
 
-### 标准库的最小工作集
-
-不用系统学习整套 STL，但建议先熟悉这些最常见部件：
-
-- `std::vector`
-- `std::array`
-- `std::move`
-- 基本算法 `<algorithm>`、迭代器和范围 `for`
-
-::: tip 关联容器
-Glyphix 自己实现了 `HashMap` 和 `HashSet`，它们和 `std::unordered_map` 非常相似。但不推荐使用 `std::map`，`std::unordered_map` 等关联容器，因为它们的性能较差，并且 `std::map` 的代码膨胀明显。
+::: warning 不要遗漏注册
+如果一个类声明了 `GX_OBJECT` 但没有通过 `glyphix_add_meta_objects()` 注册，会导致**链接错误**（找不到 `staticMetaObject` 等符号）。每当新增含有 `GX_OBJECT` 的头文件时，记得同步更新 `CMakeLists.txt`。
 :::
 
-### C 与 C++ 互操作
+### `glyphix::sdk` 接口目标
 
-如果你要对接底层 SDK，这部分几乎一定会用到。
+`GlyphixSDK.cmake` 定义了 `glyphix::sdk` CMake 接口库目标，它封装了 SDK 的所有链接依赖。在你的 `CMakeLists.txt` 中只需链接这一个目标：
 
-至少要会：
+```cmake
+target_link_libraries(my_target PRIVATE glyphix::sdk)
+```
 
-- `extern "C"` 的作用
-- C 回调函数指针
-- `void *` 上下文参数，以及 `void *` 在 C++ 中的隐式转换限制
-- C 结构体与 C++ 包装层的分工
+它内部等价于：
 
-你在[异步开发示例](./async-examples.md)里会看到很典型的模式：C API 负责真正的异步执行，C++ 层只做参数包装、生命周期管理和结果回传。
+```cmake
+# 伪代码——实际由 GlyphixSDK.cmake 自动管理
+target_include_directories(... ${GLYPHIX_INCLUDE_DIRS} wrapper/include)
+target_link_libraries(... -Wl,--start-group ${glyphix-*.a} glyphix-wrapper -Wl,--end-group)
+target_link_libraries(... m pthread dl)  # UNIX 系统库
+```
 
-::: tip 难度预期
-这部分不难，但很容易出链接错误。你可能需要学会解决混用 C/C++ 头文件时的 `extern "C"` 等导致的各种问题。
+使用 `-Wl,--start-group ... -Wl,--end-group` 包裹静态库是为了解决嵌入式平台上静态库之间的循环依赖链接问题。
+
+::: tip 链接顺序问题
+如果项目中有自己的静态库（如 `add_library(my_module STATIC ...)`），应该将其链接到 `glyphix::sdk` **内部**，否则 `--start-group` 的范围不会覆盖它，可能引发链接错误。方法是在 `GlyphixSDK.cmake` 的 `GLYPHIX_LIBS` 变量被定义之后、`glyphix-sdk` 目标被创建之前，将你的静态库路径追加进去，或者直接让最终可执行文件同时链接 `my_module` 和 `glyphix::sdk` 并手动指定 `--start-group`。
 :::
 
-## 推荐的学习顺序
+## 宿主机构建
 
-建议按下面的顺序补齐，而不是从一本大部头教材从第一页开始读。
+宿主机构建用于在开发机上运行 Glyphix 的示例程序，无需连接硬件即可快速验证控件和模块逻辑。
 
-### 先建立“从 C 到 C++”的迁移视角
+```bash
+mkdir build && cd build
+cmake -G Ninja ..
+cmake --build .
+```
 
-[ISO C++ FAQ](https://isocpp.org/faq)
-- 优先看“Learning C++ if you already know C”和“How to mix C and C++”相关条目。
-- 这套内容很适合有经验的 C 开发者，因为它默认你已经理解内存、接口、构建和底层约束。
+SDK 的 `app/` 目录下包含多个示例，每个子目录对应一个独立的可执行目标。例如：
 
-### 快速建立 Modern C++ 印象
+| 子目录 | 构建产物 | 说明 |
+|:---|:---|:---|
+| `app/emulator/` | `demo` | 带图形界面的模拟器，依赖 MiniFB 窗口后端 |
+| `app/async/` | `async-demo` | 无图形界面的异步服务示例，演示 Native Module 和异步回调 |
 
-[A Tour of C++](https://www.stroustrup.com/Tour.html)
-- 如果你愿意接受一本短书，这是最值得投入的一本。
-- 它不是“零基础编程教学”，而是给有经验开发者看的现代 C++ 总览。
-- 目标不是全部记住，而是知道 C++ 的主要构件有哪些，各自解决什么问题。
+`GlyphixSDK.cmake` 会自动检测宿主机的编译器三元组（通过 `gcc -dumpmachine` 或 `clang -dumpmachine`），并以此为键在 `libs/` 目录下查找对应的预编译库。例如在 x86_64 Linux 开发机上，会自动解析到 `libs/x86_64-linux-gnu/`。
 
-### 语法和标准库查询手册
+如果自动检测的三元组与实际库目录不匹配，可以手动指定：
 
-[cppreference](https://en.cppreference.com/w/cpp)
-- 适合边做边查，不适合顺序通读。
-- 当你在阅读 Glyphix 文档时遇到 `override`、lambda、初始化列表、模板特化、`std::vector` 等语法或库名，可以直接查这里。
-- 如果你需要回顾 C 语言的某些细节，也可以在这里查。
+```bash
+cmake -G Ninja -DTARGET_TRIPLE=x86_64-linux-gnu ..
+```
 
-### 把编码习惯切换到现代 C++
+如果只需要构建某个特定示例，可以指定目标名称：
 
-[C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
-- 这不是教程，而是工程实践指南，也有出版物版本。
-- 不建议全文顺序阅读；优先看这些章节：
-  - `P`：总原则
-  - `I`：接口设计
-  - `F`：函数
-  - `C`：类与对象
-  - `R`：资源管理
-  - `ES`：表达式与语句
-  - `CPL`：与 C 互操作
-  - `SF`：源文件组织
-  - `SL`：标准库使用
-  - `CP`：并发，按需阅读
+```bash
+cmake --build . --target demo
+cmake --build . --target async-demo
+```
 
-[Embedded Artistry 的 C++ 相关文章](https://embeddedartistry.com/blog/tag/cpp/)
-- 更适合作为专题阅读，而不是系统课程。
-- 比较值得关注的话题包括：不用堆时如何使用 C++、强类型寄存器封装、程序在 `main()` 之前发生了什么。
+## CMake 交叉编译
 
-## 建议怎样把这些资源用起来
+对于嵌入式目标，需要通过 `-DARCH` 参数指定目标架构。SDK 预置了以下架构配置：
 
-比较高效的方式不是“先学一阵子 C++ 再开始看 Glyphix”，而是并行进行：
+| `-DARCH` 值 | 目标平台 | 工具链前缀 |
+|:---:|:---:|:---:|
+| `mips-linux-gnu` | MIPS Linux | `mips-linux-gnu-` |
+| `cortex_m33-gnu` | ARM Cortex-M33（GNU） | `arm-none-eabi-` |
+| `cortex_m7-gnu` | ARM Cortex-M7（GNU） | `arm-none-eabi-` |
 
-1. 先通读本文，知道要补哪些知识。
-2. 读一遍[A Tour of C++](https://www.stroustrup.com/Tour.html)或 FAQ 中和 C 迁移相关的部分。
-3. 开始阅读[对象系统](./object-system.md)和[Native Module 开发](./native-module.md)。
-4. 遇到看不懂的语法时，用 [cppreference](https://en.cppreference.com/w/cpp) 精确查询。
-5. 遇到“为什么现代 C++ 倾向这样写”这类问题，再去看 [C++ Core Guidelines]。(https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines) 的对应章节。
+### MIPS Linux 示例
 
-这样学习的节奏更接近真实工作，也更适合已经有嵌入式经验的开发者。
+```bash
+export MIPS_TOOLCHAIN_DIR="/opt/mips-gcc720-glibc229"
 
-## 把本文和 cxxdev 文档对应起来
+mkdir build-mips && cd build-mips
+cmake -G Ninja .. \
+  -DARCH=mips-linux-gnu \
+  -DMIPS_TOOLCHAIN_DIR="$MIPS_TOOLCHAIN_DIR" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+```
 
-如果你准备继续往下读，可以这样对应重要知识点：
+如果工具链已经在 `PATH` 中（即 `mips-linux-gnu-gcc` 可直接调用），则可以省略 `-DMIPS_TOOLCHAIN_DIR`，CMake 会自动定位。
 
-- [对象系统](./object-system.md)：类、继承、生命周期、引用、模板基础
-- [SDK 项目配置](./sdk-setup.md)：头文件、源文件、构建系统、最基本的类声明知识
-- [Native Module 开发](./native-module.md)：函数接口、lambda、对象生命周期、C/C++ 互操作
-- [异步功能开发](./async.md)：模板、线程模型、对象所有权、回调约束
-- [控件开发指南](./widget.md)：继承、成员函数、事件处理、对象树和绘制流程
+### ARM Cortex-M 示例
+
+```bash
+mkdir build-cm33 && cd build-cm33
+cmake -G Ninja .. \
+  -DARCH=cortex_m33-gnu \
+  -DARM_TOOLCHAIN_DIR="/opt/arm-none-eabi-gcc" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+```
+
+在交叉编译中，`GlyphixSDK.cmake` 不会尝试自动检测三元组——架构文件（如 `cmake/arch/cortex_m33-gnu.cmake`）会直接设置 `TARGET_TRIPLE`，指向正确的库目录。
+
+### 支持的目标架构
+
+SDK 只为上表列出的架构提供预编译库。如果你的目标平台不在其中，需要联系 Glyphix 获取对应架构的 SDK 包，而不能在现有 SDK 基础上自行添加支持。
+
+## 其他构建系统
+
+SDK 使用 CMake 作为主要构建系统，Glyphix 同时会为合作厂商提供其他构建系统的支持。这通常只是引入预构建的 SDK 库和头文件，并添加 porting 层源文件。
+
+### 工程限制
+
+该方案适用于只需要标准 SDK 功能的项目。一旦需要定制控件、Native Module 等能力，就必须引入 `meta` 元对象编译器来生成必要的绑定代码，目前 CMake 是唯一支持的构建系统。
+
+有几种可用的替代方案：
+1. 使用 SDK CMake 项目构建定制代码，然后将生成的库链接到你的主项目中。
+2. 使用 SDK CMake 项目构建定制代码，然后将生成的源文件（`*_meta.cpp`）包含到你的主项目中。
+3. 直接在你的构建系统中调用 `meta` 工具生成绑定代码。
+
+其中，Glyphix SDK 本身是通过方法 1 构建的。但它不适用于下游厂商的内部开发流程，因为它需要在主固件项目外维护一个单独的项目，并将生成的二进制库链接回主项目。这会造成严重的版本管理问题。
+
+方法 3 通常也不理想，因为厂商通常不想在主项目的构建系统中引入一个外部工具。
+
+### 推荐方案
+
+因此，建议使用方法 2，这种方式拷贝源代码，虽然需要手动操作，但易于审核和集成到现有的构建流程中。你可以在 SDK 的 CMake 项目中构建定制代码，生成 `*_meta.cpp` 文件，然后将这些文件复制到你的主项目中，并在主项目的构建系统中编译它们。
+
+这种方法的另一个限制是需要定制源文件可以在 SDK 项目环境中成功构建。具体来说，这要求它可以独立于主项目构建，包括：
+- 需要正确设置包含路径和预处理器定义，定制组件的头文件中不能包含主项目特有的头文件。
+- 定制组件的 cpp 文件最好也能编译通过，虽然这不影响生成 `*_meta.cpp` 文件，但可以方便在主机环境中进行快速迭代和调试。
+
+::: tip
+对于大多数[定制控件](widget.md)来说这不是问题。对于[Native Module](native-module.md)来说可能会更麻烦一些，应该注意：声明 `GX_OBJECT` 的头文件中不要包含主项目特有的头文件。
+:::
 
 
 ============================================================
-FILE_PATH: src/original_docs/cxxdev/global-assets-migrate.md
+FILE_PATH: src/original_docs/cxxdev/applet-install-flow.md
 
-# 全局资源迁移指南
+# 应用安装流程
 
-本文面向 Glyphix 下游集成项目，帮助你将历史项目中的全局资源加载方式升级到最新方案，获得易于管理、编辑的全局资源布局，不再依赖厂商的打包或转换工具支持。
+Glyphix 是一个面向嵌入式设备的应用框架。设备出厂后，最终用户或厂商仍需要向设备添加应用——就像手机上安装 App 一样。但在资源受限的 MCU 上，“安装应用”具体意味着什么、框架如何找到并启动它，并不像手机那样广为人知。
 
-早期 Glyphix 采用 `global.pkg` 二进制归档包管理全局资源（字体文件、字体映射表等），后来逐步演进为直接使用未打包资源文件，最终字体映射文件的格式也从二进制转为标准 JSON <version-badge since="0.9" /> 。如果你维护的入口代码仍沿用旧写法，可以按本文升级。
+本文档将介绍一个应用包在设备上安装 → 启动 → 卸载的完整流程，并解释目录配置如何影响应用的查找、更新与卸载。
 
-::: tip
-使用旧模式存在维护麻烦、难以管理和编辑全局资源的问题，建议立即升级。
+## 在设备上“安装应用”
+
+一个 Glyphix 应用在交付时是一个 `.pkg` 文件——这是一个只读的资源容器，内部包含应用的清单（`manifest.json`）、JavaScript 代码、图片等资源。应用运行时不会解包，框架直接从 `.pkg` 中按需读取文件。
+
+**安装**一个应用，本质上做两件事：把这个 `.pkg` 文件放到设备上某个框架会扫描的目录里，并把它的包名登记到包数据库中。登记之后，框架就能通过包名找到对应的 `.pkg` 并启动它。**卸载**则是反向操作：删除 `.pkg` 文件、清理应用产生的数据、从数据库中注销。
+
+::: tip 资源 bundle 格式
+运行时使用完整的 `.pkg` 资源文件，而不是解压后的目录。这种 bundle 模式也常见于游戏引擎，因为应用资源包只会读取而不会写入，bundle 模式可以减少文件系统的碎片化，并避免一堆小文件过度占用文件系统的 inode。
 :::
 
-## 去除 `global.pkg`
+这里涉及两个角色，本教程面向后者：
+- **应用开发者**：用 JavaScript 编写应用，通过 `gx build` 命令构建出 `.pkg` 文件并交付。
+- **平台开发者**：在设备上集成 Glyphix 运行时，配置存放应用的目录，在 C++ 中调用安装与启动接口。你拿到的是一个 `.pkg` 文件，目标是让它跑起来。
 
-### 旧代码特征
+::: tip
+本教程假设你已有一个可运行的 Glyphix 平台骨架（`Application` + `JsVM` + `AppletKit`）。如果你还没有，参考 SDK 自带的 `examples/emulator` 示例。
+:::
 
-如果你的入口代码中存在类似以下任一模式，说明你正在使用 `global.pkg`：
+## 准备工作
+
+开始前请确认以下条件就绪：
+
+- 一个可运行的 Glyphix 平台。最小骨架如下，后续所有操作都在这个上下文里进行。
+- 一个待安装的 `.pkg` 文件。可以从应用开发者处获取，或用 `gx build` 自行构建一个示例应用。本教程假设文件名为 `com.example.demo.pkg`，包名为 `com.example.demo`（包名写在应用的 [`manifest.json`](/framework/application/manifest.md#package) 里）。
+- 设备上一个可写分区，用于存放 `.pkg` 文件与应用运行期数据。下文用 `/data` 代表这个分区。
+
+一个简单的 Glyphix 平台骨架是这样的（这不是伪代码，就是这么简单）：
+
+```cpp
+#include "gx_application.h"
+#include "gx_appletkit.h"
+#include "gx_jsvm.h"
+#include "gx_widget.h"
+
+using namespace gx;
+
+int main() {
+    Application app{new MyPlatform}; // 平台适配，需按设备接入
+    JsVM vm;                         // JavaScript 运行时
+    Widget window;                   // 所有应用的父窗口
+    AppletKit kit(&window, "/pkgs.db"); // 第二个参数是包数据库路径
+    // ...本教程的配置与安装代码写在这里
+    return app.exec();
+}
+```
+
+::: tip `AppletKit` 的第二个参数
+它指向一个“包数据库”文件（如 `/pkgs.db`）。`AppletKit` 用它记录已安装应用的信息。可以通过 `kit.database(ADBT_Applet)` 拿到一个 `PackageDatabase` 对象来查询已装应用列表，后文会用到。
+:::
+
+## 告诉框架应用放在哪里
+
+在安装任何应用之前，必须先告诉 Glyphix 两类目录的位置：**应用包目录**（存放 `.pkg` 文件）和**应用数据目录**（存放应用运行时产生的数据）。二者职责不同，不要混淆。
+
+### 应用包目录
+
+应用包目录由 `EnvPath::packages()` 管理。它是一个列表，列表中每个条目指向一个存放 `.pkg` 的目录。这个列表同时承担多个语义，理解它们是后续一切配置的基础：
+
+- **查找**：当框架需要加载 `pkg://com.example.demo/...` 这样的资源时，会**从前向后**遍历列表，在每目录下找 `com.example.demo.pkg`，首个命中即加载。
+- **安装**：调用安装接口时，新包**固定写入列表的最后一个目录**。
+- **卸载**：卸载时**从前向后**扫描，从第一个包含该包的目录中删除。
+
+因为安装总是落在列表末尾、而查找与卸载从列表头部开始，目录在列表中的顺序就决定了它的角色：靠前的目录适合放“出厂自带、不希望被覆盖”的应用；靠后的目录适合放“用户后续安装”的应用。
+
+::: important 前置条件
+调用安装接口之前，`packages()` 列表必须至少有一个目录，且列表最后一个目录（即安装目标）必须存在且可写。否则安装会直接失败。
+:::
+
+配置方法是在平台初始化阶段向列表追加目录：
+
+```cpp
+#include "gx_environment.h"
+using namespace gx;
+
+// 在 Application 构造之后、安装/启动之前调用
+EnvPath::packages().emplace_back("/data/apps");
+```
+
+### 应用数据目录
+
+应用运行时需要可写的空间来存缓存、文件、临时数据等。这些目录由 `EnvPath::setEntry(role, path)` 配置，每个角色对应一种用途。它们的语义契约如下：
+
+| 角色 | 含义 | 典型路径 |
+|:---|:---|:---|
+| `AppletCache` | 应用可写的缓存，框架可在空间紧张时清理重建 | `/data/cache` |
+| `AppletFiles` | 应用私有文件，持久保留，不被自动清理 | `/data/files` |
+| `AppletMass` | 大文件存储（如媒体资源），容量大 | `/data/mass` |
+| `AppletTemp` | 临时文件，应用退出后可清理 | `/data/temp` |
+| `AppletStorage` | 应用持久存储 | `/data/storage` |
+| `LoggingDirectory` | 框架日志目录 | `/logs` |
+
+**数据隔离**：框架按包名为每个应用在上述目录下创建独立子目录。例如应用 `com.example.demo` 的私有文件落在 `/data/files/com.example.demo/` 下。你无需手动管理这些子目录，框架在安装与卸载时会自动创建和清理它们。
+
+此外还有一个特殊角色 `GlobalPackage`，它指向一个全局共享的 `.pkg`（如 `/global.pkg`），所有应用可通过 `pkg:///...` 协议读取其中的字体、图标等公共资源。它不属于某个应用，通常随固件一起烧录。
+
+配置示例：
+
+```cpp
+EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
+EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
+EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
+EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
+EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
+EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
+```
+
+::: tip 时机
+`Application` 构造时会重置 `EnvPath` 为默认配置，因此自定义配置应紧随 `Application` 构造之后、任何 `installPackage`/`launch` 调用之前完成。配置晚了会导致意外情况。
+:::
+
+### 配置示例
+
+把两类目录合起来，最小可用的初始化片段如下：
+
+```cpp
+Application app;
+// 应用包目录：至少一个可写目录
+EnvPath::packages().emplace_back("/data/apps");
+// 应用数据目录：按设备实际分区调整
+EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
+EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
+EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
+EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
+EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
+
+JsVM vm;
+Widget window;
+AppletKit kit(&window, "/pkgs.db");
+```
+
+## 安装一个应用
+
+在调用 `installPackage` 之前，需要确认：
+
+1. `EnvPath::packages()` 列表非空，且其最后一个目录存在且可写。
+2. `AppletKit` 已构造（安装需要写入它管理的包数据库）。
+3. 待安装的 `.pkg` 文件已存在于设备文件系统中（例如位于 `/tmp/com.example.demo.pkg`）。
+4. 若使用默认的版本校验策略（`NormalVerify`），设备的 vendor/product ID 应已配置；否则安装会因设备 ID 校验失败而返回 `InvalidDevice`。
+
+### 调用安装
+
+安装接口是 `AppletKit::installPackage(fileUri, policy)`，第一个参数是 `.pkg` 文件路径，第二个是校验策略，可省略（默认 `NormalVerify`）：
+
+```cpp
+auto status = kit.installPackage("/tmp/com.example.demo.pkg");
+if (status != AppletKit::ValidPackage) {
+    LogError() << "install failed:" << AppletKit::packageStatusMessage(status);
+    return;
+}
+LogInfo() << "install ok";
+```
+
+返回值是 `PackageStatus`，常见的几种含义：
+
+| 状态 | 含义 |
+|:---|:---|
+| `ValidPackage` | 安装成功 |
+| `FileNotExists` | `.pkg` 文件路径不存在 |
+| `InvalidPackage` | 包损坏或清单不可读 |
+| `InvalidVersion` | 版本不满足校验策略 |
+| `InvalidDevice` | 设备 vendor/product ID 不匹配 |
+| `FileIOError` | 拷贝失败，通常是安装目录不可写或空间不足 |
+
+校验策略 `PackageVerify` 决定框架对安装包的严格程度：
+
+| 策略 | 版本校验 | 设备 ID 校验 |
+|:---|:---|:---|
+| `NormalVerify`（默认） | 新版本不得低于已装版本 | 必须 |
+| `UpgradeOnly` | 必须严格高于已装版本 | 必须 |
+| `IgnoreVersion` | 跳过 | 必须 |
+| `NoVerify` | 全部跳过，只要包合法即可 | 跳过 |
+
+::: tip
+首次安装调试时如果遇到 `InvalidDevice` 或 `InvalidVersion`，可临时用 `AppletKit::NoVerify` 排除校验干扰，确认安装流程本身没问题，再恢复正式策略。
+:::
+
+### 安装会做什么
+
+`installPackage` 对外保证以下效果：
+
+- 校验 `.pkg` 文件合法，并按所选策略检查版本与设备 ID。
+- 若同名应用正在运行，会先退出（terminate）它，避免文件占用或数据冲突。
+- 把 `.pkg` 文件拷贝到 `packages()` 列表的最后一个目录下，文件名为 `<package-name>.pkg`。若已存在同名文件则覆盖。
+- 在包数据库中登记该应用，记录其安装路径与 `pkg://<package-name>` 访问 URI。
+- 若应用清单声明了 URI scheme（例如把自己注册为 `ime` 输入法的处理者），一并登记。
+- 发出“包已变更”通知，使框架其他部分感知到新应用。
+
+::: important 包校验能力
+`AppletKit::installPackage()` 本身没有文件完整性或签名校验能力。设备厂商需要自行开发相关功能，并在调用 `installPackage()` 之前对 `.pkg` 文件进行校验，并对安装过程的文件系统断电保护、回滚等做一致性保障。框架只保证在 `.pkg` 文件合法、可读、可写的前提下完成安装。
+:::
+
+### 观察清单
+
+安装返回 `ValidPackage` 后，可以用以下方式验证效果：
+
+- 在安装目录下应能看到文件：`/data/apps/com.example.demo.pkg`。
+- `kit.database(ADBT_Applet)->contains("com.example.demo")` 应返回 `true`。
+- `kit.installedApplets()` 返回的列表应包含 `"com.example.demo"`。
+
+```cpp
+EXPECT_TRUE(File::exists("/data/apps/com.example.demo.pkg"));
+EXPECT_TRUE(kit.database(ADBT_Applet)->contains("com.example.demo"));
+EXPECT_NE(std::find(kit.installedApplets().begin(),
+                    kit.installedApplets().end(),
+                    "com.example.demo"),
+          kit.installedApplets().end());
+```
+
+## 启动并观察
+
+安装只是把包放到位，要让应用真正显示出来，需要调用 `AppletKit::launch(name)`，`name` 就是清单里的包名：
+
+```cpp
+Applet *applet = kit.launch("com.example.demo");
+if (!applet)
+    LogError() << "launch failed";
+```
+
+`launch` 返回指向应用对象的指针，失败返回 `nullptr`。成功后应用会进入前台显示。
+
+::: tip 依赖说明
+`launch()` 能否让应用真正显示，还取决于 JavaScript 引擎、窗口系统、平台图形适配以及应用自身代码是否就绪。如果 `launch()` 返回非空但屏幕无显示，问题通常出在上述其他系统，而非安装流程。
+:::
+
+启动成功后可验证：
+
+- 应用界面出现在窗口中（依赖上述系统就绪）。
+- 应用运行并写入数据后，其私有目录出现：`/data/files/com.example.demo/`。
+- 通过 `pkg://com.example.demo/<asset-path>` 可访问应用包内资源（可以通过 `File` 类操作）。
+
+## 卸载一个应用
+
+卸载接口是 `AppletKit::removePackage(package)`，传入包名，返回 `bool` 表示是否找到并删除了包文件：
+
+```cpp
+if (!kit.removePackage("com.example.demo"))
+    LogError() << "uninstall failed: package not found";
+```
+
+卸载对外保证的效果：
+
+- 若该应用正在运行，先结束它。
+- 从 `packages()` 列表第一个含该包的目录中删除 `.pkg` 文件。
+- 删除该应用在各数据目录下的子目录（`AppletCache`/`AppletFiles`/`AppletTemp`/`AppletStorage` 下的 `<package-name>/`）。
+- 从包数据库中注销该应用。
+
+卸载后验证：
+
+- 安装目录下的 `/data/apps/com.example.demo.pkg` 已消失。
+- `/data/files/com.example.demo/` 等数据子目录已被清除。
+- `kit.installedApplets()` 不再包含 `"com.example.demo"`。
+
+## 进阶：系统预装应用目录
+
+许多设备需要区分两类应用：**出厂预装、不可卸载**的系统应用，与**用户后续安装、可卸载**的用户应用。利用 `packages()` 列表的顺序语义，可以用两个目录实现这种分层。
+
+### 使用场景
+
+出厂预装的应用（如系统表盘、设置应用）通常烧录在只读闪存中，不应被用户卸载或覆盖。用户安装的应用则应落在可写分区，可随时增删。如果只用一个目录混放两者，后续的应用更新或卸载管理会变得复杂。
+
+### 推荐布局
+
+向 `packages()` 追加两个目录，顺序敏感，预装只读目录在前，用户可写目录在后：
+
+```cpp
+EnvPath::packages().emplace_back("/system/apps");  // 只读预装，置于前
+EnvPath::packages().emplace_back("/data/apps");    // 可写用户安装，置于后
+```
+
+回看第一步的[应用包目录](#应用包目录)，这个布局下三种操作的语义如下：
+
+- **查找**从前向后，预装目录在前，出厂应用优先命中，保证稳定加载。
+- **安装**写列表最后一个目录，即用户区，新装应用不会污染预装目录。
+- **卸载**从前向后，从首个含该包的目录删除。
+
+### 保护机制：调用侧白名单
+
+顺序语义只决定应用的存储路径和启动查找流程，并不能阻止用户卸载预装应用，内置的 <code>AppletKit&#8203;::&#8203;removePackage</code> 没有“预装”或“受保护”的概念。因此设备的卸载入口应由 native 代码实现，在其中维护一份预装包名白名单，在调用 `removePackage` 前拦截：命中白名单则拒绝卸载。
+
+安装侧不需要白名单。设备厂商的安装渠道（应用商店、预置推送等）本身受控，应用包名的合法性由签名机制保证，不属本层职责；并且由于前向 resolve 的遮蔽（见下方“已知限制”），预装应用的运行时升级本就无法生效，无需额外阻止覆盖安装。因此安装可直接调用 `kit.installPackage`。
+
+一个 native 卸载包裹层的示意：
+
+```cpp
+#include "gx_hashset.h"
+
+class PackageManager {
+public:
+    PackageManager(AppletKit &kit, HashSet<String> preinstalled)
+        : m_kit(kit), m_preinstalled(std::move(preinstalled)) {}
+
+    auto install(const String &packageUri) {
+        return m_kit.installPackage(packageUri);
+    }
+
+    bool uninstall(const String &packageName) {
+        if (m_preinstalled.count(packageName)) {
+            LogWarning() << "refuse to uninstall protected package:" << packageName;
+            return false;
+        }
+        return m_kit.removePackage(packageName);
+    }
+
+private:
+    AppletKit &m_kit;
+    HashSet<String> m_preinstalled;
+};
+```
+
+::: tip 只读挂载与白名单
+把预装分区以只读方式挂载仍是推荐做法（防止意外写入），但它不是卸载保护的依赖项。即便预装目录可写，白名单也会在调用 `removePackage` 前拦截。
+
+`EnvPath::Entry` 的 permission 字段不参与应用包目录的决策，只对应用数据目录约束 JavaScript 代码的访问。
+:::
+
+### 恢复出厂设置
+
+利用预装目录与用户目录的分离，恢复出厂设置可以实现为：删除用户目录下的所有 `.pkg` 文件，并重置 `pkgs.db`；系统目录中的预装包不受影响。运行时安装固定写入 `packages().back()`（用户目录），从不覆盖系统目录中的预装副本，因此清空用户目录并重置数据库后，预装应用仍能被 `pkg://` 正常解析加载。
+
+可选地，可实现“卸载预装应用的更新”——即删除某个预装应用在用户目录中的更新副本，使其回退到系统目录中的出厂版本。该能力目前仅具备实现可能，尚未正式支持。
+
+### 已知限制
+
+以下框架行为需要 native 业务层主动规避或留意：
+
+1. **预装应用的应用商店升级无法实现**。当前 `pkg://<name>` 的资源解析对 `packages()` 列表做前向遍历，而运行时安装固定写 `packages().back()`（用户目录）。若尝试通过运行时安装升级预装应用，新版会落到用户目录，却因前向命中被系统目录的旧版遮蔽，永远无法生效。该升级能力待实现。
+2. **卸载无“受保护”概念**。`removePackage` 只按“首个删除成功”定位，会无差别删除任何目录中的包，没有“是否为预装包”的标记。白名单拦截必须由 native 调用方实现，框架不提供该判断。
+3. **表盘包卸载未清理数据库**。`removePackage` 只从应用表（`ADBT_Applet`）注销，对表盘包（`ADBT_Dial`）的数据库条目不做清理，会留下陈旧记录。这是框架的待办项，native 卸载逻辑如需支持表盘需自行处理。
+4. **应用包目录条目的 permission 字段无效**。`EnvPath::Entry` 的 permission 不参与 `packages()` 列表的查找/安装/卸载决策，只对应用数据目录约束 JavaScript 代码的访问。无法用它表达“此目录禁止安装”。
+
+## 平台初始化模板
+
+下面给出三种典型场景的完整 `EnvPath` 配置，可直接复制后按设备路径调整。所有配置都必须在 `Application` 构造之后、<code>AppletKit&#8203;::&#8203;launch</code>/`installPackage` 之前完成。
+
+### 宿主模拟器
+
+最简配置，单目录存放应用：
+
+```cpp
+os::chroot(".");
+EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
+EnvPath::packages().emplace_back("/apps");
+```
+
+### 嵌入式目标（单分区）
+
+只有一个可写分区的设备，应用与数据共置：
 
 ```cpp
 EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
-static String globalUri(const String &path) { return "pkg:///" + path; }
+EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
+EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
+EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
+EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
+EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
+EnvPath::packages().emplace_back("/data/apps");
 ```
 
-这两行的效果是：将所有 `pkg:///` 协议的资源请求路由到 `/global.pkg` 这个二进制归档包内部的文件。
+### 带预装分区的设备
 
-为什么需要去除：
-- 每次更换字体等资源，都必须重新运行打包工具生成 `.pkg` 文件
-- 调试时无法直接查看或替换 `.pkg` 内部的单个文件，也难以核对内容
-- 打包流程依赖专用工具，增加沟通和维护成本
-
-### 迁移操作
-
-**第一步：解出 `global.pkg` 中的资源。**
-
-如果你已经没有 `.pkg` 源文件，可以从 `global.pkg` 中解出内容（使用 Glyphix 命令行工具或索取原始资源文件）。通常需要解出以下内容：
-
-```
-fonts/
-    NotoSans-Regular.ttf
-    NotoSansSC-Regular.ttf
-    ...
-    font-faces          ← 字体映射文件（后续会升级为 JSON）
-```
-
-将解出的目录放置到你的项目资源目录中，例如 `/fonts/`。
-
-**第二步：移除 `global.pkg` 相关代码。**
-
-1. 删除 `EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg")` 整行
-2. 删除 `globalUri()` 这类包装函数
-3. 将所有 `pkg:///xxx` 的资源引用改为直接文件路径，即 `/xxx`
-
-**第三步：修改字体加载代码。**
-
-假设你的初始化代码原本类似：
+预装只读分区与用户可写分区分离：
 
 ```cpp
-static String globalUri(const String &path) { return "pkg:///" + path; }
+EnvPath::setEntry(EnvPath::GlobalPackage, "/system/global.pkg");
+EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
+EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
+EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
+EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
+EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
 
-static void setupFont(const String &fontMap) {
-    String uri = globalUri(fontMap);
-    FontFaceMap &map = App()->fontManager()->faces();
-    if (!map.readFile(uri))
-        LogError() << "Failed to load font face map: " << fontMap;
-}
-
-int main() {
-    Application app;
-    EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
-    setupFont("font-faces");
-    // ...
-}
+// 顺序敏感：预装只读目录在前，用户可写目录在后
+EnvPath::packages().emplace_back("/system/apps");
+EnvPath::packages().emplace_back("/data/apps");
 ```
 
-改为直接使用文件路径（没有 `globalUri()` 函数和 `GlobalPackage` 注册）：
-
-```cpp
-static void setupFont(const String &fontMap) {
-    auto &map = App()->fontManager()->faces();
-    if (!map.readFile(fontMap))
-        LogError() << "Failed to load font face map: " << fontMap;
-}
-
-int main() {
-    Application app;
-    setupFont("/fonts/font-faces");
-    // ...
-}
-```
-
-此时资源布局变为：
-
-```
-/fonts/
-    font-faces          ← 二进制格式
-    NotoSans-Regular.ttf
-    ...
-```
-
-这个阶段你仍然使用二进制的 `font-faces` 文件，下一节将其升级为 JSON。
-
-## 改用 JSON 字体映射文件
-
-### 旧代码特征
-
-```cpp
-FontFaceMap &map = App()->fontManager()->faces();
-map.readFile("/fonts/font-faces");
-```
-
-`readFile` 读取的是自定义二进制格式文件，这个二进制文件不能手工编辑，必须从 CSS 文件用打包工具转换生成。
-
-### JSON 格式说明
-
-现在我们直接用 JSON 文件描述字体映射关系。你只需要创建一个 `font-faces.json` 文件，格式如下：
-
-```json
-{
-  "font-faces": [
-    {
-      "family": "sans-serif",
-      "weight": 400,
-      "style": "normal",
-      "urls": [
-        "NotoSans-Regular.ttf",
-        "NotoSansSC-Regular.ttf",
-        "NotoSansJP-Regular.ttf"
-      ]
-    },
-    {
-      "family": "sans-serif",
-      "weight": 700,
-      "style": "normal",
-      "urls": [
-        "NotoSans-Bold.ttf"
-      ]
-    },
-    {
-      "family": "serif",
-      "weight": 400,
-      "style": "normal",
-      "urls": [
-        "NotoSerif-Regular.ttf"
-      ]
-    }
-  ]
-}
-```
-
-字段说明：
-
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `family` | 字符串 | 是 | - | 字体族名，如 `sans-serif`、`serif` |
-| `weight` | 整数 | 否 | 400 | CSS 字重值（100-900），400 为常规，700 为加粗 |
-| `style` | 字符串 | 否 | normal | 字体样式，可选 `italic` 或 `oblique` |
-| `urls` | 字符串数组 | 是 | - | 字体文件路径，相对于 JSON 文件所在目录 |
-
-下面对关键字段做进一步说明。
-
-**weight 字段**
-
-weight 直接填 CSS 字重数值，会舍入到最近的标准值：
-
-- `100` Thin
-- `400` Regular（默认值，不填即可）
-- `700` Bold
-- `900` Black
-
-**urls 路径解析**
-
-`urls` 中的路径相对于 JSON 文件所在的目录解析。例如 JSON 文件位于 `/fonts/font-faces.json`，则 `urls` 中写 `"fonts/NotoSans-Regular.ttf"` 最终解析为 `/fonts/fonts/NotoSans-Regular.ttf`。
-
-因此建议 JSON 文件直接放置在字体文件同级目录，这样 URL 可以直接写文件名。例如目录布局为：
-
-```
-/fonts/
-    font-faces.json
-    NotoSans-Regular.ttf
-    NotoSansSC-Regular.ttf
-    NotoSans-Bold.ttf
-```
-
-此时 JSON 内容如上述代码所示。
-
-### 代码修改
-
-将初始化代码中的 `readFile` 替换为 `readJSON`：
-
-```cpp
-#include "gx_fontmanager.h"
-
-static void setupFont() {
-    auto &map = App()->fontManager()->faces();
-    if (!map.readJSON("/fonts/font-faces.json"))
-        LogError() << "Failed to load font-faces.json";
-    App()->setFont(Font("sans-serif", 24));
-}
-
-int main() {
-    Application app;
-    setupFont();
-    // ...
-}
-```
-
-就这一处 API 调用变更，其余代码无需修改。之后你可以直接编辑 `font-faces.json` 来增删字体或调整映射关系，不再需要任何转换工具。
-
-## FAQ
-
-**如何处理同一个 family 有 Regular、Bold、Italic 等多个变体？**
-
-在 `font-faces` 数组中为每个变体添加独立条目，用 `weight` 和 `style` 区分：
-
-```json
-{
-  "font-faces": [
-    {
-      "family": "sans-serif",
-      "weight": 400,
-      "style": "normal",
-      "urls": ["NotoSans-Regular.ttf"]
-    },
-    {
-      "family": "sans-serif",
-      "weight": 700,
-      "style": "normal",
-      "urls": ["NotoSans-Bold.ttf"]
-    },
-    {
-      "family": "sans-serif",
-      "weight": 400,
-      "style": "italic",
-      "urls": ["NotoSans-Italic.ttf"]
-    }
-  ]
-}
-```
-
-MCU 项目通常只使用 `normal` 字重的 Regular `sans-serif` 字体，系统会自动回退。
-
-**`urls` 数组里可以放多个文件吗？什么时候需要？**
-
-可以。当一个字体族需要覆盖多语种字符时，将多个字体文件放入同一个 `urls` 数组。例如 `sans-serif` 需要同时支持拉丁字母、中日韩文字、阿拉伯文：
-
-```json
-{
-  "family": "sans-serif",
-  "weight": 400,
-  "style": "normal",
-  "urls": [
-    "NotoSans-Regular.ttf",
-    "NotoSansSC-Regular.ttf",
-    "NotoSansJP-Regular.ttf",
-    "NotoSansArabic.ttf"
-  ]
-}
-```
-
-引擎渲染文本时会按顺序在这些文件中查找字符字形，第一个匹配到的字形将被使用。
-
-**字体文件必须和 JSON 放在同一目录吗？**
-
-不是。`urls` 中的路径相对于 JSON 文件所在目录解析，你可以使用相对路径将字体放在子目录中。也可以使用绝对路径，此时不受 JSON 目录影响。
-
-**可以直接在代码中传入 JSON 字符串吗？**
-
-可以。使用两参数重载版本：
-
-```cpp
-map.readJSON("/fonts/", R"({
-  "font-faces": [
-    {"family": "sans-serif", "urls": ["NotoSans-Regular.ttf"]}
-  ]
-})");
-```
-
-第一个参数是 baseUri，用于解析 `urls` 中的相对路径。
+完成配置后，即可按第二、三步安装并启动应用。建议第一次跑通时用 `AppletKit::NoVerify` 装一个简单的示例包，确认 `/data/apps` 下出现 `.pkg`、`launch` 返回非空，再逐步恢复正式校验策略与预装布局。
 
 
 ============================================================
@@ -2849,3176 +6020,5 @@ private:
 ::: important
 上述类型的线程安全性实际上依赖于具体的异步框架内存模型，这意味着它们在所有场景中**并不是自动线程安全**的。本文档中的异步框架保证了这一点，但不能推广到任何情况。
 :::
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/applet-install-flow.md
-
-# 应用安装流程
-
-Glyphix 是一个面向嵌入式设备的应用框架。设备出厂后，最终用户或厂商仍需要向设备添加应用——就像手机上安装 App 一样。但在资源受限的 MCU 上，“安装应用”具体意味着什么、框架如何找到并启动它，并不像手机那样广为人知。
-
-本文档将介绍一个应用包在设备上安装 → 启动 → 卸载的完整流程，并解释目录配置如何影响应用的查找、更新与卸载。
-
-## 在设备上“安装应用”
-
-一个 Glyphix 应用在交付时是一个 `.pkg` 文件——这是一个只读的资源容器，内部包含应用的清单（`manifest.json`）、JavaScript 代码、图片等资源。应用运行时不会解包，框架直接从 `.pkg` 中按需读取文件。
-
-**安装**一个应用，本质上做两件事：把这个 `.pkg` 文件放到设备上某个框架会扫描的目录里，并把它的包名登记到包数据库中。登记之后，框架就能通过包名找到对应的 `.pkg` 并启动它。**卸载**则是反向操作：删除 `.pkg` 文件、清理应用产生的数据、从数据库中注销。
-
-::: tip 资源 bundle 格式
-运行时使用完整的 `.pkg` 资源文件，而不是解压后的目录。这种 bundle 模式也常见于游戏引擎，因为应用资源包只会读取而不会写入，bundle 模式可以减少文件系统的碎片化，并避免一堆小文件过度占用文件系统的 inode。
-:::
-
-这里涉及两个角色，本教程面向后者：
-- **应用开发者**：用 JavaScript 编写应用，通过 `gx build` 命令构建出 `.pkg` 文件并交付。
-- **平台开发者**：在设备上集成 Glyphix 运行时，配置存放应用的目录，在 C++ 中调用安装与启动接口。你拿到的是一个 `.pkg` 文件，目标是让它跑起来。
-
-::: tip
-本教程假设你已有一个可运行的 Glyphix 平台骨架（`Application` + `JsVM` + `AppletKit`）。如果你还没有，参考 SDK 自带的 `examples/emulator` 示例。
-:::
-
-## 准备工作
-
-开始前请确认以下条件就绪：
-
-- 一个可运行的 Glyphix 平台。最小骨架如下，后续所有操作都在这个上下文里进行。
-- 一个待安装的 `.pkg` 文件。可以从应用开发者处获取，或用 `gx build` 自行构建一个示例应用。本教程假设文件名为 `com.example.demo.pkg`，包名为 `com.example.demo`（包名写在应用的 [`manifest.json`](/framework/application/manifest.md#package) 里）。
-- 设备上一个可写分区，用于存放 `.pkg` 文件与应用运行期数据。下文用 `/data` 代表这个分区。
-
-一个简单的 Glyphix 平台骨架是这样的（这不是伪代码，就是这么简单）：
-
-```cpp
-#include "gx_application.h"
-#include "gx_appletkit.h"
-#include "gx_jsvm.h"
-#include "gx_widget.h"
-
-using namespace gx;
-
-int main() {
-    Application app{new MyPlatform}; // 平台适配，需按设备接入
-    JsVM vm;                         // JavaScript 运行时
-    Widget window;                   // 所有应用的父窗口
-    AppletKit kit(&window, "/pkgs.db"); // 第二个参数是包数据库路径
-    // ...本教程的配置与安装代码写在这里
-    return app.exec();
-}
-```
-
-::: tip `AppletKit` 的第二个参数
-它指向一个“包数据库”文件（如 `/pkgs.db`）。`AppletKit` 用它记录已安装应用的信息。可以通过 `kit.database(ADBT_Applet)` 拿到一个 `PackageDatabase` 对象来查询已装应用列表，后文会用到。
-:::
-
-## 告诉框架应用放在哪里
-
-在安装任何应用之前，必须先告诉 Glyphix 两类目录的位置：**应用包目录**（存放 `.pkg` 文件）和**应用数据目录**（存放应用运行时产生的数据）。二者职责不同，不要混淆。
-
-### 应用包目录
-
-应用包目录由 `EnvPath::packages()` 管理。它是一个列表，列表中每个条目指向一个存放 `.pkg` 的目录。这个列表同时承担多个语义，理解它们是后续一切配置的基础：
-
-- **查找**：当框架需要加载 `pkg://com.example.demo/...` 这样的资源时，会**从前向后**遍历列表，在每目录下找 `com.example.demo.pkg`，首个命中即加载。
-- **安装**：调用安装接口时，新包**固定写入列表的最后一个目录**。
-- **卸载**：卸载时**从前向后**扫描，从第一个包含该包的目录中删除。
-
-因为安装总是落在列表末尾、而查找与卸载从列表头部开始，目录在列表中的顺序就决定了它的角色：靠前的目录适合放“出厂自带、不希望被覆盖”的应用；靠后的目录适合放“用户后续安装”的应用。
-
-::: important 前置条件
-调用安装接口之前，`packages()` 列表必须至少有一个目录，且列表最后一个目录（即安装目标）必须存在且可写。否则安装会直接失败。
-:::
-
-配置方法是在平台初始化阶段向列表追加目录：
-
-```cpp
-#include "gx_environment.h"
-using namespace gx;
-
-// 在 Application 构造之后、安装/启动之前调用
-EnvPath::packages().emplace_back("/data/apps");
-```
-
-### 应用数据目录
-
-应用运行时需要可写的空间来存缓存、文件、临时数据等。这些目录由 `EnvPath::setEntry(role, path)` 配置，每个角色对应一种用途。它们的语义契约如下：
-
-| 角色 | 含义 | 典型路径 |
-|:---|:---|:---|
-| `AppletCache` | 应用可写的缓存，框架可在空间紧张时清理重建 | `/data/cache` |
-| `AppletFiles` | 应用私有文件，持久保留，不被自动清理 | `/data/files` |
-| `AppletMass` | 大文件存储（如媒体资源），容量大 | `/data/mass` |
-| `AppletTemp` | 临时文件，应用退出后可清理 | `/data/temp` |
-| `AppletStorage` | 应用持久存储 | `/data/storage` |
-| `LoggingDirectory` | 框架日志目录 | `/logs` |
-
-**数据隔离**：框架按包名为每个应用在上述目录下创建独立子目录。例如应用 `com.example.demo` 的私有文件落在 `/data/files/com.example.demo/` 下。你无需手动管理这些子目录，框架在安装与卸载时会自动创建和清理它们。
-
-此外还有一个特殊角色 `GlobalPackage`，它指向一个全局共享的 `.pkg`（如 `/global.pkg`），所有应用可通过 `pkg:///...` 协议读取其中的字体、图标等公共资源。它不属于某个应用，通常随固件一起烧录。
-
-配置示例：
-
-```cpp
-EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
-EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
-EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
-EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
-EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
-EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
-```
-
-::: tip 时机
-`Application` 构造时会重置 `EnvPath` 为默认配置，因此自定义配置应紧随 `Application` 构造之后、任何 `installPackage`/`launch` 调用之前完成。配置晚了会导致意外情况。
-:::
-
-### 配置示例
-
-把两类目录合起来，最小可用的初始化片段如下：
-
-```cpp
-Application app;
-// 应用包目录：至少一个可写目录
-EnvPath::packages().emplace_back("/data/apps");
-// 应用数据目录：按设备实际分区调整
-EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
-EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
-EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
-EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
-EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
-
-JsVM vm;
-Widget window;
-AppletKit kit(&window, "/pkgs.db");
-```
-
-## 安装一个应用
-
-在调用 `installPackage` 之前，需要确认：
-
-1. `EnvPath::packages()` 列表非空，且其最后一个目录存在且可写。
-2. `AppletKit` 已构造（安装需要写入它管理的包数据库）。
-3. 待安装的 `.pkg` 文件已存在于设备文件系统中（例如位于 `/tmp/com.example.demo.pkg`）。
-4. 若使用默认的版本校验策略（`NormalVerify`），设备的 vendor/product ID 应已配置；否则安装会因设备 ID 校验失败而返回 `InvalidDevice`。
-
-### 调用安装
-
-安装接口是 `AppletKit::installPackage(fileUri, policy)`，第一个参数是 `.pkg` 文件路径，第二个是校验策略，可省略（默认 `NormalVerify`）：
-
-```cpp
-auto status = kit.installPackage("/tmp/com.example.demo.pkg");
-if (status != AppletKit::ValidPackage) {
-    LogError() << "install failed:" << AppletKit::packageStatusMessage(status);
-    return;
-}
-LogInfo() << "install ok";
-```
-
-返回值是 `PackageStatus`，常见的几种含义：
-
-| 状态 | 含义 |
-|:---|:---|
-| `ValidPackage` | 安装成功 |
-| `FileNotExists` | `.pkg` 文件路径不存在 |
-| `InvalidPackage` | 包损坏或清单不可读 |
-| `InvalidVersion` | 版本不满足校验策略 |
-| `InvalidDevice` | 设备 vendor/product ID 不匹配 |
-| `FileIOError` | 拷贝失败，通常是安装目录不可写或空间不足 |
-
-校验策略 `PackageVerify` 决定框架对安装包的严格程度：
-
-| 策略 | 版本校验 | 设备 ID 校验 |
-|:---|:---|:---|
-| `NormalVerify`（默认） | 新版本不得低于已装版本 | 必须 |
-| `UpgradeOnly` | 必须严格高于已装版本 | 必须 |
-| `IgnoreVersion` | 跳过 | 必须 |
-| `NoVerify` | 全部跳过，只要包合法即可 | 跳过 |
-
-::: tip
-首次安装调试时如果遇到 `InvalidDevice` 或 `InvalidVersion`，可临时用 `AppletKit::NoVerify` 排除校验干扰，确认安装流程本身没问题，再恢复正式策略。
-:::
-
-### 安装会做什么
-
-`installPackage` 对外保证以下效果：
-
-- 校验 `.pkg` 文件合法，并按所选策略检查版本与设备 ID。
-- 若同名应用正在运行，会先退出（terminate）它，避免文件占用或数据冲突。
-- 把 `.pkg` 文件拷贝到 `packages()` 列表的最后一个目录下，文件名为 `<package-name>.pkg`。若已存在同名文件则覆盖。
-- 在包数据库中登记该应用，记录其安装路径与 `pkg://<package-name>` 访问 URI。
-- 若应用清单声明了 URI scheme（例如把自己注册为 `ime` 输入法的处理者），一并登记。
-- 发出“包已变更”通知，使框架其他部分感知到新应用。
-
-::: important 包校验能力
-`AppletKit::installPackage()` 本身没有文件完整性或签名校验能力。设备厂商需要自行开发相关功能，并在调用 `installPackage()` 之前对 `.pkg` 文件进行校验，并对安装过程的文件系统断电保护、回滚等做一致性保障。框架只保证在 `.pkg` 文件合法、可读、可写的前提下完成安装。
-:::
-
-### 观察清单
-
-安装返回 `ValidPackage` 后，可以用以下方式验证效果：
-
-- 在安装目录下应能看到文件：`/data/apps/com.example.demo.pkg`。
-- `kit.database(ADBT_Applet)->contains("com.example.demo")` 应返回 `true`。
-- `kit.installedApplets()` 返回的列表应包含 `"com.example.demo"`。
-
-```cpp
-EXPECT_TRUE(File::exists("/data/apps/com.example.demo.pkg"));
-EXPECT_TRUE(kit.database(ADBT_Applet)->contains("com.example.demo"));
-EXPECT_NE(std::find(kit.installedApplets().begin(),
-                    kit.installedApplets().end(),
-                    "com.example.demo"),
-          kit.installedApplets().end());
-```
-
-## 启动并观察
-
-安装只是把包放到位，要让应用真正显示出来，需要调用 `AppletKit::launch(name)`，`name` 就是清单里的包名：
-
-```cpp
-Applet *applet = kit.launch("com.example.demo");
-if (!applet)
-    LogError() << "launch failed";
-```
-
-`launch` 返回指向应用对象的指针，失败返回 `nullptr`。成功后应用会进入前台显示。
-
-::: tip 依赖说明
-`launch()` 能否让应用真正显示，还取决于 JavaScript 引擎、窗口系统、平台图形适配以及应用自身代码是否就绪。如果 `launch()` 返回非空但屏幕无显示，问题通常出在上述其他系统，而非安装流程。
-:::
-
-启动成功后可验证：
-
-- 应用界面出现在窗口中（依赖上述系统就绪）。
-- 应用运行并写入数据后，其私有目录出现：`/data/files/com.example.demo/`。
-- 通过 `pkg://com.example.demo/<asset-path>` 可访问应用包内资源（可以通过 `File` 类操作）。
-
-## 卸载一个应用
-
-卸载接口是 `AppletKit::removePackage(package)`，传入包名，返回 `bool` 表示是否找到并删除了包文件：
-
-```cpp
-if (!kit.removePackage("com.example.demo"))
-    LogError() << "uninstall failed: package not found";
-```
-
-卸载对外保证的效果：
-
-- 若该应用正在运行，先结束它。
-- 从 `packages()` 列表第一个含该包的目录中删除 `.pkg` 文件。
-- 删除该应用在各数据目录下的子目录（`AppletCache`/`AppletFiles`/`AppletTemp`/`AppletStorage` 下的 `<package-name>/`）。
-- 从包数据库中注销该应用。
-
-卸载后验证：
-
-- 安装目录下的 `/data/apps/com.example.demo.pkg` 已消失。
-- `/data/files/com.example.demo/` 等数据子目录已被清除。
-- `kit.installedApplets()` 不再包含 `"com.example.demo"`。
-
-## 进阶：系统预装应用目录
-
-许多设备需要区分两类应用：**出厂预装、不可卸载**的系统应用，与**用户后续安装、可卸载**的用户应用。利用 `packages()` 列表的顺序语义，可以用两个目录实现这种分层。
-
-### 使用场景
-
-出厂预装的应用（如系统表盘、设置应用）通常烧录在只读闪存中，不应被用户卸载或覆盖。用户安装的应用则应落在可写分区，可随时增删。如果只用一个目录混放两者，后续的应用更新或卸载管理会变得复杂。
-
-### 推荐布局
-
-向 `packages()` 追加两个目录，顺序敏感，预装只读目录在前，用户可写目录在后：
-
-```cpp
-EnvPath::packages().emplace_back("/system/apps");  // 只读预装，置于前
-EnvPath::packages().emplace_back("/data/apps");    // 可写用户安装，置于后
-```
-
-回看第一步的[应用包目录](#应用包目录)，这个布局下三种操作的语义如下：
-
-- **查找**从前向后，预装目录在前，出厂应用优先命中，保证稳定加载。
-- **安装**写列表最后一个目录，即用户区，新装应用不会污染预装目录。
-- **卸载**从前向后，从首个含该包的目录删除。
-
-### 保护机制：调用侧白名单
-
-顺序语义只决定应用的存储路径和启动查找流程，并不能阻止用户卸载预装应用，内置的 <code>AppletKit&#8203;::&#8203;removePackage</code> 没有“预装”或“受保护”的概念。因此设备的卸载入口应由 native 代码实现，在其中维护一份预装包名白名单，在调用 `removePackage` 前拦截：命中白名单则拒绝卸载。
-
-安装侧不需要白名单。设备厂商的安装渠道（应用商店、预置推送等）本身受控，应用包名的合法性由签名机制保证，不属本层职责；并且由于前向 resolve 的遮蔽（见下方“已知限制”），预装应用的运行时升级本就无法生效，无需额外阻止覆盖安装。因此安装可直接调用 `kit.installPackage`。
-
-一个 native 卸载包裹层的示意：
-
-```cpp
-#include "gx_hashset.h"
-
-class PackageManager {
-public:
-    PackageManager(AppletKit &kit, HashSet<String> preinstalled)
-        : m_kit(kit), m_preinstalled(std::move(preinstalled)) {}
-
-    auto install(const String &packageUri) {
-        return m_kit.installPackage(packageUri);
-    }
-
-    bool uninstall(const String &packageName) {
-        if (m_preinstalled.count(packageName)) {
-            LogWarning() << "refuse to uninstall protected package:" << packageName;
-            return false;
-        }
-        return m_kit.removePackage(packageName);
-    }
-
-private:
-    AppletKit &m_kit;
-    HashSet<String> m_preinstalled;
-};
-```
-
-::: tip 只读挂载与白名单
-把预装分区以只读方式挂载仍是推荐做法（防止意外写入），但它不是卸载保护的依赖项。即便预装目录可写，白名单也会在调用 `removePackage` 前拦截。
-
-`EnvPath::Entry` 的 permission 字段不参与应用包目录的决策，只对应用数据目录约束 JavaScript 代码的访问。
-:::
-
-### 恢复出厂设置
-
-利用预装目录与用户目录的分离，恢复出厂设置可以实现为：删除用户目录下的所有 `.pkg` 文件，并重置 `pkgs.db`；系统目录中的预装包不受影响。运行时安装固定写入 `packages().back()`（用户目录），从不覆盖系统目录中的预装副本，因此清空用户目录并重置数据库后，预装应用仍能被 `pkg://` 正常解析加载。
-
-可选地，可实现“卸载预装应用的更新”——即删除某个预装应用在用户目录中的更新副本，使其回退到系统目录中的出厂版本。该能力目前仅具备实现可能，尚未正式支持。
-
-### 已知限制
-
-以下框架行为需要 native 业务层主动规避或留意：
-
-1. **预装应用的应用商店升级无法实现**。当前 `pkg://<name>` 的资源解析对 `packages()` 列表做前向遍历，而运行时安装固定写 `packages().back()`（用户目录）。若尝试通过运行时安装升级预装应用，新版会落到用户目录，却因前向命中被系统目录的旧版遮蔽，永远无法生效。该升级能力待实现。
-2. **卸载无“受保护”概念**。`removePackage` 只按“首个删除成功”定位，会无差别删除任何目录中的包，没有“是否为预装包”的标记。白名单拦截必须由 native 调用方实现，框架不提供该判断。
-3. **表盘包卸载未清理数据库**。`removePackage` 只从应用表（`ADBT_Applet`）注销，对表盘包（`ADBT_Dial`）的数据库条目不做清理，会留下陈旧记录。这是框架的待办项，native 卸载逻辑如需支持表盘需自行处理。
-4. **应用包目录条目的 permission 字段无效**。`EnvPath::Entry` 的 permission 不参与 `packages()` 列表的查找/安装/卸载决策，只对应用数据目录约束 JavaScript 代码的访问。无法用它表达“此目录禁止安装”。
-
-## 平台初始化模板
-
-下面给出三种典型场景的完整 `EnvPath` 配置，可直接复制后按设备路径调整。所有配置都必须在 `Application` 构造之后、<code>AppletKit&#8203;::&#8203;launch</code>/`installPackage` 之前完成。
-
-### 宿主模拟器
-
-最简配置，单目录存放应用：
-
-```cpp
-os::chroot(".");
-EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
-EnvPath::packages().emplace_back("/apps");
-```
-
-### 嵌入式目标（单分区）
-
-只有一个可写分区的设备，应用与数据共置：
-
-```cpp
-EnvPath::setEntry(EnvPath::GlobalPackage, "/global.pkg");
-EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
-EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
-EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
-EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
-EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
-EnvPath::packages().emplace_back("/data/apps");
-```
-
-### 带预装分区的设备
-
-预装只读分区与用户可写分区分离：
-
-```cpp
-EnvPath::setEntry(EnvPath::GlobalPackage, "/system/global.pkg");
-EnvPath::setEntry(EnvPath::AppletCache,   "/data/cache");
-EnvPath::setEntry(EnvPath::AppletFiles,   "/data/files");
-EnvPath::setEntry(EnvPath::AppletMass,    "/data/mass");
-EnvPath::setEntry(EnvPath::AppletTemp,    "/data/temp");
-EnvPath::setEntry(EnvPath::AppletStorage, "/data/storage");
-
-// 顺序敏感：预装只读目录在前，用户可写目录在后
-EnvPath::packages().emplace_back("/system/apps");
-EnvPath::packages().emplace_back("/data/apps");
-```
-
-完成配置后，即可按第二、三步安装并启动应用。建议第一次跑通时用 `AppletKit::NoVerify` 装一个简单的示例包，确认 `/data/apps` 下出现 `.pkg`、`launch` 返回非空，再逐步恢复正式校验策略与预装布局。
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/widget.md
-
----
-headerDepth: 2
----
-# 控件开发指南
-
-在 Glyphix 中，所有可见的 UI 元素都是 `Widget`（控件）。框架内置了按钮、标签、图片、滚动区域等常用控件，但设备厂商往往需要根据自己的产品特色开发定制化的控件。例如，智能手表可能因为较小的圆形屏幕而定制特殊的列表动效，仪表设备则需要定制专门的图表控件。这篇文档介绍如何用 C++ 实现一个新控件。
-
-## 控件基础
-
-`Widget` 是一个矩形区域，它有位置、大小、可见性、透明度等基本属性，可以接收事件，并负责绘制自身的内容。控件以树形结构组织：一个父控件包含若干子控件，子控件的坐标相对于父控件。
-
-每个控件都有一个**逻辑更新周期**：当控件的状态发生变化（例如数据更新了），调用 `update()` 标记为"需要重绘"，框架会在下一个渲染帧统一重绘所有已标记的控件，而不是立即重绘——这避免了同一帧内多次重复绘制。
-
-### 控件与组件系统
-
-UI 控件通常实现为一个 C++ 类，继承自 `Widget`，并符合标准的 C++ 面向对象设计。Glyphix 的响应式框架和组件系统则支持将这些 C++ 控件直接暴露为原生组件，并以模板化、声明式的方式来使用。
-
-这种设计使得 C++ 侧的控件开发和前端组件使用可以相对独立，并保持双方习惯的开发方式。例如，在 C++ 中，你可以使用类似 LVGL 或者 Qt Widgets 的方式来构建界面，而完全不需要接受前端框架流行的声明式风格。
-
-### 与其他框架的对比
-
-Glyphix 控件系统在设计上类似于 Qt Widgets 或 LVGL 等传统 C/C++ UI 框架。所以你会发现开发一个新控件的方式和知识体系与这些框架非常相似：
-- 通过继承 `Widget` 来创建新控件类；
-- 存在布局系统、事件系统、绘制系统等核心机制；
-- 通过属性系统和信号机制实现数据绑定和事件通知；
-- 具有坐标系、尺寸等几何概念，并且支持嵌套的控件树结构。
-
-::: tip 不建议使用 C++ 控件开发 UI
-Glyphix 的设计初衷并非直接在 C++ 侧开发 UI，因此我们不会提供相关的文档和示例。
-:::
-
-## 创建自定义控件
-
-本节以一个环形进度条控件（`ProgressRing`）为例，逐步说明开发一个自定义控件所需的各个要素。
-
-::: tip 控件综合示例
-SDK 附带的 [slider-demo](./widget-slider-demo.md) 示例是本文档所有知识点的完整实践，包括继承现有控件、绘制、事件处理、属性声明、`ValueAnimation` 动画，以及 `StyleEngine` 定制。建议在阅读完本文档后参阅。
-:::
-
-### 定义控件类
-
-新建一个控件，继承 `Widget`，在类定义最开始加上 `GX_OBJECT` 宏，并**覆写 `event()`** 虚函数作为事件处理的入口：
-
-```cpp
-// progressring.h
-#include "gx_widget.h"
-
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    explicit ProgressRing(Widget *parent = nullptr)
-        : Widget(parent), m_value(0) {}
-
-    int value() const { return m_value; }
-    void setValue(int v);
-    bool event(Event *event) override;
-
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-    Signal<int> valueChanged;
-
-protected:
-    void paintEvent(PaintEvent *event);
-
-    // EventDispatch 需要访问 protected 方法，声明友元
-    friend struct EventTraits<ProgressRing>;
-
-private:
-    int m_value;  // [0, 100]
-};
-```
-
-`GX_OBJECT` 是必不可少的，它触发元对象编译器为此类生成元数据，使控件可以被框架的属性系统、动画系统和组件系统正确感知（详见[对象系统](./object-system.md)）。
-
-### 绘制控件
-
-在 `.cpp` 文件中包含 `gx_widgetevent.h`，实现 `event()` 和 `paintEvent()`：
-
-```cpp
-// progressring.cpp
-#include "progressring.h"
-#include "gx_widgetevent.h"
-
-bool ProgressRing::event(Event *event) {
-    return EventDispatch<Widget>{}(this, event);
-}
-
-void ProgressRing::paintEvent(PaintEvent *event) {
-    Widget::paintEvent(event);
-    Painter p(this);
-    // ... 详见绘制章节
-}
-```
-
-自定义绘制通过实现 `paintEvent()` 完成；构造 `Painter` 时传入 `this` 指针，即可获得与当前控件关联的绘图上下文，然后调用各类绘制方法进行绘制。有关 `Painter` API 的完整说明，参见[绘制](./painting.md)章节。
-
-### 处理事件
-
-Glyphix 的事件系统**并不依赖虚函数继承**来分发事件，`paintEvent()`、`gestureEvent()` 等方法都不是 `virtual` 的，**不要**在声明时加 `override`（会编译报错）。框架通过 `EventDispatch` 在**编译期**按事件类型将调用路由到正确的处理函数。
-
-唯一需要（也必须）覆写的虚函数是 **`event()`**，在其中委托给 `EventDispatch`：
-
-```cpp
-bool ProgressRing::event(Event *event) {
-    return EventDispatch<Widget>{}(this, event);
-}
-```
-
-`EventDispatch` 的第一个模板参数通常是**直接基类**（也就是 `ProgressRing` 继承的那个类，此处为 `Widget`）。它会在编译期检查当前类是否直接声明了对应的处理函数，有则调用，否则自动回退到基类实现。处理函数的返回值为 `bool` 时表示是否消费了该事件；返回 `void` 时视为已消费。
-
-::: tip 基类选择技巧
-`EventDispatch` 的基类参数选择有一些优化技巧，通常可以选择直接基类，但也可以用更高层的祖先类，这会造成细微的代码大小和性能差异。但一般不需要过于纠结，也不用担心误用出错——只要编译通过了，事件分发就会正确工作。
-:::
-
-::: important
-下文中提到“覆写 `xxxEvent()`”的说法时，请注意仅仅是在派生控件类中**声明**了一个与基类事件处理函数签名相同但**非虚**的成员函数。这**不是**虚函数，不能加 `override`，也不依赖虚函数机制来分发事件。
-
-IDE 可能提示将这些成员函数改为虚函数，不要理会这个提示。
-:::
-
-如果要处理手势输入，声明 `gestureEvent()` 并在类中实现：
-
-```cpp
-// 在头文件 protected 区域增加声明：
-bool gestureEvent(GestureEvent *event);
-
-// 在 .cpp 中实现：
-bool ProgressRing::gestureEvent(GestureEvent *event) {
-    if (event->type() == Event::Press) {
-        // ...
-        return true;   // 返回 true 表示事件已消费，不再向父控件传递
-    }
-    return false;
-}
-```
-
-可处理的事件类型：
-
-| 方法签名 | 触发时机 |
-|---|---|
-| `bool gestureEvent(GestureEvent *)` | 手势事件，包括 Press、Pan、Swipe 等 |
-| `bool wheelEvent(WheelEvent *)` | 滚轮或旋钮输入（如表冠） |
-| `bool keyEvent(KeyEvent *)` | 实体按键 |
-| `void resizeEvent(ResizeEvent *)` | 控件尺寸变化 |
-| `void moveEvent(MoveEvent *)` | 控件位置变化 |
-| `bool focusEvent(FocusEvent *)` | 焦点变化 |
-| `void paintEvent(PaintEvent *)` | 重绘请求 |
-| `bool layoutEvent(LayoutEvent *)` | 布局请求 |
-| `void tickEvent(TickEvent *)` | 逐帧 tick（需主动调用 `requestNextTick()` 启用） |
-
-如果某些事件处理函数对当前控件是**必须实现**的，可以在 `EventDispatch` 的模板参数中声明，遗漏或签名不匹配时编译报错：
-
-```cpp
-bool MyButton::event(Event *event) {
-    // 若未正确声明 paintEvent 或 gestureEvent，编译失败
-    return EventDispatch<Widget, PaintEvent, GestureEvent>{}(this, event);
-}
-```
-
-::: tip 声明必要事件处理函数
-尽管可以使用 `EventDispatch<Widget>` 来自动分发所有事件，但是**强烈建议**显式声明当前控件需要处理的事件类型，这样可以在编译期尽可能地检查遗漏或笔误，并减少人工审核的负担。
-:::
-
-### 属性与信号
-
-使用 `GX_PROPERTY` 宏向框架暴露属性，使其可被应用层绑定、也可作为属性动画的目标：
-
-```cpp
-// 声明 value 属性，getter 为 value()，setter 为 setValue()
-// signal 字段关联变化信号，供响应式框架订阅
-GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-```
-
-声明后，`value` 属性可以：
-- 被应用层模板直接绑定（如 `<progress-ring :value="progress"/>`）
-- 被属性动画系统平滑过渡（当属性类型支持插值时）
-
-在 setter 中调用 `update()` 触发重绘，在合适时机发射信号通知外部：
-
-```cpp
-void ProgressRing::setValue(int v) {
-    if (m_value == v) return;
-    m_value = v;
-    update();          // 标记下一帧重绘
-    valueChanged(v);   // 发射信号
-}
-```
-
-`Signal<T>` 是普通的模板成员变量，直接像函数调用一样发射。无参信号使用 `Signal<>`，调用时不传参数。关于属性与信号的完整语义，参见[对象系统](./object-system.md)中的相关章节。
-
-### 布局
-
-控件实例化后，通过 `setGeometry()` 手动指定位置和大小；如果父控件使用自动布局，则覆写 `sizeHint()` 来声明控件的期望大小：
-
-```cpp
-Size ProgressRing::sizeHint() const {
-    return Size(80, 80);
-}
-```
-
-对于自身需要管理子控件布局的容器控件，在 `layoutEvent()` 中完成子控件的几何计算，或通过 `setLayout()` 挂载框架提供的布局类（如 `FlexLayout`）。详见[布局与尺寸](#布局与尺寸)章节。
-
-## 绘制
-
-### Painter 初始化
-
-在控件的 `paintEvent()` 成员函数中构造 `Painter` 即可开始绘制：
-
-```cpp
-void ProgressRing::paintEvent(PaintEvent *event) {
-    Painter p(this);
-    // 后续所有绘制通过 p 完成
-}
-```
-
-绘制坐标系以**控件左上角为原点**，向右为 $+x$，向下为 $+y$，单位为像素。`rect()` 返回当前控件的本地矩形 `(0, 0, width(), height())`，是绘制时最常用的参考区域。
-
-如果控件通过应用层样式或 `StyleModifier` 设置了背景色等框架管理的样式属性，可以在绘制自定义内容之前先调用基类来处理这些背景：
-
-```cpp
-void ProgressRing::paintEvent(PaintEvent *event) {
-    Widget::paintEvent(event);  // 先绘制框架管理的背景（如有）
-    Painter p(this);
-    // ...
-}
-```
-
-不调用基类时，框架管理的背景样式将被忽略，控件完全由自己的 `paintEvent` 负责全部视觉呈现。
-
-### 绘制状态
-
-`Painter` 维护一组当前绘制状态，每次绘制调用都使用当前状态，直到下次修改。
-
-#### 画刷（Brush）
-
-画刷决定**填充类**方法（`fillRect`、`fillRoundedRect`、`fillPath` 等），以及**文本**使用的颜色：
-
-```cpp
-p.setBrush(Color(200, 200, 200));   // RGB 灰色
-p.setBrush(Color{"#35a7ff"});       // 十六进制字符串
-p.setBrush(Color::White);           // 预定义常量
-p.setBrush(Color(0xff4486ff));      // ARGB 十六进制整数（0xff 为完全不透明）
-```
-
-#### 画笔（Pen）
-
-画笔决定**描边类**方法（`drawRect`、`drawArc`、`drawLine` 等）使用的颜色和线宽：
-
-```cpp
-Pen pen(Color(64, 156, 255));
-pen.setSize(6);    // 线宽 6px
-p.setPen(pen);
-```
-
-#### 其他状态
-
-```cpp
-p.setFont(Font(18));     // 18px 字号，影响 drawText()
-p.setOpacity(127);      // 透明度 [0, 255]，影响此后所有绘制
-```
-
-所有状态仅作用于当前 `Painter` 实例，不同控件各自构造的 `Painter` 完全独立，互不干扰。
-
-### 基础形状
-
-#### 矩形
-
-```cpp
-p.setBrush(Color::White);
-p.fillRect(rect());                    // 填充整个控件区域
-p.fillRect(Rect(10, 10, 60, 20));      // 填充指定矩形
-
-p.fillRoundedRect(rect(), 8.0f);       // 圆角填充，圆角半径 8px
-p.drawRoundedRect(rect(), 8.0f);       // 圆角描边（不填充，使用 Pen 颜色）
-```
-
-圆角半径等于宽高较小值的一半时，矩形变成胶囊形状，这在按钮和进度条中非常常见：
-
-```cpp
-float radius = min(box.width(), box.height()) * 0.5f;
-p.fillRoundedRect(box, radius);
-```
-
-#### 直线
-
-```cpp
-p.drawLine(Point(0, cy), Point(width(), cy));   // 水平分隔线
-```
-
-#### 圆弧
-
-`drawArc` 以圆心坐标和半径指定弧形，`startAngle`/`endAngle` 单位为度数，$0°$ 对应 $3$ 点钟方向，顺时针增大：
-
-```cpp
-float cx = width() / 2.0f;
-float cy = height() / 2.0f;
-float radius = min(cx, cy) - 4.0f;
-
-// 绘制完整圆弧（背景圆环），从 -90°（12 点钟）绕一圈
-Pen bgPen(Color(200, 200, 200));
-bgPen.setWidth(6);
-p.setPen(bgPen);
-p.drawArc({cx, cy}, radius, -90.0f, -90.0f + 360.0f);
-
-// 绘制进度弧（从 12 点钟顺时针到 progress 对应位置）
-if (m_value > 0) {
-    Pen fgPen(Color(64, 156, 255));
-    fgPen.setWidth(6);
-    p.setPen(fgPen);
-    p.drawArc({cx, cy}, radius, -90.0f, -90.0f + 360.0f * m_value / 100.0f);
-}
-```
-
-弧的视觉粗细由当前 `Pen` 的线宽决定。
-
-### 矢量路径 `VectorPath`
-
-对于矩形和圆弧无法描述的复杂形状，使用 `VectorPath` 构建任意轮廓，再通过 `fillPath()` 或 `drawPath()` 渲染。
-
-```cpp
-#include "gx_vectorpath.h"
-```
-
-`VectorPath` 的工作方式类似“画笔轨迹”：用 `moveTo` 落笔、`lineTo` 直线段、`arcTo` 圆弧段依次描述轮廓，最后由 `Painter` 统一渲染。
-
-#### 直线段路径
-
-```cpp
-VectorPath path;
-path.moveTo(x0, y0);   // 落笔（不绘制）
-path.lineTo(x1, y1);   // 直线到 (x1, y1)
-path.lineTo(x2, y2);
-path.lineTo(x0, y0);   // 回到起点，形成封闭三角形
-
-p.fillPath(path, Color(64, 156, 255)); // 填充封闭区域
-```
-
-`fillPath()` 自动将路径作为封闭区域处理，即使最后没有显式回到起点。`drawPath()` 则用当前 `Pen` 绘制路径轮廓而不填充。
-
-#### 圆弧段路径
-
-`arcTo` 参数为圆心、$x/y$ 半径（椭圆时两者不等）、起始角度和扫过角度（角度制，顺时针为正）：
-
-```cpp
-// 绘制水平胶囊形：左端半圆 + 右端半圆，arcTo 自动用连线衔接两段
-float r  = rect.height() * 0.5f;
-float x1 = rect.left() + r;
-float x2 = rect.right() - r;
-float y  = rect.top() + r;
-
-VectorPath path;
-path.arcTo(PointF(x1, y), r, r, 90.0f, 270.0f);    // 左端半圆（从 9 点到 3 点逆时针）
-path.arcTo(PointF(x2, y), r, r, -90.0f, 90.0f);    // 右端半圆（从 3 点到 9 点逆时针）
-p.fillPath(path);
-```
-
-`arcTo` 会在路径当前终点和新圆弧起点之间自动插入一条直线，因此两段圆弧首尾自然衔接，无需额外调用 `lineTo`。
-
-#### 曲线
-
-使用 `conicTo` 或 `cubicTo` 可以构建二次或三次贝塞尔曲线段，配合 `moveTo` 和 `lineTo` 可以描述复杂的轮廓：
-
-```cpp
-VectorPath path;
-path.moveTo(x0, y0);
-// 二次贝塞尔曲线，(cx, cy) 为控制点
-path.conicTo(cx, cy, x1, y1);
-// 三次贝塞尔曲线，(cx1, cy1) 和 (cx2, cy2) 为控制点
-path.cubicTo(cx1, cy1, cx2, cy2, x2, y2);
-// 使用指定画刷填充路径
-p.fillPath(path, brush);
-```
-
-#### 组合路径示例
-
-将多段指令组合，可以构建任意复杂的形状。以 `WaveSlider` 中波浪填充区域为例，路径包含顶部波形折线和底部圆角边：
-
-```cpp
-VectorPath path;
-path.moveTo(leftX, waveY(leftX));
-for (int i = 1; i <= sampleCount; ++i) {
-    float x = leftX + (rightX - leftX) * float(i) / sampleCount;
-    path.lineTo(x, waveY(x));           // 顶部波浪轮廓
-}
-path.lineTo(rightX, bottomEdge(rightX)); // 右侧下降
-for (int i = sampleCount - 1; i >= 0; --i) {
-    float x = leftX + (rightX - leftX) * float(i) / sampleCount;
-    path.lineTo(x, bottomEdge(x));       // 底边（沿圆角矩形底部返回）
-}
-path.lineTo(leftX, waveY(leftX));        // 回到起点
-p.fillPath(path);
-```
-
-### 文字
-
-`drawText()` 在矩形范围内排列并绘制文本，文字颜色由当前 `Brush` 决定，字体由 `setFont()` 设置：
-
-```cpp
-p.setFont(Font(18));
-p.setBrush(Color(50, 50, 50));
-p.drawText(rect(), format("{}%", m_value), AlignCenter);
-```
-
-::: tip 格式化字符串
-`format()` 是框架提供的格式化函数，语法类似 [`std::format`](https://en.cppreference.com/w/cpp/utility/format/format)，可跨平台使用。
-:::
-
-对齐标志可自由组合：
-
-| 标志 | 含义 |
-|---|---|
-| `AlignLeft` | 水平左对齐 |
-| `AlignHCenter` | 水平居中 |
-| `AlignRight` | 水平右对齐 |
-| `AlignTop` | 垂直顶对齐 |
-| `AlignVCenter` | 垂直居中 |
-| `AlignBottom` | 垂直底对齐 |
-| `AlignCenter` | 水平 + 垂直居中（等同于 `AlignHCenter \| AlignVCenter`）|
-
-`font()` 方法返回控件当前从样式系统继承的字体，在绘制中使用它可以使控件自动跟随应用字号变化：
-
-```cpp
-p.setFont(font());   // 使用控件继承的样式字体，而非固定字号
-```
-
-`drawText()` 还支持更复杂的文本布局，例如多行文本、自动换行等，详见 API 文档。
-
-### 图片
-
-`drawImage()` 将图片绘制到指定矩形内：
-
-```cpp
-Image img{"file://path/to/icon.png"};
-p.drawImage(widget->rect(), img); // 将图片绘制到指定区域，不会自动缩放
-```
-
-实际使用中图片通常来自资源系统，加载方式取决于平台和打包配置。
-
-### 完整示例
-
-以下是 `ProgressRing` 的完整 `paintEvent`，综合运用了上述绘制能力：
-
-```cpp
-void ProgressRing::paintEvent(PaintEvent *event) {
-    // 若控件有背景样式由框架管理，先调用基类
-    // Widget::paintEvent(event);
-
-    Painter p(this);
-
-    float cx = width() / 2.0f;
-    float cy = height() / 2.0f;
-    float radius = min(cx, cy) - 4.0f;
-    float startAngle = -90.0f;   // 从 12 点钟方向开始
-
-    // 绘制灰色背景圆环
-    Pen bgPen(Color(200, 200, 200));
-    bgPen.setWidth(6);
-    p.setPen(bgPen);
-    p.drawArc({cx, cy}, radius, startAngle, startAngle + 360.0f);
-
-    // 绘制彩色进度弧
-    if (m_value > 0) {
-        Pen fgPen(Color(64, 156, 255));
-        fgPen.setWidth(6);
-        p.setPen(fgPen);
-        p.drawArc({cx, cy}, radius,
-          startAngle, startAngle + 360.0f * m_value / 100.0f);
-    }
-
-    // 在圆环中心绘制百分比数字
-    p.setFont(Font(18));
-    p.setBrush(Color(50, 50, 50));
-    p.drawText(rect(), format("{}%", m_value), AlignCenter);
-}
-```
-
-## 布局与尺寸
-
-覆写 `sizeHint()` 告知布局系统控件的"期望大小"。当父控件使用自动布局时，布局系统会参考这个值来分配空间：
-
-```cpp
-Size ProgressRing::sizeHint() const {
-    return Size(80, 80);  // 建议显示为 80×80px
-}
-```
-
-如果控件是高度随宽度变化的（例如等比缩放的图片），覆写 `heightForWidth()`：
-
-```cpp
-int AspectWidget::heightForWidth(int width) const {
-    return width; // 正方形比例
-}
-```
-
-对于需要手动管理子控件布局的情况，覆写 `layoutEvent()` 并在其中设置子控件的几何：
-
-```cpp
-bool ContainerWidget::layoutEvent(LayoutEvent *event) {
-    // 将子控件从上往下排列
-    int y = 0;
-    for (auto *child : children()) {
-        auto *w = dyn_cast<Widget *>(child);
-        if (w && w->isVisible()) {
-            w->setGeometry(0, y, width(), w->sizeHint().height());
-            y += w->height();
-        }
-    }
-    return true;
-}
-```
-
-也可以使用框架提供的现成布局类（如 `FlexLayout`、`StackLayout`），通过 `setLayout(new FlexLayout())` 挂载。
-
-::: tip 使用现成的布局类
-除非你要制作特殊布局的容器控件，否则建议使用框架提供的布局类来管理子控件的布局，这种情况下不需要覆写 `layoutEvent()`。
-
-实现一个完整的布局算法是比较复杂的，需要处理 `sizeHint()` 等多个方面的交互，并且还要考虑性能优化。
-:::
-
-## 动画
-
-框架提供了三类动画机制：**样式动画**、**属性动画**和 **`ValueAnimation`**。样式动画和属性动画主要用于**应用层**（即使用控件的一侧），而在实现自定义控件时，最常直接用到的是 `ValueAnimation`。
-
-### ValueAnimation
-
-`ValueAnimation<T>` 是一个对任意类型 `T` 进行插值的动画类。每一帧它会根据当前进度计算出插值结果，并通过 `value` 信号发射出来。你只需将信号连接到自己的更新逻辑即可：
-
-```cpp
-#include "gx_valueanimation.h"
-
-// 在控件成员中声明动画对象，一般使用指针以便在需要时动态创建和销毁
-ValueAnimation<int> *m_animation = nullptr;
-```
-
-```cpp
-// 在某处初始化并启动
-m_animation = new ValueAnimation<int>;
-m_animation->setValueLimits(0, 100);  // 从 0 插值到 100
-m_animation->setDuration(800);        // 800 毫秒
-m_animation->value.connect(this, &MyWidget::onAnimationValue);
-m_animation->start();
-
-// 帧回调：接收每帧计算出的插值
-void MyWidget::onAnimationValue(int v) {
-    m_currentValue = v;
-    update();  // 触发重绘
-}
-```
-
-动画结束时发射 `finished` 信号。如果不需要手动管理生命周期，可以用 `DeleteOnStop` 策略让动画在播放完毕后自动销毁：
-
-```cpp
-// 动画对象不需要外部访问，直接 new 后自动销毁
-auto *anim = new ValueAnimation<int>;
-anim->setValueLimits(0, 100);
-anim->setDuration(500);
-anim->value.connect(this, &MyWidget::onValue);
-anim->start(AbstractAnimation::DeleteOnStop);  // 播完自动 delete
-```
-
-框架内置了以下类型的插值支持：`int`、`float`（以及其他数值类型）、`Color`、`Point`、`Pen`、`Brush`、`Length`、`Transform` 等。
-
-其他常用配置：
-
-```cpp
-// 无限循环播放
-anim->setRepeat(AbstractAnimation::Infinity);
-
-// 来回交替播放（正放→倒放→正放……）
-anim->setDirection(AbstractAnimation::Alternate);
-
-// 设置缓动曲线
-#include "gx_easecurve.h"
-anim->setEaseCurve(easing::make_curve<easing::Ease>());
-```
-
-### 样式动画与属性动画
-
-**样式动画**（`StyleAnimation`）通过类似 CSS transition 的方式定义过渡效果，当控件的样式状态切换时由框架自动播放，主要在应用层组件的样式配置中使用。
-
-**属性动画**（`PropertyAnimation`）通过属性名字符串驱动 `GX_PROPERTY` 声明的属性，常用于应用层对控件属性做动画：
-
-```cpp
-#include "gx_propertyanimation.h"
-
-auto *anim = new PropertyAnimation(widget, "value");
-anim->setStartValue(Variant{0});
-anim->setStopValue(Variant{100});
-anim->setDuration(1000);
-anim->start(AbstractAnimation::DeleteOnStop);
-```
-
-在实现控件本身时，通常不需要使用属性动画，因为 `ValueAnimation` 更直接，也没有按名称查找属性的开销。
-
-## 文本显示控件
-
-实现带有文本内容的控件时，除了基本的绘制逻辑外，还需要处理文本测量、布局缓存、样式联动等问题。`Label` 是框架最典型的文本控件，其实现可以作为类似控件的参考模板。
-
-### 使用 `updateLayout()`
-
-`update()` 仅标记控件需要**重绘**，不影响布局系统。而文本内容变化时，控件的期望大小（`sizeHint()` 返回值）通常也会随之改变，此时必须同时调用 `updateLayout()` 来触发父控件的布局重新计算：
-
-```cpp
-void MyTextWidget::setText(const String &text) {
-    if (m_text == text)
-        return;
-    m_text = text;
-    update();        // 触发重绘
-    updateLayout();  // 通知父布局重新计算（因为 sizeHint 变了）
-}
-```
-
-仅调用 `update()` 的后果是：文本内容已更新，但控件大小仍是旧文本计算出来的值，排版会错乱。
-
-### 文本测量与 `sizeHint()`
-
-`FontMetrics` 是文本测量的核心工具，用它来实现 `sizeHint()` 和 `heightForWidth()`：
-
-```cpp
-#include "gx_fontmetrics.h"
-
-Size MyTextWidget::sizeHint() const {
-    if (m_text.empty())
-        return Size{0, int(font().pixelSize() * 1.2f)};
-    FontMetrics fm(font());
-    // 单行文本：直接测量宽度
-    return Size{fm.width(m_text), int(font().pixelSize() * 1.2f)};
-}
-```
-
-对于支持自动换行的多行文本，还需要实现 `heightForWidth()`，告知布局系统在给定宽度下控件的高度：
-
-```cpp
-int MyTextWidget::heightForWidth(int width) const {
-    if (width == 0) return 0;
-    FontMetrics fm(font());
-    float lineHeight = font().pixelSize() * 1.2f;
-    // boundingRect 计算给定宽度下文本的实际边界
-    return fm.boundingRect(m_text, width, 1024 * 1024, 0, 0, lineHeight).height();
-}
-```
-
-如果控件是严格的单行（不随宽度换行），`heightForWidth()` 返回 `-1` 表示不依赖宽度：
-
-```cpp
-int SingleLineWidget::heightForWidth(int) const { return -1; }
-```
-
-### 响应样式与尺寸变化
-
-字体、颜色等样式属性变化时，文本的测量结果也会改变。覆写 `styleEvent()` 来响应样式变化，调用基类实现后刷新与样式相关的缓存，再触发布局更新：
-
-```cpp
-void MyTextWidget::styleEvent(StyleEvent *event) {
-  // 必须先调用基类，它会更新内部样式数据
-    Widget::styleEvent(event);
-    // 字体等样式改变后，sizeHint 的返回值可能变化
-    updateLayout();
-}
-```
-
-同样，控件尺寸变化时如果有依赖宽度的文本换行计算，需要在 `resizeEvent()` 中触发更新：
-
-```cpp
-void MyTextWidget::resizeEvent(ResizeEvent *event) {
-    Widget::resizeEvent(event); // 调用基类
-    update();                   // 尺寸变化后重绘内容
-}
-```
-
-::: important
-`styleEvent()`、`resizeEvent()` 等事件处理函数的基类实现通常有不可省略的副作用，**必须调用**。调用时机取决于你的逻辑需要：大多数情况下先调用基类，再执行自己的逻辑。
-:::
-
-### 覆写 `event()`
-
-将 `StyleEvent`、`ResizeEvent` 等需要处理的事件类型全部列入 `EventDispatch` 的模板参数，以获得编译期检查：
-
-```cpp
-bool MyTextWidget::event(Event *event) {
-    return EventDispatch<Widget,
-        PaintEvent, ResizeEvent, StyleEvent>{}(this, event);
-}
-```
-
-### 流式布局与行内元素
-
-`setFlowLayout(true)` 将**容器控件**设置为流式布局（flow layout）模式，效果类似 CSS 的块级流，框架会自动将子元素按行排布，无需通过 `setLayout()` 创建独立的布局对象。`Label` 在构造函数中就启用了这一模式，从而使自己可以作为 `SpanLabel` 容器（内嵌多个带不同样式的子标签）：
-
-```cpp
-Label::Label(Widget *parent) : Widget(parent) {
-    setFlowLayout(true);
-}
-```
-
-`setInlineWidget(true)` 则是针对**子元素**的设置，将该控件标记为行内（inline）元素，使其像文字一样嵌入父容器的文本流中参与排版。例如，在富文本行内嵌入一个图标控件：
-
-```cpp
-auto *icon = new ImageBox(label);
-// 作为行内元素与文字混排。ImageBox 默认已经是行内的了，这里只是示例说明。
-icon->setInlineWidget(true);
-```
-
-当 `Label` 作为容纳行内子元素的 `SpanLabel` 容器使用时，布局系统会自动协调 `Label` 自身的文本测量逻辑和作为容器时对子元素的排布。两者共用同一套布局机制，开发者不需要手动干预这一过程。
-
-## AbstractScrollArea 与可滚动控件
-
-当控件需要滚动行为时，不必从头实现手势识别、惯性滚动和回弹效果，直接继承 `AbstractScrollArea` 即可获得这些能力。框架内置的 `ScrollArea`（列表滚动）和 `TextField`（单行文本输入）都基于它实现。
-
-### 基本结构
-
-继承 `AbstractScrollArea` 的控件遵循一个固定的结构：控件本身是"视口"，内部有一个**内容控件**（content widget）负责承载实际内容，滚动时移动的是内容控件而非视口本身。
-
-构造函数中完成初始化：
-
-```cpp
-// myticker.h
-#include "gx_abstractscorllarea.h"
-
-class MyTicker : public AbstractScrollArea {
-    GX_OBJECT
-public:
-    explicit MyTicker(Widget *parent = nullptr);
-    bool event(Event *event) override;
-
-protected:
-    bool layoutEvent(LayoutEvent *event);
-    friend struct EventTraits<MyTicker>;
-};
-```
-
-```cpp
-// myticker.cpp
-#include "myticker.h"
-#include "gx_widgetevent.h"
-
-MyTicker::MyTicker(Widget *parent) : AbstractScrollArea(parent) {
-    setDirection(Horizontal);     // 水平滚动
-    setDamping(5);                // 调整阻尼（数值越大摩擦越强）
-
-    auto *content = new Widget;   // 创建内容控件
-    setContentWidget(content);
-}
-
-bool MyTicker::event(Event *event) {
-    return EventDispatch<AbstractScrollArea, LayoutEvent>{}(this, event);
-}
-```
-
-将 `EventDispatch` 的基类参数设为 `AbstractScrollArea`（而非 `Widget`），可以让未被当前类处理的事件（手势、滚轮、resize 等）自动回退到 `AbstractScrollArea` 的实现，从而保留完整的滚动行为。
-
-### 配置滚动参数
-
-```cpp
-setDirection(Vertical);          // 垂直滚动（默认）
-setDirection(Horizontal);        // 水平滚动
-setDamping(3);                   // 较低阻尼：惯性更强，滑行更远
-setDamping(20);                  // 较高阻尼：惯性较弱，接近无惯性
-setScrollBar(true);              // 显示滚动条
-setBouncesPolicy(SnapType::SnapEdge);  // 边缘回弹策略
-```
-
-`AbstractScrollArea` 还提供了 `scrollTo(x, y, behavior)` 来以编程方式控制滚动位置，`behavior` 为 `Instant`（立即跳转）或 `Smooth`（带动画）。
-
-::: tip 惯性阻尼
-对于 `TextField` 这类需要精确控制滚动位置的控件，通常会设置较高的阻尼值以弱化惯性；而对于 `ScrollArea` 这类以浏览为主的控件，则可以设置较低的阻尼以获得更流畅的滚动体验。
-
-阻尼不要设置得太低，否则超长距离的滚动可能导致内容缓存失效，出现卡顿。
-:::
-
-### 在事件分发中调用基类
-
-有时需要对某事件做额外处理，再将控制权交给 `AbstractScrollArea` 的默认实现。典型的做法是在处理函数中直接调用基类方法：
-
-```cpp
-// TextField 的做法：只在有文字时才转发手势给滚动区
-bool TextField::gestureEvent(GestureEvent *event) {
-    if (text().empty()) // 无文字时直接忽略
-        return false;
-    // 其余情况交给基类滚动逻辑
-    return AbstractScrollArea::gestureEvent(event);
-}
-```
-
-这种模式下，`EventDispatch` 的基类参数使用 `Widget`，当前类自行决定何时调用哪个基类方法：
-
-```cpp
-bool TextField::event(Event *event) {
-    // 用 Widget 作为基类，完全由自己控制 AbstractScrollArea 行为的调用时机
-    return EventDispatch<Widget, GestureEvent, ResizeEvent>{}(this, event);
-}
-```
-
-### 内容控件的事件过滤
-
-内容控件负责布局和承载子控件，但它的某些事件（如布局请求）有时需要容器来拦截和自定义处理。通过 `setEventFilter(this)` 将容器注册为内容控件的事件过滤器，然后覆写 `eventFilter()` 处理感兴趣的事件：
-
-```cpp
-// 在构造函数中注册
-content->setEventFilter(this);
-
-// 拦截内容控件的布局请求
-bool MyTicker::eventFilter(Object *receiver, Event *e) {
-    if (receiver == contentWidget() && e->type() == Event::Layout) {
-        auto *lv = static_cast<LayoutEvent *>(e);
-        if (lv->isLayoutRequest()) {
-            // 自定义布局逻辑……
-            return true; // 返回 true 阻止事件继续传递
-        }
-    }
-    // 其余情况交给基类
-    return AbstractScrollArea::eventFilter(receiver, e);
-}
-```
-
-::: tip
-未被处理的事件应回退给 `AbstractScrollArea::eventFilter()`，它负责与滚动条等内部机制的交互。
-:::
-
-### 设置行内控件
-
-调用 `setInlineWidget(true)` 可以让控件参与行内布局（inline layout），适合嵌入文本流中的场景，`TextField` 就是这样处理使其可以像文字一样嵌入行内。
-
-### ScrollArea 及派生类
-
-`ScrollArea` 是 `AbstractScrollArea` 的一个派生类，在滚动基础上增加了**索引导航**（`index()`/`setIndex()`）、**吸附模式**（snap）和**视觉特效**（visual effect）等能力，是列表、走马灯等场景的首选基类。`Swiper` 则在 `ScrollArea` 之上进一步增加了分页（`pageLength`）和指示点（indicator）等功能，适合轮播图等模式。
-
-这些类通常**不需要进一步派生**，大多数定制需求可以通过配置参数和挂载周边设施来实现，而无需子类化。
-
-#### 视觉特效 VisualEffect
-
-`ScrollArea` 支持通过 `setVisualEffect()` 挂载一个 `VisualEffect` 对象，在绘制每个子控件之前对其施加透明度、缩放、位移等视觉变换，从而实现滚动时的动态效果。框架内置了以下几种效果：
-
-| 类名 | 效果 |
-|---|---|
-| `FisheyeVisualEffect` | 鱼眼效果，中心元素放大，边缘缩小 |
-| `FadeVisualEffect` | 边缘渐隐，距离视口中心越远透明度越低 |
-| `CollapseVisualEffect` | 折叠效果，元素向上（或向下）边缘聚拢缩小 |
-| `BlendVisualEffect` | 在两种效果之间按进度插值过渡 |
-
-```cpp
-#include "gx_visualeffect.h"
-
-scrollArea->setVisualEffect(make_shared<FisheyeVisualEffect>());
-```
-
-如需自定义效果，继承 `VisualEffect` 并实现 `resolve()` 方法。`resolve()` 接收目标子控件、视口矩形和子控件中心点，返回一个 `PaintModifier`，其中可设置 `opacity`、`scale`、`translate` 等属性。
-
-有关 `ScrollArea` 和 `Swiper` 的完整参数说明，以及如何实现自定义 `VisualEffect`，将在[滚动区域](./scroll-area.md)中单独介绍。
-
-## 控件树与生命周期
-
-在 C++ 中创建控件时，通过构造函数的 `parent` 参数建立父子关系：
-
-```cpp
-// parent 销毁时，child 也会随之销毁
-auto *parent = new Widget(window);
-auto *child  = new ProgressRing(parent);
-child->setGeometry(10, 10, 80, 80);
-```
-
-无论是手动 `delete` 父控件，还是框架在应用退出时清理控件树，所有子控件都会被自动销毁。你不需要在析构函数中 `delete` 子控件。
-
-如果需要延迟销毁（例如在事件处理函数内部），可以使用 `deleteLater()`，它会在当前事件处理完成后再销毁对象，避免"在回调中销毁自己"这类问题。
-
-在响应式框架中，控件树由组件框架维护，定制开发时只需要[注册控件类](./widget-export.md)。
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/platform-font-fallback.md
-
-# 平台字体回退
-
-Glyphix 框架内置了一套基于 font-face / font-family 的字体加载与回退机制。但目标平台通常自带完善的字体管线（如 Windows DirectWrite、macOS CoreText），它们已实现系统字体回退与相关优化。
-
-为充分利用平台字体管线，Glyphix 允许你接管字体回退：当框架内字体无法覆盖某个字符时，转交平台去查找并渲染合适的系统字体。本文面向 Glyphix 的系统开发者，带你一步步完成对接。
-
-涉及的公共头文件：
-- `gx_unite.h`：含 UniTE 公共接口，以及引擎安装函数 `installEngine()`；
-- `gx_shapingadapter.h`：此为主要接口；
-- `gx_fontdriver.h`：提供 `FontDriver` 封装机制；
-- `gx_fontloader.h`：提供字体加载器接口。
-
-## 整体思路
-
-一段文本要在屏幕上显示，会经过下面这条管线：应用文本交由**段落布局引擎**分行、定位；每段同脚本、同方向的文本被**塑形**成字形；缺字时由**字体回退**补齐；字形再交**字体驱动**渲染成位图；而所有字体都来自**字体管理**层的注册、加载与复用。
-
-<ArchDiagram max-width="560px">
-  <div>应用文本<div class="remark">段落 · 字符串 · 样式</div></div>
-  <div>
-    段落布局引擎
-    <div class="group row">
-      <div>轻量引擎 LiTE<div class="remark">简单排版（默认引擎）</div></div>
-      <div>UniTE 引擎<div class="remark">BiDi · Shape · 复杂脚本</div></div>
-    </div>
-  </div>
-  <div>
-    塑形 · 字体回退
-    <div class="group row">
-      <div>HarfBuzz<div class="remark">GSUB / GPOS</div></div>
-      <div>Simple Shape<div class="remark">字符 → 字形</div></div>
-      <div class="subject">FontFallbackShaper<div class="remark">family 回退 · 平台系统字体</div></div>
-    </div>
-  </div>
-  <div>
-    字体渲染
-    <div class="group row">
-      <div>FontDriver<div class="remark">TTF / FreeType</div></div>
-      <div>FontDriverFamily<div class="remark">多 face 级联</div></div>
-      <div class="subject">PlatformFont 包装器<div class="remark">绘制平台回退字形</div></div>
-    </div>
-    <div>GlyphCache - 字形位图缓存</div>
-  </div>
-  <div>
-    字体管理 FontManager
-    <div class="group row">
-      <div>注册 / 查找<div class="remark">face · family · 属性</div></div>
-      <div class="subject">FontLoader<div class="remark">加载 face，注入包装器</div></div>
-    </div>
-  </div>
-</ArchDiagram>
-
-图中高亮的三部分即本文涉及内容：
-1. 回退策略 `FontFallbackShaper`，用于找出缺字并回退塑形；
-2. 负责绘制平台回退字体的 `PlatformFont` 包装器，与 `FontFallbackShaper` 配套使用；
-3. 用于加载平台回退字体包装器的 `FontLoader`，将注册到 `FontManager` 中。
-
-其余各层框架已实现，文本塑形（`ShapingAdapter`）通常无需重头实现，直接复用参考实现即可。
-
-### 前置条件
-
-按本文档实现平台字体回退功能前，需要：
-
-- 启用 UniTE 文本引擎（相比默认轻量引擎，它支持复杂脚本塑形与多级回退）。
-- 目标平台支持完整的字体管线，能提供系统字体的塑形、脚本映射等高级功能。这通常是一个复杂的子系统，大部分 MCU RTOS 平台不具备。
-
-::: important
-相比于默认的 LiTE 引擎，启用 UniTE 以及完整的字体管线需要更多的内存和固件空间。且该引擎的性能较轻量的 LiTE 要差，需要评估是否需要为了完整的 Unicode 支持和国际化需求而启用它。
-:::
-
-## 复用塑形后端
-
-`ShapingAdapter` 负责把字符塑形成字形。自带的 `HarfBuzzShaper`（`gx_harfbuzz_shaper.cpp`）已实现完整的 OpenType 塑形，它调用 HarfBuzz 塑形，再把字形索引、advance、偏移按目标像素尺寸写入输出。
-
-`HarfBuzzShaper` 依赖 Freetype 读取字体文件，因此需要同时引入 HarfBuzz 和 Freetype 库。若目标平台已经存在这些库，请保证版本一致，否则可能出现链接或运行时错误。
-
-::: tip
-和 HarfBuzz 的[职责](https://harfbuzz.github.io/what-harfbuzz-doesnt-do.html)类似，`ShapingAdapter` 也不处理包含不同字体的文本 run，这也包括下文介绍的“字体回退”机制情况。因此，只要 shaping 中使用的字体缺字，`ShapingAdapter` 实现就会返回 `.notdef` 字形（索引 `0`），并由回退策略去处理。
-:::
-
-## 实现回退策略
-
-`FontFallbackShaper` 是回退的核心。引擎每塑形一截文本就调用它一次，要求交回一份**不含缺字**的字形序列作为塑形结果。与 `ShapingAdapter` 不同，它不只是针对单一 font-face 的塑形，而是设计用于两级回退。
-
-### 两级回退级联
-
-`FontFallbackShaper::shape()` 回退按“由近及远”分两级：
-
-- **第一级**：在当前 family 内部用其它字体互相补字。框架已实现，你只需调用 `builtinShape()`。
-- **第二级**：第一级仍补不上的缺字，交给平台系统字体。这一级由你实现。
-
-缺字在数据里表现为字形索引为 `0`，即 `.notdef`。`shape()` 的返回值 `FallbackResult` 用位标志表达结果：`result & NotNeeded` 为真表示已无缺字、可直接结束；否则常见返回 `FullyResolved`（全部处理完）或 `PartiallyResolved`（仍有残留 `.notdef`）。
-
-### `shape()` 函数骨架
-
-先调用第一级；若已无缺字就返回，否则进入第二级的平台字体回退。`m_shaper` 是这个回退器持有的 `ShapingAdapter`（通常就是 `HarfBuzzShaper`）。
-
-```cpp
-FallbackResult shape(GlyphRunBundle &storage,
-                     TextSpan text,
-                     FontDriver *font) override {
-    // 第一级：使用 builtin API 处理 family 内的回退
-    auto r = builtinShape(storage, text, font, &m_shaper);
-    if (r & NotNeeded)
-        return r;                                  // 已无缺字，结束
-    return resolveByPlatform(storage, text, font); // 第二级，见下
-}
-```
-
-`builtinShape()` 是唯一依赖 `ShapingAdapter` 的地方，这种情况下你通常需要将 `PlatformFallbackShaper` 实现如下：
-```cpp
-class PlatformFallbackShaper : public FontFallbackShaper {
-    HarfBuzzShaper m_shaper; // 直接定义成员变量，不需要指针引用
-
-public:
-    PlatformFallbackShaper() = default;
-    FallbackResult shape(GlyphRunBundle &storage,
-                         TextSpan text, FontDriver *font) override;
-};
-```
-请注意，`m_shaper` 仅仅是你的平台回退策略的私有成员变量，完全不需要暴露给外部使用。`shape()` 内部调用 `builtinShape()` 时传入 `&m_shaper` 即可。
-
-::: tip
-极端情况下（如初步适配阶段）可以不管 family 内的回退，直接跳过 `builtinShape()`，只处理第二级平台回退。此时可以省去 `m_shaper` 成员变量。
-
-无论如何，`ShaperAdapter` 具体类通常不能定义为局部变量，因为它可能持有 HarfBuzz 的缓存状态，若每次塑形都重新创建会导致严重的性能下降。
-:::
-
-### 取得平台字体
-
-第二级要把缺字交给平台，并最终让包装器去渲染。`fallbackFont(font)` 返回注册在 family 末项的那个包装器（见后文）。它的静态类型是 `FontDriver *`，你需要转回自己的包装器类型，才能调用你自定义的登记、查询接口。
-
-```cpp
-// 转型也可用 dyn_cast，但如果只有一个包装器类型，static_cast 也安全
-auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
-if (wrapper == nullptr)
-    return PartiallyResolved; // family 末项没有包装器，无法继续
-```
-
-::: warning 必须成对实现
-回退策略与包装器是配套的一对：上面的 `static_cast` 要求 `fallbackFont()` 返回的正是你自己的包装器类型。务必保证安装的回退器与注册的包装器相互匹配。
-:::
-
-### 简单回退塑形
-
-最常见且适合起步的情形是：整段 run 都可用同一平台字体塑形（即某一系统字体文件完全覆盖该脚本）。此时按 `storage.run().spec.script` 选定平台字体，对整 run 重塑一次，整段写入同一个 `faceId`，**直接覆盖第一级结果**，无需与已解析字形做合并。
-
-UniTE 按 script 切分 run，同一段文本里的拉丁与 CJK 本就是不同 run。当主字体主打拉丁、遇到 CJK, Arabic, Devanagari 等 script 时，该 run 经 `builtinShape()` 后往往整段都是 `.notdef`，整段重塑并覆盖不会丢失任何已解析字形。所以多语言排版绝大多数走这条路径，并非退化特例。
-
-```cpp
-// 按脚本选定平台字体（平台字体句柄，非 FontDriver），登记得 faceId
-auto sysFont = platformFontForScript(storage.run().spec.script);
-uint32_t faceId = wrapper->registerFont(sysFont);
-// 你的塑形步骤产出 glyphCount 个字形（此处以 HarfBuzz 产物演示）
-auto &run = storage.resize(glyphCount);
-for (int i = 0; i < glyphCount; ++i) {
-    run.data.glyphIds[i]   = GlyphIds::encodeFallback(gid[i], faceId);
-    run.data.xAdvances[i]  = uint16_t(scale(pos[i].x_advance));
-    run.data.xOffsets[i]   = int16_t(scale(pos[i].x_offset));
-    run.data.yOffsets[i]   = int16_t(scale(pos[i].y_offset));
-    run.data.clusterMap[i] = static_cast<int>(info[i].cluster);
-}
-```
-
-`pos`, `info`, `gid` 和 `scale` 字段来自你的塑形步骤，上面用 HarfBuzz 的输出作演示。
-
-::: tip 平台塑形能力
-平台通常自带塑形能力（如 DirectWrite、CoreText），是否复用 HarfBuzz 按具体平台决定；演示中的 HarfBuzz 产物替换为平台塑形输出即可。RTL run（`spec.bidiLevel & 1`）需把方向传给塑形器。
-:::
-
-此方法的前提是整段 run 映射到单一平台字体。它**不适用 Common script**（Emoji、符号等）：同一 run 内不同字符可能分属多种平台字体，需要下文的复杂回退。
-
-### 复杂回退塑形
-
-当一个 run 内需要多种平台字体、或仅部分簇需要回退时，简单方案不再适用。考虑到具体的回退和合并算法取决于平台 API，本文档只约束合并后 `GlyphRun` 必须满足的语义，实现需自行处理：
-
-- 第一级已解析的字形**原样保留**，第二级只替换仍为 `.notdef` 的簇。
-- 每个字形槽填齐 `glyphIds`, `xAdvances`, `xOffsets`, `yOffsets`, `clusterMap`；回退字形用 `encodeFallback(gid, faceId)` 标记。
-- `clusterMap[i]` 为该字形对应源码点相对**本 run** 的偏移（与 `spec.text` 一致，范围 `[0, text.length())`），供绘制回映与按行裁剪。
-- 字形数量可变：用 `storage.resize()/reset()` 调整存储，然后逐槽写入。`GlyphRunBundle` 内部会自动更新 `run().glyphCount`。
-- 同一源簇映射到多个字形时，顺序与 advance 之和须正确；GSUB 合簇吞并的码点应产出零 advance 字形，避免空隙或错位。
-- `faceId` 须为包装器登记过、全生命周期稳定的 ID；RTL run 的字形顺序与塑形方向须一致。
-- 返回值：全部补齐返回 `FullyResolved`，仍有残留返回 `PartiallyResolved`。
-
-只要输出满足上述约束，框架即可正确渲染，具体是分段查询平台 API、还是复用 HarfBuzz 逐字体塑形，可按平台选择。
-
-### 行高与缓存
-
-行高取决于每个字形**实际由哪个字体绘制**。`builtinLineMetrics()` 负责 family 内字形的部分；带回退标记（`isFallback()`）的字形则向包装器查询其系统字体的升降部并入。回退字形在 `GlyphIds` 里由 `encodeFallback` 编码，其 `fontIndex()` 即写入的 `faceId`，据此向包装器取回对应平台字体。
-
-```cpp
-VerticalMetrics resolveLineMetrics(const GlyphIds *gids, int count,
-                                   FontDriver *font) const override {
-    // 处理 family 内的字形
-    VerticalMetrics m = builtinLineMetrics(gids, count, font);
-    // 处理平台回退字形
-    auto *wrapper = static_cast<PlatformFont *>(fallbackFont(font));
-    if (wrapper == nullptr)
-        return m;
-    // 对 gids[i].isFallback() 的字形，向包装器查 asc/descent 并入 m
-    for (auto gid : utils::span<const GlyphIds>(gids, count)) {
-        if (!gid.isFallback())
-            continue; // 只处理回退字形
-        uint32_t faceId = gid.fontIndex(); // 回退字形的 fontIndex() 即 faceId
-        auto face = wrapper->fontForFaceId(faceId); // 平台字体句柄（非 FontDriver）
-        if (face == nullptr)
-            continue;
-        m.ascent = max(face->ascender(), m.ascent);
-        m.descent = min(face->descender(), m.descent);
-    }
-    return m;
-}
-```
-
-也可以汇总整行的回退字体并一次性查询它们的 asc/descent，避免循环中逐字形查询。
-
-`flush()` 用来释放包装器缓存的系统字体：
-
-```cpp
-void flush(FontDriver *font) override {
-    if (auto *w = static_cast<PlatformFont *>(fallbackFont(font)))
-        w->releaseFonts();
-}
-```
-
-::: tip
-`flush()` 在段落销毁或内存紧张时由框架调用，请在其中清理包装器持有的平台资源。
-:::
-
-## 回退字体 `FontDriver` 包装器
-
-包装器负责把上一步塑形的字形渲染成位图。它继承 `FontDriver`，构造时带上 `PlatformFallback` 标记，这样框架就知道它是回退字体。
-
-```cpp
-class PlatformFont : public FontDriver {
-public:
-    PlatformFont(const String &family, const FontAttribute &attr)
-        : FontDriver(family, attr, Vector | PlatformFallback) {}
-    // ... bitmapOf / metricsOf ...
-protected:
-    void requestHandler(int) override {}
-};
-```
-
-该字体包装器并不用于加载某种字体文件（如 `FontDriverTTF` 那样）。它的作用是把回退字形交给平台字体管线去处理，而内部实现对 Glyphix 是不透明的。
-
-### 双模式查询
-
-包装器收到的 `code` 有两种含义，用 `CodeAsGlyphId` 位区分：
-
-- **带标记**：按字形索引查询，高位携带 `faceId`，低位为字形索引。解出后路由到对应平台字体，再以 `glyphId` 查询对应的 `GlyphBitmap`。
-- **不带标记**：Unicode 字符查询，按 codepoint 在已登记平台字体里兜底查找，内部自己转换为字形索引再查询。
-
-常见的 `bitmapOf()` 实现如下：
-
-```cpp
-bool bitmapOf(uint32_t code, GlyphBitmap *bitmap) override {
-    if (code & CodeAsGlyphId) { // 按字形索引
-        uint32_t faceId  = (code >> 16) & 0x3ff;
-        uint32_t glyphId =  code & 0xffff;
-        auto face = fontForFaceId(faceId); // 平台字体句柄（非 FontDriver）
-        return face && face->bitmapOf(glyphId, bitmap);
-    }
-    // Unicode 字符查找，这里遍历已注册字体，也可以用更高效的映射表
-    for (auto *face : registeredFonts()) {
-        uint32_t glyphId = face->glyphIndexOf(code);
-        if (face->bitmapOf(glyphId, bitmap))
-            return true;
-    }
-    return false;
-}
-```
-
-::: tip
-`fontForFaceId()` 返回的是平台字体句柄，**并非 `FontDriver`**；上述 `face->bitmapOf(...)`、`face->glyphIndexOf(...)` 是对该句柄操作的伪代码，分别表示“按 `glyphId` 取 `GlyphBitmap`”，“按码点取 `glyphId`”。
-:::
-
-`metricsOf()` 用同样的双模式逻辑；`advancesOf()`、`baseline()` 等也从平台字体计算。`duplicate()` 复制一份映射表即可。
-
-### `faceId` 映射
-
-包装器维护一张 `faceId` → 平台字体的映射，供回退策略登记、渲染时查回。
-
-`faceId` 是 $10$ 位整数（$[0, 1023]$），含义完全由实现定义，唯一要求是**全生命周期稳定**。有两种常见做法：
-
-- **按脚本固定**：直接用 `Script` 枚举值作 `faceId`，包装器按脚本持有对应平台字体，登记时即按脚本写入，无需运行时分配。
-- **按需分配**：每遇到一个新平台字体就分配下一个索引，维护一张增长表。
-
-按脚本固定的例子（`faceId` 即脚本值）：
-```cpp
-PlatformFontHandle fontForScript(Script script) {
-    switch (script) {
-    case Script::Han:    return sysHanFont;
-    case Script::Arabic: return sysArabicFont;
-    case Script::Latin:  return sysLatinFont;
-    // ...
-    }
-    return sysDefaultFont;
-}
-```
-你需要自行处理脚本→字体映射、`faceId` 分配与平台字体对象缓存。
-
-::: tip
-`faceId` 是回退策略与包装器之间的契约：`PlatformFallbackShaper` 用它编码字形，`PlatformFont` 用它解码回系统字体。两端对 `faceId` 的解释必须一致，并且要保证可以由 $10\rm bit$ 整数表示。
-:::
-
-## 注册包装器
-
-最后让框架把包装器纳入 family 加载。实现 `FontLoader::load()`，对某个通用 family 名返回包装器，再装进 `FontManager`：
-
-```cpp
-struct PlatformFontLoader : public FontLoader {
-    FontDriver *load(const String &face, const FontAttribute &attr) override {
-        if (face == "sans-serif")
-            return new PlatformFont(face, attr);
-        return nullptr;
-    }
-};
-
-CoreApp()->fontManager()->install(new PlatformFontLoader);
-```
-
-应用以 `"<primary-face>,sans-serif"` 形式请求字体时，框架按逗号顺序把各部分合并进同一个 family，包装器作为最后一项成为兜底 face，`fallbackFont()` 便能取到它。
-
-`PlatformFont` 和 `PlatformFontLoader` 通常只注册为 `sans-serif` 这类通用 family 名的字体，而不是某个具体的系统字体名。这样应用就可以在不同平台上使用同一 family 名，而不需要知道平台的具体字体。
-
-::: warning 功能限制
-包装器总在 family 末项目前依赖应用按上述顺序书写 family 名。自动保证该顺序的机制尚在完善中。
-:::
-
-## 安装并装配
-
-`gx_unite.h` 的 `installEngine()` 把你的回退策略接入引擎：
-
-```cpp
-unite::installEngine(*CoreApp()->typesetCore(),
-                     std::make_unique<PlatformFallbackShaper>());
-```
-
-完整装配顺序：
-
-1. `fontManager()->install(new PlatformFontLoader)`：注册包装器加载器。
-2. `installEngine(...)`：安装持有塑形后端的回退策略。
-3. 以 `"<primary-face>,sans-serif"` 形式请求字体，照常布局、绘制。
-
-## 注意事项
-
-- advance / 偏移一律为 Q26.6 定点（值 = 像素 × 64）。
-- 仍未补齐的 `.notdef`（字形索引为 $0$）在渲染时被跳过，对应位置会显示空白或豆腐块。
-- `faceId` 仅 $10$ 位，单个 family 同时活跃的系统字体上限为 $1024$ 个。
-- 回退策略与包装器必须成对实现并保持类型一致（依赖 `static_cast`）。
-- 在 `flush()` 中务必释放包装器持有的平台字体缓存。
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/README.md
-
-# C++ 原生开发
-
-Glyphix 是一个面向嵌入式设备的应用框架，它提供了一套以 JavaScript 为主、类 Vue Options API 风格的应用开发体验。然而，框架的核心运行时是用 C++ 实现的，因此硬件厂商可以通过 C++ 来扩展和定制框架功能——这正是 “C++ 原生开发” 的用武之地。
-
-这份文档面向具有嵌入式开发经验的 C++ 开发者，旨在帮助你理解 Glyphix 的 C++ 扩展机制，并能够动手实现以下两类功能：
-
-- **Native Module（原生模块）**：将 C++ 功能封装为 JavaScript 可调用的 API，例如文件访问、硬件传感器读取、蓝牙通信等系统能力。
-- **Native Widget（原生控件）**：用 C++ 实现自定义 UI 控件，并将其注册为框架[组件](/framework/component/native-component.md)，供应用在界面中直接使用，就如同使用内置的 `div`、`image`、`button` 组件一样。
-
-::: tip
-在应用开发中，我们使用“组件”来指代 UI 元素，而在 C++ 层使用“控件（Widget）”来指代 UI 元素。本文档会区分这两个术语：**控件**是 C++ 层的概念，**组件**是响应式框架中的概念。
-:::
-
-## 框架运行模型
-
-Glyphix 的运行时由多个层次构成，下图展示了完整的分层架构：
-
-<ArchDiagram max-width="560px">
-  <div>
-    应用沙箱（Applet × N）
-    <div class="remark">独立 JavaScript Realm · 生命周期隔离</div>
-  </div>
-  <div>
-    响应式框架（C++）
-    <div class="group row">
-      <div>AppletKit<div class="remark">应用路由 · 后台管理</div></div>
-      <div>组件系统<div class="remark">Template · Reactive Render</div></div>
-      <div>JsVM 桥接层<div class="remark">JerryScript / QuickJS</div></div>
-    </div>
-    <div class="group row">
-      <div>Applet<div class="remark">C++ ↔ JavaScript Sandbox</div></div>
-      <div>异步会话<div class="remark">ResultSession · Signals</div></div>
-      <div>Native Module<div class="remark">系统 API 扩展</div></div>
-    </div>
-  </div>
-  <div>
-    C++ 核心框架
-    <div class="group row">
-      <div>控件系统<div class="remark">Object · Widget</div></div>
-      <div>布局引擎<div class="remark">Flex · Flow · Stack</div></div>
-      <div>样式引擎<div class="remark">CSS · Transition</div></div>
-    </div>
-    <div class="group row">
-      <div>事件系统<div class="remark">Touch · Key · Wheel</div></div>
-      <div>Painter<div class="remark">2D 绘制</div></div>
-      <div>动画引擎<div class="remark">Property · Ease</div></div>
-      <div>Signal / Slot</div>
-    </div>
-  </div>
-  <div>
-    平台适配层
-    <div class="group row">
-      <div>图形后端<div class="remark">Framebuffer · GPU</div></div>
-      <div>输入驱动<div class="remark">Touch · Key · Wheel</div></div>
-      <div>文件系统<span class="remark">File · Dir</span></div>
-      <div>IO/时间<span class="remark">Logger · Time</span></div>
-    </div>
-  </div>
-  <div>
-    硬件 / OS
-    <div class="remark">RTOS · Linux · WASM</div>
-  </div>
-</ArchDiagram>
-
-最底层是**平台适配层**，负责图形渲染、输入事件、文件系统等平台相关的抽象。这一层通常由设备厂商实现，或由 Glyphix 提供对应平台的参考实现。
-
-其上是 **C++ 核心框架**，包含完整的控件系统（`Widget`）、事件分发、动画引擎、布局系统和样式引擎。所有的 UI 元素最终都以 C++ 控件树的形式组织和渲染。
-
-再上层是**响应式框架**，负责将 C++ 核心能力桥接到 JavaScript 应用。它内嵌 JavaScript 引擎（JerryScript 或 QuickJS），通过 `JsVM` 和 `JsValue` 类实现 C++ 与 JavaScript 的双向交互。AppletKit 管理应用（Applet）的完整生命周期，组件系统实现响应式数据绑定和模板渲染，异步会话框架则将 C++ 的异步操作映射为 JavaScript 的 Promise。响应式框架本身也是用 C++ 实现的。
-
-最上层是**应用沙箱**，每个运行的应用（Applet）拥有独立的 JavaScript 执行环境（Realm），彼此完全隔离。应用退出时，其沙箱内的所有资源会被自动回收。
-
-### 系统协作原理
-
-架构题呈现了模块划分，但刻意隐藏了模块间的协作和耦合关系。实际上，整个框架由一套共同的底层机制协作运转。理解这些机制，能帮助你在实践中知道“自己在做什么、为什么这么做”。
-
-整个框架由一套**对象系统**贯穿，它赋予类运行时感知能力，包括 C++ 类的属性反射与事件通知能力，以及必要的生命周期安全性。Widget、Native Module、应用框架和异步会话都依赖这同一套地基，详见[对象系统](./object-system.md)。
-
-**Widget** 以对象树加上绘制与事件分发构成 UI 骨架；JavaScript 应用层则使用**组件化**的声明式编程模型，两者通过对象的属性等反射能力自然衔接。**异步会话**等复杂的功能也依赖对象系统的生命周期模型来保证正确性。
-
-通过**元对象编译器**和其他抽象机制，Glyphix 并不需要开发者手写绑定代码，即可将 C++ 开发的控件类暴露给 JavaScript 使用。同时，C++ 侧也保留功能完整性，理论上讲你可以直接用 C++ 开发一个完整的应用（虽然不建议这么做）。
-
-### 编程模型
-
-Glyphix 项目不限制特定的编程范式，例如对象系统是一个经典的面向对象模型，但响应式框架则为应用开发者提供声明式的组件化开发体验。
-
-我们不建议开发者去实践“一切皆对象”、刻意套用设计模式，或者追求不必要的抽象。我们的设计原则更倾向于**实用主义**，以满足嵌入式系统的**资源限制**和开发效率为首要目标。
-
-## 文档约定
-
-### 这份文档是什么？
-
-这是 Glyphix C++ 原生开发的指南文档，而**不是** API 参考文档。它介绍框架的设计理念、核心机制和开发流程，帮助你理解如何扩展框架功能，并通过示例代码展示具体实现细节。
-
-在实际开发中，请务必参考 API 文档，它跟随 SDK 一起分发，请联系你的厂商获取访问权限。
-
-### 示例代码说明
-
-Glyphix 框架中的所有 C++ 代码都在 `gx` 命名空间下，文档中默认假设已经 `using namespace gx;`，因此类名和函数名不带 `gx::` 前缀。例如：
-
-```cpp
-#include "gx_widget.h"
-
-using namespace gx; // 文档中默认假设已经引入 gx 命名空间
-
-class MyWidget : public Widget {
-    // ...
-};
-```
-
-中，`Widget` 实际上是 `gx::Widget`，但为了简洁起见，我们省略了命名空间前缀。
-
-::: tip C++ 学习资源
-如果你主要使用 C 开发，熟悉 MCU、RTOS、驱动或 LVGL，但没有系统学习过 C++，建议先阅读 [C++ 学习建议](./cpp-guide.md)。它只覆盖进入 Glyphix 原生开发真正需要的那部分 C++，并整理了适合嵌入式开发者的外部资源。
-:::
-
-## 开发路径
-
-无论你的目标是什么，建议先通读[对象系统](./object-system)中关于 `GX_OBJECT`、`GX_PROPERTY` 和 `Signal` 的基本用法——它们在所有开发场景中都会用到。
-
-根据你的目标，选择合适的文档继续阅读：
-
-- [SDK 项目配置](./sdk-setup)：如何配置 SDK 项目的构建环境，包括 `glyphix_add_meta_objects()` 注册、宿主机构建和交叉编译。
-- [Native Module 开发](./native-module)：如何为应用提供新的系统 API，例如获取传感器数据、调用底层 SDK 功能。
-- [异步功能开发](./async)：如何为应用扩展异步功能，例如网络请求、文件 IO、耗时计算等。
-- [控件开发指南](./widget.md)：如何实现新的 UI 控件（如自定义图表、特殊的动效列表等）。
-- [控件注册与导出](./widget-export.md)：将自定义控件注册为框架组件，供应用直接使用。
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/async-examples.md
-
-# 异步开发示例
-
-如果你感觉[异步功能开发](async.md)的章节内容过多且不够直观，本文档将提供一些典型的、较为简单的示例，帮助你应对一些常见的异步开发场景。
-
-这些场景并不极端复杂，但侧重于：
-- 一个典型的异步调用模式，重点在于跨线程、跨语言的调用关系；
-- 这些场景可能更琐碎，存在一大批需要对接的系统 API，对代码膨胀较为敏感；
-- 存在典型的 C API 交互需求，而不是标准的 C++ 接口。
-
-你可以在 SDK 示例中找到这些场景的完整实现，并可以直接在 PC 上模拟运行。
-
-## 场景：对接 C 闹钟接口
-
-嵌入式系统中常见的异步模式是“C 回调”：调用方提交一个任务，并传入一个函数指针作为完成通知，操作完成后由 worker 线程调用该回调。
-
-::: important async 只支持线程模型
-Glyphix 框架的异步功能只支持普通的线程上下文，不能在中断中使用。如果你的异步上下文是中断处理程序，那么应该配备一个线程来中转。
-:::
-
-这里以一个闹钟服务为例。它提供的 C 异步接口是这样的：
-
-```c
-// 以 alarm_async_create 为例，其他操作的形式类似
-void alarm_async_create(AlarmService *svc, uint32_t interval_ms, ...,
-                        alarm_create_cb_t done_cb, void *done_ctx);
-
-// 完成回调的函数指针类型，在 worker 线程被调用
-typedef void (*alarm_create_cb_t)(alarm_err_t err, alarm_id_t id, void *ctx);
-```
-
-接下来说明如何将这类典型的 C 回调接口桥接到 JavaScript 的 Promise。
-
-### 多个操作共用 Session 类型
-
-闹钟服务有 `create`、`cancel`、`setEnabled`、`update`、`snooze`、`getInfo`、`list`、`count` 等一批操作。如果为每个操作单独定义一个客户端类（client），会产生大量模板实例化。
-
-对于这类“实际逻辑均在 C 层完成，C++ 侧只做参数传递”的场景，可以定义一个只包含错误码映射的轻量客户端，让所有操作共用一个 `ResultSession` 实例化：
-
-```cpp
-struct AlarmClient {
-    // 将 C 层的 alarm_err_t 转换为可读的错误字符串，
-    // 供 Promise 被 reject 时传给 JavaScript 侧的 catch。
-    static const char *errorMessage(async::Status status) {
-        switch (status.value()) {
-        case ALARM_OK:              return "ok";
-        case ALARM_ERR_NOT_FOUND:   return "not_found";
-        case ALARM_ERR_TABLE_FULL:  return "table_full";
-        case ALARM_ERR_INVALID_ARG: return "invalid_arg";
-        default:                    return "unknown_error";
-        }
-    }
-};
-
-// 所有闹钟操作共用这一个 Session 类型
-using AlarmSession = async::ResultSession<AlarmClient>;
-```
-
-`AlarmClient` 不需要实现 `resolve()` 方法，因为这里不使用默认的线程池执行器，实际的异步操作由闹钟服务的 worker 线程完成，C++ 侧只负责将结果投递回 UI 线程。
-
-### 基本绑定模式
-
-以 `alarm.create()` 为例，展示完整的绑定流程：
-
-```cpp
-static JsValue jsAlarmCreate(JsCtx ctx) {
-    auto *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1 || !ctx.arg(0).isObject())
-        return JsValue{};
-
-    // 从 JavaScript 传入的 options 对象中读取参数
-    const JsValue &opts = ctx.arg(0);
-    uint32_t intervalMs = static_cast<uint32_t>(opts["interval"].toInt());
-    String label        = opts["label"].toString();
-    alarm_repeat_t mask = parseRepeatMask(opts["repeat"]);
-
-    // 创建会话，并从 options 对象中提取 resolve/reject 回调（支持两种异步风格）
-    auto *session = async::make<AlarmSession>(applet);
-    session->setResolver(opts);
-
-    // C 回调：在 worker 线程中被调用，通过 resolve() 跨线程通知 JavaScript
-    auto done = +[](alarm_err_t err, alarm_id_t id, void *data) {
-        auto *s = static_cast<AlarmSession *>(data);
-        s->resolve(err == ALARM_OK
-            ? async::Result<int>(id) // 成功：resolve 新建的闹钟 ID
-            : async::Status(err));   // 失败：reject，错误消息来自 errorMessage()
-    };
-
-    // 调用 C 服务的异步闹钟创建接口，传入回调和会话指针
-    alarm_async_create(AppletAlarmService::instance(),
-                       intervalMs, mask, label.c_str(), /*...*/,
-                       onAlarmFired, nullptr, done, session);
-    // 返回 Promise 对象给 JavaScript，框架会在 resolve() 被调用时自动决议它
-    return session->promise();
-}
-```
-
-这里有几个固定的套路，可以直接复制使用：
-
-- `async::make<AlarmSession>(applet)` 创建会话并绑定到当前 Applet，以满足生命周期要求。
-- `session->setResolver(opts)` 让同一套代码同时支持[回调风格和 Promise 风格](/api/README.md#快应用异步接口)的异步调用。
-- `+[](... void *data)` 通过一元 `+` 将 lambda 转换为普通函数指针，满足 C 回调的类型要求。
-- 将 `session` 作为 `void *` 透传给 C API，在回调中转型回来再调用 `resolve()`。
-- `resolve()` 是线程安全的，它将结果封装为事件投递回 UI 线程，再驱动 Promise 的决议。
-
-::: tip 利用 lambda 表达式写回调
-在 C 中，回调函数通常是一个静态函数，可以使用 C++ 的 lambda 表达式直接就近嵌套定义回调函数，例如：
-```cpp
-auto done = +[](alarm_err_t err, alarm_id_t id, ...) { ... }
-alarm_async_create(..., done, session);
-```
-这样可以避免定义一大批单独的静态函数，代码更紧凑清晰。
-:::
-
-其余操作（`cancel`、`setEnabled`、`snooze` 等）的结构完全相同，只有参数读取和 C API 调用不同：
-
-```cpp
-static JsValue jsAlarmCancel(JsCtx ctx) {
-    auto *applet = Applet::current(ctx.vm());
-    if (!applet || ctx.argc() < 1)
-        return JsValue{};
-
-    alarm_id_t id = ctx.arg(0).toInt();
-
-    auto *session = async::make<AlarmSession>(applet);
-    session->setResolver(ctx.arg(0));
-
-    auto done = +[](alarm_err_t err, void *data) {
-        // 没有返回值时，用 resolve<void> 即可
-        static_cast<AlarmSession *>(data)->resolve<void>(async::Status(err));
-    };
-    alarm_async_cancel(AppletAlarmService::instance(), id, done, session);
-
-    return session->promise();
-}
-```
-
-::: important 不要遗漏参数检查
-`session->setResolver(ctx.arg(0))` 依赖对 `ctx.argc()` 的检查。如果函数开头没有检查参数数量，那么要在调用 `setResolver()` 时检查参数数量：
-```cpp
-session->setResolver(ctx.argc() ? ctx.arg(0) : JsValue{});
-```
-:::
-
-### 注册自定义 C 结构体的类型转换
-
-`alarm.getInfo()` 返回一个 `alarm_info_t` 结构体，需要将它转换为 JavaScript 对象。为此，先在 `gx` 命名空间中特化 `js_cast<T>`：
-
-```cpp
-template<> JsValue gx::js_cast<alarm_info_t>(const alarm_info_t &info) {
-    JsValue obj = JsVM::current().newObject();
-    obj["id"]          = info.id;
-    obj["label"]       = info.label;
-    obj["interval"]    = double(info.interval_ms);
-    obj["repeatMask"]  = info.repeat_mask;
-    obj["enabled"]     = bool(info.enabled);
-    obj["remaining"]   = double(info.remaining_ms);
-    obj["fireCount"]   = int(info.fire_count);
-    obj["snooze"]      = int(info.snooze_ms);
-    obj["snoozed"]     = bool(info.snoozed);
-    return obj;
-}
-```
-
-特化完成后，在绑定函数中直接将结构体实例传给 `resolve()` 即可：
-
-```cpp
-auto done = +[](alarm_err_t err, const alarm_info_t *info, void *data) {
-    auto *s = static_cast<AlarmSession *>(data);
-    if (err != ALARM_OK || !info) {
-        // 异常路径，返回错误状态触发 reject，错误消息来自 errorMessage()
-        s->resolve<alarm_info_t>(async::Status(err));
-        return;
-    }
-    s->resolve<alarm_info_t>(*info);  // 框架在 UI 线程自动调用 js_cast
-};
-alarm_async_get_info(AppletAlarmService::instance(), id, done, session);
-```
-
-::: tip
-`js_cast()` 由框架在结果回到 UI 线程之后才调用，不在 worker 线程中执行。这意味着在 `js_cast()` 内部可以安全地使用 `JsVM::current()` 等 UI 线程专属 API。
-:::
-
-对于 `alarm.list()` 这种返回数组的情况，可以直接构造 `std::vector<int>` 并 resolve，无需定义额外的类型转换：
-
-```cpp
-auto done = +[](alarm_err_t /*err*/, const alarm_id_t *ids, int count, void *data) {
-    auto *s = static_cast<AlarmSession *>(data);
-    s->resolve<std::vector<int>>(std::vector<int>{ids, ids + count});
-};
-alarm_async_list(AppletAlarmService::instance(), done, session);
-```
-
-### 闹钟触发回调：将事件送回 JavaScript
-
-闹钟触发时，C 层会从 worker 线程调用 `alarm_fire_cb_t` 回调。这个场景和前面的“查询结果”有些不同，需要专门设计事件通知机制。
-
-#### 为什么不用 JavaScript 回调函数
-
-直觉上，让应用在注册闹钟时传入一个回调函数似乎合理：
-
-```javascript
-// ❌ 这在闹钟场景下行不通
-alarm.create({ interval: 60000, onFired: (event) => { /* ... */ } })
-```
-
-问题是，闹钟是跨越应用生命周期的：闹钟创建后，应用可能会在闹钟触发之前的任意时刻被杀死；许多设备还支持重启后触发闹钟。
-
-一个 JavaScript 回调函数（`JsValue`）只在当前应用实例的 JavaScript 运行时中有效。一旦应用被关闭，这个运行时连同所有 `JsValue` 都会被销毁。此时 C++ 侧没办法继续保留这个 JavaScript 回调，更别说在闹钟触发时调用它了。
-
-这不只是闹钟的问题，**任何可能在跨应用存活期触发的事件，都无法通过 JavaScript 回调解决**，例如定时任务、离线消息推送、后台下载完成通知等。
-
-#### 使用约定方法名代替回调引用
-
-最简单的解决方法是：不由应用“注册回调”，而是系统在事件发生时主动**启动**应用，并以约定好的方法名调用应用对象上的处理方法。
-
-这与应用生命周期函数（`onCreate`、`onShow` 等）的思路一致——系统按需启动应用，调用已知的入口方法，而不是持有事先注册的回调。应用侧按约定实现对应方法即可：
-
-```javascript
-// app.js — 应用模型对象导出的处理方法（按约定实现）
-export default {
-  onAlarmFired(event) {
-    // event: { id, label, interval, ... }
-    console.log('alarm fired:', event)
-  }
-}
-```
-
-C++ 侧的实现：先在 worker 线程读取快照，再切回主线程启动应用并调用方法：
-
-```cpp
-static void onAlarmFired(alarm_id_t id, void * /*user_data*/) {
-    // 在 worker 线程读取快照，避免跨线程访问闹钟表
-    alarm_info_t info{};
-    alarm_get_info(id, &info);
-
-    // 切换回主线程再操作 JavaScript
-    App()->postTask([info] {
-        auto *svc = AppletAlarmService::instance();
-        // 用 launch() 启动（或唤醒）目标应用，即使它当前不在运行
-        auto *applet = AppletKit::instance()->launch(svc->alarmAppletName);
-        if (!applet) return;
-
-        auto &vm = JsVM::current();
-        // 调用 app.js 导出对象上的约定方法，事件参数为闹钟信息的 JavaScript 对象
-        JsValue event = js_cast(info);
-        applet->modelObject().callMethod("onAlarmFired", {event}).reportError();
-    });
-}
-```
-
-几个要点：
-
-- **不要**在 worker 线程中直接操作 `JsValue` 或调用任何 JavaScript API，它们只能在 UI 线程中使用。
-- 使用 `App()->postTask()` 将闭包投递到主事件循环中执行，这是切回主线程最简单的方式。
-- 用 `AppletKit::launch()` 而不是查找现有实例；`launch()` 在应用不存在时会重新启动它，在应用已经运行时则返回现有实例。
-- `callMethod()` 返回值上的 `.reportError()` 会将可能发生的 JavaScript 异常打印到日志，而不是静默忽略。
-
-::: tip 约定方法名是最简单的事件处理方式
-可以将这种模式理解为：app.js 的导出对象就是应用暴露给系统的“入口点集合”，系统在需要时调用其中的方法，就像调用 `onCreate`、`onShow` 一样。
-
-这种方法不太通用，但对受控的系统应用来说基本够用，且实现简单，不需要复杂的持久化和回调管理机制。
-:::
-
-### 注册库加载器
-
-所有绑定函数编写完成后，还需要将它们“装配”成一个 JavaScript 可以导入的[库对象](native-module.md#library-loader)，并注册到框架中。
-
-库加载器是一个在应用调用 `app.loadLibrary('vendor.alarm')` 时被触发的 C++ 函数，它负责创建并返回一个包含所有导出方法的 JavaScript 对象：
-
-```cpp
-static JsValue libAlarmLoader(Applet *applet) {
-    // 可以在这里检查应用的包名，拒绝未授权的应用访问。也可以检查字段。
-    if (!applet || applet->objectName() != "com.vendor.alarm")
-        return JsValue{};
-
-    JsValue lib = JsVM::current().newObject();
-
-    // 将绑定函数挂载到库对象上，属性名就是 JavaScript 侧调用的方法名
-    lib["create"]     = jsAlarmCreate;
-    lib["cancel"]     = jsAlarmCancel;
-    lib["list"]       = jsAlarmList;
-    lib["count"]      = jsAlarmCount;
-    // ...
-    return lib;
-}
-```
-
-然后在初始化阶段将加载器注册到 `AppletKit`：
-
-```cpp
-AppletKit kit{&window};
-kit.setLibraryLoader("vendor.alarm", libAlarmLoader);
-```
-
-JavaScript 侧通过 `app.loadLibrary()` 导入，返回值就是加载器返回的库对象：
-
-```javascript
-const alarm = app.loadLibrary('vendor.alarm')
-
-const id = await alarm.create({ interval: 60000, label: '起床' })
-```
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/sdk-setup.md
-
-# SDK 项目配置
-
-Glyphix 以预编译库的形式分发给设备厂商，本文介绍如何在 SDK 项目中配置构建环境，以便在其基础上开发 Native Module、Native Widget 或平台适配代码。
-
-### 前置条件
-
-开始之前请确保已安装：
-- CMake 3.14 或更高版本
-- 支持 C++14 的 C++ 编译器（GCC、Clang 或 MSVC）
-- Glyphix 元对象编译器 `meta`（与 SDK 匹配，获取方式详见下文）
-- 交叉编译工具链（如需构建嵌入式目标）
-
-::: tip 系统要求
-- MSVC 工具链需要安装 Visual Studio 2022 或更高版本。
-- Linux 建议使用带桌面环境的发行版，如 Ubuntu 22.04 或更高版本。
-- 不建议使用 Ubuntu 20.04，因为它的包版本通常过旧，经常要手动安装新版软件。
-- 使用 WSL、Docker 等不带图形界面的环境将无法运行模拟器和 GUI 示例。
-- 目前宿主环境仅提供 Linux 预编译库，目前尚未准备好 Windows 和 macOS 的预编译库。
-:::
-
-## SDK 包结构
-
-解压后的 SDK 包含以下目录：
-
-```
-glyphix-sdk/
-├── libs/
-│   └── <target-triple>/       # 按目标三元组区分的预编译库
-│       ├── include/           # Glyphix 头文件（gx_*.h）
-│       └── lib/               # 静态库（libglyphix-core.a 等）
-├── cmake/
-│   ├── GlyphixSDK.cmake       # SDK 主配置脚本
-│   ├── meta.cmake             # 元对象编译器集成（glyphix_add_meta_objects）
-│   ├── cross-compile.cmake    # 交叉编译工具链加载
-│   ├── arch/                  # 各架构的编译参数（mips-linux-gnu、cortex-m33 等）
-│   └── toolchain/             # 各工具链的 CMake 工具链文件
-├── wrapper/                   # 平台适配层（网络、文件系统等宿主机实现）
-├── app/                       # 示例应用入口（emulator、async 等）
-└── vendor/                    # 第三方依赖库
-```
-
-### `libs/<target-triple>/`
-
-SDK 的预编译库以**目标三元组**（target triple）为目录名区分平台，例如：
-
-- `x86_64-linux-gnu/`： 64 位 Linux 宿主机开发/模拟
-- `mips-linux-gnu/`：MIPS Linux 嵌入式目标
-- `cortex_m55-none-gnu/`：Cortex-M55 裸机目标
-
-`include/` 目录下包含所有 Glyphix 公共头文件，均以 `gx_` 为前缀。`lib/` 目录下为静态库，核心库包括：
-
-| 库文件 | 说明 |
-|:---|:---|
-| `libglyphix-core.a` | 核心框架（对象系统、控件树、事件等） |
-| `libglyphix-widgets.a` | 内置控件库 |
-| `libglyphix-reactive.a` | 响应式框架（JavaScript 桥接层） |
-| `libglyphix-platform.a` | 平台抽象层接口 |
-| `libglyphix-service.a` | 系统服务层 |
-
-::: tip 预编译 vendor 库
-SDK 分发包中还包含一些预编译的第三方库，例如 `libfreetype.a` 等。方便起见，我们没有直接分发这些库的源代码，但你可以不使用预编译库，而是直接使用源码构建。
-:::
-
-## 准备工作
-
-### 配置元对象编译器
-
-`meta` 元对象编译器与 SDK 分开分发，以独立压缩包的形式提供。解压后会得到 `bin/` 和 `lib/` 两个目录，**两者都必须保留在同一目录下**，`meta` 可执行文件依赖 `lib/` 中的运行时库。
-
-在 Linux 和 macOS 中，推荐解压到 `/usr/local`，这样 `meta` 会自动位于 `PATH` 中：
-
-::: code-tabs#bash
-
-@tab Linux
-
-```bash
-sudo tar -xJf glyphix-meta-vX.X-linux-x86_64.tar.xz -C /usr/local
-```
-
-@tab macOS
-
-```bash
-sudo tar -xJf glyphix-meta-vX.X-darwin-arm64.tar.xz -C /usr/local
-```
-
-:::
-
-也可以解压到任意目录，然后将其中的 `bin/` 目录加入 `PATH`。完成后通过以下命令确认是否可用：
-
-```bash
-meta --version
-```
-
-如果不希望修改 `PATH`，可以在 CMake 配置时通过 `-DGX_META=/path/to/bin/meta` 显式指定可执行文件的完整路径。
-
-## 配置 CMakeLists.txt
-
-### 最小配置
-
-::: tip
-本节介绍的 CMake 配置类似 Glyphix SDK 项目的标准示例模板，你可以直接参考 SDK 的源文件。
-:::
-
-以下是一个最小可运行的 `CMakeLists.txt`，展示了项目的标准配置骨架：
-
-```cmake
-cmake_minimum_required(VERSION 3.14)
-
-# 必须在 project() 之前加载，以便在 project() 探测编译器时工具链已就位
-include(cmake/cross-compile.cmake)
-
-project(my_glyphix_app)
-set(CMAKE_CXX_STANDARD 14)
-
-# 加载 Glyphix SDK（设置头文件路径、链接目录、glyphix::sdk 目标）
-include(cmake/GlyphixSDK.cmake)
-
-add_subdirectory(vendor)  # 第三方依赖（如有）
-add_subdirectory(src)     # 你的源代码
-```
-
-在 `src/CMakeLists.txt` 中创建目标并链接 SDK：
-
-```cmake
-add_executable(my_app
-  main.cpp
-  my_module.cpp
-  my_widget.cpp
-)
-
-# 链接 Glyphix SDK
-target_link_libraries(my_app PRIVATE glyphix::sdk)
-
-# 为含有 GX_OBJECT 的头文件生成元数据
-glyphix_add_meta_objects(my_app
-  my_module.h
-  my_widget.h
-)
-```
-
-### 注册元对象（`glyphix_add_meta_objects`）
-
-[对象系统](./object-system)文档中提到，任何声明了 `GX_OBJECT` 的类都必须注册到构建系统，由元对象编译器为其生成 `*_meta.cpp` 文件。`glyphix_add_meta_objects()` 是完成这一步骤的 CMake 函数：
-
-```cmake
-glyphix_add_meta_objects(<target> [header1.h header2.h ...])
-```
-
-它接受目标名称和一组**头文件**路径作为参数。对每个头文件，`meta` 工具会在构建目录下的 `meta/` 子目录中生成对应的 `*_meta.cpp`，并自动加入目标的源文件列表参与编译。
-
-**示例：** 假设项目有如下结构：
-
-```
-src/
-├── CMakeLists.txt
-├── main.cpp
-├── sensors/
-│   ├── step_counter.h       # 包含 GX_OBJECT
-│   └── step_counter.cpp
-└── widgets/
-    ├── activity_ring.h      # 包含 GX_OBJECT
-    └── activity_ring.cpp
-```
-
-对应的 `CMakeLists.txt`：
-
-```cmake
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/meta.cmake)
-
-add_executable(my_app
-  main.cpp
-  sensors/step_counter.cpp
-  widgets/activity_ring.cpp
-)
-target_link_libraries(my_app PRIVATE glyphix::sdk)
-
-glyphix_add_meta_objects(my_app
-  sensors/step_counter.h
-  widgets/activity_ring.h
-)
-```
-
-::: tip 只传头文件，不传 .cpp
-`glyphix_add_meta_objects()` 只需要传入包含 `GX_OBJECT` 声明的**头文件**（`.h`）。元对象编译器读取头文件中的宏声明来生成代码，不需要解析实现文件。相反，`.cpp` 文件中不能定义含 `GX_OBJECT` 的类。
-:::
-
-::: warning 不要遗漏注册
-如果一个类声明了 `GX_OBJECT` 但没有通过 `glyphix_add_meta_objects()` 注册，会导致**链接错误**（找不到 `staticMetaObject` 等符号）。每当新增含有 `GX_OBJECT` 的头文件时，记得同步更新 `CMakeLists.txt`。
-:::
-
-### `glyphix::sdk` 接口目标
-
-`GlyphixSDK.cmake` 定义了 `glyphix::sdk` CMake 接口库目标，它封装了 SDK 的所有链接依赖。在你的 `CMakeLists.txt` 中只需链接这一个目标：
-
-```cmake
-target_link_libraries(my_target PRIVATE glyphix::sdk)
-```
-
-它内部等价于：
-
-```cmake
-# 伪代码——实际由 GlyphixSDK.cmake 自动管理
-target_include_directories(... ${GLYPHIX_INCLUDE_DIRS} wrapper/include)
-target_link_libraries(... -Wl,--start-group ${glyphix-*.a} glyphix-wrapper -Wl,--end-group)
-target_link_libraries(... m pthread dl)  # UNIX 系统库
-```
-
-使用 `-Wl,--start-group ... -Wl,--end-group` 包裹静态库是为了解决嵌入式平台上静态库之间的循环依赖链接问题。
-
-::: tip 链接顺序问题
-如果项目中有自己的静态库（如 `add_library(my_module STATIC ...)`），应该将其链接到 `glyphix::sdk` **内部**，否则 `--start-group` 的范围不会覆盖它，可能引发链接错误。方法是在 `GlyphixSDK.cmake` 的 `GLYPHIX_LIBS` 变量被定义之后、`glyphix-sdk` 目标被创建之前，将你的静态库路径追加进去，或者直接让最终可执行文件同时链接 `my_module` 和 `glyphix::sdk` 并手动指定 `--start-group`。
-:::
-
-## 宿主机构建
-
-宿主机构建用于在开发机上运行 Glyphix 的示例程序，无需连接硬件即可快速验证控件和模块逻辑。
-
-```bash
-mkdir build && cd build
-cmake -G Ninja ..
-cmake --build .
-```
-
-SDK 的 `app/` 目录下包含多个示例，每个子目录对应一个独立的可执行目标。例如：
-
-| 子目录 | 构建产物 | 说明 |
-|:---|:---|:---|
-| `app/emulator/` | `demo` | 带图形界面的模拟器，依赖 MiniFB 窗口后端 |
-| `app/async/` | `async-demo` | 无图形界面的异步服务示例，演示 Native Module 和异步回调 |
-
-`GlyphixSDK.cmake` 会自动检测宿主机的编译器三元组（通过 `gcc -dumpmachine` 或 `clang -dumpmachine`），并以此为键在 `libs/` 目录下查找对应的预编译库。例如在 x86_64 Linux 开发机上，会自动解析到 `libs/x86_64-linux-gnu/`。
-
-如果自动检测的三元组与实际库目录不匹配，可以手动指定：
-
-```bash
-cmake -G Ninja -DTARGET_TRIPLE=x86_64-linux-gnu ..
-```
-
-如果只需要构建某个特定示例，可以指定目标名称：
-
-```bash
-cmake --build . --target demo
-cmake --build . --target async-demo
-```
-
-## CMake 交叉编译
-
-对于嵌入式目标，需要通过 `-DARCH` 参数指定目标架构。SDK 预置了以下架构配置：
-
-| `-DARCH` 值 | 目标平台 | 工具链前缀 |
-|:---:|:---:|:---:|
-| `mips-linux-gnu` | MIPS Linux | `mips-linux-gnu-` |
-| `cortex_m33-gnu` | ARM Cortex-M33（GNU） | `arm-none-eabi-` |
-| `cortex_m7-gnu` | ARM Cortex-M7（GNU） | `arm-none-eabi-` |
-
-### MIPS Linux 示例
-
-```bash
-export MIPS_TOOLCHAIN_DIR="/opt/mips-gcc720-glibc229"
-
-mkdir build-mips && cd build-mips
-cmake -G Ninja .. \
-  -DARCH=mips-linux-gnu \
-  -DMIPS_TOOLCHAIN_DIR="$MIPS_TOOLCHAIN_DIR" \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-```
-
-如果工具链已经在 `PATH` 中（即 `mips-linux-gnu-gcc` 可直接调用），则可以省略 `-DMIPS_TOOLCHAIN_DIR`，CMake 会自动定位。
-
-### ARM Cortex-M 示例
-
-```bash
-mkdir build-cm33 && cd build-cm33
-cmake -G Ninja .. \
-  -DARCH=cortex_m33-gnu \
-  -DARM_TOOLCHAIN_DIR="/opt/arm-none-eabi-gcc" \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-```
-
-在交叉编译中，`GlyphixSDK.cmake` 不会尝试自动检测三元组——架构文件（如 `cmake/arch/cortex_m33-gnu.cmake`）会直接设置 `TARGET_TRIPLE`，指向正确的库目录。
-
-### 支持的目标架构
-
-SDK 只为上表列出的架构提供预编译库。如果你的目标平台不在其中，需要联系 Glyphix 获取对应架构的 SDK 包，而不能在现有 SDK 基础上自行添加支持。
-
-## 其他构建系统
-
-SDK 使用 CMake 作为主要构建系统，Glyphix 同时会为合作厂商提供其他构建系统的支持。这通常只是引入预构建的 SDK 库和头文件，并添加 porting 层源文件。
-
-### 工程限制
-
-该方案适用于只需要标准 SDK 功能的项目。一旦需要定制控件、Native Module 等能力，就必须引入 `meta` 元对象编译器来生成必要的绑定代码，目前 CMake 是唯一支持的构建系统。
-
-有几种可用的替代方案：
-1. 使用 SDK CMake 项目构建定制代码，然后将生成的库链接到你的主项目中。
-2. 使用 SDK CMake 项目构建定制代码，然后将生成的源文件（`*_meta.cpp`）包含到你的主项目中。
-3. 直接在你的构建系统中调用 `meta` 工具生成绑定代码。
-
-其中，Glyphix SDK 本身是通过方法 1 构建的。但它不适用于下游厂商的内部开发流程，因为它需要在主固件项目外维护一个单独的项目，并将生成的二进制库链接回主项目。这会造成严重的版本管理问题。
-
-方法 3 通常也不理想，因为厂商通常不想在主项目的构建系统中引入一个外部工具。
-
-### 推荐方案
-
-因此，建议使用方法 2，这种方式拷贝源代码，虽然需要手动操作，但易于审核和集成到现有的构建流程中。你可以在 SDK 的 CMake 项目中构建定制代码，生成 `*_meta.cpp` 文件，然后将这些文件复制到你的主项目中，并在主项目的构建系统中编译它们。
-
-这种方法的另一个限制是需要定制源文件可以在 SDK 项目环境中成功构建。具体来说，这要求它可以独立于主项目构建，包括：
-- 需要正确设置包含路径和预处理器定义，定制组件的头文件中不能包含主项目特有的头文件。
-- 定制组件的 cpp 文件最好也能编译通过，虽然这不影响生成 `*_meta.cpp` 文件，但可以方便在主机环境中进行快速迭代和调试。
-
-::: tip
-对于大多数[定制控件](widget.md)来说这不是问题。对于[Native Module](native-module.md)来说可能会更麻烦一些，应该注意：声明 `GX_OBJECT` 的头文件中不要包含主项目特有的头文件。
-:::
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/object-system.md
-
-# 对象系统
-
-Glyphix 的 C++ 框架有一套以 `PrimitiveObject` 为根基的对象模型，理解它是后续开发的基础。
-
-对象系统由三个相互配合的部分构成：**对象基类体系**定义了所有托管对象的公共能力与生命周期规则；**元对象系统**通过构建期的元对象编译器为 C++ 类生成元数据，赋予它反射、属性绑定和 JavaScript 导出的能力；**内存安全机制**则通过守卫指针和引用计数解决 GUI 框架中普遍存在的悬空指针问题。
-
-<ArchDiagram max-width="540px">
-  <div>
-    JavaScript 脚本层
-    <div class="remark">属性绑定 · 方法调用 · 事件响应</div>
-  </div>
-  <div>
-    元对象系统
-    <div class="group row">
-      <div>GX_OBJECT<div class="remark">元编译器注册</div></div>
-      <div>GX_PROPERTY<div class="remark">属性/方法反射</div></div>
-      <div>Variant<div class="remark">C++ ↔ JS 类型桥接</div></div>
-      <div>dyn_cast<div class="remark">安全向下转型</div></div>
-    </div>
-  </div>
-  <div class="subject">
-    对象基类体系
-    <div class="group row">
-      <div>PrimitiveObject<div class="remark">反射支持 · 生命周期管理</div></div>
-      <div>Object<div class="remark">父子树结构 · 级联销毁</div></div>
-      <div>Widget<div class="remark">UI 控件基类</div></div>
-    </div>
-  </div>
-  <div>
-    内存安全机制
-    <div class="group row">
-      <div>Signal&lt;&gt;<div class="remark">事件通知 · 自动断联</div></div>
-      <div>Pointer&lt;T&gt;<div class="remark">守卫弱引用</div></div>
-      <div>SharedRef&lt;T&gt;<div class="remark">侵入式共享引用</div></div>
-    </div>
-  </div>
-</ArchDiagram>
-
-## 反射与元对象编译器
-
-标准 C++ 的类是 “沉默” 的：拿到一个对象指针，你无法在运行时知道它有哪些成员、叫什么名字、怎么读写。这对于不需要脚本化的静态 C++ 开发来说不是障碍。
-
-但 Glyphix 的工作方式不同。当应用的页面模板写下 `:value="progress"`，响应式框架需要在运行时按字符串 `"value"` 找到控件对应的属性，并在数据变化时自动刷新。这种 "程序运行时能了解自己的结构" 的能力叫做**反射（Reflection）**，标准 C++ 并不支持。
-
-Glyphix 的解决方案是在构建流程中加入一个**元对象编译器（Meta Compiler）**。它在正式的 C++ 编译之前扫描源代码，为需要参与对象系统的类生成元数据。开发者只需在类定义开头放上 **`GX_OBJECT`** 宏，元对象编译器就会处理这个类——此后框架就能按名称读写它的属性或调用方法，并能在 JavaScript 中访问它。
-
-你暂时不需要了解元对象系统的内部原理。记住一条规则就够了：凡是需要反射能力的类，都必须在定义时加上 `GX_OBJECT` 宏，并继承自 `PrimitiveObject` 或 `Object`。
-
-## `PrimitiveObject` 与 `Object`
-
-框架的对象体系分为两级：
-
-**`PrimitiveObject`** 是所有**托管对象**的根基类。继承它的类就拥有了属性反射、动态转型、安全延迟销毁等框架能力。但 `PrimitiveObject` 本身**没有**父子树结构——它就是一个“框架可以感知的 C++ 对象”。`AsyncSession`、`BindableObject` 等类型都继承自它，因为这些类不需要组成树。
-
-**`Object`** 继承自 `PrimitiveObject`，额外增加了**父子树结构**：构造时传入 `parent` 指针，父对象销毁时所有子对象也会递归销毁。控件树（Widget Tree）就是通过这一机制组织的。
-
-::: tip 类比其他框架
-如果你有 Qt 开发经验，可以将 Glyphix 的元对象系统类比为 Qt 的 MOC 系统：`GX_OBJECT` 对应 `Q_OBJECT`。但也有许多差异，如 Glyphix 将 Qt 中 `QObject` 的能力拆分成了两层；`Signal` 也只是一个不依赖元对象编译器的普通模板类。
-
-其他框架如 Unreal Engine 的 UCLASS 也有类似的反射系统。
-:::
-
-选择哪个基类取决于你的类是否需要成为树的一部分：
-
-```cpp
-// 需要参与对象树 → 继承 Object
-class MySensor : public Object {
-    GX_OBJECT
-public:
-    explicit MySensor(Object *parent = nullptr) : Object(parent) {}
-};
-
-// 只需框架感知，不参与树 → 继承 PrimitiveObject
-class MyNetworkSession : public PrimitiveObject {
-    GX_OBJECT_KINDS(ExplicitDeleteKind)
-public:
-    MyNetworkSession() = default;
-};
-```
-
-代码中的 `GX_OBJECT_KINDS(ExplicitDeleteKind)` 是一个附加声明，它和 `GX_OBJECT` 宏一样声明元对象类，但告知框架这个对象的生命周期由开发者负责，不会被 JavaScript 自动回收。`AsyncSession` 等生命周期敏感的类型都使用了它。
-
-## 属性与信号
-
-**`GX_PROPERTY`** 宏用于声明一个可被框架感知的属性，关联对应的 getter 和 setter。声明后属性可以由框架的响应式系统驱动——值变化时依赖它的 UI 自动刷新，动画系统也可以对它做插值：
-
-```cpp
-class MyWidget : public Widget {
-    GX_OBJECT
-public:
-    int value() const { return m_value; }
-    void setValue(int v) { m_value = v; update(); }
-
-    GX_PROPERTY(int value, get value, set setValue)
-
-private:
-    int m_value = 0;
-};
-```
-
-### 信号（Signal）
-
-**`Signal<>`** 是事件通知机制，直接声明为类成员。事件发生时“发射”它，其他对象通过“连接”来接收通知（[lambda 表达式](https://en.cppreference.com/w/cpp/language/lambda)是 C++ 的匿名函数语法）：
-
-```cpp
-class MyWidget : public Widget {
-    GX_OBJECT
-public:
-    Signal<int> valueChanged;
-
-    void setValue(int v) {
-        m_value = v;
-        valueChanged(v);  // 发射信号
-    }
-private:
-    int m_value = 0;
-};
-
-// 连接到成员函数
-myWidget->valueChanged.connect(this, &MyClass::onValueChanged);
-
-// 或者连接到 lambda
-auto slot = make_slot([](int v) { /* 响应变化 */ });
-myWidget->valueChanged.connect(slot);
-```
-
-::: tip 和 Qt 的信号槽对比
-Qt 的经典信号槽机制需要 MOC 生成代码支持，但 `Signal<>` 是一个纯 C++ 模板类，不依赖元对象编译器。因此不一定要在特定类中使用 `Signal<...>` 对象，你可以在任何地方使用它。
-
-由于 `Signal` 是一个类，它会占据内存空间（即便没有连接），因此建议尽量使用事件类型枚举和单一信号成员变量来节约内存，而不是为每个事件都声明一个 `Signal` 成员。
-:::
-
-### `GX_PROPERTY` 的完整形式
-
-`GX_PROPERTY` 除了 `get` / `set` 之外，还支持声明关联的变化信号（`signal`），这是响应式框架订阅属性变化的标准接口：
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    int value() const { return m_value; }
-    void setValue(int v) {
-        if (m_value == v) return;
-        m_value = v;
-        update();
-        valueChanged(v);
-    }
-
-    Signal<int> valueChanged;
-
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-
-private:
-    int m_value = 0;
-};
-```
-
-声明了 `signal` 的属性，其变化会通过响应式框架自动传递给绑定了该属性的 JavaScript 表达式。这是控件属性与应用数据双向同步的基础。
-
-`GX_PROPERTY` 中的 `signal` 字段不依赖 `Signal<T>` 的参数类型，框架只关心它是否存在以及何时被发射。相反，此时必须提供 `get` 字段来让框架在 JavaScript 侧读取属性值。
-
-## 守卫指针与内存安全
-
-GUI 框架中，异步场景容易引发悬空指针崩溃。一个典型案例：
-```cpp
-void onNetworkResponse(const String &data) {
-    // 网络请求耗时 2 秒才返回
-    // 但在这 2 秒内，用户可能已经退出当前页面，label 已被销毁
-    this->label->setText(data); // Segmentation Fault!
-}
-```
-定时器回调、IO 回调等所有异步场景都面临同等风险。在脚本化框架中，这种用例是结构性不可避免的，因此必须提供一种安全的生命周期观察机制。
-
-### `Pointer<T>` 守卫指针
-
-Glyphix 为 `PrimitiveObject` 的所有派生类内置了弱引用计数支持。使用 `Pointer<T>` 持有非所有权的跨对象引用，当目标对象被销毁时，`Pointer<T>` 会自动被置空，解引用前检查即可安全使用：
-
-```cpp
-Pointer<Label> m_label; // 声明为成员变量
-
-// ...构造后赋值...
-m_label = label;
-
-// 在任何可能导致 label 被销毁的异步回调中：
-void onNetworkResponse(const String &data) {
-    if (!m_label)
-        return; // label 已被销毁，安全退出
-    m_label->setText(data); // 此时访问是安全的
-}
-```
-
-::: tip 何时使用
-跨对象持有指针但不拥有其生命周期时，用 `Pointer<T>` 代替裸指针 `T *` 来追踪生命周期。`Signal` 的 `connect` 机制也依赖守卫指针——当接收者（slot 所在对象）被销毁时，连接自动断开，不会触发悬空回调。
-:::
-
-::: warning 线程限制
-守卫指针不支持跨线程访问，它们基本仅限于 UI 线程使用，同时也不是零开销抽象，每次构造都会涉及引用计数操作。
-:::
-
-### `SharedRef<T>` 侵入式引用计数
-
-对于不继承自 `PrimitiveObject` 的普通值对象（如自定义数据结构），框架提供了侵入式的共享引用计数。让值类型继承 `SharedValue`，再用 `SharedRef<T>` 持有它，即可获得类似 [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr) 的共享语义，同时避免额外的控制块分配：
-
-```cpp
-class MyData : public SharedValue {
-public:
-    int x = 0;
-    String name;
-};
-
-auto ref1 = make_shared<MyData>();
-ref1->x = 42;
-
-SharedRef<MyData> ref2 = ref1; // 引用计数增加，共享同一对象
-```
-
-`SharedRef` 还支持写时复制（COW）语义：在对拷贝版本进行修改前，创建一个独立副本，确保多个持有者之间互不干扰。该机制使用原子引用计数实现线程安全。
-
-## 动态类型转换
-
-标准 C++ 的 [`dynamic_cast`](https://en.cppreference.com/w/cpp/language/dynamic_cast) 依赖 RTTI（运行时类型信息），而嵌入式环境通常以 `-fno-rtti` 编译。`dyn_cast` 利用元对象系统提供了等效的运行时安全向下转型能力。
-
-`dyn_cast<T *>()` 的目标类型 `T` 必须满足两个条件：
-1. 继承自 `PrimitiveObject`
-2. 声明了 `GX_OBJECT`/`GX_OBJECT_KINDS` 宏
-
-```cpp
-PrimitiveObject *obj = getSomeObject();
-
-// 安全的向下转型，转型失败返回 nullptr
-auto *btn = dyn_cast<Button *>(obj);
-if (btn)
-    btn->setText("OK");
-
-// const 版本同样支持
-const auto *constBtn = dyn_cast<const Button *>(obj);
-```
-
-::: warning `GX_OBJECT` 是前提
-`dyn_cast` 的类型检查依赖目标类的静态元对象信息（`staticMetaObject`）。如果目标类没有声明 `GX_OBJECT`，则缺乏必要的运行时类型信息，并出现编译错误。
-:::
-
-在 Native Module 开发中，`dyn_cast` 尤为常用：框架经常将对象以基类指针（`PrimitiveObject *` 或 `Object *`）传入，需要 `dyn_cast` 来安全地还原为具体类型再操作。
-
-考虑到沙箱安全策略不信任脚本传入的对象，我们不能假设传入的运行时对象指针是正确的类型，因此必须用 `dyn_cast` 来验证类型并安全地访问其成员。
-
-### 内存泄漏陷阱
-
-典型的 `dyn_cast` 使用模式暗含一个内存泄漏风险，如：
-```cpp
-auto *session = dyn_cast<Session *>(takeObjectOwnership());
-if (session) {
-    // 成功转型，访问 session 的成员并转移所有权
-}
-```
-问题在于，如果 `takeObjectOwnership()` 返回的对象不是 `Session` 类型，`dyn_cast` 会返回 `nullptr`，但原始对象的所有权已经被转移了——如果没有其他机制来回收这个对象，就会导致内存泄漏。
-
-在开发 Native Module API 时，有时会遇到这种问题，相关框架提供更好的 API 来避免这种情况。但开发者应该意识到这个潜在风险，不要被 `dyn_cast` 的安全性误导。
-
-### `GX_OBJECT` 是否必要
-
-并非所有继承自 `PrimitiveObject` 的类都需要 `GX_OBJECT`。`GX_OBJECT` 宏的作用是将类注册到元对象系统，启用反射、属性绑定和 `dyn_cast` 等能力。如果你的类：
-
-- 不需要暴露给 JavaScript
-- 不需要 `GX_PROPERTY`、`GX_METHOD` 等反射机制
-- 不需要被 `dyn_cast` 安全转型
-
-那么可以省略 `GX_OBJECT`，只继承基类并正常使用 C++ 特性即可：
-
-```cpp
-// 不需要任何元对象能力的内部辅助类，省略 GX_OBJECT
-class InternalBufferManager : public PrimitiveObject {
-public:
-    explicit InternalBufferManager() = default;
-    void flush();
-private:
-    // ...
-};
-```
-
-省略 `GX_OBJECT` 的类仍然具有 `PrimitiveObject` 的基础能力，包括 `deleteLater()` 和守卫指针支持，只是失去了反射和动态类型识别能力。
-
-另一种情况是，你的最终类型需要元对象能力，但中间的某些基类不需要，那么中间基类可以不声明 `GX_OBJECT`。这会丢失一些运行时类型信息，但能减小代码量。
-
-::: tip
-如果你不确定是否需要 `GX_OBJECT`，通常建议保守地加上它。
-:::
-
-最后一个重要的差异在于：一旦使用 `GX_OBJECT` 标记，类必须位于头文件（`*.h`）中，并使用 `glyphix_add_meta_objects()` CMake 宏注册到构建系统中。没有 `GX_OBJECT` 的类则没有这个要求，可以直接在 `.cpp` 文件中定义。
-
-## 运行时类型系统
-
-在前面所有关于 `GX_PROPERTY` 的讨论中，有一个问题从未被回答：
-
-```cpp
-GX_PROPERTY(int value, get value, set setValue)
-```
-
-JavaScript 怎么知道 `int` 是什么？当 JavaScript 侧写下 `widget.value = 42`，这个 `42` 是 JavaScript 的 `number` 类型。而 `setValue(int v)` 接受的是 C++ 的 `int`。这之间发生了什么？反过来，`getValue()` 返回的 `int` 又怎么变成了 JavaScript 中的 `number`？
-
-在没有任何胶水代码的情况下，框架显然需要在幕后做一些工作来桥接 C++ 静态类型和动态的脚本类型。这是一个相当透明的过程，本节将解释中间发生了什么。
-
-### 通用类型容器 `Variant`
-
-答案在于 `Variant`。它是一个可以容纳任意类型值的类型擦除容器，是连接 C++ 静态类型系统和 JavaScript 动态类型的核心桥梁。
-
-每当框架需要跨越这道界限，它都走 `Variant` 这条路：
-
-1. **属性读写中间层**：`GX_PROPERTY` 声明的属性通过反射 API 读写时，值以 `Variant` 传递。框架将 JavaScript 的 `JsValue` 转换成 `Variant`，再由 `Variant` 转换成 C++ setter 的实际参数类型；读取时方向相反。
-2. **方法调用参数编组**：`GX_METHOD` 的参数和返回值在传递给 C++ 之前，都先经过 `Variant` 表示。
-
-```cpp
-Variant v1;                  // 空值（null）
-Variant v2{42};              // 存储 int
-Variant v3{3.14};            // 存储 double
-Variant v4{String("Hello")}; // 存储 String
-// Variant 必须显式构造，不支持隐式转换
-// Variant v5 = 42; // 错误，必须写 Variant v5{42};
-
-// 类型检查
-if (v2.is<int>()) { /* ... */ }
-// 不建议检查可转换性，而是直接 to<T>() 后判断是否为非法值
-if (v3.convertible<double>()) { /* ... */ }
-
-// 按引用读取（最快，要求类型精确匹配）
-int n = v2.as<int>();
-// 按引用读取，类型不匹配时返回默认值
-double d = v2.as<double>(0.0); // int != double，返回 0.0
-// 带类型转换的读取（按值）
-int fromDouble = v3.to<int>();   // 3.14 -> 3
-String fromInt = v2.to<String>(); // 42 -> "42"
-```
-
-::: tip
-这不是 C++17 的 [`std::variant`](https://en.cppreference.com/w/cpp/utility/variant)，更像是支持运行时类型识别和自动类型转换的 [`std::any`](https://en.cppreference.com/w/cpp/utility/any)。
-
-通常你不需要在业务代码中直接操作 `Variant`，框架自动完成所有转换。只有在实现低层框架扩展、编写通用工具函数，或需要直接操作运行时反射 API 时，才会直接与它打交道。
-:::
-
-### 内置类型映射
-
-框架为常见的 C++ 基础类型内置了与 JavaScript 的双向映射：
-
-| C++ 类型 | JavaScript 类型 | 备注 |
-|:---:|:---:|:---:|
-| `int`、`float`、`double` 等 | `number` | 数值类型直接映射 |
-| `bool` | `boolean` | |
-| `String` | `string` | |
-| `PrimitiveObject *` 的子类 | JavaScript 对象引用 | 由框架管理对象生命周期 |
-| `Color`、`Length` 等值类型 | `string` | 通过特定格式的字符串表示 |
-
-这就是为什么你写下 `GX_PROPERTY(int value, ...)` 后，JS 侧能直接做 `widget.value = 42`：`int` 在内置映射表中，框架知道如何转换类型。
-
-::: note 不要使用 C 字符串
-`Variant` 要求存储类型 `T` 具有所有权，因此 C 字符串（`const char *`）、字符串切片（`String::View`）等非拥有类型不能存储在 `Variant` 中。请始终使用 `String` 来表示文本数据，必要时需要显式转换为 `String` 后存储到 `Variant`。
-
-如果使用了不受支持的字符串类型，会导致编译错误。
-:::
-
-::: important
-内置类型映射表没有注册 `std::string` 相关的映射，因此也不建议在 `Variant` 中存储 `std::string`。未映射的类型可以正常存储，但它会被当作一个不透明的 C++ 对象处理，无法在 JavaScript 中使用。
-:::
-
-### 复杂类型反射
-
-对于使用 `GX_OBJECT` 声明的类，还可以利用 `GX_ENUM` 和 `GX_STRUCT` 来导出枚举和结构体成员类型，让它们也能在 JavaScript 中以自然的方式使用。这种类型导出是自动的，不需要再手写额外的绑定代码。
-
-#### 枚举反射 `GX_ENUM`
-
-当属性或方法的参数类型是 C++ 枚举时，直接以整数暴露给 JavaScript 既不直观也容易出错。`GX_ENUM` 将枚举导出为字符串常量，让 JavaScript 用可读字符串而非魔法数字来操作：
-
-```cpp
-class ScrollArea : public Widget {
-    GX_OBJECT
-public:
-    enum GX_ENUM ScrollBarStyle {
-        RemoveScrollBar GX_ALIAS("hidden"),
-        LinearScrollBar GX_ALIAS("line"),
-        DotsScrollBar   GX_ALIAS("dots")
-    };
-
-    GX_PROPERTY(ScrollBarStyle indicator, set setScrollBar)
-};
-```
-
-`GX_ENUM` 放在 `enum` 关键字后，告诉元对象编译器这个枚举需要导出。`GX_ALIAS("...")` 为每个枚举成员指定 JavaScript 可见的字符串名称——如果省略，则默认使用 C++ 成员的原始名称。应用开发者在 JavaScript 中这样使用：
-
-```js
-scroll.indicator = "hidden"; // 对应 RemoveScrollBar
-scroll.indicator = "dots";   // 对应 DotsScrollBar
-```
-
-框架在读取 `indicator` 属性时，将字符串 `"dots"` 转换为 `DotsScrollBar` 枚举值后再传给 setter；读取时将枚举值转回字符串。整个过程对 C++ 侧完全透明，C++ 代码始终操作的是具体枚举类型。
-
-#### 结构体参数反射 `GX_STRUCT`
-
-对于方法参数，有时一个操作需要多个相关配置项。此时可以将参数封装成结构体，并用 `GX_STRUCT` 导出，让 JavaScript 侧传入一个对象字面量：
-
-```cpp
-class Scroll : public ScrollArea {
-    GX_OBJECT
-public:
-    struct GX_STRUCT ScrollOptions {
-        Length left;
-        Length top;
-        ScrollBehavior behavior;
-    };
-    struct GX_STRUCT IndexOptions {
-        int index;
-        ScrollBehavior behavior;
-    };
-
-    GX_METHOD void scrollTo(const ScrollOptions &options);
-    GX_METHOD void scrollBy(const ScrollOptions &options);
-    GX_METHOD void setIndex(const IndexOptions &options);
-};
-```
-
-`GX_STRUCT` 放在 `struct` 关键字后，结构体的每个字段按其类型（同样经由内置类型映射或嵌套的 `GX_ENUM`）自动导出。JS 侧可以直接传入对象：
-
-```js
-scroll.scrollTo({ left: 0, top: 200, behavior: "smooth" });
-scroll.setIndex({ index: 3, behavior: "instant" });
-```
-
-C++ 侧的 `scrollTo` 接收到的始终是强类型的 `ScrollOptions` 对象，不需要在 C++ 侧做任何解析。
-
-::: warning 不要遗忘标注
-在声明 `GX_PROPERTY` 或 `GX_METHOD` 时，如果相关类型是一个自定义的枚举或结构体，务必正确标注 `GX_ENUM` 或 `GX_STRUCT`。否则 JavaScript 侧无法使用这些属性或方法，并且没有任何编译错误提示。
-:::
-
-### 存在一种“中间表示”吗？
-
-使用 `Variant` 来桥接 C++ 和 JavaScript 时，框架是否会将 JavaScript 对象转换成一个通用的中间表示，如某种类似 JSON 的序列化结构？
-
-答案是否定的。`Variant` 直接存储 C++ 对象（包括 `JsValue`），这也包括该对象的所有类型信息和操作语义。系统会根据 `Variant` 值的运行时类型标记来正确地进行类型转换和方法调用，而不需要特定的中间表示或者序列化过程。
-
-
-============================================================
-FILE_PATH: src/original_docs/cxxdev/widget-export.md
-
-# 控件注册与框架集成
-
-在[控件开发指南](./widget.md)中，我们实现了一个 C++ 控件类。但此时它还只是一个普通的 C++ 对象，应用开发者无法在页面代码中直接使用。本文介绍如何将控件注册到框架，使其成为可在应用中使用的组件。本文档的许多概念涉及[对象系统](./object-system.md)，建议先阅读相关内容。
-
-## 运行环境
-
-控件注册依赖一组**运行环境对象**。它们是响应式框架运行所必需的依赖，必须在 `main()` 或平台启动代码中显式创建，并且其生命周期要覆盖整个应用运行期间：
-
-```cpp
-Application app(/* platform */);
-JsVM vm;
-Window window;
-AppletKit kit(&window, "pkgs.db");
-```
-
-这几个对象负责整个应用的运行环境：
-- `Application` 框架应用对象负责所有底层服务并维护事件循环，在初始化的最后调用 `app.exec()` 进入事件循环；
-- `JsVM` 是内嵌的 JavaScript 引擎，承载响应式框架的运行，**必须**在 `AppletKit` 之前创建；
-- `Window` 是顶层窗口，作为渲染输出目标；
-- `AppletKit` 是应用（Applet）管理器，负责应用生命周期与控件注册。
-
-::: warning 不要省略这些对象
-`vm`、`window`、`kit` 等是 RAII 对象，框架通过它们的构造/析构来管理运行环境。即使代码里看不到对 `vm` 的直接调用，它的**存在本身**就是必需的——提前销毁或不创建会导致框架无法工作。
-:::
-
-`Window window` 有时候也可以替换成 `Wigdet window` 等，区别在于 `Window` 默认绘制不透明背景，而 `Widget` 默认透明。
-
-## 注册控件
-
-控件的注册通过 `AppletKit::installWidget<T>()` 完成，在 `AppletKit` 实例化之后、`launch()` 启动第一个应用**之前**调用：
-
-```cpp
-// 注册自定义控件（在 launch 之前）
-kit.installWidget<ProgressRing>(); // 无参数，以类名注册，模板中写作 <progress-ring>
-kit.installWidget<MySpecialChart>("SpecialChart"); // 或用自定义名称注册（见下文）
-
-kit.launch("com.example.app");     // 启动应用
-return app.exec();                 // 进入事件循环
-```
-
-::: tip 内置控件默认已注册
-框架自带的按钮、标签等内置控件由 `installBuiltinWidgets()` 注册。只要 SDK 构建时启用了 CMake 选项 `GX_BUILTIN_BINDINGS`（默认 `ON`），`AppletKit` 构造时就会**自动调用**它，无需手动处理。仅当显式关闭该选项时，才需要自己调用 `kit.installBuiltinWidgets()`。
-:::
-
-注册后，框架会根据控件类的 `GX_OBJECT` 元数据，自动导出其属性、事件、方法，以及它们用到的枚举、结构体类型，使其在应用层可用。
-
-### 在应用页面中使用
-
-注册成功后，应用开发者可以在页面模板中像使用内置控件那样使用它：
-
-```xml
-<!-- 以 progress-ring 组件为例 -->
-<progress-ring
-  class="ring"
-  :value="progress"
-  @completed="onDone">
-</progress-ring>
-```
-
-这里 `:value="progress"` 把控件的 `value` 属性绑定到应用数据 `progress`；`@completed` 监听控件暴露的 `completed` 事件。框架自动完成 JavaScript 值与 C++ 属性的互相转换，开发者无需写任何"桥接代码"。
-
-### 自定义组件名称
-
-默认情况下，控件以**类名**注册。如果类名不适合直接作为组件名，可以在注册时指定一个自定义名称：
-
-```cpp
-// 将 VendorWaveformGraph 以 WaveformGraph 注册，模板中写作 <waveform-graph>
-kit.installWidget<VendorWaveformGraph>("WaveformGraph");
-```
-
-自定义名称要使用**大驼峰（PascalCase）**形式，与 C++ 类名风格一致。
-
-### C++ ↔ UX 命名转换
-
-组件标签名对应注册时的名称（默认为 `GX_OBJECT` 声明的**类名**，或注册时指定的自定义名称）。模板里习惯用短横线（kebab-case）书写，**ux 打包工具在编译期负责名称转换**：
-
-- 标签名：模板中的 kebab-case ↔ 注册名的大驼峰（PascalCase）。如 `<progress-ring>` 对应类 `ProgressRing`。自定义注册名也如此。
-- 属性名：模板中的 kebab-case ↔ C++ 中的 camelCase。如 `ring-color` 对应属性 `ringColor`。
-
-也就是说，运行时框架按 C++ 中声明的原始名称（camelCase / PascalCase）精确匹配，而短横线写法只是模板侧的书写习惯，由 ux 工具转换后对接。
-
-ux 组件中也可以使用与 C++ 相同的标签 PascalCase 和属性 camelCase，参见[组件命名规范](/tutorials/name-spec.md)。
-
-## 属性和事件导出
-
-`GX_PROPERTY` 声明的属性会被自动导出，规则如下：
-
-- 属性名即框架组件中的属性名，二者直接对应
-- 声明了 setter 的属性（`set xxx`）可以被应用赋值
-- 声明了 getter 的属性（`get xxx`）可以被应用读取
-- 声明了 signal（`signal xxxChanged`）时，属性变化的信号会被传递给绑定
-
-例如以下完整的属性声明：
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-    GX_PROPERTY(Color ringColor, get ringColor, set setRingColor)
-    GX_PROPERTY(bool showLabel, get showLabel, set setShowLabel)
-    // ...
-};
-```
-
-在应用层对应的用法：
-
-```xml
-<progress-ring
-  :value="jobProgress"
-  ring-color="#409EFF"
-  :show-label="true">
-</progress-ring>
-```
-
-模板里属性以短横线（kebab-case）书写，对应 C++ 中的 camelCase 属性名：`ring-color` → `ringColor`，`show-label` → `showLabel`（转换由 ux 打包工具完成，见上文）。`:value`、`:show-label` 是动态绑定（值为表达式），而 `ring-color="#409EFF"` 这样的字面量则是静态赋值。
-
-### 事件导出
-
-组件事件是通过**带变化信号的属性**导出的，而不是直接导出 `Signal<>` 成员。导出一个事件需要两步：
-
-1. 声明一个 `Signal<...>` 成员（C++ 内部使用）；
-2. 在某个 `GX_PROPERTY` 的 `signal` 字段中引用它。
-
-关键规则是：应用侧监听的事件名是**属性名**，而**不是**信号成员的名字。
-
-### 带值的属性变化事件
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    int value() const;
-    void setValue(int v);
-
-    Signal<int> valueChanged;   // 内部信号，这个名字对应用不可见
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-};
-```
-
-应用侧用 `@属性名` 监听变化，因此这里写 `@value`（属性名），而**不是** `@value-changed`：尽管信号成员叫 `valueChanged`，应用看到的事件名始终是属性名 `value`。
-
-```xml
-<progress-ring :value="progress" @value="onProgressChanged"></progress-ring>
-```
-
-这一点和框架内置控件完全一致。例如 `Slider` 的值变化信号成员叫 `changed`，但应用侧监听的仍是属性名 `value`（`@value` 或双向绑定 `::value`）。
-
-### 无值的纯事件
-
-对于不携带数值、只表示“某件事发生了”的事件（如“完成”），用 `invalid_t` 作为属性类型声明一个只有信号、没有读写值的属性：
-
-```cpp
-Signal<>  completed;   // 进度完成时发射
-GX_PROPERTY(invalid_t completed, signal completed)
-```
-
-应用侧可以这样监听（没有事件值）：
-
-```xml
-<progress-ring @completed="onDone"></progress-ring>
-```
-
-你无法将一个 `GX_PROPERTY` 声明为 `void` 类型，即便它根本没有 `get`/`set`，因此要用 `invalid_t` 作为占位类型。如果你希望事件携带值，必须声明为一个具体类型，并提供 `get` 方法——`Signal<T>` 的参数类型不会自动成为事件值，而是始终来自属性的 getter。
-
-::: warning `Signal<>` 不会自动成为事件
-只声明一个 `Signal<>` 成员、却不在任何 `GX_PROPERTY` 中用 `signal` 字段引用它，这个信号是**无法**在应用侧用 `@some-event` 监听的。框架只会把“属性的变化信号”，也就是 `signal` 字段暴露为事件，事件名始终来自属性名。
-:::
-
-## 方法导出
-
-用 `GX_METHOD` 声明的成员函数会作为组件方法导出，供应用在 JavaScript 中调用：
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    GX_METHOD void reset();               // 无参方法
-    GX_METHOD void animateTo(int target); // 带参方法
-};
-```
-
-与属性、事件不同，方法不通过模板标签使用，而是先用 [`$element()`](../framework/component/component-apis.md#element) 取得原生组件对象，再在其上调用。对应模板需要给组件设置 `id`：
-
-```xml
-<progress-ring id="ring" :value="progress"/>
-```
-
-```js
-onReady() {
-  const ring = this.$element('ring'); // 'ring' 为模板中组件的 id
-  ring.reset();
-  ring.animateTo(80);
-}
-```
-
-方法的参数与返回值由框架经 `Variant` 自动编组，无需手写转换代码（类型桥接的细节见[对象系统](./object-system.md#运行时类型系统)）。注意 `$element()` 须在 [`onReady()`](../framework/component/life-cycle.md#onready) 生命周期及之后调用，详见[原生组件](../framework/component/native-component.md)。
-
-## 枚举与结构体类型
-
-当属性或方法参数的类型是自定义的 C++ 枚举或结构体时，用 `GX_ENUM` / `GX_STRUCT` 标注即可一并导出，[注册控件](#注册控件)时框架会自动安装相应的类型转换，无需手写绑定代码。枚举在 JavaScript 侧表现为字符串常量，结构体表现为对象字面量：
-
-```cpp
-class ProgressRing : public Widget {
-    GX_OBJECT
-public:
-    // 注意为值定义别名，否则 JavaScript 侧会使用
-    // 'Solid' / 'Dashed' 名称，而不是预期的 'solid' / 'dashed'
-    enum GX_ENUM LineStyle {
-        Solid GX_ALIAS("solid") = 0,
-        Dashed GX_ALIAS("dashed"),
-    };
-    // 结构体注意写默认值，以免在 JavaScript 侧创建时出现未定义字段
-    struct GX_STRUCT Range { int min = 0; int max = 100; };
-
-    GX_METHOD void setRange(const Range &range);
-
-    GX_PROPERTY(LineStyle lineStyle, get lineStyle, set setLineStyle)
-};
-```
-
-```xml
-<progress-ring line-style="dashed"/>
-```
-
-```js
-this.$element('ring').setRange({ min: 0, max: 100 });
-```
-
-枚举别名、结构体字段映射、嵌套类型等完整语义见[对象系统 · 复杂类型反射](./object-system.md#复杂类型反射)，此处不再展开。
-
-::: warning 不要遗忘标注
-属性或方法用到自定义枚举/结构体时，务必标注 `GX_ENUM` / `GX_STRUCT`，否则 JavaScript 侧无法使用，且没有任何编译错误提示。
-:::
-
-## 容纳子控件（容器型控件）
-
-如果控件需要容纳应用声明的子内容，只需把它实现为一个**容器型控件**：在 C++ 侧负责子控件的布局，框架会自动把模板里嵌套声明的子组件创建为子控件并挂载到它下面。Glyphix 没有 HTML 那样的具名插槽（slot），模板中嵌套的标签会直接成为该控件的子控件。
-
-容器的布局有两种实现方式（详见[控件开发指南](./widget.md)的「布局与尺寸」一节）：
-
-- 使用框架现成的布局类，例如在构造函数中 `setLayout(new FlexLayout())`；
-- 或覆写 `layoutEvent()`，在其中遍历 `children()` 手动设置每个子控件的几何。
-
-在应用层，像嵌套子标签一样使用即可（这里 `card-panel` 是开发者实现并注册的容器控件，`text` 为内置控件）：
-
-```xml
-<card-panel>
-  <text>标题</text>
-  <progress-ring :value="progress"/>
-</card-panel>
-```
-
-## 一个完整的例子
-
-以下定义一个简单的数字显示控件，并将其注册为框架组件：
-
-```cpp
-// number_display.h
-#pragma once
-#include "gx_widget.h"
-#include "gx_color.h"
-
-class NumberDisplay : public Widget {
-    GX_OBJECT
-public:
-    explicit NumberDisplay(Widget *parent = nullptr);
-
-    int value() const { return m_value; }
-    Color textColor() const { return m_color; }
-
-    void setValue(int v);
-    void setTextColor(const Color &c);
-
-    bool event(Event *event) override;   // 唯一需要覆写的虚函数
-
-    Signal<int> valueChanged;            // 内部信号；应用侧通过属性名 value 监听
-
-    GX_PROPERTY(int value, get value, set setValue, signal valueChanged)
-    GX_PROPERTY(Color textColor, get textColor, set setTextColor)
-
-protected:
-    // paintEvent / sizeHint 都不是虚函数，不能加 override
-    void paintEvent(PaintEvent *event);
-    Size sizeHint() const;
-
-    // EventDispatch 需要访问 protected 处理函数
-    friend struct EventTraits<NumberDisplay>;
-
-private:
-    int m_value = 0;
-    Color m_color{0, 0, 0};
-};
-```
-
-```cpp
-// number_display.cpp
-#include "number_display.h"
-#include "gx_format.h"
-#include "gx_painter.h"
-#include "gx_widgetevent.h"   // EventDispatch
-
-NumberDisplay::NumberDisplay(Widget *parent)
-    : Widget(parent) {}
-
-bool NumberDisplay::event(Event *event) {
-    // 把事件分发给 paintEvent；声明 PaintEvent 可在编译期检查遗漏
-    return EventDispatch<Widget, PaintEvent>{}(this, event);
-}
-
-void NumberDisplay::setValue(int v) {
-    if (m_value == v) return;
-    m_value = v;
-    update();
-    valueChanged(v);
-}
-
-void NumberDisplay::setTextColor(const Color &c) {
-    if (m_color == c) return;
-    m_color = c;
-    update();
-}
-
-Size NumberDisplay::sizeHint() const {
-    return Size(60, 30);
-}
-
-void NumberDisplay::paintEvent(PaintEvent *) {
-    Painter p(this);
-    p.setBrush(m_color);   // 文本颜色由画刷（Brush）决定，而非画笔
-    p.setFont(Font(20));
-    p.drawText(rect(), format("{}", m_value), AlignCenter);
-}
-```
-
-注册：
-
-```cpp
-kit.installWidget<NumberDisplay>();
-```
-
-应用层使用：
-
-```xml
-<number-display
-  :value="count"
-  text-color="#333333"
-  @value="onCountChanged">
-</number-display>
-```
-
-至此，从 C++ 实现到应用使用，整个流程完整：`<number-display>` 标签经 ux 工具转换为注册名 `NumberDisplay` 而被识别。
-
-每当应用数据 `count` 变化时，`:value` 绑定会调用 `NumberDisplay::setValue()`；当控件内部发射 `valueChanged` 信号时，框架触发名为 `value` 的事件（事件名取属性名），从而调用应用的 `onCountChanged`。若希望 `count` 与控件双向同步，可改用 `::value="count"`。
 
 

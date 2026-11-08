@@ -2,6 +2,551 @@
 Ограничения среды: MCU (No DOM), RTOS Zephyr, аппаратная платформа ATS3085S.
 
 ============================================================
+FILE_PATH: src/transl/EN/tutorials/qa.md
+
+---
+icon: help-circle-outline
+---
+# Frequently Asked Questions
+
+## Packaging Tools
+
+### Project Build Issues
+
+#### `Lisp Error: thread killed` Error
+
+The specific symptom is an error message similar to the following:
+
+``` log
+[ 47%] Process image src/assets/images/frame1.png
+error: Lisp Error: thread killed
+```
+
+This issue occurs because a previous build step failed, causing the ongoing image conversion build operation to be cancelled. You only need to fix the build operation with the `fatal` error to recover; no special handling is required.
+
+### Simulator
+
+#### Simulator Default Language
+
+The default language of the simulator is `zh-CN`. Therefore, if you have added [internationalization](/framework/component/i18n.md) configuration, it will default to using the `zh-CN.json` translation file. You can use the `-l` or `--language` option with the `gx` command to specify the language when running the simulator:
+``` shell
+gx emu -l en-US # Use American English
+```
+You can also dynamically change the language while the simulator is running using the inspector debugging tool.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/getting-started.md
+
+---
+icon: rocket
+---
+# Quick Start
+
+In this chapter, we will introduce how to use Glyphix.js to create a simple application. We will start by installing the packaging tool, then create a project, and run the simulator to view the results. Finally, we will briefly introduce the project structure and main files. This tutorial does not cover how to run the application on a real device or how to publish it.
+
+## Preparation
+
+Before getting started, please refer to [this documentation](/tutorials/glyphix.js/README.md#npm-installation) to install the Glyphix packaging tool. Simply put, you can use [npm](https://nodejs.org) to install the `glyphix-cli` package:
+```bash
+npm install -g glyphix-cli
+```
+
+Since Glyphix development tools are primarily command-line based, it is recommended to install a modern shell such as Zsh or PowerShell 7+, along with some utility plugins to improve operational efficiency.
+
+### Terminal Tools
+
+For Linux or macOS users, [Oh My Zsh](https://ohmyz.sh/) is recommended. For Windows users, [Windows Terminal](https://aka.ms/terminal) with [Oh My Posh](https://ohmyposh.dev/) is recommended. Please also refer to the [`gx completion`](/tutorials/glyphix.js/README.md#gx-completion) documentation to install the auto-completion script for the `gx` command.
+
+You can use any editor to develop Glyphix applications, such as [VS Code](https://code.visualstudio.com/) or the [Quick App IDE](https://www.quickapp.cn/devtool).
+
+::: tip
+The Quick App IDE does not have the `glyphix.js` packaging tool built-in. You still need to install `glyphix-cli` and use the `gx` command in the terminal to build and run the project. When using editors like VS Code, it is recommended to associate `*.ux` files with the `html` format to get basic syntax highlighting.
+:::
+
+### Using Node.js
+
+If you decide to use npm packages or any resources from the web development ecosystem in your project, please refer to the [Node.js](/tutorials/nodejs.md) configuration documentation. Using Node.js is not mandatory, but it enables modern development tools like TypeScript.
+
+### Using the Packaging Tool
+
+Once everything is set up, enter the `gx list device` command in the terminal. If you get an output similar to the following, it means the installation was successful:
+``` bash
+$ gx list device
+  default
+  ...
+```
+
+Next, let's create an application project and run it in the simulator! Simply use the following commands:
+``` bash
+gx new myapp # Create a project named myapp, which will create a directory named myapp
+cd myapp     # Switch to the myapp directory
+gx emu       # Run the simulator
+```
+If all goes well, you will see a window displaying "Hello World!". Subsequent tutorials will further explain how to use the commands of the `glyphix.js` tool.
+
+::: tip
+Refer to the [`gx build`](/tutorials/glyphix.js/README.md#gx-build) and [`gx emu`](glyphix.js/emulator.html) documentation for more information about building and running the simulator.
+:::
+
+## Project Structure
+
+You can use a file explorer to view the structure of the `myapp` directory. In the current version, its structure is as follows:
+``` bash
+<app-name>
+├─ README.md         # Project README file
+└─ src               # Project source code directory
+    ├─ app.js        # App entry script file
+    ├─ manifest.json # Configures basic application information
+    ├─ assets        # Stores public resources (fonts, images, etc.)
+    │  ├─ fonts      # Stores font resources
+    │  └─ images     # Stores image resources
+    └─ main          # Directory storing the main page
+        └─ index.ux  # Interface description file for the main page
+```
+
+In the default project template, the source code is located in the `<app-name>/src` directory. Documentation and other resources that do not need to be packaged and released can be placed in other directories.
+
+We recommend preparing a directory for each page (using the page name as the directory name) and placing this directory under the root of the source code. Source files of components used exclusively within a page (`*.ux` files) should be placed in that page's directory, while public files can be stored according to the following rules:
+- Public UX files and scripts can be placed in the `common` directory.
+- Script files referenced exclusively by a page are stored directly in the page's directory.
+- Font files are stored in the `assets/fonts` directory.
+- Image files are stored in the `assets/images` directory.
+- Other resources can be stored in appropriate locations within the `assets` directory.
+
+### Project Files
+
+Now you have seen some files inside `myapp`. Please pay attention to files with the `*.ux` extension and the `manifest.json` file, as these are the ones you will interact with most frequently during development. The following tutorial will briefly introduce them.
+
+## The `manifest.json` File
+
+The `manifest.json` file is the configuration file for the application and is used when packaging the app. This file contains basic application information, such as the app name and version details, as well as descriptions and routing information for all pages within the app. In other words, page descriptions must be added to `manifest.json` before you can navigate to those pages in your code.
+
+Here is the content of the `manifest.json` file generated for the template app by the `gx` command:
+``` json
+{
+  "package": "com.example.app",
+  "name": "Example App",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "features": [],
+  "router": { // Page routing information
+    "entry": "main", // Initial page of the application
+    "pages": { // Page description information
+      "main": {
+        "component": "index"
+      }
+    }
+  }
+}
+```
+
+::: warning
+For educational purposes, there are some comments in this `manifest.json` code snippet, but JSON does not support comments. Please do not add any comments to the `manifest.json` file in your project.
+:::
+
+### Filling in Application Information
+
+You can fill in your application information in `manifest.json`.
+
+### Adding Page Descriptions
+
+In the root fields of the `manifest.json` file, the `router` and `pages` fields are related to page descriptions. The `router` field is the application's page routing table and must contain at least the `entry` field to specify the app's entry page, which is usually the `main` page.
+
+If you want to add a new page, you need to add content to the `pages` field. For example, if we want to create a new page named `NewPage` whose entry component is `NewPage/index.ux`, the content of the `pages` field will now look like this:
+``` json
+"pages": {
+  "main": {
+    "component": "index"
+  },
+  "NewPage": { // This is the newly added page
+    "component": "index"
+  }
+}
+```
+The `pages` field is a JSON object where each key is the name of a page, which by default is also the path of the page directory. The value corresponding to the page name is also an object, and its `component` is the name of the page's entry component, which must be stored in the page directory. The `component` field is the filename of the page entry component (without the extension). All names are case-sensitive.
+
+Whenever you add or remove a page, remember to update the relevant fields in `manifest.json`.
+
+For a detailed description of the `manifest.json` file structure, please refer to the related documentation.
+
+## Introduction to UX Files
+
+UX (UI XML) is Glyphix's interface description file. Taking the initial template project as an example, the content of the `main/index.ux` file is as follows:
+``` html
+<template>
+  <p>{{text}}</p>
+</template>
+
+<style>
+  * {
+    text-align: center;
+  }
+</style>
+
+<script>
+  export default {
+    data: {
+      text: "Hello, World!"
+    }
+  }
+</script>
+```
+
+A UX file is actually a type of XML file with three root nodes: `<template>`, `<style>`, and `<script>`. The content within the `<template>` node is the structural description of the interface, the `<style>` node defines the style sheet, and the content within the `<script>` node is JavaScript code that implements the interaction logic for the component.
+
+::: tip
+VS Code does not provide syntax coloring for UX files by default. You can switch the language to "HTML" in the bottom-right corner to get better highlighting effects.
+:::
+
+### Introduction to Components
+
+The object corresponding to a UX file at runtime is called a **component**. Components are an important concept in the Glyphix JavaScript application framework. Each component is an interface element with the following characteristics:
+- Components have their own visual appearance.
+- Some components can respond to user input.
+- Some components can display corresponding effects based on data and state.
+- Components can be embedded and used within other components.
+
+Common interface elements in the Glyphix JavaScript application framework are all components, such as:
+- Text: Used to display textual information.
+- Button: Buttons can display text, and most importantly, they can respond to click events (while also displaying click visual effects).
+- List: Lists hold other components and arrange them vertically; elements within a list can also be moved via swipe gestures.
+
+Components capable of holding other components, like lists, are also referred to as **container components**.
+
+As you can imagine, a component has two main elements: visual appearance and behavioral logic. The `<template>` tag in a UX file declares the component's appearance. Taking `main/index.ux` as an example:
+``` html
+<template>
+  <p>{{text}}</p>
+</template>
+```
+The `main/index.ux` component uses a `<p>` component to display content. This type of component is used to display text, and the value of the `{{text}}` expression is the text to be displayed.
+
+The JavaScript script inside the `<script>` tag implements the component's behavioral logic, always using `export default` to export a **component object**. The first thing to focus on is the component object's `data` property, which is typically an object:
+``` js
+export default {
+  data: {
+    text: 'Hello, World!'
+  }
+}
+```
+Here, the `data` object has a `text` property, and the value of this property will be used as the display content of the aforementioned `<text>` (or `<p>`) component.
+
+### Component Model and State Updates
+
+Suppose we need to design a component that displays different text when clicked. In this case, we need to listen to input events on the component and update the displayed content. The following code listens for click events on the `<p>` component:
+``` html
+<template>
+  <p on:click="text += '!'">{{text}}</p>
+</template>
+```
+The expression in the `on:click` attribute is executed when the text is clicked. Therefore, upon clicking, an `'!'` character is appended to the `text` displayed in the `<p>` component:
+
+<glyphix id="getting-started-click-p" height="120" width="360" title="Click Event">
+
+``` html
+<p on:click="text += '!'">{{text}}</p>
+```
+
+``` js
+export default {
+  data: {
+    text: "Hello, World!"
+  }
+}
+```
+
+``` css
+p {
+  font-size: 32px;
+  text-align: center;
+}
+```
+
+</glyphix>
+
+In subsequent tutorials, we will cover the component update mechanism in detail.
+
+## Start Developing Your App
+
+Now, you can start developing your own Glyphix application! Begin writing code from the default project template and run the simulator using the `gx emu` command. Other sections of this documentation will introduce how to use Glyphix's built-in mechanisms, APIs, and components to build interfaces, as well as how to implement application interaction logic.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/README.md
+
+---
+title: Glyphix Application Development Tutorial
+index: false
+icon: routes
+category:
+  - Guide
+---
+
+## What is Glyphix
+
+Glyphix is an efficient, lightweight application development framework designed for MCU (Microcontroller Unit) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components, and deploy applications to various smart devices (such as smartwatches).
+
+For more information, please refer to the [Framework](/framework/README.md) chapter.
+
+### Web-like Framework
+
+Unlike traditional MCU firmware development, Glyphix is closer to frameworks based on the Web technology stack. Application developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You do not need to master the complete Web development technology stack, such as browser DOM, standard HTML tags, and complex build toolchains. However, if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), you will find it very easy to get started with Glyphix.
+
+::: tip
+It should be noted that Glyphix is not a "low-code" platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, a solid foundation in JavaScript and a good frontend mindset will help you fully unleash the potential of Glyphix.
+:::
+
+### Declarative UI Framework
+
+Traditional interface development is usually imperative: it requires step-by-step function calls to create controls, update states, and refresh interfaces. This approach is flexible, but business and interface logic are highly coupled. As the application scale expands, the code quickly becomes complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.
+
+Glyphix adopts a declarative UI paradigm. Developers only need to describe "what the interface should look like," and the framework automatically completes rendering and updates based on data and state changes. This approach significantly reduces the complexity of interface logic and state management, allowing developers to focus their main energy on functionality and interaction design rather than maintaining UI hierarchies and refresh processes.
+
+### Application Container
+
+Glyphix is not just a UI framework; it also provides functions such as application lifecycle management, permission isolation, and system APIs. Applications run in an independent container and are isolated from each other, ensuring system stability and security.
+
+Please read the [Getting Started](getting-started.md) tutorial to start Glyphix application development right away.
+
+## Other Questions
+
+### Do I need to be familiar with MCU and embedded development?
+
+Application developers generally do not need to understand the specific knowledge of MCU and embedded development. However, you should have some understanding of the resource constraints of the device. For example, the memory capacity of an MCU is usually only a few megabytes, and the memory for running JavaScript code is also limited. This means you might encounter situations where you cannot request very large JSON data from the network, or you cannot encode an entire image into Base64 and retrieve it via a GET request.
+
+These limitations, which are completely different from Web development, are indeed caused by the limited resources of MCU devices, but they are not part of typical MCU knowledge systems.
+
+Intuitively speaking, it is best to confirm whether the application experience is good enough by running the app on the device. You can run it on real hardware multiple times at different stages of development to ensure the experience.
+
+### Do I need to use C/C++ for application development?
+
+Glyphix application development uses HTML, CSS, and JavaScript exclusively, so there is no need to use the C/C++ language.
+
+### How can embedded developers get started with Glyphix application development?
+
+Embedded developers can follow the [Getting Started](getting-started.md) tutorial to gradually understand the core concepts of Glyphix. The framework adopts a componentization and data-binding mechanism similar to the Vue Options API. This may be somewhat different for readers accustomed to imperative GUIs such as [LVGL](https://lvgl.io/) or Qt widgets, but Glyphix's declarative design also brings a more intuitive interface control experience.
+
+Developers do not need to fully master HTML, CSS, and JavaScript, but familiarity with basic JavaScript syntax (such as variables, conditional statements, function calls, etc.) will help in understanding Glyphix's rendering logic and event handling. You can familiarize yourself with these contents and accelerate your development process through sample code and practical operations in the tutorials and documentation.
+
+### Do I need to pay attention to application performance optimization?
+
+Our framework has been deeply optimized for the resource constraints of embedded systems, allowing it to adapt well to various hardware environments. Most applications can achieve sufficiently smooth and stable running performance under default settings, so you generally do not need to spend extra time on performance optimization.
+
+If there is a need to understand specific optimization solutions in the future, we will provide dedicated performance optimization documentation to help developers further improve the runtime efficiency of their applications.
+
+### Is the Glyphix environment different from a browser?
+
+Yes, the Glyphix environment is significantly different from a browser. Glyphix does not have a DOM structure like browsers, nor does it provide objects such as `window` or `document`. Instead, it directly and exclusively provides a set of declarative interfaces through which developers can perform component development and interface interaction. This design simplifies the development process and is more suitable for embedded environments.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/name-spec.md
+
+---
+icon: code-tags-check
+---
+# Component Naming Conventions
+
+This document introduces the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strictly required; failure to comply may result in unexpected behavior. Adhering to the recommended naming conventions ensures maximum compatibility.
+
+## Template Naming Conventions
+
+Tag names in templates must be in kebab-case or PascalCase:
+``` html
+<Button></Button>
+<button></button>
+<scroll-area></scroll-area>
+<ScrollArea></ScrollArea>
+```
+
+Attribute names must be in kebab-case or camelCase:
+``` html
+<component prop-name="expr"></component>
+<component propName="expr"></component>
+```
+
+It is recommended to uniformly use the kebab-case naming convention that complies with Web standards.
+
+## JavaScript Code Naming Conventions
+
+
+Component names in JavaScript code must be in PascalCase, while the corresponding kebab-case should be used in templates.
+
+Component property names in JavaScript code must be in camelCase:
+``` js
+export default {
+  data: {
+    propName: 0 // The property name in the template is prop-name
+  }
+}
+```
+These property names are automatically converted to their corresponding kebab-case in template code.
+
+## File Naming Conventions
+
+UX files must use the same name as the component, which is PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute must use either PascalCase or kebab-case:
+``` html
+<import src="path/to/UxFile" name="UxFile"/>
+<import src="path/to/UxFile" name="ux-file"/>
+```
+In fact, the naming requirement for the `name` attribute is consistent with that of tag names in templates.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/nodejs.md
+
+---
+icon: nodejs
+---
+# Node.js Package Manager
+
+In addition to using it independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm, or yarn. This requires the `glyphix` package to be installed first:
+
+::: code-tabs
+@tab npm
+```bash
+npm install -D glyphix
+```
+
+@tab pnpm
+```bash
+pnpm i -D glyphix
+
+@tab yarn
+```bash
+yarn add -D glyphix
+```
+:::
+
+Otherwise, you may encounter an error like this when executing `gx build`:
+```bash
+$ gx build
+fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
+```
+
+The main benefits of using a JavaScript package manager in Glyphix application development include:
+- Using TypeScript instead of JavaScript as the development language, providing type safety and a better development experience.
+- Using JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.).
+- Using tools like ESLint and Prettier to improve code quality and development efficiency.
+- Facilitating team collaboration and project maintenance.
+
+::: warning
+Currently, only regular JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused this way. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
+:::
+
+::: tip
+If the [Glyphix.js](glyphix.js/README.md) devtools are installed globally, you can directly use commands like `gx build` to package the project; otherwise, you need to add `scripts` configurations in `package.json`.
+:::
+
+## Project Configuration
+
+### `package.json` Configuration
+
+When using a Node.js package manager, it is recommended to add the necessary scripts and configurations in `package.json`:
+
+```json
+{
+  "name": "my-glyphix-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "gx build",
+    "emu": "gx emu",
+    "clean": "gx clean"
+  },
+  "devDependencies": {
+    "glyphix": "^1.0.41",
+    "typescript": "^5.8.3"
+  }
+}
+```
+
+### `tsconfig.json` Configuration
+
+If you are using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "baseUrl": "./",
+    "paths": {
+      "/*": ["src/*"],
+      "/assets": ["src/assets/*"]
+    },
+    "types": ["glyphix", "node"],
+    "allowImportingTsExtensions": true,
+    "checkJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.ux"]
+}
+```
+
+::: info
+The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code hints.
+:::
+
+## `glyphix.config.js` Configuration
+
+It is recommended to create a `glyphix.config.js` file in the project root directory (where `src/` or `package.json` is located) to customize packaging options:
+```js
+module.exports = {
+  minify: false, // Disable code minification to facilitate debugging and mapping to source code line numbers
+};
+```
+If you are using TypeScript, you can create a `glyphix.config.ts` file instead.
+
+::: tip
+Be sure to create this file and configure `minify: false`, otherwise the packaged code will be minified and obfuscated, making it impossible to map to source code line numbers during debugging.
+:::
+
+## Using TypeScript
+
+The Glyphix framework provides experimental TypeScript support, allowing you to enjoy type safety and modern JavaScript syntax advantages in your application development.
+
+### Basic Component Example
+
+Below is an example of a component written in TypeScript:
+
+```html
+<template>
+  <p on:click="onClick">{{count}}</p>
+</template>
+
+<script lang="ts">
+import { defineComponent } from "glyphix"
+
+export default defineComponent({
+  data: {
+    count: 0
+  },
+  onClick() {
+    this.count++
+  }
+})
+</script>
+```
+
+Compared to the default JavaScript component script, using TypeScript requires the following adjustments:
+1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
+2. Import the `defineComponent` function from the `glyphix` module.
+3. Pass the component object to be exported as an argument to `defineComponent` and export the return value of this function.
+
+After using TypeScript, the `defineComponent` function makes code hints and type checking in the IDE much more accurate.
+
+### `app.ts`
+
+Rename `app.js` to `app.ts` to switch to the TypeScript application entry file, and the packaging tool will handle it automatically.
+
+============================================================
 FILE_PATH: src/transl/EN/tutorials/component-basic.md
 
 ---
@@ -243,242 +788,6 @@ Here is the content of the `Menu.ux` file:
 </script>
 ```
 We simply use a native `div` component to respond to the user's click and report it upward. Inside the `div` component, the child components passed from the parent will also be displayed, ultimately making the menu list visible.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/getting-started.md
-
----
-icon: rocket
----
-# Quick Start
-
-In this chapter, we will introduce how to use Glyphix.js to create a simple application. We will start by installing the packaging tool, then create a project, and run the simulator to view the results. Finally, we will briefly introduce the project structure and main files. This tutorial does not cover how to run the application on a real device or how to publish it.
-
-## Preparation
-
-Before getting started, please refer to [this documentation](/tutorials/glyphix.js/README.md#npm-installation) to install the Glyphix packaging tool. Simply put, you can use [npm](https://nodejs.org) to install the `glyphix-cli` package:
-```bash
-npm install -g glyphix-cli
-```
-
-Since Glyphix development tools are primarily command-line based, it is recommended to install a modern shell such as Zsh or PowerShell 7+, along with some utility plugins to improve operational efficiency.
-
-### Terminal Tools
-
-For Linux or macOS users, [Oh My Zsh](https://ohmyz.sh/) is recommended. For Windows users, [Windows Terminal](https://aka.ms/terminal) with [Oh My Posh](https://ohmyposh.dev/) is recommended. Please also refer to the [`gx completion`](/tutorials/glyphix.js/README.md#gx-completion) documentation to install the auto-completion script for the `gx` command.
-
-You can use any editor to develop Glyphix applications, such as [VS Code](https://code.visualstudio.com/) or the [Quick App IDE](https://www.quickapp.cn/devtool).
-
-::: tip
-The Quick App IDE does not have the `glyphix.js` packaging tool built-in. You still need to install `glyphix-cli` and use the `gx` command in the terminal to build and run the project. When using editors like VS Code, it is recommended to associate `*.ux` files with the `html` format to get basic syntax highlighting.
-:::
-
-### Using Node.js
-
-If you decide to use npm packages or any resources from the web development ecosystem in your project, please refer to the [Node.js](/tutorials/nodejs.md) configuration documentation. Using Node.js is not mandatory, but it enables modern development tools like TypeScript.
-
-### Using the Packaging Tool
-
-Once everything is set up, enter the `gx list device` command in the terminal. If you get an output similar to the following, it means the installation was successful:
-``` bash
-$ gx list device
-  default
-  ...
-```
-
-Next, let's create an application project and run it in the simulator! Simply use the following commands:
-``` bash
-gx new myapp # Create a project named myapp, which will create a directory named myapp
-cd myapp     # Switch to the myapp directory
-gx emu       # Run the simulator
-```
-If all goes well, you will see a window displaying "Hello World!". Subsequent tutorials will further explain how to use the commands of the `glyphix.js` tool.
-
-::: tip
-Refer to the [`gx build`](/tutorials/glyphix.js/README.md#gx-build) and [`gx emu`](glyphix.js/emulator.html) documentation for more information about building and running the simulator.
-:::
-
-## Project Structure
-
-You can use a file explorer to view the structure of the `myapp` directory. In the current version, its structure is as follows:
-``` bash
-<app-name>
-├─ README.md         # Project README file
-└─ src               # Project source code directory
-    ├─ app.js        # App entry script file
-    ├─ manifest.json # Configures basic application information
-    ├─ assets        # Stores public resources (fonts, images, etc.)
-    │  ├─ fonts      # Stores font resources
-    │  └─ images     # Stores image resources
-    └─ main          # Directory storing the main page
-        └─ index.ux  # Interface description file for the main page
-```
-
-In the default project template, the source code is located in the `<app-name>/src` directory. Documentation and other resources that do not need to be packaged and released can be placed in other directories.
-
-We recommend preparing a directory for each page (using the page name as the directory name) and placing this directory under the root of the source code. Source files of components used exclusively within a page (`*.ux` files) should be placed in that page's directory, while public files can be stored according to the following rules:
-- Public UX files and scripts can be placed in the `common` directory.
-- Script files referenced exclusively by a page are stored directly in the page's directory.
-- Font files are stored in the `assets/fonts` directory.
-- Image files are stored in the `assets/images` directory.
-- Other resources can be stored in appropriate locations within the `assets` directory.
-
-### Project Files
-
-Now you have seen some files inside `myapp`. Please pay attention to files with the `*.ux` extension and the `manifest.json` file, as these are the ones you will interact with most frequently during development. The following tutorial will briefly introduce them.
-
-## The `manifest.json` File
-
-The `manifest.json` file is the configuration file for the application and is used when packaging the app. This file contains basic application information, such as the app name and version details, as well as descriptions and routing information for all pages within the app. In other words, page descriptions must be added to `manifest.json` before you can navigate to those pages in your code.
-
-Here is the content of the `manifest.json` file generated for the template app by the `gx` command:
-``` json
-{
-  "package": "com.example.app",
-  "name": "Example App",
-  "versionName": "1.0.0",
-  "versionCode": 1,
-  "features": [],
-  "router": { // Page routing information
-    "entry": "main", // Initial page of the application
-    "pages": { // Page description information
-      "main": {
-        "component": "index"
-      }
-    }
-  }
-}
-```
-
-::: warning
-For educational purposes, there are some comments in this `manifest.json` code snippet, but JSON does not support comments. Please do not add any comments to the `manifest.json` file in your project.
-:::
-
-### Filling in Application Information
-
-You can fill in your application information in `manifest.json`.
-
-### Adding Page Descriptions
-
-In the root fields of the `manifest.json` file, the `router` and `pages` fields are related to page descriptions. The `router` field is the application's page routing table and must contain at least the `entry` field to specify the app's entry page, which is usually the `main` page.
-
-If you want to add a new page, you need to add content to the `pages` field. For example, if we want to create a new page named `NewPage` whose entry component is `NewPage/index.ux`, the content of the `pages` field will now look like this:
-``` json
-"pages": {
-  "main": {
-    "component": "index"
-  },
-  "NewPage": { // This is the newly added page
-    "component": "index"
-  }
-}
-```
-The `pages` field is a JSON object where each key is the name of a page, which by default is also the path of the page directory. The value corresponding to the page name is also an object, and its `component` is the name of the page's entry component, which must be stored in the page directory. The `component` field is the filename of the page entry component (without the extension). All names are case-sensitive.
-
-Whenever you add or remove a page, remember to update the relevant fields in `manifest.json`.
-
-For a detailed description of the `manifest.json` file structure, please refer to the related documentation.
-
-## Introduction to UX Files
-
-UX (UI XML) is Glyphix's interface description file. Taking the initial template project as an example, the content of the `main/index.ux` file is as follows:
-``` html
-<template>
-  <p>{{text}}</p>
-</template>
-
-<style>
-  * {
-    text-align: center;
-  }
-</style>
-
-<script>
-  export default {
-    data: {
-      text: "Hello, World!"
-    }
-  }
-</script>
-```
-
-A UX file is actually a type of XML file with three root nodes: `<template>`, `<style>`, and `<script>`. The content within the `<template>` node is the structural description of the interface, the `<style>` node defines the style sheet, and the content within the `<script>` node is JavaScript code that implements the interaction logic for the component.
-
-::: tip
-VS Code does not provide syntax coloring for UX files by default. You can switch the language to "HTML" in the bottom-right corner to get better highlighting effects.
-:::
-
-### Introduction to Components
-
-The object corresponding to a UX file at runtime is called a **component**. Components are an important concept in the Glyphix JavaScript application framework. Each component is an interface element with the following characteristics:
-- Components have their own visual appearance.
-- Some components can respond to user input.
-- Some components can display corresponding effects based on data and state.
-- Components can be embedded and used within other components.
-
-Common interface elements in the Glyphix JavaScript application framework are all components, such as:
-- Text: Used to display textual information.
-- Button: Buttons can display text, and most importantly, they can respond to click events (while also displaying click visual effects).
-- List: Lists hold other components and arrange them vertically; elements within a list can also be moved via swipe gestures.
-
-Components capable of holding other components, like lists, are also referred to as **container components**.
-
-As you can imagine, a component has two main elements: visual appearance and behavioral logic. The `<template>` tag in a UX file declares the component's appearance. Taking `main/index.ux` as an example:
-``` html
-<template>
-  <p>{{text}}</p>
-</template>
-```
-The `main/index.ux` component uses a `<p>` component to display content. This type of component is used to display text, and the value of the `{{text}}` expression is the text to be displayed.
-
-The JavaScript script inside the `<script>` tag implements the component's behavioral logic, always using `export default` to export a **component object**. The first thing to focus on is the component object's `data` property, which is typically an object:
-``` js
-export default {
-  data: {
-    text: 'Hello, World!'
-  }
-}
-```
-Here, the `data` object has a `text` property, and the value of this property will be used as the display content of the aforementioned `<text>` (or `<p>`) component.
-
-### Component Model and State Updates
-
-Suppose we need to design a component that displays different text when clicked. In this case, we need to listen to input events on the component and update the displayed content. The following code listens for click events on the `<p>` component:
-``` html
-<template>
-  <p on:click="text += '!'">{{text}}</p>
-</template>
-```
-The expression in the `on:click` attribute is executed when the text is clicked. Therefore, upon clicking, an `'!'` character is appended to the `text` displayed in the `<p>` component:
-
-<glyphix id="getting-started-click-p" height="120" width="360" title="Click Event">
-
-``` html
-<p on:click="text += '!'">{{text}}</p>
-```
-
-``` js
-export default {
-  data: {
-    text: "Hello, World!"
-  }
-}
-```
-
-``` css
-p {
-  font-size: 32px;
-  text-align: center;
-}
-```
-
-</glyphix>
-
-In subsequent tutorials, we will cover the component update mechanism in detail.
-
-## Start Developing Your App
-
-Now, you can start developing your own Glyphix application! Begin writing code from the default project template and run the simulator using the `gx emu` command. Other sections of this documentation will introduce how to use Glyphix's built-in mechanisms, APIs, and components to build interfaces, as well as how to implement application interaction logic.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/quick-orientation.md
@@ -792,532 +1101,6 @@ export default {
 ```
 
 </glyphix>
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/README.md
-
----
-title: Glyphix Application Development Tutorial
-index: false
-icon: routes
-category:
-  - Guide
----
-
-## What is Glyphix
-
-Glyphix is an efficient, lightweight application development framework designed for MCU (Microcontroller Unit) devices. It provides developers with a declarative UI development paradigm similar to the Web ecosystem: through HTML templates, CSS, and JavaScript, developers can easily build pages and components, and deploy applications to various smart devices (such as smartwatches).
-
-For more information, please refer to the [Framework](/framework/README.md) chapter.
-
-### Web-like Framework
-
-Unlike traditional MCU firmware development, Glyphix is closer to frameworks based on the Web technology stack. Application developers need to be familiar with JavaScript, CSS, and basic HTML knowledge. You do not need to master the complete Web development technology stack, such as browser DOM, standard HTML tags, and complex build toolchains. However, if you are familiar with Web UI frameworks such as [Vue.js](https://vuejs.org/) ([Options API](https://vuejs.org/guide/introduction#options-api)), you will find it very easy to get started with Glyphix.
-
-::: tip
-It should be noted that Glyphix is not a "low-code" platform. During the development process, you will still encounter challenges such as logic abstraction, interface organization, user experience, and performance trade-offs. Therefore, a solid foundation in JavaScript and a good frontend mindset will help you fully unleash the potential of Glyphix.
-:::
-
-### Declarative UI Framework
-
-Traditional interface development is usually imperative: it requires step-by-step function calls to create controls, update states, and refresh interfaces. This approach is flexible, but business and interface logic are highly coupled. As the application scale expands, the code quickly becomes complex and difficult to maintain. Patterns such as MVC and MVVM were proposed precisely to solve this complexity.
-
-Glyphix adopts a declarative UI paradigm. Developers only need to describe "what the interface should look like," and the framework automatically completes rendering and updates based on data and state changes. This approach significantly reduces the complexity of interface logic and state management, allowing developers to focus their main energy on functionality and interaction design rather than maintaining UI hierarchies and refresh processes.
-
-### Application Container
-
-Glyphix is not just a UI framework; it also provides functions such as application lifecycle management, permission isolation, and system APIs. Applications run in an independent container and are isolated from each other, ensuring system stability and security.
-
-Please read the [Getting Started](getting-started.md) tutorial to start Glyphix application development right away.
-
-## Other Questions
-
-### Do I need to be familiar with MCU and embedded development?
-
-Application developers generally do not need to understand the specific knowledge of MCU and embedded development. However, you should have some understanding of the resource constraints of the device. For example, the memory capacity of an MCU is usually only a few megabytes, and the memory for running JavaScript code is also limited. This means you might encounter situations where you cannot request very large JSON data from the network, or you cannot encode an entire image into Base64 and retrieve it via a GET request.
-
-These limitations, which are completely different from Web development, are indeed caused by the limited resources of MCU devices, but they are not part of typical MCU knowledge systems.
-
-Intuitively speaking, it is best to confirm whether the application experience is good enough by running the app on the device. You can run it on real hardware multiple times at different stages of development to ensure the experience.
-
-### Do I need to use C/C++ for application development?
-
-Glyphix application development uses HTML, CSS, and JavaScript exclusively, so there is no need to use the C/C++ language.
-
-### How can embedded developers get started with Glyphix application development?
-
-Embedded developers can follow the [Getting Started](getting-started.md) tutorial to gradually understand the core concepts of Glyphix. The framework adopts a componentization and data-binding mechanism similar to the Vue Options API. This may be somewhat different for readers accustomed to imperative GUIs such as [LVGL](https://lvgl.io/) or Qt widgets, but Glyphix's declarative design also brings a more intuitive interface control experience.
-
-Developers do not need to fully master HTML, CSS, and JavaScript, but familiarity with basic JavaScript syntax (such as variables, conditional statements, function calls, etc.) will help in understanding Glyphix's rendering logic and event handling. You can familiarize yourself with these contents and accelerate your development process through sample code and practical operations in the tutorials and documentation.
-
-### Do I need to pay attention to application performance optimization?
-
-Our framework has been deeply optimized for the resource constraints of embedded systems, allowing it to adapt well to various hardware environments. Most applications can achieve sufficiently smooth and stable running performance under default settings, so you generally do not need to spend extra time on performance optimization.
-
-If there is a need to understand specific optimization solutions in the future, we will provide dedicated performance optimization documentation to help developers further improve the runtime efficiency of their applications.
-
-### Is the Glyphix environment different from a browser?
-
-Yes, the Glyphix environment is significantly different from a browser. Glyphix does not have a DOM structure like browsers, nor does it provide objects such as `window` or `document`. Instead, it directly and exclusively provides a set of declarative interfaces through which developers can perform component development and interface interaction. This design simplifies the development process and is more suitable for embedded environments.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/qa.md
-
----
-icon: help-circle-outline
----
-# Frequently Asked Questions
-
-## Packaging Tools
-
-### Project Build Issues
-
-#### `Lisp Error: thread killed` Error
-
-The specific symptom is an error message similar to the following:
-
-``` log
-[ 47%] Process image src/assets/images/frame1.png
-error: Lisp Error: thread killed
-```
-
-This issue occurs because a previous build step failed, causing the ongoing image conversion build operation to be cancelled. You only need to fix the build operation with the `fatal` error to recover; no special handling is required.
-
-### Simulator
-
-#### Simulator Default Language
-
-The default language of the simulator is `zh-CN`. Therefore, if you have added [internationalization](/framework/component/i18n.md) configuration, it will default to using the `zh-CN.json` translation file. You can use the `-l` or `--language` option with the `gx` command to specify the language when running the simulator:
-``` shell
-gx emu -l en-US # Use American English
-```
-You can also dynamically change the language while the simulator is running using the inspector debugging tool.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/name-spec.md
-
----
-icon: code-tags-check
----
-# Component Naming Conventions
-
-This document introduces the mandatory naming conventions and recommended naming styles for the component framework. Mandatory naming conventions are strictly required; failure to comply may result in unexpected behavior. Adhering to the recommended naming conventions ensures maximum compatibility.
-
-## Template Naming Conventions
-
-Tag names in templates must be in kebab-case or PascalCase:
-``` html
-<Button></Button>
-<button></button>
-<scroll-area></scroll-area>
-<ScrollArea></ScrollArea>
-```
-
-Attribute names must be in kebab-case or camelCase:
-``` html
-<component prop-name="expr"></component>
-<component propName="expr"></component>
-```
-
-It is recommended to uniformly use the kebab-case naming convention that complies with Web standards.
-
-## JavaScript Code Naming Conventions
-
-
-Component names in JavaScript code must be in PascalCase, while the corresponding kebab-case should be used in templates.
-
-Component property names in JavaScript code must be in camelCase:
-``` js
-export default {
-  data: {
-    propName: 0 // The property name in the template is prop-name
-  }
-}
-```
-These property names are automatically converted to their corresponding kebab-case in template code.
-
-## File Naming Conventions
-
-UX files must use the same name as the component, which is PascalCase. In the `<import>` tag, the `src` attribute must be a case-sensitive file URL, and the `name` attribute must use either PascalCase or kebab-case:
-``` html
-<import src="path/to/UxFile" name="UxFile"/>
-<import src="path/to/UxFile" name="ux-file"/>
-```
-In fact, the naming requirement for the `name` attribute is consistent with that of tag names in templates.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/nodejs.md
-
----
-icon: nodejs
----
-# Node.js Package Manager
-
-In addition to using it independently, the `gx` packaging tool can be used with JavaScript package managers such as npm, pnpm, or yarn. This requires the `glyphix` package to be installed first:
-
-::: code-tabs
-@tab npm
-```bash
-npm install -D glyphix
-```
-
-@tab pnpm
-```bash
-pnpm i -D glyphix
-
-@tab yarn
-```bash
-yarn add -D glyphix
-```
-:::
-
-Otherwise, you may encounter an error like this when executing `gx build`:
-```bash
-$ gx build
-fatal: glyphix not found, please install it by `npm install -D glyphix' or other package manager.
-```
-
-The main benefits of using a JavaScript package manager in Glyphix application development include:
-- Using TypeScript instead of JavaScript as the development language, providing type safety and a better development experience.
-- Using JavaScript libraries from the Node.js ecosystem suitable for embedded development (such as algorithm libraries, data processing tools, etc.).
-- Using tools like ESLint and Prettier to improve code quality and development efficiency.
-- Facilitating team collaboration and project maintenance.
-
-::: warning
-Currently, only regular JavaScript or TypeScript dependencies can be managed via package managers; Glyphix components cannot be reused this way. When choosing third-party libraries, please ensure they are suitable for embedded environments and avoid using libraries that depend on the DOM, Node.js-specific APIs, or are excessively large.
-:::
-
-::: tip
-If the [Glyphix.js](glyphix.js/README.md) devtools are installed globally, you can directly use commands like `gx build` to package the project; otherwise, you need to add `scripts` configurations in `package.json`.
-:::
-
-## Project Configuration
-
-### `package.json` Configuration
-
-When using a Node.js package manager, it is recommended to add the necessary scripts and configurations in `package.json`:
-
-```json
-{
-  "name": "my-glyphix-app",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "gx build",
-    "emu": "gx emu",
-    "clean": "gx clean"
-  },
-  "devDependencies": {
-    "glyphix": "^1.0.41",
-    "typescript": "^5.8.3"
-  }
-}
-```
-
-### `tsconfig.json` Configuration
-
-If you are using TypeScript, you need to create a `tsconfig.json` file in the project root directory:
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2021",
-    "module": "commonjs",
-    "baseUrl": "./",
-    "paths": {
-      "/*": ["src/*"],
-      "/assets": ["src/assets/*"]
-    },
-    "types": ["glyphix", "node"],
-    "allowImportingTsExtensions": true,
-    "checkJs": true,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true
-  },
-  "include": ["src/**/*.ts", "src/**/*.ux"]
-}
-```
-
-::: info
-The Glyphix packaging tool automatically handles the compilation of TypeScript files. The above configuration is mainly used for IDE type checking and code hints.
-:::
-
-## `glyphix.config.js` Configuration
-
-It is recommended to create a `glyphix.config.js` file in the project root directory (where `src/` or `package.json` is located) to customize packaging options:
-```js
-module.exports = {
-  minify: false, // Disable code minification to facilitate debugging and mapping to source code line numbers
-};
-```
-If you are using TypeScript, you can create a `glyphix.config.ts` file instead.
-
-::: tip
-Be sure to create this file and configure `minify: false`, otherwise the packaged code will be minified and obfuscated, making it impossible to map to source code line numbers during debugging.
-:::
-
-## Using TypeScript
-
-The Glyphix framework provides experimental TypeScript support, allowing you to enjoy type safety and modern JavaScript syntax advantages in your application development.
-
-### Basic Component Example
-
-Below is an example of a component written in TypeScript:
-
-```html
-<template>
-  <p on:click="onClick">{{count}}</p>
-</template>
-
-<script lang="ts">
-import { defineComponent } from "glyphix"
-
-export default defineComponent({
-  data: {
-    count: 0
-  },
-  onClick() {
-    this.count++
-  }
-})
-</script>
-```
-
-Compared to the default JavaScript component script, using TypeScript requires the following adjustments:
-1. Use `lang="ts"` in the `<script>` tag to specify the language type as TypeScript.
-2. Import the `defineComponent` function from the `glyphix` module.
-3. Pass the component object to be exported as an argument to `defineComponent` and export the return value of this function.
-
-After using TypeScript, the `defineComponent` function makes code hints and type checking in the IDE much more accurate.
-
-### `app.ts`
-
-Rename `app.js` to `app.ts` to switch to the TypeScript application entry file, and the packaging tool will handle it automatically.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/glyphix.js/image-forge.md
-
----
-icon: image-filter
----
-# Image Management
-
-The glyphix.js packaging tool manages all PNG image resources in the project (`src` directory). The related modules mainly provide the following features:
-- Supports configuration files for image resources and provides a related configuration interface
-- Converts images into device-optimized sizes and formats during packaging
-
-Application developers only need to configure the packaging parameters for image resources according to their needs, while device vendors need to define specific image conversion strategies for their devices.
-
-## Application Development Configuration
-
-In application development, image packaging parameters must be configured to correctly generate resource packages.
-Configuring `config/image-rules.json` and properties such as `config.designWidth` in `src/manifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while fields in `manifest.json` affect the global scaling ratio of images (used to adapt to devices of different resolutions).
-
-::: tip
-`config/image-rules.json` can be configured using the `gx config` command or other methods, but direct editing with a text editor is not recommended.
-:::
-
-If using the `gx config` command, developers will primarily focus on two parameters: `transparent` and `quality`.
-
-### Transparent Parameter
-
-The `transparent` parameter indicates whether the image contains transparent pixels. If configured as `false` while the source image does contain transparent pixels, these pixels will be converted to opaque (usually blended onto a black background) during generation. Therefore, necessary images must be marked to preserve transparent pixels; otherwise, incorrect overlay effects will be displayed. Because opaque images have better performance on certain platforms and consume less data, the `transparent` option is disabled by default.
-
-### Quality Parameter
-
-The `quality` parameter represents the quality of the packed image, which is an integer in the range $[0, 100]$. However, typically only 3 approximate quality levels are used:
-- High: 100, indicating the highest quality
-- Middle: 50, medium quality, the default value
-- Low: 0, low quality
-
-Image resources are optimized based on the quality parameter during conversion. Generally speaking, medium quality is a conversion strategy that balances display quality, rendering/loading performance, and memory resource consumption on the target platform, and is therefore recommended. Using high quality may provide better visual fidelity, but could result in degraded performance. Low quality can be used for images where quality can be sacrificed to improve performance (such as photographs). Specific target platforms may also ignore the `quality` parameter and use a unified strategy instead.
-
-## Device and Platform Adaptation
-
-Assuming device and platform developers have implemented optimized image resource formats for specific target platforms supporting multiple quality and pixel formats, the following work is required to generate these image formats within glyphix.js:
-- Implement a command-line tool required for **single image** conversion
-  - Must provide a command-line interface to convert from PNG images to a custom format, supporting output to a specified path (including overwriting the original file)
-  - Preferably provide a command-line interface to convert from a custom format back to PNG images, supporting output to a specified path (including overwriting the original file). Without this feature, PC-side previews will not be available
-- Write device description files and image conversion scripts
-
-### Image Conversion Script
-
-The image conversion script is a Scheme file. When an image needs to be converted, glyphix.js invokes this script, which uses the following variables to determine how to convert the image:
-- `env.image-path`: The absolute path of the image to be converted; the converted image overwrites this path.
-- `env.transparent`: The transparency parameter of this image.
-- `env.quailty`: The quality parameter of this image.
-- `env.target`: The conversion target mode, described later.
-- `env.verbose`: Whether verbose mode is enabled. If true, detailed logs can be output; otherwise, no logs should be output.
-- `env.script-dir`: The absolute path of the current script file. If the command required for conversion is relative to this script file rather than in the `PATH` environment variable, this parameter can be used for concatenation.
-
-`env.target` represents the **target mode** for image conversion, and its value determines the specific conversion method applied:
-- `"device"`: Executes the complete conversion process targeting the target device, such as removing the alpha channel of opaque images and then converting them into the PGF format (Glyphix Image Format) according to the quality parameter.
-- `"emulator"`: Executes the conversion process targeting the emulator. Since the emulator does not support specific hardware texture formats (such as ETC2, etc.), to ensure images display correctly in the emulator, only the alpha channel of opaque images may be removed without further conversion to the target device format (or converted to a software-supported PGF format).
-- `"preprocess"`: Executes only the preprocessing steps, which means removing the alpha channel of opaque images and outputting the result in PNG format.
-- `"preview"`: Generates a preview PNG image. First, convert the image to the custom target format following the `"device"` target conversion process, and then convert the output image back to PNG for preview purposes.
-
-::: tip
-If the command-line tool for image conversion does not support converting custom formats to PNG, do not implement the `"preprocess"` and `"preview"` target modes.
-:::
-
-### image-forge Command-Line Tool
-
-`image-forge` is the PGF image format command-line tool provided by Glyphix, featuring the following capabilities:
-- Supports converting PNG images to PGF format, as well as PGF to PNG images.
-- Supports common ARGB and PAL pixel formats, distinguishing between premultiplied alpha modes.
-- Supports blending transparent ARGB images onto a specified solid color background to convert them into opaque images (rather than directly discarding the alpha channel).
-- Supports row alignment by pixels or bytes.
-- Supports LZ4 compression, with the ability to set a minimum compression threshold (image data below the threshold will not be compressed).
-
-Platforms using other custom image formats can also utilize `image-forge` to remove the alpha channel.
-
-## Image Conversion Script Example
-
-The following example demonstrates how to use commands like `image-forge` to convert PNGs to PGF images, prioritizing the palette (PAL) format.
-
-First, define the target formats for opaque and transparent conditions:
-``` scheme
-; Define pixel format rules for opaque colors
-(define (opaque-formats q)
-  (cond ((<= q 50) "pal-rgb")
-        (else "rgb24")))
-
-; Define pixel format rules for transparent colors
-(define (transparent-formats q)
-  (cond ((<= q 50) "pal-argb-premul")
-        (else "argb32-premul")))
-
-; Calculate the target pixel format under the influence of transparency and quality parameters
-(define pixel-format
-  ((if env.transparent
-      transparent-formats opaque-formats)
-    env.quailty))
-
-; Whether the image is converted to a palette format
-(define palette (<= env.quailty 50))
-```
-
-The above code uses the palette format when the quality is less than or equal to 50, using `pal-rgb` or `pal-argb` depending on transparency. For qualities higher than 50, it uses 8-bit per channel RGB or ARGB pixel formats. Ultimately, the `pixel-format` variable represents the actual pixel format name used, and `palette` indicates whether the palette format is used.
-
-Next, define the commands needed for various scenarios:
-
-``` scheme
-; Whether to add the --verbose command-line argument
-(define if-verbose (if env.verbose "--verbose " ""))
-
-; Call the pngquant command to reduce image colors to 256 or fewer; pngquant must be installed on the system
-(define color-reduction
-  (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
-
-; Convert image to PGF format
-(define convert (string-append "image-forge "
-  "--format=" pixel-format " " ; Specify output pixel format
-  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, minimum compression ratio is 5
-  "--align=16 --pixel-align " ; Align image to 16 pixels
-  if-verbose
-  env.image-path))
-
-; Remove image Alpha channel and add background
-(define remove-alpha (string-append "image-forge --bypass "
-  ; On the bes2500ibp watch, non-transparent images can have their alpha channel removed and blended with a black background; this operation improves image quality after PAL color reduction
-  (if env.transparent "" "--background black ")
-  if-verbose
-  env.image-path))
-
-; Command to decode PGF image back to PNG
-(define decode
-  (string-append "image-forge --decode " if-verbose env.image-path))
-```
-
-In the code below, `execute-try` calls a specified `f` function when a command exits with a non-zero status, while the `execute` function prints an error log and exits the script with an exception when a command exits with a non-zero status. The `run-convert` function executes the complete target device image conversion workflow (calling `remove-alpha` and `convert` commands).
-
-``` scheme
-; Execute a command and print command contents in verbose mode; if the command exits with a non-zero exception, call function f
-(define (execute-try cmd f)
-  (begin
-    (if env.verbose ; Print command contents if in verbose mode
-      (display (string-append "Run command: " cmd "\n")))
-    (let ((r (system (string-append env.script-dir "/bin/" cmd))))
-      (if (= r 0) 0 (f r)))
-  ))
-
-; Execute a command, print command contents in verbose mode, and exit the program if the command exits with an exception
-(define (execute cmd)
-  (execute-try cmd (lambda (x)
-    (begin ; Print error code and exit exceptionally upon failure
-      (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
-      (exit-fail)
-  ))))
-
-; Convert image
-(define (run-convert)
-  (begin
-    (execute remove-alpha) ; Remove transparency channel first
-    (if palette (execute color-reduction)) ; Reduce image pixel count if palette format is used
-    (execute convert) ; Execute image conversion command
-  ))
-```
-
-The `targets` macro defines the processing methods for all target modes, such as the `"device"` mode calling the `run-convert` function, etc.
-
-``` scheme
-; Define conversion strategies corresponding to targets
-(targets env.target
-  ; Device mode: Image conversion workflow ultimately used for the target device
-  ("device" (run-convert))
-  ; Emulator mode: Only remove the alpha channel of non-transparent images, do not convert format
-  ("emulator" (execute remove-alpha))
-  ; Preprocess mode: Remove the alpha channel of non-transparent images and add background
-  ("preprocess" (execute remove-alpha))
-  ; Preview mode: Generate a PNG preview image consistent with the actual device display effect
-  ("preview" (begin
-    (run-convert) ; Convert image to PGF format first
-    (decode))) ; Then convert image back to PNG
-  )
-```
-
-### Using the Image Conversion Script
-
-To use the image conversion script, add a field to the device model description file:
-
-``` yaml
-description: default watch
-
-screen:
-  width: 454 # pixels
-  height: 454 # pixels
-  dpi: 326 # pixels per inch
-
-#...
-image-build: image-convert-pal.scm # Path of the image conversion script relative to this Yaml file
-```
-
-### More Complex Strategies
-
-Since the image conversion script is a full programming language rather than a configuration language like Yaml or JSON, we can implement more complex custom conversion strategies without being limited by the features provided by the framework. Taking the aforementioned palette format conversion as an example: the PAL format performs poorly on color-rich images. In such cases, images can be converted to a format that performs better in these scenarios. The general approach is as follows:
-1. The `pngquant` command supports exiting with an exception when the quality falls below a specified value after PAL format conversion; configure command parameters accordingly for this purpose.
-2. Modify the `color-reduction` operation executed by `execute` in the `run-convert` function to be executed by `execute-try` instead, using an alternative format conversion operation in the latter's exception handling function.
-3. The handling for targets like `preview` is similar, but note that when converting the output format back to PNG, command exit exceptions must also be detected and handled by subsequent fallback commands.
-
-In summary, following a shell-script-like approach, you use the exit codes of commands to control the workflow.
-
-============================================================
-FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
-
----
-icon: console-line
----
-# Command Line Options
-
-Pending migration.
 
 ============================================================
 FILE_PATH: src/transl/EN/tutorials/glyphix.js/README.md
@@ -1840,6 +1623,286 @@ gx emu --real-scale --watch --top --device default-watch-466x466
 It is recommended to install the auto-completion script as described in [`gx completion`](#gx-completion) so that you can easily select device names and command options in the terminal.
 
 ============================================================
+FILE_PATH: src/transl/EN/tutorials/glyphix.js/cli.md
+
+---
+icon: console-line
+---
+# Command Line Options
+
+Pending migration.
+
+============================================================
+FILE_PATH: src/transl/EN/tutorials/glyphix.js/image-forge.md
+
+---
+icon: image-filter
+---
+# Image Management
+
+The glyphix.js packaging tool manages all PNG image resources in the project (`src` directory). The related modules mainly provide the following features:
+- Supports configuration files for image resources and provides a related configuration interface
+- Converts images into device-optimized sizes and formats during packaging
+
+Application developers only need to configure the packaging parameters for image resources according to their needs, while device vendors need to define specific image conversion strategies for their devices.
+
+## Application Development Configuration
+
+In application development, image packaging parameters must be configured to correctly generate resource packages.
+Configuring `config/image-rules.json` and properties such as `config.designWidth` in `src/manifest.json` during application development will affect the packaging behavior of image resources. `config/image-rules.json` is generally used to configure quality and performance parameters, while fields in `manifest.json` affect the global scaling ratio of images (used to adapt to devices of different resolutions).
+
+::: tip
+`config/image-rules.json` can be configured using the `gx config` command or other methods, but direct editing with a text editor is not recommended.
+:::
+
+If using the `gx config` command, developers will primarily focus on two parameters: `transparent` and `quality`.
+
+### Transparent Parameter
+
+The `transparent` parameter indicates whether the image contains transparent pixels. If configured as `false` while the source image does contain transparent pixels, these pixels will be converted to opaque (usually blended onto a black background) during generation. Therefore, necessary images must be marked to preserve transparent pixels; otherwise, incorrect overlay effects will be displayed. Because opaque images have better performance on certain platforms and consume less data, the `transparent` option is disabled by default.
+
+### Quality Parameter
+
+The `quality` parameter represents the quality of the packed image, which is an integer in the range $[0, 100]$. However, typically only 3 approximate quality levels are used:
+- High: 100, indicating the highest quality
+- Middle: 50, medium quality, the default value
+- Low: 0, low quality
+
+Image resources are optimized based on the quality parameter during conversion. Generally speaking, medium quality is a conversion strategy that balances display quality, rendering/loading performance, and memory resource consumption on the target platform, and is therefore recommended. Using high quality may provide better visual fidelity, but could result in degraded performance. Low quality can be used for images where quality can be sacrificed to improve performance (such as photographs). Specific target platforms may also ignore the `quality` parameter and use a unified strategy instead.
+
+## Device and Platform Adaptation
+
+Assuming device and platform developers have implemented optimized image resource formats for specific target platforms supporting multiple quality and pixel formats, the following work is required to generate these image formats within glyphix.js:
+- Implement a command-line tool required for **single image** conversion
+  - Must provide a command-line interface to convert from PNG images to a custom format, supporting output to a specified path (including overwriting the original file)
+  - Preferably provide a command-line interface to convert from a custom format back to PNG images, supporting output to a specified path (including overwriting the original file). Without this feature, PC-side previews will not be available
+- Write device description files and image conversion scripts
+
+### Image Conversion Script
+
+The image conversion script is a Scheme file. When an image needs to be converted, glyphix.js invokes this script, which uses the following variables to determine how to convert the image:
+- `env.image-path`: The absolute path of the image to be converted; the converted image overwrites this path.
+- `env.transparent`: The transparency parameter of this image.
+- `env.quailty`: The quality parameter of this image.
+- `env.target`: The conversion target mode, described later.
+- `env.verbose`: Whether verbose mode is enabled. If true, detailed logs can be output; otherwise, no logs should be output.
+- `env.script-dir`: The absolute path of the current script file. If the command required for conversion is relative to this script file rather than in the `PATH` environment variable, this parameter can be used for concatenation.
+
+`env.target` represents the **target mode** for image conversion, and its value determines the specific conversion method applied:
+- `"device"`: Executes the complete conversion process targeting the target device, such as removing the alpha channel of opaque images and then converting them into the PGF format (Glyphix Image Format) according to the quality parameter.
+- `"emulator"`: Executes the conversion process targeting the emulator. Since the emulator does not support specific hardware texture formats (such as ETC2, etc.), to ensure images display correctly in the emulator, only the alpha channel of opaque images may be removed without further conversion to the target device format (or converted to a software-supported PGF format).
+- `"preprocess"`: Executes only the preprocessing steps, which means removing the alpha channel of opaque images and outputting the result in PNG format.
+- `"preview"`: Generates a preview PNG image. First, convert the image to the custom target format following the `"device"` target conversion process, and then convert the output image back to PNG for preview purposes.
+
+::: tip
+If the command-line tool for image conversion does not support converting custom formats to PNG, do not implement the `"preprocess"` and `"preview"` target modes.
+:::
+
+### image-forge Command-Line Tool
+
+`image-forge` is the PGF image format command-line tool provided by Glyphix, featuring the following capabilities:
+- Supports converting PNG images to PGF format, as well as PGF to PNG images.
+- Supports common ARGB and PAL pixel formats, distinguishing between premultiplied alpha modes.
+- Supports blending transparent ARGB images onto a specified solid color background to convert them into opaque images (rather than directly discarding the alpha channel).
+- Supports row alignment by pixels or bytes.
+- Supports LZ4 compression, with the ability to set a minimum compression threshold (image data below the threshold will not be compressed).
+
+Platforms using other custom image formats can also utilize `image-forge` to remove the alpha channel.
+
+## Image Conversion Script Example
+
+The following example demonstrates how to use commands like `image-forge` to convert PNGs to PGF images, prioritizing the palette (PAL) format.
+
+First, define the target formats for opaque and transparent conditions:
+``` scheme
+; Define pixel format rules for opaque colors
+(define (opaque-formats q)
+  (cond ((<= q 50) "pal-rgb")
+        (else "rgb24")))
+
+; Define pixel format rules for transparent colors
+(define (transparent-formats q)
+  (cond ((<= q 50) "pal-argb-premul")
+        (else "argb32-premul")))
+
+; Calculate the target pixel format under the influence of transparency and quality parameters
+(define pixel-format
+  ((if env.transparent
+      transparent-formats opaque-formats)
+    env.quailty))
+
+; Whether the image is converted to a palette format
+(define palette (<= env.quailty 50))
+```
+
+The above code uses the palette format when the quality is less than or equal to 50, using `pal-rgb` or `pal-argb` depending on transparency. For qualities higher than 50, it uses 8-bit per channel RGB or ARGB pixel formats. Ultimately, the `pixel-format` variable represents the actual pixel format name used, and `palette` indicates whether the palette format is used.
+
+Next, define the commands needed for various scenarios:
+
+``` scheme
+; Whether to add the --verbose command-line argument
+(define if-verbose (if env.verbose "--verbose " ""))
+
+; Call the pngquant command to reduce image colors to 256 or fewer; pngquant must be installed on the system
+(define color-reduction
+  (string-append "pngquant --ext=.png --force " if-verbose env.image-path))
+
+; Convert image to PGF format
+(define convert (string-append "image-forge "
+  "--format=" pixel-format " " ; Specify output pixel format
+  "--compress --min-compress-ratio=5 " ; Compress image data to reduce file size, minimum compression ratio is 5
+  "--align=16 --pixel-align " ; Align image to 16 pixels
+  if-verbose
+  env.image-path))
+
+; Remove image Alpha channel and add background
+(define remove-alpha (string-append "image-forge --bypass "
+  ; On the bes2500ibp watch, non-transparent images can have their alpha channel removed and blended with a black background; this operation improves image quality after PAL color reduction
+  (if env.transparent "" "--background black ")
+  if-verbose
+  env.image-path))
+
+; Command to decode PGF image back to PNG
+(define decode
+  (string-append "image-forge --decode " if-verbose env.image-path))
+```
+
+In the code below, `execute-try` calls a specified `f` function when a command exits with a non-zero status, while the `execute` function prints an error log and exits the script with an exception when a command exits with a non-zero status. The `run-convert` function executes the complete target device image conversion workflow (calling `remove-alpha` and `convert` commands).
+
+``` scheme
+; Execute a command and print command contents in verbose mode; if the command exits with a non-zero exception, call function f
+(define (execute-try cmd f)
+  (begin
+    (if env.verbose ; Print command contents if in verbose mode
+      (display (string-append "Run command: " cmd "\n")))
+    (let ((r (system (string-append env.script-dir "/bin/" cmd))))
+      (if (= r 0) 0 (f r)))
+  ))
+
+; Execute a command, print command contents in verbose mode, and exit the program if the command exits with an exception
+(define (execute cmd)
+  (execute-try cmd (lambda (x)
+    (begin ; Print error code and exit exceptionally upon failure
+      (display (string-append "subprocess failed (" (number->string x) "): " cmd "\n"))
+      (exit-fail)
+  ))))
+
+; Convert image
+(define (run-convert)
+  (begin
+    (execute remove-alpha) ; Remove transparency channel first
+    (if palette (execute color-reduction)) ; Reduce image pixel count if palette format is used
+    (execute convert) ; Execute image conversion command
+  ))
+```
+
+The `targets` macro defines the processing methods for all target modes, such as the `"device"` mode calling the `run-convert` function, etc.
+
+``` scheme
+; Define conversion strategies corresponding to targets
+(targets env.target
+  ; Device mode: Image conversion workflow ultimately used for the target device
+  ("device" (run-convert))
+  ; Emulator mode: Only remove the alpha channel of non-transparent images, do not convert format
+  ("emulator" (execute remove-alpha))
+  ; Preprocess mode: Remove the alpha channel of non-transparent images and add background
+  ("preprocess" (execute remove-alpha))
+  ; Preview mode: Generate a PNG preview image consistent with the actual device display effect
+  ("preview" (begin
+    (run-convert) ; Convert image to PGF format first
+    (decode))) ; Then convert image back to PNG
+  )
+```
+
+### Using the Image Conversion Script
+
+To use the image conversion script, add a field to the device model description file:
+
+``` yaml
+description: default watch
+
+screen:
+  width: 454 # pixels
+  height: 454 # pixels
+  dpi: 326 # pixels per inch
+
+#...
+image-build: image-convert-pal.scm # Path of the image conversion script relative to this Yaml file
+```
+
+### More Complex Strategies
+
+Since the image conversion script is a full programming language rather than a configuration language like Yaml or JSON, we can implement more complex custom conversion strategies without being limited by the features provided by the framework. Taking the aforementioned palette format conversion as an example: the PAL format performs poorly on color-rich images. In such cases, images can be converted to a format that performs better in these scenarios. The general approach is as follows:
+1. The `pngquant` command supports exiting with an exception when the quality falls below a specified value after PAL format conversion; configure command parameters accordingly for this purpose.
+2. Modify the `color-reduction` operation executed by `execute` in the `run-convert` function to be executed by `execute-try` instead, using an alternative format conversion operation in the latter's exception handling function.
+3. The handling for targets like `preview` is similar, but note that when converting the output format back to PNG, command exit exceptions must also be detected and handled by subsequent fallback commands.
+
+In summary, following a shell-script-like approach, you use the exit codes of commands to control the workflow.
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
+
+# Swiper Page Indicator
+
+<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper Indicator">
+
+``` html
+<stack>
+  <swiper ::index="index">
+    <p for="i in panels">Panel {{i + 1}}</p>
+  </swiper>
+  <div class="indicator">
+    <image for="x in indicator" :src="x" />
+  </div>
+</stack>
+```
+
+``` js
+export default {
+  data: {
+    panels: 5,
+    index: 2
+  },
+  computed: {
+    indicator() {
+      let result = []
+      for (let i = 0; i < this.panels; i++) {
+        let suffix = i == this.index ? '1' : '0'
+        result.push(`/assets/images/ind-${suffix}.png`)
+      }
+      return result
+    }
+  }
+}
+```
+
+``` css
+swiper > p {
+  background-color: #888;
+  margin: 32px;
+  border-radius: 32px;
+  text-align: center;
+}
+
+.indicator {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.indicator > * {
+  margin: 0 4px 56px 4px;
+}
+```
+
+</Glyphix>
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/README.md
+
+# Practical Guide
+
+============================================================
 FILE_PATH: src/transl/EN/cookbook/blur-overlay.md
 
 # Blur Overlay Menu
@@ -1927,6 +1990,141 @@ Since Glyphix does not support the browser's [`backdrop-filter`](https://develop
 Since blur effects are computationally intensive, developers need to pay special attention to their performance overhead. We recommend using blur effects only in static interfaces, and ideally adding the [`quiescent`](/framework/generic/properties.md#quiescent) property to elements that need to be blurred.
 
 If possible, you should test whether the blurred interface meets performance expectations on physical devices.
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/layout-tricks.md
+
+# Layout Tips
+
+## Limit Element Width
+
+You can use the `margin` property to limit the width of an element.
+
+<glyphix id="cookbook-margin-layout-1" width="360" height="100">
+
+```html
+<div>
+  <div class="limit">
+    <p>{{text}}</p>
+  </div>
+</div>
+```
+
+```css
+div {
+  background-color: lightgreen;
+}
+
+.limit {
+  border: 1px solid red;
+  margin: 0 150px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+p {
+  border: 1px solid gray;
+  margin: 2px;
+}
+```
+
+```js
+export default {
+  data: { text: 'A' },
+  onInit() {
+    let index = 1
+    setInterval(() => {
+      this.text += String.fromCharCode(index++ + 0x41)
+      if (index > 26) {
+        this.text = 'A'
+        index = 1
+      }
+    }, 200)
+  }
+}
+```
+
+</glyphix>
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/clangd-lsp.md
+
+# Clangd Configuration
+
+When developing firmware using a cross-compilation toolchain such as `arm-none-eabi-gcc` along with a build system like CMake, you can configure the Clangd language server to enhance your development experience. Specifically, you will benefit from the following features:
+- Accurate navigation to declarations or definitions based on the actual project structure;
+- Viewing API documentation (documentation comments written in Doxygen formats such as `/**` and `//!`);
+- Support for code formatting rules defined by `.clang-format`;
+- Real-time static analysis or error checking without the need for compilation;
+- Code suggestions and completion as you type;
+- Finding references, code refactoring, and more.
+
+## Preparation
+
+First, you need an editor that supports the LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and its related extensions. If you need to install clangd manually, you can download a suitable version from [LLVM](https://github.com/llvm/llvm-project/releases) or use your operating system's package manager.
+
+After installing the necessary extensions, clangd may work out-of-the-box for simple native host projects, but further configuration is required in complex cross-compilation environments.
+
+## Cross-Compilation Environment Configuration
+
+### CMake Options
+
+If you use CMake as your build system, you need to enable the `CMAKE_EXPORT_COMPILE_COMMANDS` option. You can do this via a command-line argument:
+``` bash
+cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # Command-line argument during the CMake configuration stage
+```
+If using command-line arguments is inconvenient, you can also define this variable in any `CMakeLists.txt` file:
+``` cmake
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+```
+Then, when you configure or build the project using CMake, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
+
+### Clangd Configuration
+
+After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you are likely to encounter the following issues:
+- `compile_commands.json` is located deep within the directory hierarchy, so clangd cannot find it;
+- clangd cannot find standard headers suitable for the cross-compilation environment, such as `stdint.h`.
+
+To resolve these issues, you first need to create a `.clangd` file in the root directory of your project (i.e., the directory opened by your editor, usually where the `.git` folder is located). This is a YAML file; populate it with the following content:
+``` yaml
+CompileFlags:
+  CompilationDatabase: "Relative path to the directory containing compile_commands.json"
+  Add: 
+    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
+    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
+  Remove:
+    - -fno-reorder-functions
+```
+Please modify the file paths according to your actual setup. Next, add the following command-line option to clangd's startup arguments:
+``` bash
+--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # Fill in the path according to your actual setup
+```
+Then restart the clangd language server, and it should work properly.
+
+In VS Code, you can add arguments via `clangd.arguments` in the project's `.vscode/settings.json`:
+``` json
+{
+  "clangd.arguments": [
+    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
+  ]
+}
+```
+
+============================================================
+FILE_PATH: src/transl/EN/cookbook/game-2048.md
+
+# 2048 Game
+
+## Demo
+
+Tip: Use the mouse to quickly swipe up, down, left, and right to play the "2048 Game".
+
+<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
+
+</glyphix>
 
 ============================================================
 FILE_PATH: src/transl/EN/cookbook/async.md
@@ -2211,202 +2409,4 @@ C-style strings are not supported. They will be converted to `boolean` type.
 :::
 
 The conversion happens automatically without developer intervention.
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/layout-tricks.md
-
-# Layout Tips
-
-## Limit Element Width
-
-You can use the `margin` property to limit the width of an element.
-
-<glyphix id="cookbook-margin-layout-1" width="360" height="100">
-
-```html
-<div>
-  <div class="limit">
-    <p>{{text}}</p>
-  </div>
-</div>
-```
-
-```css
-div {
-  background-color: lightgreen;
-}
-
-.limit {
-  border: 1px solid red;
-  margin: 0 150px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-p {
-  border: 1px solid gray;
-  margin: 2px;
-}
-```
-
-```js
-export default {
-  data: { text: 'A' },
-  onInit() {
-    let index = 1
-    setInterval(() => {
-      this.text += String.fromCharCode(index++ + 0x41)
-      if (index > 26) {
-        this.text = 'A'
-        index = 1
-      }
-    }, 200)
-  }
-}
-```
-
-</glyphix>
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/README.md
-
-# Practical Guide
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/game-2048.md
-
-# 2048 Game
-
-## Demo
-
-Tip: Use the mouse to quickly swipe up, down, left, and right to play the "2048 Game".
-
-<glyphix id="cookbook-game-2048" height="466" width="466" title="2048 游戏" inline>
-
-</glyphix>
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/clangd-lsp.md
-
-# Clangd Configuration
-
-When developing firmware using a cross-compilation toolchain such as `arm-none-eabi-gcc` along with a build system like CMake, you can configure the Clangd language server to enhance your development experience. Specifically, you will benefit from the following features:
-- Accurate navigation to declarations or definitions based on the actual project structure;
-- Viewing API documentation (documentation comments written in Doxygen formats such as `/**` and `//!`);
-- Support for code formatting rules defined by `.clang-format`;
-- Real-time static analysis or error checking without the need for compilation;
-- Code suggestions and completion as you type;
-- Finding references, code refactoring, and more.
-
-## Preparation
-
-First, you need an editor that supports the LSP (Language Server Protocol), such as Visual Studio Code, and then install clangd and its related extensions. If you need to install clangd manually, you can download a suitable version from [LLVM](https://github.com/llvm/llvm-project/releases) or use your operating system's package manager.
-
-After installing the necessary extensions, clangd may work out-of-the-box for simple native host projects, but further configuration is required in complex cross-compilation environments.
-
-## Cross-Compilation Environment Configuration
-
-### CMake Options
-
-If you use CMake as your build system, you need to enable the `CMAKE_EXPORT_COMPILE_COMMANDS` option. You can do this via a command-line argument:
-``` bash
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON # Command-line argument during the CMake configuration stage
-```
-If using command-line arguments is inconvenient, you can also define this variable in any `CMakeLists.txt` file:
-``` cmake
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-```
-Then, when you configure or build the project using CMake, a `compile_commands.json` file will be generated in the output directory, which will be used by clangd.
-
-### Clangd Configuration
-
-After configuring CMake and generating `compile_commands.json`, clangd may work partially, but you are likely to encounter the following issues:
-- `compile_commands.json` is located deep within the directory hierarchy, so clangd cannot find it;
-- clangd cannot find standard headers suitable for the cross-compilation environment, such as `stdint.h`.
-
-To resolve these issues, you first need to create a `.clangd` file in the root directory of your project (i.e., the directory opened by your editor, usually where the `.git` folder is located). This is a YAML file; populate it with the following content:
-``` yaml
-CompileFlags:
-  CompilationDatabase: "Relative path to the directory containing compile_commands.json"
-  Add: 
-    - -resource-dir=C:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/arm-none-eabi/include/c++/9.3.1/arm-none-eabi
-    - -IC:/gcc-arm-none-eabi-9-2020-q2/lib/gcc/arm-none-eabi/9.3.1/include
-  Remove:
-    - -fno-reorder-functions
-```
-Please modify the file paths according to your actual setup. Next, add the following command-line option to clangd's startup arguments:
-``` bash
---query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe # Fill in the path according to your actual setup
-```
-Then restart the clangd language server, and it should work properly.
-
-In VS Code, you can add arguments via `clangd.arguments` in the project's `.vscode/settings.json`:
-``` json
-{
-  "clangd.arguments": [
-    "--query-driver=C:/gcc-arm-none-eabi-9-2020-q2/bin/arm-none-eabi-g++.exe"
-  ]
-}
-```
-
-============================================================
-FILE_PATH: src/transl/EN/cookbook/swiper-indicator.md
-
-# Swiper Page Indicator
-
-<Glyphix id="cookbook-swiper-indicator" height="466" width="466" designWidth="466" title="Swiper Indicator">
-
-``` html
-<stack>
-  <swiper ::index="index">
-    <p for="i in panels">Panel {{i + 1}}</p>
-  </swiper>
-  <div class="indicator">
-    <image for="x in indicator" :src="x" />
-  </div>
-</stack>
-```
-
-``` js
-export default {
-  data: {
-    panels: 5,
-    index: 2
-  },
-  computed: {
-    indicator() {
-      let result = []
-      for (let i = 0; i < this.panels; i++) {
-        let suffix = i == this.index ? '1' : '0'
-        result.push(`/assets/images/ind-${suffix}.png`)
-      }
-      return result
-    }
-  }
-}
-```
-
-``` css
-swiper > p {
-  background-color: #888;
-  margin: 32px;
-  border-radius: 32px;
-  text-align: center;
-}
-
-.indicator {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-}
-
-.indicator > * {
-  margin: 0 4px 56px 4px;
-}
-```
-
-</Glyphix>
 
